@@ -3472,8 +3472,11 @@ const getStallDisplayPhoto = (s: MapStall): string => {
   return stallPhotoSamples[Math.abs(hash) % stallPhotoSamples.length]
 }
 
-const showPopupForStall = (_s: MapStall) => {
-  hoverPopup?.remove()
+const showPopupForStall = (s: MapStall) => {
+  if (!map || !hoverPopup || !s?.center) return
+  hoverPopup.setLngLat(s.center).setHTML(`
+    <div class="mlp mlp-stall-tooltip"><strong>แผง ${s.code}</strong></div>
+  `).addTo(map)
 }
 
 // ---------------- Drill-down actions ----------------
@@ -3751,7 +3754,7 @@ const bindMapEvents = () => {
       const changedStall = setHoveredStall(s)
       const isMyBooked = Boolean(s && !props.previewMode && (props.myBookedStallCodes || []).includes(s.code))
       map.getCanvas().style.cursor = s && s.status !== 'occupied' && !isMyBooked ? 'pointer' : 'not-allowed'
-      if (s && changedStall) showPopupForStall(s)
+      // Keep stall details click-driven so the tooltip does not flicker while moving across the map.
       return
     }
 
@@ -6946,6 +6949,8 @@ onUnmounted(cleanupMapResources)
   width: 310px;
   max-width: 100%;
 }
+.mlp-stall-tooltip { width: auto; min-width: 0; max-width: 220px; padding: 9px 14px; color: #0f172a; font-size: 0.9375rem; font-weight: 700; line-height: 1.35; white-space: nowrap; }
+.mlp-popup:has(.mlp-stall-tooltip) .maplibregl-popup-content { width: max-content; max-width: 240px; }
 .mlp-accent {
   height: 4px;
   background: linear-gradient(90deg, var(--mlp-accent), color-mix(in srgb, var(--mlp-accent) 40%, #ffffff));

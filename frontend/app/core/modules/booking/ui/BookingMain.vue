@@ -9,7 +9,10 @@
       <div v-if="currentRole === 'tenant'" class="tenant-view-section">
         <!-- Page Main Title & Actions -->
         <div class="page-header-row">
-          <h1 class="main-page-title">การจองของฉัน</h1>
+          <div>
+            <h1 class="main-page-title">การจองแผงเช่า</h1>
+            <p class="page-subtitle">ติดตามสถานะและจัดการรายการจองแผงเช่าของฉัน</p>
+          </div>
 
           <div class="page-header-actions">
             <AppButton
@@ -396,7 +399,12 @@
 
 
           <!-- Loading State -->
-          <AppBookingListSkeleton v-if="loading" :count="2" />
+          <div v-if="loading && tenantViewMode === 'table'" class="tenant-table-skeleton" role="status" aria-label="กำลังโหลดตารางการจอง">
+            <div v-for="row in 6" :key="row" class="tenant-table-skeleton-row" aria-hidden="true">
+              <span v-for="cell in 7" :key="cell"></span>
+            </div>
+          </div>
+          <AppBookingListSkeleton v-else-if="loading" :count="2" />
 
           <!-- Empty State -->
           <div v-else-if="filteredTenantBookings.length === 0" class="empty-state-box">
@@ -440,10 +448,134 @@
             </template>
           </div>
 
-          <!-- Market Accordion Groups List (เมื่อเลือกมุมมองตามตลาด) หรือ ลิสต์การ์ดทั้งหมด (เมื่อเลือกมุมมองรายการทั้งหมด) -->
+          <div v-else-if="tenantViewMode === 'table'" class="officer-table-container" role="region" aria-label="ตารางการจองของฉัน" tabindex="0">
+            <table class="officer-custom-table">
+              <thead>
+                <tr>
+                  <th scope="col">เลขที่ใบจอง</th>
+                  <th scope="col">ตลาด / โครงการ</th>
+                  <th scope="col">แผงค้า</th>
+                  <th scope="col">ยอดรวม (แผงที่เหลือ)</th>
+                  <th scope="col">กำหนดนัดหมาย</th>
+                  <th scope="col">สถานะ</th>
+                  <th scope="col" class="tenant-table-actions-heading">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="b in paginatedTenantBookings" :key="b.id" :data-booking-id="String(b.id)">
+                  <td>
+                    <strong class="clickable-id" @click="openBookingDetails(b)">{{ formatBookingNumber(b.booking_number) }}</strong>
+                    <div class="cell-sub-date">{{ b.created_at?.slice(0, 10) }}</div>
+                  </td>
+                  <td>
+                    <strong>{{ b.market_name || 'ตลาดนัดจตุจักร' }}</strong>
+                    <div class="cell-sub-date">{{ getBookingProjectName(b) }}</div>
+                  </td>
+                  <td>
+                    <strong>{{ b.stall_number }}</strong>
+                    <div class="cell-sub-date">{{ getBookingStallCountLabel(b) }}</div>
+                  </td>
+                  <td>
+                    <strong class="tenant-table-amount">฿{{ getBookingTotalMonthlyRent(b).toLocaleString() }}/เดือน</strong>
+                    <div class="cell-sub-date">มัดจำ ฿{{ getBookingTotalDeposit(b).toLocaleString() }}</div>
+                  </td>
+                  <td>
+                    <div class="table-visit-date">{{ formatThaiVisitDate(b.visit_date, b) }}</div>
+                    <div class="table-visit-slot">{{ getVisitTimeSlot(b) }}</div>
+                  </td>
+                  <td>
+                    <span class="status-pill-badge" :class="getStatusPillClass(b.status)">{{ getStatusBadgeLabel(b.status) }}</span>
+                  </td>
+                  <td>
+                      <div class="table-actions-cell">
+                        <!-- 1. ปุ่มยกเลิก / สละสิทธิ์ -->
+                        <AppButton
+                          v-if="isQueueBooking(b) && ['pending_approval', 'pending', 'approved', 'waiting_queue'].includes(b.status)"
+                          variant="danger-outline"
+                          size="sm"
+                          @click="handleCancelBooking(b, 'ผู้เช่ายกเลิกการต่อคิว')"
+                          title="สละสิทธิ์การต่อคิว"
+                        >
+                          <template #prefix>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                          </template>
+                          <span>สละสิทธิ์</span>
+                        </AppButton>
+                        <AppButton
+                          v-else-if="['pending_approval', 'pending', 'pending_slot', 'approved', 'interested'].includes(b.status)"
+                          variant="danger-outline"
+                          size="sm"
+                          @click="handleCancelBooking(b, 'ผู้เช่าขอยกเลิกการจอง')"
+                          title="ยกเลิกคำขอจอง"
+                        >
+                          <template #prefix>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                          </template>
+                          <span>ยกเลิก</span>
+                        </AppButton>
+
+                        <!-- 2. ปุ่มดูรายละเอียด -->
+                        <AppButton
+                          variant="secondary"
+                          size="sm"
+                          @click="openBookingDetails(b)"
+                        >
+                          <template #prefix>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path></svg>
+                          </template>
+                          <span>รายละเอียด</span>
+                        </AppButton>
+
+                        <!-- 3. Primary Actions ตามสถานะ -->
+                        <!-- pending_slot -> เลือกวันนัดชม -->
+                        <AppButton
+                          v-if="b.status === 'pending_slot'"
+                          variant="primary"
+                          size="sm"
+                          @click="openSelectSlotModal(b)"
+                        >
+                          <span>เลือกวันนัดชม</span>
+                          <template #suffix>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                          </template>
+                        </AppButton>
+
+                        <!-- interested -> ยื่นคำร้องขอเช่าแผงนี้ -->
+                        <AppButton
+                          v-else-if="b.status === 'interested'"
+                          variant="primary"
+                          size="sm"
+                          @click="openLeaseApplication(b)"
+                        >
+                          <span>ยื่นคำร้องขอเช่าแผงนี้</span>
+                          <template #suffix>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                          </template>
+                        </AppButton>
+
+                        <!-- lease_applied หรือ completed -> ติดตามคำร้อง -->
+                        <AppButton
+                          v-else-if="b.status === 'lease_applied' || b.status === 'completed'"
+                          to="/applications"
+                          variant="purple"
+                          size="sm"
+                        >
+                          <span>ติดตามคำร้อง</span>
+                          <template #suffix>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                          </template>
+                        </AppButton>
+                      </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Market Accordion Groups List (มุมมองตามตลาด) -->
           <div
             v-else
-            :class="tenantViewMode === 'flat' ? 'tenant-bookings-list' : 'market-accordions-list'"
+            class="market-accordions-list"
           >
             <div
               v-for="group in tenantDisplayGroups"
@@ -631,16 +763,11 @@
                   </div>
 
                   <!-- Next Step Guidance & Actions Bar for Collapsed View -->
-                  <div
-                    v-if="!isCardExpanded(b.id)"
-                    class="collapsed-next-step"
-                    :class="getTenantNextStepTone(b.status)"
-                  >
+                  <div v-if="!isCardExpanded(b.id)" class="collapsed-next-step" :class="getTenantNextStepTone(b.status)">
                     <div class="collapsed-next-step-content">
                       <span class="collapsed-next-step-label">{{ getTenantNextStepLabel(b.status) }}</span>
                       <strong>{{ getTenantNextStep(b) }}</strong>
                     </div>
-
                     <div class="collapsed-actions-group">
                       <!-- 1. ปุ่มยกเลิก / สละสิทธิ์ -->
                       <AppButton
@@ -830,13 +957,11 @@
                     <!-- Card Footer Row with High-Impact Visual Hierarchy -->
                     <div class="card-footer-row">
                       <div class="footer-left-status" :class="getTenantNextStepTone(b.status)">
-                        <!-- สไตล์ข้อความเหมือนตอน collapse เพื่อความกลมกลืนเป็นหนึ่งเดียวกัน -->
                         <div class="collapsed-next-step-content">
                           <span class="collapsed-next-step-label">{{ getTenantNextStepLabel(b.status) }}</span>
                           <strong>{{ getTenantNextStep(b) }}</strong>
                         </div>
                       </div>
-
                       <div class="footer-right-actions">
                         <!-- 1. ปุ่มยกเลิก / สละสิทธิ์ -->
                         <AppButton
@@ -935,7 +1060,7 @@
         <section v-show="tenantBookingSection === 'interests'" class="main-white-card waitlist-card">
           <div class="card-header-row">
             <div class="header-left">
-              <h2 class="section-title">แผงที่สนใจ (Waiting List)</h2>
+              <h2 class="section-title">แผงที่สนใจ</h2>
               <div class="item-count-subtitle">{{ tenantVisibleWaitlistItems.length }} รายการ</div>
             </div>
           </div>
@@ -1046,8 +1171,13 @@
             </article>
           </div>
           <div v-else class="empty-state-box">
-            <strong>ยังไม่มีแผงที่สนใจ</strong>
-            <p>เลือกแผงที่ติดจองจากผัง แล้วกด “รอคิวแผงนี้” ได้ที่นี่</p>
+            <div class="empty-state-panel">
+              <div class="empty-icon" aria-hidden="true">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+              </div>
+              <div class="empty-title">ยังไม่มีแผงที่สนใจ</div>
+              <div class="empty-desc">เลือกแผงที่ติดจองจากผัง แล้วกด “รอคิวแผงนี้” เพื่อบันทึกไว้ติดตาม</div>
+            </div>
           </div>
         </section>
       </div>
@@ -1058,9 +1188,22 @@
       <div v-else class="officer-view-section">
         <!-- Page Main Title & Actions -->
         <div class="page-header-row">
-          <h1 class="main-page-title">จัดการนัดชมแผง</h1>
+          <div>
+            <h1 class="main-page-title">การจองแผงเช่า</h1>
+            <p class="page-subtitle">ตรวจสอบ อนุมัติ และจัดการรายการจองแผงเช่าที่ผู้เช่าส่งเข้ามา</p>
+          </div>
 
           <div class="page-header-actions">
+            <AppButton
+              variant="secondary"
+              @click="openPolicySettingsModal"
+              title="ตั้งค่าระยะเวลายื่นคำร้องและการตอบรับคิวรอ"
+            >
+              <template #prefix>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line><circle cx="9" cy="6" r="2"></circle><circle cx="15" cy="12" r="2"></circle><circle cx="11" cy="18" r="2"></circle></svg>
+              </template>
+              ตั้งค่าระยะเวลา
+            </AppButton>
             <AppButton
               @click="handleClearAllData"
               title="ล้างข้อมูลการจองและคำร้องทั้งหมด เพื่อเริ่มทดสอบ Flow ใหม่จาก 0"
@@ -1077,7 +1220,7 @@
         <nav class="tenant-booking-sections" aria-label="หมวดการจัดการของเจ้าหน้าที่">
           <button type="button" :class="{ active: officerSection === 'bookings' }" @click="officerSection = 'bookings'">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            <span>รายการนัดชมแผง</span>
+            <span>การจองทั้งหมด</span>
             <span class="tab-count-badge">{{ officerDirectBookingsCount }}</span>
           </button>
           <button type="button" :class="{ active: officerSection === 'waiting' }" @click="officerSection = 'waiting'">
@@ -1197,7 +1340,7 @@
                     <div class="kpi-popover-body">
                       <div class="kpi-popover-item" :class="{ 'is-selected': officerSubFilter === 'pending_approval' }" @click="setOfficerSubFilter('pending_approval')">
                         <span class="kpi-status-dot amber"></span>
-                        <span class="kpi-status-name">รออนุมัติ</span>
+                        <span class="kpi-status-name">รอเจ้าหน้าที่อนุมัติ</span>
                         <span class="kpi-status-val">{{ officerCountPending }}</span>
                       </div>
                       <div class="kpi-popover-item" :class="{ 'is-selected': officerSubFilter === 'approved' }" @click="setOfficerSubFilter('approved')">
@@ -1285,7 +1428,7 @@
                 @click="officerSubFilter = 'pending_approval'"
               >
                 <span class="subfilter-dot"></span>
-                <span>รออนุมัติ</span>
+                <span>รอเจ้าหน้าที่อนุมัติ</span>
                 <span class="subfilter-badge">{{ officerCountPending }}</span>
               </button>
               <button
@@ -1295,7 +1438,7 @@
                 @click="officerSubFilter = 'approved'"
               >
                 <span class="subfilter-dot"></span>
-                <span>นัดหมายแล้ว</span>
+                <span>นัดหมายสำเร็จ</span>
                 <span class="subfilter-badge">{{ officerCountApproved }}</span>
               </button>
               <button
@@ -1305,7 +1448,7 @@
                 @click="officerSubFilter = 'interested'"
               >
                 <span class="subfilter-dot"></span>
-                <span>รอยื่นคำร้อง</span>
+                <span>รอผู้เช่ายื่นคำร้อง</span>
                 <span class="subfilter-badge">{{ officerCountInterested }}</span>
               </button>
             </div>
@@ -1523,7 +1666,7 @@
                             class="msa-btn msa-btn-danger"
                             @click.stop="handleCancelSingleStallBooking(sub, ['pending', 'pending_approval', 'pending_slot'].includes(sub.status) ? 'เจ้าหน้าที่ปฏิเสธนัดหมายเฉพาะแผงนี้' : 'เจ้าหน้าที่ยกเลิกเฉพาะแผงนี้', b)"
                           >
-                            <span>{{ ['pending', 'pending_approval', 'pending_slot'].includes(sub.status) ? 'ปฏิเสธแผงนี้' : 'ยกเลิกแผงนี้' }}</span>
+                            <span>ยกเลิกแผงนี้</span>
                           </button>
                         </div>
                       </div>
@@ -1566,7 +1709,7 @@
                         <template #prefix>
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </template>
-                        <span>{{ isQueueBooking(b) ? 'ยกเลิกคิว' : 'ยกเลิกทั้งใบ' }}</span>
+                        <span>{{ isQueueBooking(b) ? 'ยกเลิกคิว' : 'ยกเลิก' }}</span>
                       </AppButton>
                       <AppButton
                         variant="secondary"
@@ -1606,7 +1749,7 @@
                         <template #prefix>
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </template>
-                        <span>{{ isQueueBooking(b) ? 'ยกเลิกคิว' : 'ยกเลิกทั้งใบ' }}</span>
+                        <span>{{ isQueueBooking(b) ? 'ยกเลิกคิว' : 'ยกเลิก' }}</span>
                       </AppButton>
                       <AppButton
                         variant="secondary"
@@ -1633,7 +1776,7 @@
                         <template #prefix>
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </template>
-                        <span>ยกเลิกทั้งใบ</span>
+                        <span>ยกเลิก</span>
                       </AppButton>
                       <AppButton
                         variant="secondary"
@@ -1794,7 +1937,7 @@
                           <template #prefix>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                           </template>
-                          <span>{{ isQueueBooking(b) ? 'ยกเลิกคิว' : 'ยกเลิกทั้งใบ' }}</span>
+                          <span>{{ isQueueBooking(b) ? 'ยกเลิกคิว' : 'ยกเลิก' }}</span>
                         </AppButton>
                         <AppButton
                           variant="secondary"
@@ -1831,7 +1974,7 @@
                           <template #prefix>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                           </template>
-                          <span>{{ isQueueBooking(b) ? 'ยกเลิกคิว' : 'ยกเลิกทั้งใบ' }}</span>
+                          <span>{{ isQueueBooking(b) ? 'ยกเลิกคิว' : 'ยกเลิก' }}</span>
                         </AppButton>
                         <AppButton
                           variant="secondary"
@@ -1856,7 +1999,7 @@
                           <template #prefix>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                           </template>
-                          <span>ยกเลิกทั้งใบ</span>
+                          <span>ยกเลิก</span>
                         </AppButton>
                         <AppButton
                           variant="secondary"
@@ -2059,7 +2202,7 @@
           <!-- Header Row: Title & Subtitle on Left, Search on Right -->
           <div class="card-header-row">
             <div class="header-left">
-              <h2 class="section-title">คิวรอแผงค้า (Waiting List)</h2>
+              <h2 class="section-title">คิวรอแผงค้า</h2>
               <div class="item-count-subtitle">
                 {{ officerWaitlistSubTab === 'active' ? `${officerWaitlistStallGroups.length} แผง (รวม ${officerCountWaiting} คิวรอ)` : `${officerMarketWaitlistHistoryItems.length} รายการตัดสิทธิ์/สิ้นสุดคิว` }}
               </div>
@@ -2090,8 +2233,7 @@
               :class="{ active: officerWaitlistSubTab === 'active' }"
               @click="officerWaitlistSubTab = 'active'"
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              <span>คิวที่กำลังรอ (Active)</span>
+              <span>คิวที่กำลังรอ</span>
               <span class="tab-badge">{{ officerCountWaiting }}</span>
             </button>
             <button
@@ -2100,8 +2242,7 @@
               :class="{ active: officerWaitlistSubTab === 'history' }"
               @click="officerWaitlistSubTab = 'history'"
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 8 8 12 12 16"></polyline><line x1="16" y1="12" x2="8" y2="12"></line></svg>
-              <span>ประวัติคิวที่สิ้นสุด / ตัดสิทธิ์แล้ว</span>
+              <span>คิวที่สิ้นสุด / ตัดสิทธิ์</span>
               <span class="tab-badge">{{ officerMarketWaitlistHistoryItems.length }}</span>
             </button>
           </div>
@@ -2114,7 +2255,7 @@
                 <div class="empty-icon" aria-hidden="true">
                   <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 </div>
-                <div class="empty-eyebrow">คิวรอแผงค้า (Waiting List)</div>
+                <div class="empty-eyebrow">คิวรอแผงค้า</div>
                 <div class="empty-title">ยังไม่มีผู้รอคิวในตลาดนี้</div>
                 <div class="empty-desc">เมื่อผู้เช่ากด “รอคิวแผงนี้” บนแผงที่ติดจอง รายชื่อคิวจะแสดงแยกตามรายแผงที่นี่</div>
               </div>
@@ -2240,12 +2381,11 @@
                       <span v-if="item.tenant_phone" style="color: #64748b; font-weight: 500;"> ({{ item.tenant_phone }})</span>
                     </span>
                   </div>
-                  <p style="margin: 6px 0 2px 0; color: #64748b; font-size: 0.8125rem;">
-                    {{ item.market_name || 'ตลาดนัดจตุจักร' }}
-                    <span v-if="item.project_name"> · {{ item.project_name }}</span>
-                    <span v-if="item.created_at"> · เข้าคิวเมื่อ: {{ formatSubmissionTimestamp(item.created_at) }}</span>
-                    <span v-if="item.updated_at"> · สิ้นสุด/ตัดสิทธิ์เมื่อ: {{ formatSubmissionTimestamp(item.updated_at) }}</span>
-                  </p>
+                  <div class="waitlist-history-meta">
+                    <span>{{ item.market_name || 'ตลาดนัดจตุจักร' }}<span v-if="item.project_name"> · {{ item.project_name }}</span></span>
+                    <span v-if="item.created_at">เข้าคิว {{ formatSubmissionTimestamp(item.created_at) }}</span>
+                    <span v-if="item.updated_at">สิ้นสุด {{ formatSubmissionTimestamp(item.updated_at) }}</span>
+                  </div>
                   <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.8125rem; color: #b91c1c; background: #fef2f2; padding: 4px 10px; border-radius: 6px; width: fit-content; border: 1px solid #fee2e2;">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                     <span>เหตุผล: {{ item.dismiss_reason || 'ตัดสิทธิ์เนื่องจากผู้จองหลักทำสัญญาเช่าแผงสำเร็จ' }}</span>
@@ -2257,7 +2397,7 @@
                     size="sm"
                     @click="openStallQueueModal(item.stall_number || item.stall_ident, item.market_name, 'history')"
                   >
-                    ดูผังคิวแผงนี้
+                    ดูประวัติคิว
                   </AppButton>
                 </div>
               </article>
@@ -2474,7 +2614,6 @@
             :class="{ active: stallQueueModalTab === 'active' }"
             @click="stallQueueModalTab = 'active'"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <span>คิวที่กำลังรอ ({{ getStallWaitingQueues(selectedStallNumber).length }})</span>
           </button>
           <button
@@ -2483,8 +2622,7 @@
             :class="{ active: stallQueueModalTab === 'history' }"
             @click="stallQueueModalTab = 'history'"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 8 8 12 12 16"></polyline><line x1="16" y1="12" x2="8" y2="12"></line></svg>
-            <span>ประวัติคิวที่สิ้นสุด / ตัดสิทธิ์ ({{ getStallWaitlistHistory(selectedStallNumber).length }})</span>
+            <span>คิวที่สิ้นสุด / ตัดสิทธิ์ ({{ getStallWaitlistHistory(selectedStallNumber).length }})</span>
           </button>
         </div>
 
@@ -2557,7 +2695,7 @@
                 <div
                   v-for="(q, qIdx) in getStallWaitingQueues(selectedStallNumber)"
                   :key="q.id"
-                  class="queue-item-row"
+                  class="queue-item-row queue-history-item"
                   :style="q.status === 'offered' ? 'border-color: #6ee7b7; background: #f0fdf4;' : ''"
                 >
                   <div class="queue-item-left">
@@ -2612,13 +2750,6 @@
           <!-- VIEW 2: QUEUE HISTORY & DISMISSED RECORDS (ประวัติการสิ้นสุดคิว / ตัดสิทธิ์) -->
           <template v-else>
             <div class="queue-section-block">
-              <div class="queue-section-header">
-                <span class="queue-section-badge badge-primary-holder" style="display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; color: #475569;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 8 8 12 12 16"></polyline><line x1="16" y1="12" x2="8" y2="12"></line></svg>
-                  <span>ประวัติการตัดสิทธิ์และการสิ้นสุดคิว ({{ getStallWaitlistHistory(selectedStallNumber).length }} รายการ)</span>
-                </span>
-              </div>
-
               <div v-if="getStallWaitlistHistory(selectedStallNumber).length > 0" class="queue-list-container">
                 <div
                   v-for="q in getStallWaitlistHistory(selectedStallNumber)"
@@ -2632,8 +2763,7 @@
                     </div>
                     <div class="queue-item-info">
                       <div class="queue-item-name-row">
-                        <strong>{{ q.tenant_name }}</strong>
-                        <span v-if="q.tenant_phone" class="queue-user-phone">({{ q.tenant_phone }})</span>
+                        <strong>แผง {{ selectedStallNumber }}</strong>
                         <span
                           class="status-pill-badge"
                           :class="q.status === 'cancelled' ? 'pill-red' : (q.status === 'expired' ? 'pill-amber' : 'pill-gray')"
@@ -2641,11 +2771,13 @@
                         >
                           {{ q.status === 'cancelled' ? 'ตัดสิทธิ์ (มีผู้เช่าแล้ว)' : (q.status === 'expired' ? 'หมดเวลาตอบรับ (สละสิทธิ์)' : 'ยกเลิกการรอคิว') }}
                         </span>
+                        <strong>{{ q.tenant_name }}</strong>
+                        <span v-if="q.tenant_phone" class="queue-user-phone">({{ q.tenant_phone }})</span>
                       </div>
                       <div class="queue-item-sub">
                         <span>เข้าคิวเมื่อ: {{ formatSubmissionTimestamp(q.created_at) }}</span>
                         <span style="margin: 0 4px; color: #cbd5e1;">•</span>
-                        <span>สิ้นสุด/ตัดสิทธิ์: {{ formatSubmissionTimestamp(q.updated_at) }}</span>
+                        <span class="queue-history-ended-at">สิ้นสุด/ตัดสิทธิ์: {{ formatSubmissionTimestamp(q.updated_at) }}</span>
                       </div>
                       <div style="margin-top: 6px; font-size: 0.78rem; color: #b91c1c; display: flex; align-items: center; gap: 6px; background: #fef2f2; padding: 4px 8px; border-radius: 6px; width: fit-content; border: 1px solid #fee2e2;">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
@@ -2683,8 +2815,7 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             </div>
             <div>
-              <h3 style="margin: 0; font-size: 1.125rem; font-weight: 700; color: #0f172a;">ตั้งค่าระยะเวลายื่นคำร้องและตอบรับคิว</h3>
-              <p style="margin: 2px 0 0; font-size: 0.8125rem; color: #64748b;">{{ policyMarketLabel }}</p>
+              <h3 style="margin: 0; font-size: 1.125rem; font-weight: 700; color: #0f172a;">ตั้งค่าระยะเวลา</h3>
             </div>
           </div>
           <button class="btn-logout" @click="showPolicySettingsModal = false" aria-label="ปิด">
@@ -2694,7 +2825,7 @@
         <div class="modal-body">
           <div class="form-group" style="margin-bottom: 16px;">
             <label class="form-label" style="font-weight: 700; color: #1e293b;">
-              1. ระยะเวลายื่นคำร้องขอเช่า (หลังจากเจ้าหน้าที่กดยืนยันการเช่าแล้ว) *
+              1. ระยะเวลายื่นคำร้องขอเช่า <span class="required-marker">*</span>
             </label>
             <AppSelect
               v-model="policyLeaseDeadlineDays"
@@ -2702,13 +2833,13 @@
               placeholder="เลือกระยะเวลายื่นคำร้องขอเช่า"
             />
             <p style="margin: 6px 0 0; font-size: 0.78rem; color: #64748b; line-height: 1.45;">
-              เมื่อเจ้าหน้าที่พาชมแผงและกดยืนยันการเช่า ระบบจะนับเวลาให้ผู้เช่ายื่นคำร้องภายในจำนวนวันที่กำหนด หากเกินกำหนดระบบจะตัดสิทธิ์และเลื่อนคิวรออัตโนมัติ
+              กำหนดจำนวนวันที่ผู้เช่าต้องส่งคำร้อง หลังเจ้าหน้าที่อนุมัติการเช่า
             </p>
           </div>
 
           <div class="form-group" style="margin-bottom: 8px;">
             <label class="form-label" style="font-weight: 700; color: #1e293b;">
-              2. ระยะเวลาตอบรับสิทธิ์คิวรอ (เมื่อแผงว่างลงแล้วถึงคิวลำดับที่ 1) *
+              2. ระยะเวลาตอบรับคิวรอ <span class="required-marker">*</span>
             </label>
             <AppSelect
               v-model="policyWaitlistOfferHours"
@@ -2716,13 +2847,13 @@
               placeholder="เลือกระยะเวลาตอบรับคิวรอ"
             />
             <p style="margin: 6px 0 0; font-size: 0.78rem; color: #64748b; line-height: 1.45;">
-              เมื่อผู้จองหลักสละสิทธิ์หรือถูกตัดสิทธิ์ ระบบจะเสนอสิทธิ์ให้คิวที่ 1 เข้ามาเลือกวันนัดชมภายในเวลาที่กำหนด
+              กำหนดเวลาที่ผู้เช่าต้องตอบรับ เมื่อแผงว่างและถึงคิวของตนเอง
             </p>
           </div>
         </div>
         <div class="modal-footer">
           <AppButton variant="secondary" size="md" @click="showPolicySettingsModal = false">ยกเลิก</AppButton>
-          <AppButton variant="primary" size="md" :loading="savingPolicySettings" @click="savePolicySettings">บันทึกการตั้งค่า</AppButton>
+          <AppButton variant="primary" size="md" :loading="savingPolicySettings" @click="savePolicySettings">บันทึก</AppButton>
         </div>
       </div>
     </div>
@@ -3117,7 +3248,7 @@ const withdrawWaitlistByOfficer = async (q: any) => {
 // Tenant Specific State
 const tenantStatusTab = ref<'all' | 'pending' | 'waiting' | 'applied' | 'completed' | 'cancelled'>('all')
 const tenantSubFilter = ref<'all' | 'pending_approval' | 'approved' | 'interested'>('all')
-const tenantViewMode = ref<'market' | 'flat'>('market')
+const tenantViewMode = ref<'market' | 'table'>('market')
 const tenantSortOrder = ref<'newest' | 'oldest' | 'visit_soon'>('newest')
 const toggleTenantSort = () => {
   tenantSortOrder.value = tenantSortOrder.value === 'newest' ? 'oldest' : 'newest'
@@ -3172,7 +3303,7 @@ const tenantVisitTimeOptions = [
 
 const tenantViewOptions = [
   { value: 'market', label: 'ตลาด', title: 'มุมมองแยกกลุ่มตามตลาด', icon: 'market' },
-  { value: 'flat', label: 'รายการ', title: 'มุมมองรายการ', icon: 'list' }
+  { value: 'table', label: 'ตาราง', title: 'มุมมองตารางรายการจอง', icon: 'table' }
 ]
 
 const officerViewOptions = [
@@ -3706,19 +3837,7 @@ const tenantMarketGroups = computed(() => {
   return result
 })
 
-const tenantDisplayGroups = computed(() => {
-  if (tenantViewMode.value === 'flat') {
-    return [
-      {
-        name: 'all',
-        isFlat: true,
-        bookings: paginatedTenantBookings.value,
-        hasLatest: true
-      }
-    ]
-  }
-  return tenantMarketGroups.value.map(g => ({ ...g, isFlat: false }))
-})
+const tenantDisplayGroups = computed(() => tenantMarketGroups.value.map(g => ({ ...g, isFlat: false })))
 
 watch(
   () => overallLatestTenantBooking.value?.market_name,
@@ -5344,7 +5463,7 @@ const restoreBookingReturnContext = async () => {
       // keep old saved contexts from opening a removed tenant tab.
       tenantStatusTab.value = context.tenant.statusTab === 'waiting' ? 'all' : (context.tenant.statusTab || 'all')
       tenantSubFilter.value = context.tenant.subFilter || 'all'
-      tenantViewMode.value = context.tenant.viewMode || 'market'
+      tenantViewMode.value = ['table', 'flat'].includes(context.tenant.viewMode) ? 'table' : 'market'
       tenantSortOrder.value = context.tenant.sortOrder || 'newest'
       tenantSearchQuery.value = context.tenant.search || ''
       tenantSelectedMarket.value = context.tenant.selectedMarket || 'all'
@@ -5578,11 +5697,22 @@ onMounted(async () => {
   }
 }
 
-.waitlist-list { display: grid; gap: 10px; }
-.waitlist-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 16px; align-items: center; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
-.waitlist-item strong { font-size: 0.9375rem; color: #1e293b; }
-.waitlist-item p { margin: 3px 0 0; color: #64748b; font-size: 0.8125rem; }
-.waitlist-position { padding: 5px 10px; border-radius: 7px; background: #fffbeb; color: #b45309; font-size: 0.8125rem; font-weight: 600; }
+.waitlist-list { display: grid; gap: 16px; }
+.waitlist-item { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 22px; align-items: center; padding: 24px 22px 20px; border: 1px solid #e2e8f0; border-left: 3px solid #94a3b8; border-radius: 14px; background: #fff; box-shadow: 0 2px 8px rgba(15,23,42,.04); }
+.waitlist-item::after { content: ''; position: absolute; top: 58px; left: 22px; right: 22px; height: 1px; background: #eef2f6; }
+.waitlist-item:hover { border-color: #bfdbfe; box-shadow: 0 4px 14px rgba(37,99,235,.08); }
+.waitlist-item > div:last-child { align-self: end; margin-bottom: 2px; }
+.waitlist-item strong { font-size: 1rem; color: #1e293b; }
+.waitlist-item p { margin: 18px 0 0; padding-top: 12px; color: #64748b; font-size: 0.8125rem; line-height: 1.65; }
+.waitlist-item > div:first-child > div:last-child { margin-top: 12px !important; }
+.waitlist-position { padding: 6px 12px; border-radius: 999px; background: #fff7ed; color: #c2410c; font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
+.waitlist-history-meta { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 12px; padding-top: 12px; color: #64748b; font-size: 0.8125rem; line-height: 1.6; }
+.waitlist-history-meta span { display: inline-flex; align-items: center; }
+.waitlist-history-meta span + span { padding-left: 18px; border-left: 1px solid #cbd5e1; }
+.queue-history-item { padding: 16px 18px; border-radius: 12px; }
+.queue-history-item .queue-item-name-row { gap: 10px; }
+.queue-history-item .queue-item-sub { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin-top: 12px; padding-top: 12px; border-top: 1px solid #cbd5e1 !important; }
+.queue-history-item .queue-history-ended-at { margin-left: 14px; padding-left: 14px; border-left: 1px solid #cbd5e1; }
 @media (max-width: 640px) {
   .waitlist-item { grid-template-columns: 1fr; gap: 8px; align-items: start; }
 }
@@ -5625,6 +5755,15 @@ onMounted(async () => {
   color: #0f172a;
   letter-spacing: -0.01em;
 }
+
+.page-subtitle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.required-marker { color: #dc2626; font-weight: 700; }
 
 .page-header-actions {
   display: inline-flex;
@@ -9163,9 +9302,9 @@ onMounted(async () => {
 }
 
 .modal-title-icon-box {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   background: #eff6ff;
   color: #2563eb;
   display: flex;
@@ -9821,4 +9960,13 @@ onMounted(async () => {
   background: #fef2f2;
   border-color: #f87171;
 }
+
+.tenant-view-section { min-width: 0; max-width: 100%; }
+.tenant-table-amount { color: #1e293b; font-weight: 700; white-space: nowrap; }
+.tenant-table-skeleton { overflow: hidden; }
+.tenant-table-skeleton-row { display: grid; grid-template-columns: repeat(7, minmax(100px, 1fr)); gap: 24px; padding: 24px 16px; border-bottom: 1px solid #f1f5f9; }
+.tenant-table-skeleton-row span { height: 18px; border-radius: 6px; background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: tenant-table-shimmer 1.5s infinite; }
+@keyframes tenant-table-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .tenant-table-skeleton-row span { animation: none; } }
+
 </style>

@@ -66,12 +66,10 @@
         >
           <span class="nav-icon-wrap">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="4" y1="6" x2="20" y2="6"></line>
-              <line x1="4" y1="12" x2="20" y2="12"></line>
-              <line x1="4" y1="18" x2="20" y2="18"></line>
-              <circle cx="9" cy="6" r="2"></circle>
-              <circle cx="15" cy="12" r="2"></circle>
-              <circle cx="11" cy="18" r="2"></circle>
+              <path d="M4 10h16v10H4z"></path>
+              <path d="M3 10l2-6h14l2 6"></path>
+              <path d="M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"></path>
+              <path d="M9 20v-5h6v5"></path>
             </svg>
           </span>
           <span v-if="isExpanded" class="nav-label">จัดการตลาด</span>
@@ -121,7 +119,7 @@
           <NuxtLink
             :to="staffVisitManagementLink"
             class="nav-icon-link staff-nav-submenu-link"
-            :class="{ active: route.path.startsWith('/stalls/visit-schedule') }"
+            :class="{ active: route.path.startsWith('/stalls/visit-schedule') && route.query.section !== 'holidays' }"
             :title="isExpanded ? '' : 'จัดการรอบเข้าชม'"
           >
             <span class="nav-icon-wrap">
@@ -131,6 +129,23 @@
               </svg>
             </span>
             <span v-if="isExpanded" class="nav-label">จัดการรอบเข้าชม</span>
+          </NuxtLink>
+
+          <NuxtLink
+            :to="`${staffVisitManagementLink}&section=holidays`"
+            class="nav-icon-link staff-nav-submenu-link"
+            :class="{ active: route.query.section === 'holidays' }"
+            :title="isExpanded ? '' : 'จัดการวันหยุด'"
+          >
+            <span class="nav-icon-wrap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </span>
+            <span v-if="isExpanded" class="nav-label">จัดการวันหยุด</span>
           </NuxtLink>
         </div>
       </template>
@@ -157,16 +172,18 @@
         to="/bookings"
         class="nav-icon-link"
         :class="{ active: route.path.startsWith('/bookings') }"
-        :title="isExpanded ? '' : 'การจอง'"
+        :title="isExpanded ? '' : 'การจองแผงเช่า'"
         @click="acknowledgeMenu('bookings')"
       >
         <span class="nav-icon-wrap">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
+            <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
         </span>
-        <span v-if="isExpanded" class="nav-label">การจอง</span>
+        <span v-if="isExpanded" class="nav-label">การจองแผงเช่า</span>
         <span v-if="displayBookingActionCount > 0" class="sidebar-action-badge" :aria-label="`มีรายการจองที่ต้องจัดการ ${displayBookingActionCount} รายการ`">{{ formatBadgeCount(displayBookingActionCount) }}</span>
       </NuxtLink>
 
@@ -180,11 +197,9 @@
       >
         <span class="nav-icon-wrap">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-            <polyline points="10 9 9 9 8 9"></polyline>
+            <path d="M3 11l18-6v14L3 13z"></path>
+            <path d="M3 13l2 7h4l-2-6"></path>
+            <path d="M21 9a3 3 0 0 1 0 6"></path>
           </svg>
         </span>
         <span v-if="isExpanded" class="nav-label">คำร้อง</span>
@@ -200,9 +215,10 @@
       >
         <span class="nav-icon-wrap">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
           </svg>
         </span>
         <span v-if="isExpanded" class="nav-label">
