@@ -1896,7 +1896,7 @@ const refreshBackendStalls = async (): Promise<void> => {
     const wMap: Record<string, any> = {}
     waitListItems.forEach((w: any) => {
       const code = String(w.stall_number || w.stall_ident || '').trim()
-      if (code) wMap[code] = w
+      if (code && ['waiting', 'offered'].includes(w.status)) wMap[code] = w
     })
     myWaitlistByStall.value = wMap
 

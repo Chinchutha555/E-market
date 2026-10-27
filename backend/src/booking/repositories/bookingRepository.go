@@ -809,7 +809,7 @@ func (r *repository) FindWaitlistByTenant(userID int) ([]models.Waitlist, error)
 	var items []models.Waitlist
 	query := r.conn.Where("1 = 1")
 	if userID > 0 {
-		query = query.Where("tenant_id = ? AND tenant_dismissed = false AND status != 'withdrawn'", userID)
+		query = query.Where("tenant_id = ? AND tenant_dismissed = false AND status NOT IN ('withdrawn', 'accepted')", userID)
 	} else {
 		query = query.Where("status IN ('waiting', 'offered', 'cancelled', 'expired', 'withdrawn')")
 	}

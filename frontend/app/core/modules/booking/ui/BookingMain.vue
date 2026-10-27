@@ -2758,7 +2758,20 @@ const bookings = ref<any[]>([])
 const waitlistItems = ref<any[]>([])
 const selectedStallWaitlistItems = ref<any[]>([])
 const tenantVisibleWaitlistItems = computed(() => {
-  return waitlistItems.value.filter(item => !item.tenant_dismissed && item.status !== 'withdrawn')
+  const activeBookedStalls = new Set(
+    bookings.value
+      .filter((b: any) => b && !['cancelled', 'rejected', 'not_interested', 'no_show', 'terminated'].includes(b.status))
+      .map((b: any) => String(b.stall_number || b.stall_id || '').trim().toLowerCase())
+      .filter(Boolean)
+  )
+
+  return waitlistItems.value.filter((item: any) => {
+    if (item.tenant_dismissed) return false
+    if (item.status === 'withdrawn' || item.status === 'accepted') return false
+    const stallKey = String(item.stall_number || item.stall_ident || '').trim().toLowerCase()
+    if (stallKey && activeBookedStalls.has(stallKey)) return false
+    return true
+  })
 })
 const tenantBookingSection = ref<'bookings' | 'interests'>(route.query?.tab === 'interests' ? 'interests' : 'bookings')
 const bookingReturnStorageKey = 'booking-list-return-context'
