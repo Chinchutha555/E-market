@@ -14,12 +14,33 @@
       <!-- Page Heading แบบรูปแรก (Pattern เดียวกันทั้งระบบ) -->
       <header class="visit-page-heading">
         <div class="heading-left">
-          <h1 class="page-title">จัดการรอบเข้าชม</h1>
-          <p class="page-desc">กำหนดตารางรอบเวลาเข้าชมแผงค้า และระยะเวลายื่นคำร้องขอเช่า</p>
+          <h1 class="page-title">{{ isHolidaySection ? 'จัดการวันหยุด' : 'จัดการรอบเข้าชม' }}</h1>
+          <p class="page-desc">{{ isHolidaySection ? 'กำหนดวันที่งดรับนัดเป็นกรณีพิเศษ' : 'ตั้งค่ารอบเวลาเข้าชมและการยื่นคำร้อง' }}</p>
         </div>
       </header>
 
-      <section class="schedule-card card glass-card">
+      <section v-if="isHolidaySection" class="schedule-card card glass-card holiday-placeholder-card">
+        <div class="holiday-manager">
+          <div class="holiday-manager-head">
+            <div><h2>วันหยุดของตลาด</h2><p>วันหยุดที่ตั้งค่าจะปิดรับนัดเฉพาะวันนั้น</p></div>
+            <span class="holiday-count">{{ holidayDates.length }} วัน</span>
+          </div>
+          <div class="holiday-add-row">
+            <AppInput v-model="holidayDateDraft" type="date" aria-label="วันที่หยุด" />
+            <AppInput v-model.trim="holidayNameDraft" placeholder="ชื่อวันหยุด" aria-label="ชื่อวันหยุด" />
+            <AppButton variant="primary" size="md" @click="addHolidayDate">เพิ่มวันหยุด</AppButton>
+          </div>
+          <div v-if="holidayDates.length" class="holiday-list">
+            <div v-for="holiday in holidayDates" :key="holiday.date" class="holiday-row">
+              <div><strong>{{ formatHolidayDate(holiday.date) }}</strong><span>{{ holiday.name }}</span></div>
+              <button type="button" class="btn btn-outline btn-sm holiday-remove" @click="removeHolidayDate(holiday.date)">ลบ</button>
+            </div>
+          </div>
+          <div v-else class="holiday-empty">ยังไม่มีวันหยุดที่ตั้งค่าไว้</div>
+        </div>
+      </section>
+
+      <section v-else class="schedule-card card glass-card">
 
         <!-- ======================================================== -->
         <!-- WEEKLY MASTER (ตั้งครั้งเดียว หมุนเวียนใช้ได้ตลอดไป)         -->
@@ -68,9 +89,6 @@
                     <div class="dmi-bot-row">
                       <span v-if="weeklyMaster[dayObj.dayOfWeek]?.enabled" class="dmi-status-open">
                         เปิด {{ openWeeklySlotCount(dayObj.dayOfWeek) }} รอบ · {{ getWeeklyTotalCapacity(dayObj.dayOfWeek) }} คิว
-                        <template v-if="getDayBookedCount(dayObj.dayOfWeek) > 0">
-                          <span style="color: #2563eb; font-weight: 700;"> (จองแล้ว {{ getDayBookedCount(dayObj.dayOfWeek) }} คิว)</span>
-                        </template>
                       </span>
                       <span v-else class="dmi-status-closed">
                         ปิดรับนัด
@@ -92,7 +110,7 @@
                   <line x1="12" y1="16" x2="12" y2="12"></line>
                   <line x1="12" y1="8" x2="12.01" y2="8"></line>
                 </svg>
-                <span>ตารางหลักนี้จะหมุนเวียนใช้ในทุกๆ สัปดาห์อัตโนมัติ</span>
+                <span>ตารางนี้ใช้ซ้ำทุกสัปดาห์</span>
               </div>
             </aside>
 
@@ -308,14 +326,6 @@
                     </div>
                   </article>
 
-                  <!-- Add Slot Button -->
-                  <button type="button" class="add-slot-row-btn" @click="addNewWeeklySlot">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <span>เพิ่มรอบเวลาสำหรับ{{ activeWeeklyDay.dayName }}</span>
-                  </button>
                 </div>
               </div>
 
@@ -372,21 +382,21 @@
           </button>
         </div>
         <div class="cm-body">
-          <p class="cm-desc">เลือกวันในสัปดาห์ที่ต้องการนำรอบเวลาและโควตา ({{ activeWeeklyDay.slots.length }} รอบ) ไปใช้งานแทนที่:</p>
+          <p class="cm-desc">เลือกวันที่ต้องการใช้รอบเวลา {{ activeWeeklyDay.slots.length }} รอบ</p>
 
           <div class="copy-target-options">
             <label class="target-option-card">
               <input v-model="weeklyCopyTargetType" type="radio" value="weekends" />
               <div>
                 <strong>ทุกวันเสาร์และอาทิตย์ (สุดสัปดาห์)</strong>
-                <p>นำรอบเวลานี้ไปใส่ในทุกวันเสาร์และอาทิตย์ของสัปดาห์</p>
+                <p>ใช้กับวันเสาร์และอาทิตย์</p>
               </div>
             </label>
             <label class="target-option-card">
               <input v-model="weeklyCopyTargetType" type="radio" value="all_week" />
               <div>
                 <strong>ทุกวันในสัปดาห์ (จันทร์ - อาทิตย์)</strong>
-                <p>เปิดรับและตั้งค่ารอบเวลานี้ให้กับทุกๆ วันตลอดทั้งสัปดาห์</p>
+                <p>ใช้กับทุกวัน</p>
               </div>
             </label>
             <label class="target-option-card">
@@ -438,8 +448,35 @@ const { user } = useAuth()
 const { showSuccess, showError } = useAppAlert()
 const { applyMarketOverride } = useMarketOverrides()
 const isStaff = computed(() => user.value?.role === 'staff')
+const isHolidaySection = computed(() => route.query.section === 'holidays')
+const holidayDateDraft = ref('')
+const holidayNameDraft = ref('')
+const holidayDates = ref<Array<{ date: string; name: string }>>([])
 
 const marketId = computed(() => String(route.query.market || '1'))
+
+const holidayStorageKey = computed(() => `emarket-holidays-${marketId.value}`)
+const loadHolidayDates = () => {
+  if (!import.meta.client) return
+  try { holidayDates.value = JSON.parse(localStorage.getItem(holidayStorageKey.value) || '[]') } catch { holidayDates.value = [] }
+}
+const persistHolidayDates = () => {
+  if (import.meta.client) localStorage.setItem(holidayStorageKey.value, JSON.stringify(holidayDates.value))
+}
+const addHolidayDate = () => {
+  if (!holidayDateDraft.value) return
+  if (!holidayDates.value.some(item => item.date === holidayDateDraft.value)) {
+    holidayDates.value.push({ date: holidayDateDraft.value, name: holidayNameDraft.value || 'วันหยุดนักขัตฤกษ์' })
+    holidayDates.value.sort((a, b) => a.date.localeCompare(b.date))
+    persistHolidayDates()
+  }
+  holidayDateDraft.value = ''
+  holidayNameDraft.value = ''
+}
+const removeHolidayDate = (date: string) => { holidayDates.value = holidayDates.value.filter(item => item.date !== date); persistHolidayDates() }
+const formatHolidayDate = (date: string) => new Intl.DateTimeFormat('th-TH', { dateStyle: 'long' }).format(new Date(`${date}T00:00:00`))
+onMounted(loadHolidayDates)
+watch(marketId, loadHolidayDates)
 const apiMarketName = ref('')
 const marketName = computed(() => {
   const cfg = getMarketGisConfig(marketId.value)
@@ -1418,12 +1455,13 @@ watch(marketId, () => {
 }
 
 .config-field.badge-field {
-  width: 210px;
+  flex: 1;
+  min-width: 0;
 }
 
 .config-field.advice-field {
   flex: 1;
-  min-width: 260px;
+  min-width: 0;
 }
 
 /* Slots Management Box */
@@ -1483,8 +1521,28 @@ watch(marketId, () => {
   color: #334155;
 }
 
+.holiday-placeholder-card { min-height: 0; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); }
+.holiday-placeholder-card .empty-state-panel { display: grid; justify-items: center; max-width: 420px; text-align: center; }
+.holiday-placeholder-card .empty-icon { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 14px; border-radius: 16px; background: #eff6ff; color: #2563eb; }
+.holiday-placeholder-card .empty-title { color: #1e293b; font-size: 1rem; font-weight: 700; }
+.holiday-placeholder-card .empty-desc { margin-top: 6px; color: #64748b; font-size: .875rem; line-height: 1.5; }
+.holiday-manager { padding: 0; }
+.holiday-manager-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; padding: 4px 0 18px; border-bottom: 1px solid #eef2f6; }
+.holiday-manager-head h2 { margin: 0; color: #1e293b; font-size: 1.125rem; }
+.holiday-manager-head p { margin: 5px 0 0; color: #64748b; font-size: .875rem; }
+.holiday-count { color: #2563eb; background: #eff6ff; border-radius: 999px; padding: 5px 10px; font-size: .8rem; font-weight: 700; white-space: nowrap; }
+.holiday-add-row { display: grid; grid-template-columns: 180px 1fr auto; gap: 10px; margin-top: 16px; align-items: center; }
+.holiday-list { display: grid; gap: 8px; margin-top: 16px; }
+.holiday-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; }
+.holiday-row div { display: flex; flex-direction: column; gap: 3px; }.holiday-row strong { color: #1e293b; }.holiday-row span { color: #64748b; font-size: .8125rem; }.holiday-remove { color: #dc2626; border-color: #fecaca; }
+.holiday-empty { margin-top: 18px; padding: 22px; border: 1px dashed #cbd5e1; border-radius: 10px; color: #64748b; text-align: center; font-size: .875rem; }
+
+.day-booked-badge { display: inline-flex; align-items: center; margin-left: 6px; padding: 2px 7px; border-radius: 999px; background: #dbeafe; color: #1d4ed8; font-size: .75rem; font-weight: 700; white-space: nowrap; }
+
 .styled-input {
   width: 100%;
+  height: 44px;
+  box-sizing: border-box;
   padding: 8px 12px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;

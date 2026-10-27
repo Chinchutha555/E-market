@@ -15,7 +15,7 @@
       <!-- Page Heading มาตรฐานเดียวกับระบบ สำหรับโหมดจัดการผัง -->
       <header v-if="!isInspectMode && !isMapOverviewMode" class="manage-page-heading">
         <div class="heading-left">
-          <h1 class="page-title">จัดการผัง</h1>
+          <h1 class="page-title">จัดการผัง GIS</h1>
           <p class="page-desc">จัดการโซน ตำแหน่งแผงค้า และข้อมูลผังแผงดิจิทัล (GIS)</p>
         </div>
         <div class="manage-page-actions">

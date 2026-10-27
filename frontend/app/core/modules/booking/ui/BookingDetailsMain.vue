@@ -43,57 +43,7 @@
             >
               คิวสำรองที่ {{ booking.queue_position || booking.queue_number || 1 }}
             </span>
-            <span
-              v-else-if="booking.holding_stall && !['cancelled', 'rejected', 'not_interested', 'no_show', 'lease_applied', 'completed'].includes(booking.status)"
-              class="status-badge tone-blue"
-              title="ผู้จองหลัก (ถือสิทธิ์แผงค้า)"
-            >
-              ผู้จองหลัก (ตัวจริง)
-            </span>
             <span class="status-badge" :class="statusToneClass">{{ statusLabel }}</span>
-          </div>
-        </section>
-
-        <section class="booking-at-a-glance" aria-label="ข้อมูลสำคัญของการจอง">
-          <div class="glance-item">
-            <span>แผงค้า</span>
-            <strong>{{ appointmentStallSummary }}</strong>
-          </div>
-          <div class="glance-item">
-            <span>โครงการ</span>
-            <strong>{{ booking.project_name || '-' }}</strong>
-          </div>
-          <div class="glance-item">
-            <span>ผู้จอง</span>
-            <strong>{{ booking.tenant_name || '-' }}</strong>
-          </div>
-          <div class="glance-item glance-contact">
-            <span>เบอร์ติดต่อ</span>
-            <a :href="`tel:${booking.tenant_phone}`">{{ booking.tenant_phone || '-' }}</a>
-            <div v-if="booking.tenant_phone && currentRole === 'officer'" class="glance-contact-actions">
-              <a :href="`tel:${booking.tenant_phone}`" class="glance-icon-button" aria-label="โทรหาผู้จอง" title="โทรหาผู้จอง">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.64a2 2 0 0 1-.45 2.11L8.01 9.74a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.86.29 1.74.5 2.64.62A2 2 0 0 1 22 16.9z"></path></svg>
-              </a>
-              <button type="button" class="glance-icon-button" aria-label="คัดลอกเบอร์โทรศัพท์" title="คัดลอกเบอร์โทรศัพท์" @click="copyTenantPhone">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <section class="progress-card" aria-label="ขั้นตอนการจอง">
-          <div v-for="(step, index) in steps" :key="step.number" class="progress-fragment">
-            <div class="progress-step" :class="{ active: currentStep === step.number, complete: currentStep > step.number }">
-              <div class="progress-circle">
-                <svg v-if="currentStep > step.number" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span v-else>{{ step.number }}</span>
-              </div>
-              <div class="progress-copy">
-                <strong>{{ step.label }}</strong>
-                <span>{{ step.description }}</span>
-              </div>
-            </div>
-            <div v-if="index < steps.length - 1" class="progress-line" :class="{ complete: currentStep > step.number }"></div>
           </div>
         </section>
 
@@ -120,7 +70,7 @@
               <template v-if="booking.status === 'pending_approval' || booking.status === 'pending'">
                 <AppButton
                   variant="primary"
-                  size="base"
+                  size="md"
                   :disabled="actionLoading"
                   @click="openApproveModal"
                   title="อนุมัติวันเวลานัดหมาย"
@@ -132,7 +82,7 @@
                 </AppButton>
                 <AppButton
                   variant="danger-outline"
-                  size="base"
+                  size="md"
                   :disabled="actionLoading"
                   @click="isQueueBooking(booking) ? handleOfficerCancel() : openRejectModal()"
                   :title="isQueueBooking(booking) ? 'ยกเลิกการต่อคิว' : 'ปฏิเสธ/ยกเลิกคำขอนัดหมาย'"
@@ -149,7 +99,7 @@
                 <AppButton
                   v-if="!isQueueBooking(booking)"
                   variant="success"
-                  size="base"
+                  size="md"
                   :disabled="actionLoading"
                   @click="handleMarkVisited"
                   title="บันทึกผลว่าผู้เช่ามาชมแผงแล้ว และสนใจเช่า"
@@ -161,7 +111,7 @@
                 </AppButton>
                 <AppButton
                   variant="danger-outline"
-                  size="base"
+                  size="md"
                   :disabled="actionLoading"
                   @click="handleOfficerCancel"
                   :title="isQueueBooking(booking) ? 'ยกเลิกการต่อคิว' : 'ยกเลิกนัดหมายนี้'"
@@ -177,7 +127,7 @@
               <template v-else-if="['interested', 'pending_decision', 'pending_slot'].includes(booking.status)">
                 <AppButton
                   variant="danger-outline"
-                  size="base"
+                  size="md"
                   :disabled="actionLoading"
                   @click="handleOfficerCancel"
                   title="ยกเลิกการจอง / บันทึกการสละสิทธิ์"
@@ -193,7 +143,7 @@
               <template v-else-if="booking.status === 'waiting_queue'">
                 <AppButton
                   variant="danger-outline"
-                  size="base"
+                  size="md"
                   :disabled="actionLoading"
                   @click="handleOfficerCancel"
                   title="ยกเลิกการต่อคิว"
@@ -210,7 +160,7 @@
                 <AppButton
                   to="/applications"
                   variant="primary"
-                  size="base"
+                  size="md"
                 >
                   <span>ดูคำร้อง</span>
                   <template #suffix>
@@ -228,7 +178,7 @@
               <AppButton
                 v-if="isQueueBooking(booking) && ['pending_approval', 'pending', 'approved', 'waiting_queue'].includes(booking.status)"
                 variant="danger-outline"
-                size="base"
+                size="md"
                 :disabled="actionLoading"
                 @click="handleTenantCancel('ผู้เช่ายกเลิกการต่อคิว')"
                 title="สละสิทธิ์การต่อคิว"
@@ -242,7 +192,7 @@
               <AppButton
                 v-else-if="['pending_approval', 'pending', 'pending_slot', 'approved', 'interested', 'pending_decision'].includes(booking.status)"
                 variant="danger-outline"
-                size="base"
+                size="md"
                 :disabled="actionLoading"
                 @click="handleTenantCancel('ผู้เช่าขอยกเลิกการจอง')"
                 title="ยกเลิกคำขอจอง"
@@ -257,7 +207,7 @@
               <AppButton
                 v-if="booking.status === 'pending_slot'"
                 variant="primary"
-                size="base"
+                size="md"
                 :disabled="actionLoading"
                 @click="openSelectSlotModal"
               >
@@ -270,7 +220,7 @@
               <AppButton
                 v-else-if="['interested', 'pending_decision'].includes(booking.status)"
                 variant="primary"
-                size="base"
+                size="md"
                 :disabled="actionLoading"
                 @click="openLeaseForSubBooking(booking)"
               >
@@ -284,7 +234,7 @@
                 v-else-if="booking.status === 'lease_applied' || booking.status === 'completed'"
                 to="/applications"
                 variant="purple"
-                size="base"
+                size="md"
               >
                 <span>ติดตามคำร้อง</span>
                 <template #suffix>
@@ -292,6 +242,22 @@
                 </template>
               </AppButton>
             </template>
+          </div>
+        </section>
+
+        <section class="progress-card" aria-label="ขั้นตอนการจอง">
+          <div v-for="(step, index) in steps" :key="step.number" class="progress-fragment">
+            <div class="progress-step" :class="{ active: currentStep === step.number, complete: currentStep > step.number }">
+              <div class="progress-circle">
+                <svg v-if="currentStep > step.number" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span v-else>{{ step.number }}</span>
+              </div>
+              <div class="progress-copy">
+                <strong>{{ step.label }}</strong>
+                <span>{{ step.description }}</span>
+              </div>
+            </div>
+            <div v-if="index < steps.length - 1" class="progress-line" :class="{ complete: currentStep > step.number }"></div>
           </div>
         </section>
 
@@ -330,118 +296,100 @@
           </div>
         </section>
 
-        <section class="summary-shell">
-          <div class="summary-heading">
-            <div>
-              <span class="eyebrow">สรุปข้อมูลการจอง</span>
-              <h2>ตรวจสอบข้อมูลทั้งหมด</h2>
-              <p>ตรวจสอบรายละเอียดให้ครบถ้วนก่อนดำเนินการในขั้นตอนถัดไป</p>
-            </div>
-          </div>
-
-          <div class="summary-grid">
-            <article class="summary-section">
-              <div class="section-heading">
-                <span class="section-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                </span>
-                <h3>ข้อมูลแผงและตลาด</h3>
-              </div>
-              <dl class="detail-list">
-                <div><dt>ตลาด</dt><dd>{{ booking.market_name || '-' }}</dd></div>
-                <div><dt>โครงการ</dt><dd>{{ bookingProjectsSummary }}</dd></div>
-                <div>
-                  <dt>แผงค้าที่คงเหลือ</dt>
-                  <dd class="primary-value">
-                    {{ appointmentStallSummary }}
-                  </dd>
+        <section class="booking-information" aria-label="ข้อมูลการจอง">
+          <div class="booking-information-grid">
+            <div class="booking-information-main">
+              <article class="summary-section booked-stalls-section">
+                <div class="section-heading stalls-heading">
+                  <span class="section-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></span>
+                  <div><h3>แผงที่จอง</h3><p>{{ booking.market_name || '-' }} · {{ siblingBookings.length }} แผง</p></div>
                 </div>
-                <div><dt>โซนตลาด</dt><dd>{{ booking.stall_zone_name || bookingProjectsSummary }}</dd></div>
-                <div><dt>ยอดค่าเช่ารวม (แผงที่เหลือ)</dt><dd class="money-value">฿{{ Number(appointmentTotalMonthlyRate || 0).toLocaleString() }}/เดือน</dd></div>
-                <div><dt>เงินประกันรวม (แผงที่เหลือ)</dt><dd class="money-value">฿{{ Number(appointmentTotalDeposit || 0).toLocaleString() }}</dd></div>
-              </dl>
-
-              <!-- Multi-stall breakdown inside Booking Details -->
-              <div class="detail-multi-stalls" style="margin-top: 16px; border-top: 1px solid #e2e8f0; padding-top: 14px;">
-                <div class="dms-title" style="font-size: 0.85rem; font-weight: 700; color: #1e293b; margin-bottom: 10px;">
-                  รายการแผงย่อยในใบจอง ({{ activeSiblingBookings.length > 0 && activeSiblingBookings.length < siblingBookings.length ? `${activeSiblingBookings.length}/${siblingBookings.length} แผงปกติ` : `${siblingBookings.length} แผง` }})
+                <div class="booked-stalls-scroll" role="region" aria-label="รายการแผงที่จอง" tabindex="0">
+                  <table class="booked-stalls-table">
+                    <thead><tr><th scope="col">แผงค้า / โครงการ</th><th scope="col">ค่าเช่า/เดือน</th><th scope="col">มัดจำ</th><th scope="col" aria-label="การดำเนินการ"></th></tr></thead>
+                    <tbody>
+                      <tr v-for="sub in paginatedDetailStalls" :key="sub.id || sub.stall_number" :class="{ 'is-ended': isTerminalStallStatus(sub.status) }">
+                        <td>
+                          <strong>{{ sub.stall_number }}</strong>
+                          <span class="stall-secondary">{{ getSubStallProjectName(sub) || '-' }}</span>
+                          <span v-if="sub.status !== booking.status" class="status-badge" :class="getSubStatusToneClass(sub.status)">{{ getStatusLabelByCode(sub.status) }}</span>
+                          <span v-if="Number(sub.waitlist_count || 0) > 0" class="stall-secondary">คิวรอ {{ sub.waitlist_count }}</span>
+                        </td>
+                        <td class="stall-money">฿{{ Number(sub.monthly_rent || sub.stall_monthly_rate || 0).toLocaleString() }}</td>
+                        <td class="stall-money">฿{{ Number(sub.deposit ?? sub.deposit_fee ?? sub.monthly_rent ?? sub.stall_monthly_rate ?? 0).toLocaleString() }}</td>
+                        <td>
+                          <AppButton v-if="!isTerminalStallStatus(sub.status) && !['lease_applied', 'completed'].includes(sub.status)" variant="danger-outline" size="sm" :disabled="actionLoading" @click="handleCancelSubBooking(sub)">ยกเลิกแผงนี้</AppButton>
+                          <span v-else class="stall-secondary">—</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-                <div
-                  v-for="sub in siblingBookings"
-                  :key="sub.id || sub.stall_number"
-                  class="dms-row"
-                  :style="isTerminalStallStatus(sub.status) ? 'opacity: 0.65; background: #f8fafc;' : ''"
-                  style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; flex-wrap: wrap;"
-                >
-                  <div class="dms-left" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <strong style="font-size: 0.9rem; color: #0f172a;">แผง {{ sub.stall_number }}</strong>
-                    <span
-                      v-if="getSubStallProjectName(sub)"
-                      style="font-size: 0.78rem; color: #475569; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px; font-weight: 600;"
-                    >
-                      {{ getSubStallProjectName(sub) }}
-                    </span>
-                    <span class="status-badge" :class="getSubStatusToneClass(sub.status)" style="font-size: 0.75rem; padding: 2px 9px;">
-                      {{ getStatusLabelByCode(sub.status) }}
-                    </span>
-                    <span style="font-size: 0.82rem; color: #334155; font-weight: 600;">
-                      ค่าเช่า ฿{{ Number(sub.monthly_rent || sub.stall_monthly_rate || 0).toLocaleString() }}/ด. • มัดจำ ฿{{ Number(sub.deposit || sub.deposit_fee || sub.monthly_rent || sub.stall_monthly_rate || 0).toLocaleString() }}
-                    </span>
-                    <span
-                      v-if="Number(sub.waitlist_count || 0) > 0"
-                      style="display: inline-flex; align-items: center; gap: 4px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; font-weight: 600;"
-                    >
-                      คิวรอ {{ sub.waitlist_count }}
-                    </span>
-                  </div>
-                  <div class="dms-actions" style="display: flex; align-items: center; gap: 6px;">
-                    <AppButton
-                      v-if="!isTerminalStallStatus(sub.status) && !['lease_applied', 'completed'].includes(sub.status)"
-                      variant="danger-outline"
-                      size="sm"
-                      :disabled="actionLoading"
-                      @click="handleCancelSubBooking(sub)"
-                    >
-                      ยกเลิกแผงนี้
-                    </AppButton>
-                  </div>
-                </div>
-              </div>
-            </article>
-
+                <AppPagination v-if="siblingBookings.length > 5" v-model="detailStallPage" v-model:items-per-page="detailStallsPerPage" :total-items="siblingBookings.length" unit-label="แผง" />
+                <dl class="booking-cost-summary">
+                  <div><dt>รวมค่าเช่า/เดือน (แผงที่เหลือ)</dt><dd>฿{{ Number(appointmentTotalMonthlyRate || 0).toLocaleString() }}</dd></div>
+                  <div><dt>รวมเงินมัดจำ (แผงที่เหลือ)</dt><dd>฿{{ Number(appointmentTotalDeposit || 0).toLocaleString() }}</dd></div>
+                </dl>
+              </article>
             <article class="summary-section">
               <div class="section-heading">
                 <span class="section-icon">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 </span>
-                <h3>ข้อมูลนัดหมายและการประสานงาน</h3>
+                <h3>ข้อมูลนัดหมาย</h3>
               </div>
               <dl class="detail-list">
                 <div class="appointment-highlight"><dt>วันนัดหมาย</dt><dd>{{ formatVisitDate(booking) }}</dd></div>
                 <div class="appointment-highlight"><dt>ช่วงเวลา</dt><dd>{{ getVisitSlot(booking) }}</dd></div>
-                <div class="full"><dt>จุดนัดพบ</dt><dd>{{ booking.meeting_point || 'หน้ากองอำนวยการตลาด เสาธง 1' }}</dd></div>
-                <div class="full"><dt>เจ้าหน้าที่ผู้พาชม</dt><dd>{{ booking.escort_officer || 'เจ้าหน้าที่เวรฝ่ายปฏิบัติการ' }}</dd></div>
+                <div class="full"><dt>จุดนัดพบ</dt><dd>{{ booking.meeting_point || 'เจ้าหน้าที่จะแจ้งหลังอนุมัติ' }}</dd></div>
+                <div class="full"><dt>เจ้าหน้าที่ผู้พาชม</dt><dd>{{ booking.escort_officer || 'รอเจ้าหน้าที่แจ้ง' }}</dd></div>
                 <div class="full"><dt>สินค้าที่ต้องการจำหน่าย</dt><dd>{{ booking.intended_business || '-' }}</dd></div>
               </dl>
             </article>
 
-            <article class="summary-section full-width">
+            <article class="summary-section contact-section">
               <div class="section-heading">
                 <span class="section-icon">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </span>
-                <h3>ข้อมูลผู้ขอจองเข้าชม</h3>
+                <h3>ข้อมูลผู้จอง</h3>
               </div>
               <dl class="detail-list tenant-list">
                 <div><dt>ชื่อ–นามสกุล</dt><dd>{{ booking.tenant_name || '-' }}</dd></div>
                 <div><dt>เบอร์โทรศัพท์</dt><dd><a :href="`tel:${booking.tenant_phone}`">{{ booking.tenant_phone || '-' }}</a></dd></div>
-                <div><dt>อีเมล</dt><dd>{{ booking.tenant_email || '-' }}</dd></div>
-                <div><dt>เลขบัตรประชาชน</dt><dd>{{ booking.tenant_id_card || '-' }}</dd></div>
+                <div v-if="booking.tenant_email"><dt>อีเมล</dt><dd>{{ booking.tenant_email || '-' }}</dd></div>
+                <div v-if="booking.tenant_id_card"><dt>เลขบัตรประชาชน</dt><dd>{{ booking.tenant_id_card || '-' }}</dd></div>
               </dl>
+            </article>
+
+            </div>
+            <article class="summary-section booking-map-section">
+              <div class="section-heading booking-map-heading">
+                <span class="section-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></span>
+                <div><h3>ตำแหน่งแผงค้า</h3><p>{{ booking.market_name || '-' }} · {{ bookingProjectsSummary }}</p></div>
+                <div class="booking-map-legend" aria-label="คำอธิบายสถานะแผง">
+                  <span><i class="legend-dot selected"></i>แผงที่คุณเลือก ({{ bookingMapStallCodes.length }})</span>
+                  <span><i class="legend-dot available"></i>แผงว่าง</span>
+                  <span><i class="legend-dot reserved"></i>ติดจอง</span>
+                </div>
+              </div>
+              <ClientOnly>
+                <MarketProjectsOverviewMap
+                  v-if="bookingMapMarketId"
+                  :key="`${booking.id}-${bookingMapMarketId}`"
+                  container-id="booking-detail-maplibre"
+                  :market-id="bookingMapMarketId"
+                  :selected-stall-codes="bookingMapStallCodes"
+                  :selected-stall-keys="bookingMapStallKeys"
+                  v-model:map-style="bookingMapStyle"
+                  :preview-mode="true"
+                />
+                <div v-else class="booking-map-unavailable">ยังไม่มีข้อมูลแผนที่ของตลาดนี้</div>
+                <template #fallback><div class="booking-map-skeleton" aria-label="กำลังโหลดแผนที่"></div></template>
+              </ClientOnly>
             </article>
           </div>
 
-          <div v-if="booking.officer_notes" class="notice success"><strong>บันทึกจากเจ้าหน้าที่</strong><span>{{ booking.officer_notes }}</span></div>
           <div v-if="cancellationReason" class="notice danger"><strong>เหตุผลที่ยกเลิก</strong><span>{{ cancellationReason }}</span></div>
         </section>
       </template>
@@ -611,6 +559,8 @@ import {
   normalizeVisitDateToIso,
   getAppointmentRoundKey
 } from '../../stall/composables/useMarketVisitSchedule'
+import MarketProjectsOverviewMap from '../../stall/ui/components/MarketProjectsOverviewMap.vue'
+import { BMA_MARKETS_MASTER, getMarketGisConfig } from '../../stall/data/markets_registry'
 import { useNotifications } from '~/composables/useNotifications'
 
 const route = useRoute()
@@ -626,6 +576,31 @@ const allBookings = ref<any[]>([])
 const siblingBookings = ref<any[]>([])
 const stallWaitingQueueInfo = ref<any | null>(null)
 const leaseModalTargetBooking = ref<any | null>(null)
+const detailStallPage = ref(1)
+const detailStallsPerPage = ref(5)
+const paginatedDetailStalls = computed(() => {
+  const start = (detailStallPage.value - 1) * detailStallsPerPage.value
+  return siblingBookings.value.slice(start, start + detailStallsPerPage.value)
+})
+watch([detailStallsPerPage, siblingBookings], () => { detailStallPage.value = 1 })
+const bookingMapStyle = ref<'standard' | 'dark' | 'satellite'>('standard')
+const bookingMapMarketId = computed(() => {
+  const item = booking.value
+  if (!item) return null
+  const market = Object.values(BMA_MARKETS_MASTER).find(m =>
+    String(m.id) === String(item.market_id || '') || m.slug === item.market_slug || m.name === item.market_name
+  )
+  // Booking records from older data may not include market_id/market_slug.
+  // Resolve by name first, then use the registry's standard market fallback
+  // so the detail page still renders the same GIS map as Step 3.
+  return market ? String(market.id) : String(getMarketGisConfig(item.market_name || '1').id)
+})
+const bookingMapStallCodes = computed<string[]>(() => [...new Set(siblingBookings.value.flatMap(sub =>
+  String(sub.stall_number || sub.stall_ident || '').split(',').map(code => code.trim()).filter(Boolean)
+))])
+const bookingMapStallKeys = computed<string[]>(() => siblingBookings.value.map(sub =>
+  sub.selection_id || sub.stall_selection_id || sub.stall_number || sub.stall_ident
+).filter(Boolean))
 const showTimeline = ref(false)
 const showLeaseModal = ref(false)
 const showApproveModal = ref(false)
@@ -867,17 +842,17 @@ const appointmentStallSummary = computed(() => {
 })
 
 const appointmentTotalMonthlyRate = computed(() => {
-  const source = activeSiblingBookings.value.length > 0 ? activeSiblingBookings.value : siblingBookings.value
-  if (source.length > 0) {
+  const source = activeSiblingBookings.value
+  if (siblingBookings.value.length > 0) {
     return source.reduce((sum, s) => sum + (Number(s.monthly_rent || s.stall_monthly_rate) || 0), 0)
   }
   return Number(booking.value?.total_monthly_rent || booking.value?.monthly_rent || booking.value?.stall_monthly_rate || 0)
 })
 
 const appointmentTotalDeposit = computed(() => {
-  const source = activeSiblingBookings.value.length > 0 ? activeSiblingBookings.value : siblingBookings.value
-  if (source.length > 0) {
-    return source.reduce((sum, s) => sum + (Number(s.deposit || s.deposit_fee || s.monthly_rent || s.stall_monthly_rate) || 0), 0)
+  const source = activeSiblingBookings.value
+  if (siblingBookings.value.length > 0) {
+    return source.reduce((sum, s) => sum + (Number(s.deposit ?? s.deposit_fee ?? s.monthly_rent ?? s.stall_monthly_rate) || 0), 0)
   }
   return Number(booking.value?.total_deposit || booking.value?.deposit || booking.value?.deposit_fee || appointmentTotalMonthlyRate.value)
 })
@@ -1032,7 +1007,7 @@ const nextAction = computed(() => {
   }
   if (['pending', 'pending_approval'].includes(status)) {
     return isOfficer
-      ? { tone: 'action', owner: 'เจ้าหน้าที่ต้องทำ', title: 'ตรวจสอบวันเวลา แล้วอนุมัตินัดชมแผง', description: `${formatVisitDate(item)} · ${getVisitSlot(item)}` }
+      ? { tone: 'action', owner: 'เจ้าหน้าที่ต้องทำ', title: 'ตรวจสอบวันเวลา แล้วอนุมัตินัดชมแผง', description: `ผู้เช่าขอนัดชมวันที่ ${formatVisitDate(item)} เวลา ${getVisitSlot(item)}` }
       : { tone: 'waiting', owner: 'เจ้าหน้าที่ดำเนินการ', title: 'คุณยังไม่ต้องดำเนินการ', description: 'เจ้าหน้าที่กำลังตรวจสอบวันและเวลานัดหมาย ระบบจะแจ้งเมื่ออนุมัติแล้ว' }
   }
   if (status === 'pending_slot') {
@@ -1042,7 +1017,7 @@ const nextAction = computed(() => {
   }
   if (status === 'approved') {
     return isOfficer
-      ? { tone: 'action', owner: 'เจ้าหน้าที่ต้องทำ', title: 'หลังพาชมแผง ให้กด "ยืนยันการเช่า" เพื่อเปิดให้ผู้เช่ายื่นคำร้อง', description: `${formatVisitDate(item)} · ${getVisitSlot(item)}` }
+      ? { tone: 'action', owner: 'เจ้าหน้าที่ต้องทำ', title: 'ยืนยันการเช่าหลังพาชมแผง', description: 'หลังทราบผลจากผู้เช่าแล้ว ให้ยืนยันว่าตกลงเช่าหรือไม่เช่า' }
       : { tone: 'action', owner: 'คุณต้องทำ', title: 'ไปตามวัน เวลา และจุดนัดหมาย', description: `${formatVisitDate(item)} · ${getVisitSlot(item)} · ${item?.meeting_point || 'จุดนัดพบตามที่เจ้าหน้าที่แจ้ง'}` }
   }
   if (['interested', 'pending_decision'].includes(status)) {
@@ -1059,8 +1034,8 @@ const nextAction = computed(() => {
       }
     }
     return isOfficer
-      ? { tone: 'waiting', owner: 'ผู้จองต้องทำ', title: `ยืนยันการเช่าแล้ว รอผู้เช่ายื่นคำร้องขอเช่าแผงค้า (${deadlineNote})`, description: 'เมื่อผู้เช่าส่งคำร้องแล้ว สถานะจะเปลี่ยนเป็น "ยื่นคำร้องสำเร็จ" หากเกินกำหนดระบบจะตัดสิทธิ์และเลื่อนคิวอัตโนมัติ' }
-      : { tone: 'action', owner: 'คุณต้องทำ', title: `ยื่นคำร้องขอเช่าแผงนี้ (${deadlineNote})`, description: 'กรอกคำร้องและส่งเอกสารภายในระยะเวลาที่กำหนด หากเกินกำหนดระบบจะตัดสิทธิ์และเลื่อนคิวให้ลำดับถัดไปอัตโนมัติ' }
+      ? { tone: 'waiting', owner: 'ผู้จองต้องทำ', title: 'รอผู้เช่ายื่นคำร้องขอเช่าแผง', description: `ผู้เช่าต้องส่งคำร้อง ${deadlineNote}` }
+      : { tone: 'action', owner: 'คุณต้องทำ', title: 'ยื่นคำร้องขอเช่าแผง', description: `กรอกและส่งคำร้อง ${deadlineNote}` }
   }
   return { tone: 'waiting', owner: 'ระบบกำลังตรวจสอบ', title: 'ติดตามสถานะจากหน้านี้', description: 'ยังไม่มีขั้นตอนที่คุณต้องดำเนินการในขณะนี้' }
 })
@@ -1400,7 +1375,10 @@ watch(() => route.params.id, loadBooking)
 .progress-line { height: 2px; flex: 1; min-width: 50px; margin: 0 18px; background: #e2e8f0; }.progress-line.complete { background: #2563eb; }
 .next-action-card { display: flex; align-items: center; gap: 14px; min-height: 76px; padding: 15px 18px; margin-bottom: 16px; border: 1px solid #bfdbfe; border-left: 4px solid #2563eb; border-radius: 14px; background: #fff; box-shadow: 0 1px 3px rgba(15,23,42,.03); }
 .next-action-icon { width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center; border-radius: 11px; background: #eff6ff; color: #2563eb; }
-.next-action-copy { flex: 1; min-width: 0; }.next-action-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; color: #64748b; font-size: .75rem; font-weight: 650; }.next-action-owner { padding: 2px 8px; border-radius: 999px; background: #dbeafe; color: #1d4ed8; }.next-action-copy h2 { margin: 0; color: #0f172a; font-size: 1rem; line-height: 1.35; }.next-action-copy p { margin: 3px 0 0; color: #64748b; font-size: .8rem; line-height: 1.45; }.next-action-buttons { flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-end; gap: 9px; flex-wrap: wrap; }
+.next-action-copy { flex: 1; min-width: 0; }.next-action-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; color: #64748b; font-size: .75rem; font-weight: 650; }.next-action-owner { padding: 2px 7px; border-radius: 999px; background: #dbeafe; color: #1d4ed8; font-size: var(--font-size-2xs); line-height: 1.35; font-weight: 600; white-space: nowrap; }.next-action-copy h2 { margin: 0; color: #0f172a; font-size: 1rem; line-height: 1.35; }.next-action-copy p { margin: 6px 0 0; color: #64748b; font-size: .8rem; line-height: 1.45; }.next-action-buttons { flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-end; gap: 9px; flex-wrap: wrap; }
+.next-action-card { flex-wrap: wrap; }
+.next-action-note { flex: 0 0 100%; display: flex; align-items: center; gap: 12px; margin-top: 4px; padding: 10px 14px; border-radius: 8px; background: #eff6ff; color: #475569; font-size: .8rem; line-height: 1.35; }
+.next-action-note strong { color: #1d4ed8; font-weight: 700; white-space: nowrap; }
 .next-action-waiting { border-color: #bae6fd; border-left-color: #0ea5e9; }.next-action-waiting .next-action-icon { background: #f0f9ff; color: #0284c7; }.next-action-waiting .next-action-owner { background: #e0f2fe; color: #0369a1; }
 .next-action-complete { border-color: #e2e8f0; border-left-color: #94a3b8; }.next-action-complete .next-action-icon { background: #f1f5f9; color: #64748b; }.next-action-complete .next-action-owner { background: #f1f5f9; color: #64748b; }
 .queue-context-banner { display: flex; align-items: flex-start; gap: 14px; padding: 16px 20px; margin-bottom: 16px; border: 1px solid #fde68a; border-left: 4px solid #d97706; border-radius: 14px; background: #fffbeb; color: #78350f; }
@@ -1454,4 +1432,81 @@ watch(() => route.params.id, loadBooking)
 .form-input:focus, .form-textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
 @media (max-width: 900px) { .detail-hero { align-items: flex-start; }.hero-actions { flex-direction: column; align-items: flex-end; }.booking-at-a-glance { grid-template-columns: repeat(2, 1fr); }.glance-item:nth-child(2) { border-right: 0; }.glance-item:nth-child(-n+2) { border-bottom: 1px solid #eef2f6; }.progress-card { align-items: flex-start; overflow-x: auto; }.progress-step { min-width: 145px; }.progress-copy span { display: none; }.summary-grid { grid-template-columns: 1fr; }.summary-section.full-width { grid-column: auto; } }
 @media (max-width: 640px) { .detail-hero { flex-direction: column; }.hero-actions { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; }.detail-title-icon { width: 40px; height: 40px; }.detail-hero h1 { font-size: 1.35rem; }.booking-at-a-glance { grid-template-columns: 1fr; }.glance-item, .glance-item:nth-child(2) { min-height: 60px; border-right: 0; border-bottom: 1px solid #eef2f6; }.glance-item:last-child { border-bottom: 0; }.progress-card { padding: 18px 16px; }.progress-step { min-width: 104px; flex-direction: column; text-align: center; }.progress-copy strong { font-size: .78rem; }.progress-line { min-width: 26px; margin: 16px 8px 0; }.next-action-card { align-items: flex-start; flex-wrap: wrap; }.next-action-copy { min-width: calc(100% - 56px); }.next-action-buttons { width: 100%; padding-left: 54px; }.summary-shell { padding: 16px; }.summary-heading { align-items: flex-start; flex-direction: column; }.detail-list, .tenant-list { grid-template-columns: 1fr; }.detail-list .full { grid-column: auto; }.notice { flex-direction: column; gap: 4px; }.timeline-edge-trigger { top: 32%; bottom: auto; width: 40px; height: 180px; transform: translateY(-50%); border-radius: 11px 0 0 11px; font-size: .68rem; }.timeline-edge-trigger:hover { width: 44px; } }
+
+/* Compact detail layout; the original hero and next-action card themes are preserved. */
+.booking-information-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+.booking-information-main { display: grid; gap: 16px; min-width: 0; }
+.detail-container { display: flex; flex-direction: column; }
+.detail-container > .next-action-card { order: 1; }
+.detail-container > .detail-hero { order: 2; }
+.detail-container > .progress-card { order: 3; }
+.detail-container > .queue-context-banner { order: 4; }
+.detail-container > .booking-information { order: 5; }
+.detail-container > .notice { order: 6; }
+.booking-information .summary-section { padding: 24px; border-radius: 16px; }
+.booking-information .booked-stalls-section, .booking-information .booking-map-section { padding: 20px; }
+.booking-information .section-heading { margin-bottom: 12px; padding-bottom: 12px; }
+.booking-information .section-heading h3 { font-size: var(--font-size-lg); font-weight: 700; color: #0f172a; }
+.booking-information .section-heading p { margin: 4px 0 0; font-size: var(--font-size-sm); color: #64748b; }
+.booking-information .detail-list { gap: 12px 20px; }
+.booking-information .detail-list dt { font-size: var(--font-size-xs); line-height: 1.4; color: #64748b; }
+.booking-information .detail-list dd { font-size: var(--font-size-sm); font-weight: 700; line-height: 1.45; color: #0f172a; }
+.booking-information .tenant-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.booking-information-main > .summary-section:not(.booked-stalls-section) .detail-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; }
+.booking-information-main > .summary-section:not(.booked-stalls-section) .detail-list .full { grid-column: auto; }
+.booking-information-main > .summary-section:not(.booked-stalls-section) .detail-list > div { padding: 10px 0; border-radius: 0; background: transparent; }
+.booking-information-main > .summary-section:not(.booked-stalls-section) .detail-list .appointment-highlight { background: #f8fbff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 11px 12px; }
+.booking-information-main > .summary-section:not(.booked-stalls-section) .detail-list .appointment-highlight dt { color: #64748b; }
+.booking-information-main > .summary-section:not(.booked-stalls-section) .detail-list .appointment-highlight dd { color: #2563eb; }
+.booking-information .section-icon { width: 40px; height: 40px; border-radius: 10px; }
+.booking-information .section-icon svg { width: 20px; height: 20px; }
+.booked-stalls-scroll { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.booked-stalls-table { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: left; font-size: var(--font-size-sm); }
+.booked-stalls-table th:nth-child(1), .booked-stalls-table td:nth-child(1) { width: 38%; }
+.booked-stalls-table th:nth-child(2), .booked-stalls-table td:nth-child(2) { width: 20%; }
+.booked-stalls-table th:nth-child(3), .booked-stalls-table td:nth-child(3) { width: 20%; }
+.booked-stalls-table th:nth-child(4), .booked-stalls-table td:nth-child(4) { width: 22%; }
+.booked-stalls-table th { padding: 14px 12px; font-size: var(--font-size-xs); font-weight: 500; color: #64748b; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+.booked-stalls-table td { padding: 16px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+.booked-stalls-table tbody tr:hover { background: #f8fafc; }
+.booked-stalls-table td:last-child { text-align: right; }
+.booked-stalls-table .is-ended { background: #f8fafc; }
+.booked-stalls-table .stall-money { font-weight: 700; color: #1e293b; white-space: nowrap; }
+.stall-secondary { display: block; margin-top: 4px; font-size: var(--font-size-xs); color: #64748b; }
+.booked-stalls-table .status-badge { margin-top: 6px; font-size: var(--font-size-xs); padding: 4px 8px; }
+.booking-cost-summary { margin: 12px 0 0; padding: 12px; border-radius: 8px; background: #f8fafc; display: grid; gap: 8px; font-size: var(--font-size-sm); }
+.booking-cost-summary > div { display: flex; justify-content: space-between; gap: 12px; }
+.booking-cost-summary dt { color: #64748b; }
+.booking-cost-summary dd { margin: 0; font-weight: 700; color: #1e293b; white-space: nowrap; }
+.booking-map-section { position: relative; overflow: hidden; height: 100%; min-height: 560px; display: flex; flex-direction: column; }
+.booking-map-heading { align-items: flex-start; }
+.booking-map-legend { display: inline-flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-left: auto; color: #475569; font-size: var(--font-size-xs); white-space: nowrap; }
+.booking-map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 4px; }
+.legend-dot.selected { background: #2563eb; box-shadow: 0 0 0 3px #dbeafe; }
+.legend-dot.available { background: #10b981; }
+.legend-dot.reserved { background: #f59e0b; }
+.booking-map-section :deep(.preview-head-left), .booking-map-section :deep(.preview-legend-row) { display: none; }
+.booking-map-section :deep(.preview-booked-pill-btn) { display: none; }
+.booking-map-section :deep(.preview-top-bar) { position: absolute; top: 76px; left: 30px; right: 30px; z-index: 30; padding: 0; border: 0 !important; box-shadow: none !important; pointer-events: none; }
+.booking-map-section :deep(.preview-head-right) { width: 100%; align-items: flex-start; }
+.booking-map-section :deep(.preview-booked-pill-btn) { max-width: min(100%, 420px); white-space: normal; font-size: var(--font-size-xs); pointer-events: auto; }
+.booking-map-section :deep(.preview-badge-stalls) { white-space: normal; overflow-wrap: anywhere; }
+.booking-map-section :deep(.projects-master-container), .booking-map-section :deep(.maplibre-overview-wrapper) { height: 100% !important; min-height: 0; flex: 1; }
+.booking-map-skeleton, .booking-map-unavailable { height: 490px; border-radius: 12px; background: #f1f5f9; }
+.booking-map-unavailable { display: grid; place-items: center; color: #64748b; font-size: var(--font-size-sm); }
+.booking-map-skeleton { background: linear-gradient(90deg, #f1f5f9, #e2e8f0, #f1f5f9); background-size: 200% 100%; animation: detail-map-shimmer 1.5s infinite; }
+@keyframes detail-map-shimmer { to { background-position: -200% 0; } }
+.progress-card { padding: 16px 24px; }
+.progress-copy strong { font-size: var(--font-size-sm); }
+.progress-copy span { font-size: var(--font-size-xs); }
+.detail-hero h1 { font-size: var(--font-size-2xl); overflow-wrap: anywhere; }
+.detail-title-wrap { min-width: 0; }
+.next-action-meta, .created-at, .eyebrow { font-size: var(--font-size-xs); }
+.next-action-copy p { font-size: var(--font-size-sm); }
+.timeline-edge-trigger { font-size: var(--font-size-2xs); }
+@media (max-width: 1100px) { .booking-information-grid { grid-template-columns: minmax(0, 1fr); }.booking-map-section { min-height: 380px; }.booking-map-legend { justify-content: flex-start; margin-left: 0; }.booking-map-section :deep(.preview-top-bar) { top: 72px; left: 22px; right: 22px; }.booking-map-section :deep(.projects-master-container), .booking-map-section :deep(.maplibre-overview-wrapper) { height: 380px !important; } }
+@media (max-width: 640px) { .booking-information .summary-section { padding: 16px; }.booking-information .tenant-list { grid-template-columns: minmax(0, 1fr); }.booked-stalls-table { min-width: 520px; }.progress-card { padding: 16px 12px; }.progress-step { min-width: 0; flex: 1; }.progress-copy strong { font-size: var(--font-size-xs); }.progress-line { min-width: 12px; margin-inline: 8px; }.detail-hero h1 { font-size: var(--font-size-xl); }.timeline-edge-trigger { font-size: var(--font-size-2xs); } }
+@media (prefers-reduced-motion: reduce) { .booking-map-skeleton { animation: none; } }
+
 </style>

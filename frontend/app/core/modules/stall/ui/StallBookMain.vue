@@ -781,7 +781,7 @@
                       </svg>
                       เต็มแล้ว
                     </span>
-                    <span v-else-if="(s.bookedCount || 0) > 0" style="margin-left: auto; font-size: 0.75rem; color: #2563eb; font-weight: 600; background: #eff6ff; border: 1px solid #bfdbfe; padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
+                    <span v-else-if="(s.bookedCount || 0) > 0" class="slot-booked-summary" style="margin-left: auto; font-size: 0.75rem; color: #2563eb; font-weight: 600; background: #eff6ff; border: 1px solid #bfdbfe; padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
                       จองแล้ว {{ s.bookedCount }}/{{ s.capacity }} คิว
                     </span>
                   </div>
@@ -820,7 +820,7 @@
       <!-- ============================================================ -->
       <!-- STEP 3: ตรวจสอบและยืนยัน (Enhanced with BA/QA/UX)            -->
       <!-- ============================================================ -->
-      <div v-else-if="currentStep === 3">
+      <div v-else-if="currentStep === 3" class="step3-review">
         <div style="margin-bottom: 24px;">
           <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;">
             ตรวจสอบและยืนยัน
@@ -829,7 +829,14 @@
         </div>
 
         <!-- Confirmation GIS Map: แสดงแผนที่จริงพร้อมล็อคแผงที่จอง -->
-        <div class="card" style="padding: 0; position: relative; overflow: hidden; background: #ffffff; border: 1px solid #e2e8f0; margin-bottom: 24px; border-radius: 16px;">
+        <div class="card step3-map-card" style="padding: 0; position: relative; overflow: hidden; background: #ffffff; border: 1px solid #e2e8f0; margin-bottom: 24px; border-radius: 16px;">
+          <div class="step3-map-heading">
+            <div class="step3-map-heading-copy">
+              <span class="step3-map-heading-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></span>
+              <div><h3>ตำแหน่งแผงค้า</h3><p>{{ currentMarket?.name || currentMarketName || 'ตลาดนัดจตุจักร' }} · {{ selectedProject?.name || 'โครงการ' }}</p></div>
+            </div>
+            <div class="step3-map-heading-legend"><span><i class="selected"></i>แผงที่คุณเลือก ({{ selectedStalls.length }})</span><span><i class="available"></i>แผงว่าง</span><span><i class="reserved"></i>ติดจอง</span></div>
+          </div>
           <MarketProjectsOverviewMap
             containerId="step3-confirmation-maplibre"
             :marketId="currentMarketId"
@@ -844,7 +851,7 @@
         </div>
 
         <!-- Card 1: แผงเช่าที่คุณเลือก (List of selected stalls - แยกการ์ดแต่ละแผงพร้อมรูปภาพในตัว) -->
-        <div class="card" style="margin-bottom: 24px; padding: 24px;">
+        <div class="card step3-stalls-card" :class="{ 'has-multiple-stalls': selectedStalls.length > 1 }" style="margin-bottom: 24px; padding: 24px;">
           <!-- Card Header -->
           <div style="display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #eef2f6; padding-bottom: 16px; margin-bottom: 20px;">
             <div style="width: 38px; height: 38px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -860,6 +867,7 @@
           </div>
 
           <!-- Stalls Cards Loop (แยกการ์ดแต่ละแผงพร้อมรูปภาพในตัวตามรูป) -->
+          <div class="step3-stalls-scroll">
           <div
             v-for="(stallItem, idx) in selectedStalls"
             :key="stallSelectionKey(stallItem)"
@@ -927,7 +935,7 @@
             </div>
 
             <!-- Photos of THIS specific stall -->
-            <div>
+            <div class="step3-photos">
               <div style="color: #64748b; font-size: 0.82rem; margin-bottom: 10px;">รูปภาพ</div>
               <div style="display: flex; gap: 14px; flex-wrap: wrap;">
                 <div
@@ -971,10 +979,11 @@
               </span>
             </div>
           </div>
+          </div>
         </div>
 
         <!-- 2-Column Review Section (ข้อมูลผู้จอง & การเยี่ยมชมแผง) -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+        <div class="step3-review-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
           <!-- Card 2: ข้อมูลผู้จอง -->
           <div class="card" style="padding: 24px;">
             <div style="display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #eef2f6; padding-bottom: 14px; margin-bottom: 18px;">
@@ -1039,13 +1048,13 @@
         </div>
 
         <!-- WOW FEATURE 3: Transparent Financial Fee Schedule -->
-        <div class="card" style="margin-bottom: 24px; padding: 24px; border: 1.5px solid #dbeafe; background: #ffffff;">
+        <div class="card step3-finance-card" style="margin-bottom: 24px; padding: 24px; border: 1.5px solid #dbeafe; background: #ffffff;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #059669;">
+              <span class="step3-finance-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                 <line x1="10" y1="2" x2="10" y2="22"></line>
-              </svg>
+              </svg></span>
               <span style="font-size: 1rem; font-weight: 700; color: #0f172a;">ตารางประมาณการค่าใช้จ่ายแบบโปร่งใส (ประมาณการวันทำสัญญา)</span>
             </div>
             <span class="badge" style="background: #ecfdf5; color: #059669; font-weight: 600;">ไม่มีค่าใช้จ่ายแอบแฝง</span>
@@ -1087,7 +1096,7 @@
         </div>
 
         <!-- 100% Refundable Security Deposit Guarantee Card (BA) -->
-        <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 14px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div class="step3-guarantee-card" style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 14px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
           <div style="display: flex; align-items: center; gap: 12px;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #15803d; flex-shrink: 0;">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -1115,7 +1124,7 @@
           <button type="button" class="btn btn-outline" @click="goToStep(2)">
             <span>ย้อนกลับ</span>
           </button>
-          <button type="button" class="btn btn-primary" :disabled="submitting" @click="submitBooking" style="padding: 12px 32px; font-size: 1.05rem; font-weight: 700; box-shadow: 0 4px 16px rgba(67, 97, 238, 0.35);">
+          <button type="button" class="btn btn-primary" :disabled="submitting" @click="submitBooking" style="padding: 10px 24px; font-weight: 700;">
             <span v-if="submitting">กำลังบันทึกการจอง...</span>
             <span v-else style="display: inline-flex; align-items: center; gap: 8px;">
               <span>ยืนยันการจอง</span>
@@ -1130,7 +1139,7 @@
       <!-- ============================================================ -->
       <div v-if="showSuccessModal" class="modal-overlay" @click.self="closeSuccessModal">
         <canvas ref="confettiCanvas" class="confetti-canvas-overlay"></canvas>
-        <div class="modal-content vip-booking-pass-card" style="max-width: 560px; padding: 0; text-align: center; position: relative; overflow: hidden; border-radius: 20px; border: 1px solid #bfdbfe; box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);">
+        <div class="modal-content vip-booking-pass-card" style="width: min(440px, calc(100vw - 32px)); max-width: 440px; padding: 0; text-align: center; position: relative; overflow: hidden; border-radius: 20px; border: 1px solid #bfdbfe; box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);">
           <!-- Top Metallic Gradient Banner -->
           <div class="vip-pass-header" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%); color: #ffffff; padding: 24px 28px; position: relative; text-align: left;">
             <button
@@ -1150,7 +1159,7 @@
               <div>
                 <div style="font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: #bfdbfe; font-weight: 700;">สำนักงานตลาดกรุงเทพมหานคร (BMA)</div>
                 <h3 style="font-size: 1.25rem; font-weight: 800; color: #ffffff; margin: 0;">
-                  บัตรนัดหมายเข้าชมแผงเช่า (Digital Pass)
+                  บัตรนัดหมายเข้าชมแผงเช่า
                 </h3>
               </div>
             </div>
@@ -1176,19 +1185,19 @@
           <!-- Body Content -->
           <div style="padding: 24px 28px; background: #ffffff;">
             <!-- Countdown Banner -->
-            <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 10px; padding: 10px 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
-              <span style="font-size: 0.85rem; color: #854d0e; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #ca8a04;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span>ยื่นคำขอนัดดูแผงสำเร็จ (รอเจ้าหน้าที่อนุมัติ)</span>
+            <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 10px; padding: 12px 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+              <span style="flex: 1; min-width: 0; text-align: left; font-size: 0.82rem; line-height: 1.35; color: #854d0e; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: 0 0 auto; color: #ca8a04;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>ยื่นคำขอนัดดูแผงสำเร็จ</span>
               </span>
-              <span class="badge" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+              <span class="badge" style="flex: 0 0 auto; white-space: nowrap; background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; padding: 7px 10px;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 <span>รอเจ้าหน้าที่ตรวจสอบ</span>
               </span>
             </div>
 
             <!-- Ticket Details Grid -->
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 18px; text-align: left; margin-bottom: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 18px; text-align: left; margin-bottom: 20px;">
               <!-- Left: Specs -->
               <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; font-size: 0.82rem; display: flex; flex-direction: column; gap: 8px;">
                 <div style="display: flex; justify-content: space-between;">
@@ -1221,34 +1230,12 @@
                 </div>
               </div>
 
-              <!-- Right: QR Code for Gate Check-in -->
-              <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 12px;">
-                <!-- Simulated Dynamic QR Code -->
-                <div style="width: 80px; height: 80px; background: #ffffff; padding: 6px; border-radius: 8px; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; margin-bottom: 6px;">
-                  <svg width="68" height="68" viewBox="0 0 24 24" fill="currentColor" style="color: #1e3a8a;">
-                    <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm-2 10h8v8H2v-8zm2 2v4h4v-4H4zm10-14h8v8h-8V2zm2 2v4h4V4h-4zm2 12h-2v2h2v-2zm-2 2h-2v2h2v-2zm4 0h-2v2h2v-2zm2-2h-2v2h2v-2zm0 4h-2v2h2v-2zm-6-2h-2v2h2v-2zm4-6h-2v2h2v-2zm2 0h-2v2h2v-2zm-4 2h-2v2h2v-2z"></path>
-                  </svg>
-                </div>
-                <span style="font-size: 0.68rem; color: #1e40af; font-weight: 700; text-align: center;">สแกนเพื่อเช็คอินหน้างาน</span>
-              </div>
-            </div>
-
-            <!-- Pass Action Buttons -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
-              <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.82rem; font-weight: 700; border-color: #cbd5e1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" @click="printPass">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                <span>พิมพ์ / บันทึก PDF</span>
-              </button>
-              <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.82rem; font-weight: 700; border-color: #3b82f6; color: #2563eb; background: #eff6ff; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" @click="addToCalendar">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                <span>เพิ่มลงปฏิทินมือถือ</span>
-              </button>
             </div>
 
             <!-- Bottom Navigation -->
             <div style="display: flex; gap: 10px;">
               <NuxtLink to="/bookings" class="btn btn-primary" style="flex: 1; padding: 12px; font-weight: 700;">
-                ไปที่รายการการจองของฉัน &rarr;
+                รายการจองของฉัน &rarr;
               </NuxtLink>
               <NuxtLink to="/" class="btn btn-outline" style="padding: 12px; font-weight: 600;">
                 กลับหน้าหลัก
@@ -3991,6 +3978,7 @@ onUnmounted(() => {
   color: #64748b;
   line-height: 1.3;
 }
+.slot-booked-summary { white-space: nowrap; }
 
 /* Payment Schedule Grid (BA Perspective) */
 .payment-schedule-grid {
@@ -4682,5 +4670,88 @@ onUnmounted(() => {
 .is-full-guide {
   border-color: #fca5a5 !important;
   background: rgba(254, 242, 242, 0.95) !important;
+}
+
+/* Compact Step 3 review layout: keep the GIS component prominent and reduce repeated detail cards. */
+.step3-review { color: #0f172a; }
+.step3-review { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 24px; row-gap: 24px; align-items: start; }
+.step3-review > .step3-map-card, .step3-review > .step3-stalls-card, .step3-review > .step3-review-grid, .step3-review > .step3-finance-card, .step3-review > .step3-guarantee-card { margin-bottom: 0 !important; }
+.step3-review > div:first-child,
+.step3-review > .step3-review-grid,
+.step3-review > .step3-finance-card,
+.step3-review > .step3-guarantee-card,
+.step3-review > div:last-child { grid-column: 1 / -1; }
+.step3-review > .step3-map-card { grid-column: 2; grid-row: 2; width: auto; height: auto; align-self: stretch; margin-bottom: 0 !important; }
+.step3-review > .step3-stalls-card { grid-column: 1; grid-row: 2; width: auto; height: 760px !important; align-self: start; margin-bottom: 0 !important; }
+.step3-stalls-card.has-multiple-stalls { height: 760px !important; max-height: 760px; overflow: hidden; display: flex; flex-direction: column; overscroll-behavior: contain; }
+.step3-stalls-scroll { min-height: 0; }
+.step3-stalls-card.has-multiple-stalls .step3-stalls-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
+.step3-review > .step3-review-grid { grid-column: 1 / -1; grid-row: 3; grid-template-columns: 1fr 1fr; gap: 24px !important; align-self: start; }
+.step3-review > .step3-finance-card { grid-column: 1 / -1; grid-row: 4; align-self: start; }
+.step3-review > .step3-guarantee-card { grid-column: 1 / -1; grid-row: 5; }
+.step3-review > div:last-child { grid-row: 6; }
+.step3-review > div:first-child { margin-bottom: 16px !important; }
+.step3-map-card { margin-bottom: 0 !important; }
+.step3-map-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 24px; padding: 20px 0 12px; border-bottom: 1px solid #eef2f6; }
+.step3-map-heading-copy { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.step3-map-heading-icon { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 40px; border: 0; border-radius: 10px; background: #eff6ff; color: #2563eb; }
+.step3-map-heading-icon svg { width: 20px; height: 20px; }
+.step3-map-heading h3 { margin: 0; color: #0f172a; font-size: var(--font-size-lg); font-weight: 700; }
+.step3-map-heading p { margin: 4px 0 0; color: #64748b; font-size: var(--font-size-sm); }
+.step3-map-heading-legend { display: inline-flex; align-items: center; gap: 14px; color: #475569; font-size: var(--font-size-sm); white-space: nowrap; }
+.step3-map-heading-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.step3-map-heading-legend i { width: 14px; height: 14px; display: inline-block; border-radius: 4px; }
+.step3-map-heading-legend i.selected { background: #2563eb; box-shadow: 0 0 0 3px #dbeafe; }
+.step3-map-heading-legend i.available { background: #10b981; }
+.step3-map-heading-legend i.reserved { background: #f59e0b; }
+.step3-map-card :deep(.preview-top-bar) { display: none !important; }
+.step3-map-card :deep(.projects-master-container.is-preview-mode) { border-radius: 16px; overflow: hidden; }
+.step3-map-card :deep(.projects-master-container.is-preview-mode) { padding: 0 !important; gap: 0 !important; }
+.step3-map-card :deep(.projects-master-container.is-preview-mode .maplibre-overview-wrapper) { width: calc(100% - 48px); height: 620px !important; min-height: 620px !important; margin: 24px 24px 24px; }
+.step3-map-card :deep(.preview-top-bar) { min-height: 126px; padding: 24px 28px 16px; }
+.step3-map-card :deep(.preview-head-left) { gap: 14px; }
+.step3-map-card :deep(.preview-head-icon-box) { width: 48px; height: 48px; border-radius: 13px; }
+.step3-map-card :deep(.preview-head-title) { font-size: var(--font-size-xl); }
+.step3-map-card :deep(.preview-head-subtitle) { font-size: var(--font-size-sm); }
+.step3-map-card :deep(.preview-booked-pill-btn) { border-radius: 14px; }
+.step3-map-card :deep(.preview-legend-row) { gap: 14px; font-size: var(--font-size-sm); }
+.step3-stalls-card { margin-bottom: 16px !important; padding: 24px !important; border-radius: 16px !important; }
+.step3-stalls-card > div:first-child > div:first-child { width: 40px !important; height: 40px !important; border-radius: 10px !important; }
+.step3-stalls-card > div:first-child h3 { font-size: var(--font-size-lg) !important; }
+.step3-stalls-card > div[style*="border: 1px solid #e2e8f0"] { padding: 16px !important; margin-bottom: 12px !important; }
+.step3-stalls-card > div[style*="border: 1px solid #e2e8f0"] > div[style*="display: grid"] { gap: 10px 14px !important; }
+.step3-stalls-card > div[style*="display: grid"] { gap: 12px 18px !important; margin-bottom: 14px !important; }
+.step3-stalls-card > div[style*="display: grid"] > div > div:first-child { font-size: var(--font-size-xs) !important; }
+.step3-stalls-card > div[style*="display: grid"] > div > div:last-child { font-size: var(--font-size-sm) !important; }
+.step3-photos { display: block !important; margin-top: 16px; padding-top: 14px; border-top: 1px solid #f1f5f9; }
+.step3-photos > div:last-child { display: flex; gap: 10px !important; flex-wrap: nowrap !important; overflow-x: auto; padding-bottom: 2px; }
+.step3-photos .summary-stall-photo-card { width: 112px !important; height: 78px !important; flex: 0 0 112px; border-radius: 9px; }
+.step3-review-grid { gap: 16px !important; margin-bottom: 16px !important; }
+.step3-review-grid > .card { padding: 24px !important; }
+.step3-review-grid > .card > div[style*="display: grid"] { row-gap: 18px !important; }
+.step3-review-grid { gap: 16px !important; }
+.step3-review-grid > .card > div:first-child > div:first-child { width: 40px !important; height: 40px !important; border-radius: 10px !important; }
+.step3-review-grid > .card > div:first-child > div:first-child svg { width: 20px; height: 20px; }
+.step3-review-grid > .card > div:first-child > span { font-size: var(--font-size-lg) !important; font-weight: 700 !important; }
+.step3-review-grid [style*="font-size: 0.8rem"] { font-size: var(--font-size-xs) !important; }
+.step3-review-grid [style*="font-size: 0.88rem"] { font-size: var(--font-size-sm) !important; }
+.step3-finance-card { margin-bottom: 16px !important; padding: 20px !important; }
+.step3-review > .step3-finance-card { margin-top: 0 !important; }
+.step3-finance-icon { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: #eff6ff; color: #2563eb; flex: 0 0 40px; }
+.step3-finance-icon svg { width: 20px; height: 20px; }
+.step3-finance-card > div:last-child { font-size: var(--font-size-sm) !important; }
+.step3-guarantee-card { margin-bottom: 16px !important; padding: 12px 16px !important; }
+.step3-review > .step3-guarantee-card { margin-top: 0 !important; }
+.step3-review > div:last-child { margin-top: 0 !important; }
+@media (max-width: 900px) {
+  .step3-review { display: block; }
+  .step3-review > .step3-stalls-card, .step3-stalls-card.has-multiple-stalls { height: auto !important; max-height: none; overflow: visible; }
+  .step3-stalls-card.has-multiple-stalls .step3-stalls-scroll { overflow: visible; }
+  .step3-review > .step3-map-card, .step3-review > .step3-stalls-card { margin-bottom: 16px !important; }
+  .step3-map-card :deep(.preview-top-bar) { min-height: 112px; padding: 18px 18px 12px; }
+  .step3-map-heading { align-items: flex-start; flex-direction: column; margin: 0 16px; padding: 18px 0 12px; }
+  .step3-map-heading-legend { flex-wrap: wrap; white-space: normal; }
+  .step3-map-card :deep(.projects-master-container.is-preview-mode .maplibre-overview-wrapper) { width: calc(100% - 32px); height: 500px !important; min-height: 500px; margin: 18px 16px 16px; }
+  .step3-review-grid { grid-template-columns: 1fr !important; }
 }
 </style>
