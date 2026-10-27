@@ -10,7 +10,7 @@ import (
 	"emarket-api/responses"
 	bookingrepo "emarket-api/src/booking/repositories"
 	bookinguc "emarket-api/src/booking/usecases"
-	"gorm.io/driver/sqlite"
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 

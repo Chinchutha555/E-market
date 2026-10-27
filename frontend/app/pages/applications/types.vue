@@ -376,8 +376,11 @@ definePageMeta({
     if (!import.meta.client) return
     const auth = useAuthStore()
     auth.hydrate()
+    if (!auth.isLoggedIn) {
+      return navigateTo('/auth/login', { replace: true })
+    }
     if (auth.role !== 'admin' && auth.role !== 'staff') {
-      return navigateTo(auth.role === 'staff' ? '/staff' : '/applications', { replace: true })
+      return navigateTo('/applications', { replace: true })
     }
   }
 })

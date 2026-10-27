@@ -21,6 +21,7 @@ venv/
 ENV/
 env/
 *.exe
+*.exe~
 
 
 # Databases
