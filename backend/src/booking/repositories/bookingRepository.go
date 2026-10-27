@@ -66,6 +66,21 @@ func promoteOrReleaseStallOnTx(tx *gorm.DB, stallIdent string) error {
 
 	// 3. If the first item is already 'offered' and not expired, ensure stall is 'offered'
 	if len(activeWaitlist) > 0 && activeWaitlist[0].Status == "offered" && activeWaitlist[0].ExpiresAt != nil && activeWaitlist[0].ExpiresAt.After(now) {
+		waiterPos := 1
+		for j := range activeWaitlist {
+			if activeWaitlist[j].Status == "waiting" {
+				if activeWaitlist[j].Position != waiterPos {
+					if err := tx.Model(&activeWaitlist[j]).Updates(map[string]interface{}{
+						"position":   waiterPos,
+						"updated_at": now,
+					}).Error; err != nil {
+						return err
+					}
+					activeWaitlist[j].Position = waiterPos
+				}
+				waiterPos++
+			}
+		}
 		return tx.Model(&models.Stall{}).Where("ident = ?", cleanIdent).Update("stall_status", "offered").Error
 	}
 
@@ -95,6 +110,28 @@ func promoteOrReleaseStallOnTx(tx *gorm.DB, stallIdent string) error {
 			}).Error; err != nil {
 				return err
 			}
+			nextWaiter.Status = "offered"
+
+			// Re-index remaining waiting items so the next in line moves up: position 1, 2, 3...
+			waiterPos := 1
+			for j := range activeWaitlist {
+				if activeWaitlist[j].ID == nextWaiter.ID {
+					continue
+				}
+				if activeWaitlist[j].Status == "waiting" {
+					if activeWaitlist[j].Position != waiterPos {
+						if err := tx.Model(&activeWaitlist[j]).Updates(map[string]interface{}{
+							"position":   waiterPos,
+							"updated_at": now,
+						}).Error; err != nil {
+							return err
+						}
+						activeWaitlist[j].Position = waiterPos
+					}
+					waiterPos++
+				}
+			}
+
 			if err := tx.Model(&models.Stall{}).Where("ident = ?", cleanIdent).Update("stall_status", "offered").Error; err != nil {
 				return err
 			}
@@ -792,8 +829,8 @@ func (r *repository) CreateWaitlist(item *models.Waitlist) error {
 		}
 		var last models.Waitlist
 		position := 1
-		if err := tx.Where("stall_ident = ? AND status IN ('waiting', 'offered')", item.StallIdent).
-			Order("position DESC").First(&last).Error; err == nil {
+		if err := tx.Where("stall_ident = ? AND status = 'waiting'", item.StallIdent).
+			Order("position DESC, id DESC").First(&last).Error; err == nil {
 			position = last.Position + 1
 		} else if err != nil && err != gorm.ErrRecordNotFound {
 			return err
@@ -809,9 +846,9 @@ func (r *repository) FindWaitlistByTenant(userID int) ([]models.Waitlist, error)
 	var items []models.Waitlist
 	query := r.conn.Where("1 = 1")
 	if userID > 0 {
-		query = query.Where("tenant_id = ? AND tenant_dismissed = false AND status != 'withdrawn'", userID)
+		query = query.Where("tenant_id = ? AND tenant_dismissed = false AND status NOT IN ('withdrawn', 'accepted')", userID)
 	} else {
-		query = query.Where("status IN ('waiting', 'offered', 'cancelled', 'expired', 'withdrawn')")
+		query = query.Where("status IN ('waiting', 'offered', 'cancelled', 'expired')")
 	}
 	err := query.
 		Order("CASE WHEN status = 'offered' THEN 0 WHEN status = 'waiting' THEN 1 ELSE 2 END ASC, position ASC, updated_at DESC, created_at DESC").
@@ -862,20 +899,27 @@ func (r *repository) WithdrawWaitlist(item *models.Waitlist) error {
 
 		// Re-index remaining active waitlist items only if the withdrawing item was active
 		if wasActive {
-			var remaining []models.Waitlist
-			if err := tx.Where("stall_ident = ? AND status IN ('waiting', 'offered')", item.StallIdent).
-				Order("position ASC, id ASC").Find(&remaining).Error; err != nil {
-				return err
-			}
-			for i := range remaining {
-				if err := tx.Model(&remaining[i]).Update("position", i+1).Error; err != nil {
-					return err
-				}
-			}
-
 			// If the person who withdrew was holding the active offer, promote the next person or release the stall!
 			if wasOffered {
 				return promoteOrReleaseStallOnTx(tx, item.StallIdent)
+			}
+
+			// If a waiting person withdrew, re-index remaining waiting items
+			var remainingWaiters []models.Waitlist
+			if err := tx.Where("stall_ident = ? AND status = 'waiting'", item.StallIdent).
+				Order("position ASC, id ASC").Find(&remainingWaiters).Error; err != nil {
+				return err
+			}
+			for i := range remainingWaiters {
+				newPos := i + 1
+				if remainingWaiters[i].Position != newPos {
+					if err := tx.Model(&remainingWaiters[i]).Updates(map[string]interface{}{
+						"position":   newPos,
+						"updated_at": now,
+					}).Error; err != nil {
+						return err
+					}
+				}
 			}
 		}
 		return nil

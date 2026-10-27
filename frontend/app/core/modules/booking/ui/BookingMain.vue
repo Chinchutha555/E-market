@@ -954,7 +954,7 @@
                     class="status-pill-badge pill-blue"
                     style="font-size: 0.75rem; padding: 2px 10px;"
                   >
-                    กำลังเสนอสิทธิ์ให้คุณ
+                    ถึงสิทธิ์ (กำลังเสนอสิทธิ์ให้คุณ)
                   </span>
                   <span
                     v-else-if="item.status === 'cancelled'"
@@ -1007,7 +1007,7 @@
                 class="waitlist-position"
                 :style="item.status === 'offered' ? 'background: #dbeafe; color: #1d4ed8;' : (item.status === 'cancelled' ? 'background: #fee2e2; color: #dc2626;' : (item.status === 'expired' || item.status === 'withdrawn' ? 'background: #f1f5f9; color: #64748b;' : ''))"
               >
-                <span v-if="item.status === 'offered'">เหลือเวลา {{ formatRemainingOfferTime(item) }}</span>
+                <span v-if="item.status === 'offered'">ถึงสิทธิ์ • เหลือ {{ formatRemainingOfferTime(item) }}</span>
                 <span v-else-if="item.status === 'cancelled'">มีผู้เช่าแล้ว</span>
                 <span v-else-if="item.status === 'expired'">หมดเวลา</span>
                 <span v-else-if="item.status === 'withdrawn'">ยกเลิกแล้ว</span>
@@ -2585,7 +2585,23 @@ const bookings = ref<any[]>([])
 const waitlistItems = ref<any[]>([])
 const selectedStallWaitlistItems = ref<any[]>([])
 const tenantVisibleWaitlistItems = computed(() => {
-  return waitlistItems.value.filter(item => !item.tenant_dismissed && item.status !== 'withdrawn')
+  return waitlistItems.value.filter(item => {
+    if (item.tenant_dismissed) return false
+    if (item.status === 'withdrawn' || item.status === 'accepted') return false
+
+    // If the tenant already has an active booking for this stall, hide it from "แผงที่สนใจ"
+    const stallCode = String(item.stall_number || item.stall_ident || '').trim().toLowerCase()
+    if (stallCode && bookings.value.length > 0) {
+      const hasActiveBooking = bookings.value.some(b => {
+        if (isStallTerminal(b.status)) return false
+        const subs = getBookingStallItems(b)
+        return subs.some(s => String(s.stall_number || '').trim().toLowerCase() === stallCode && !isStallTerminal(s.status))
+      })
+      if (hasActiveBooking) return false
+    }
+
+    return true
+  })
 })
 const tenantBookingSection = ref<'bookings' | 'interests'>(route.query?.tab === 'interests' ? 'interests' : 'bookings')
 const bookingReturnStorageKey = 'booking-list-return-context'

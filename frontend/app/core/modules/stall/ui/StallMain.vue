@@ -4,10 +4,6 @@
     <AppHeader />
 
     <div class="content-body market-detail-page">
-      <!-- Breadcrumb -->
-
-      </div>
-
       <header class="md-page-heading">
         <div>
           <h2>รายละเอียดตลาด</h2>

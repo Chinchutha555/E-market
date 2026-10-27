@@ -117,7 +117,7 @@ func (r *repository) Create(app *models.Application) error {
 		}
 
 		// Only link bookings and update stall status for stall_lease applications
-		if app.ApplicationType == "stall_lease" && app.StallIdent != "" && app.StallIdent != "-" {
+		if (app.ApplicationType == "stall_lease" || app.ApplicationType == "") && app.StallIdent != "" && app.StallIdent != "-" {
 			// 1. Mark the primary holder booking for this stall as lease_applied and append timeline
 			var activeBookings []models.Booking
 			tx.Model(&models.Booking{}).
@@ -199,7 +199,63 @@ func (r *repository) Create(app *models.Application) error {
 				_ = tx.Create(&closeNotif).Error
 			}
 
+			// 3. Close the per-stall Waitlist as soon as the primary holder
+			// submits a lease application. These records are separate from the
+			// legacy queue bookings above and must be notified individually.
+			var activeWaitlist []models.Waitlist
+			if err := tx.Where("stall_ident = ? AND status IN ('waiting', 'offered')", app.StallIdent).
+				Order("position ASC, id ASC").Find(&activeWaitlist).Error; err != nil {
+				return err
+			}
+			for i := range activeWaitlist {
+				item := &activeWaitlist[i]
+				if err := tx.Model(item).Updates(map[string]interface{}{
+					"status":         "cancelled",
+					"dismiss_reason": "ตัดสิทธิ์เนื่องจากผู้จองหลักยื่นคำร้องขอเช่าแผงสำเร็จ",
+					"expires_at":     nil,
+					"updated_at":     now,
+				}).Error; err != nil {
+					return err
+				}
 
+				closeNotif := models.Notification{
+					RecipientRole:   "tenant",
+					RecipientUserID: &item.TenantID,
+					RecipientName:   item.TenantName,
+					Type:            "waitlist_cancelled",
+					StatusCode:      "waitlist_cancelled",
+					StatusLabel:     "แผงถูกเช่าแล้ว",
+					Title:           fmt.Sprintf("แผง %s ถูกเช่าแล้ว", item.StallIdent),
+					Message:         fmt.Sprintf("แผง %s ที่คุณลงชื่อรอคิวมีผู้จองหลักยื่นคำร้องขอเช่าแล้ว ระบบจึงปิดรายการรอคิวของคุณ คุณสามารถเลือกแผงอื่นที่ว่างหรือเข้าคิวแผงอื่นได้", item.StallIdent),
+					StallNumber:     item.StallIdent,
+					MarketName:      item.MarketName,
+					ProjectName:     item.ProjectName,
+					TargetURL:       "/bookings?tab=interests",
+				}
+				if err := tx.Create(&closeNotif).Error; err != nil {
+					return err
+				}
+			}
+
+			// 4. Upsert stall to occupied
+			var stallCount int64
+			tx.Model(&models.Stall{}).Where("ident = ?", app.StallIdent).Count(&stallCount)
+			if stallCount == 0 {
+				newStall := models.Stall{
+					Ident:       app.StallIdent,
+					Name:        "แผงค้า " + app.StallIdent,
+					StallStatus: "occupied",
+					Floor:       "1",
+					Status:      "A",
+				}
+				if app.MarketID != nil {
+					newStall.MarketID = *app.MarketID
+				}
+				_ = tx.Create(&newStall).Error
+			} else {
+				_ = tx.Model(&models.Stall{}).
+					Where("ident = ?", app.StallIdent).
+					Update("stall_status", "occupied").Error
 			}
 		}
 		return nil
