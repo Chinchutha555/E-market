@@ -47,7 +47,19 @@ func ScopeMarketQuery(db *gorm.DB) gin.HandlerFunc {
 			if err != nil || len(ids) == 0 {
 				query.Set("market_id", "-1")
 			} else {
-				query.Set("market_id", strconv.Itoa(ids[0]))
+				requestedMarket := query.Get("market_id")
+				isAssigned := false
+				if requestedMarket != "" {
+					for _, id := range ids {
+						if strconv.Itoa(id) == requestedMarket {
+							isAssigned = true
+							break
+						}
+					}
+				}
+				if !isAssigned {
+					query.Set("market_id", strconv.Itoa(ids[0]))
+				}
 			}
 			query.Del("created_by")
 		case "tenant":

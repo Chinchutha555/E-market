@@ -933,8 +933,8 @@ import { useNotifications } from '~/composables/useNotifications'
 
 const { get, post } = useApi()
 const authStore = useAuthStore()
-const { user, currentUser, isTenant, isAdmin, isStaff, role } = useAuth()
-const isAdminOrStaff = computed(() => isAdmin.value || isStaff.value || ['admin', 'staff'].includes(role.value || authStore.role || ''))
+const { user, currentUser, isTenant, role } = useAuth()
+const isAdminOrStaff = computed(() => ['admin', 'staff'].includes(role.value || authStore.role || ''))
 const { showAlert, showConfirm, showSuccess, showError } = useAppAlert()
 const { fetchNotifications } = useNotifications()
 const { resetTestData } = useResetTestData()

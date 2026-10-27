@@ -18,6 +18,11 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   telemetry: false,
   ssr: false,
+  routeRules: {
+    '/api/v1/**': {
+      proxy: `${process.env.BACKEND_API_URL || process.env.BACKEND_URL || 'http://127.0.0.1:8080'}/api/v1/**`
+    }
+  },
   experimental: {
     appManifest: false
   },

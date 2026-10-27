@@ -200,8 +200,33 @@ func SeedAll(db *gorm.DB) error {
 			return err
 		}
 		log.Println("Seeded 12 markets successfully")
+	}
 
-		// 3. Seed Default Zones for each market
+	// Ensure staff account has market assignments so ScopeMarketQuery and CanManageMarket work
+	var staffUser models.User
+	if err := db.Where("username = ?", "staff").First(&staffUser).Error; err == nil {
+		var assignmentCount int64
+		db.Model(&models.MarketStaffAssignment{}).Where("user_id = ?", staffUser.ID).Count(&assignmentCount)
+		if assignmentCount == 0 {
+			var mktIDs []int
+			db.Model(&models.Market{}).Pluck("id", &mktIDs)
+			var assignments []models.MarketStaffAssignment
+			for _, mID := range mktIDs {
+				assignments = append(assignments, models.MarketStaffAssignment{
+					UserID:   staffUser.ID,
+					MarketID: mID,
+				})
+			}
+			if len(assignments) > 0 {
+				_ = db.Create(&assignments).Error
+				log.Println("Seeded staff market assignments successfully")
+			}
+		}
+	}
+
+	if marketCount == 0 {
+		var markets []models.Market
+		db.Find(&markets)
 		var zones []models.Zone
 		for _, m := range markets {
 			zones = append(zones,

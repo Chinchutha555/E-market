@@ -100,19 +100,51 @@ CREATE TABLE IF NOT EXISTS "booking" (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS "market_staff_assignment" (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES "user"(id),
+    market_id INT NOT NULL REFERENCES "market"(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT idx_market_staff UNIQUE (user_id, market_id)
+);
+
+CREATE TABLE IF NOT EXISTS "application_types" (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(64) UNIQUE NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS "application" (
     id SERIAL PRIMARY KEY,
     application_no VARCHAR(50) UNIQUE NOT NULL,
+    application_type VARCHAR(50) DEFAULT 'stall_lease',
+    subject VARCHAR(255),
+    booking_id INT,
+    market_id INT,
+    market_name VARCHAR(255),
     stall_id INT REFERENCES "stall"(id),
-    stall_ident VARCHAR(50) NOT NULL,
+    stall_ident VARCHAR(50),
     applicant_name VARCHAR(255) NOT NULL,
     applicant_phone VARCHAR(50) NOT NULL,
     applicant_id_card VARCHAR(50),
-    shop_name VARCHAR(255) NOT NULL,
+    applicant_email VARCHAR(255),
+    applicant_address TEXT,
+    details TEXT,
+    shop_name VARCHAR(255),
     product_category VARCHAR(255),
+    proposed_rent_type VARCHAR(50) DEFAULT 'monthly',
+    requested_start_date VARCHAR(50),
     lease_term_months INT DEFAULT 12,
     monthly_rate DECIMAL(10, 2) DEFAULT 0,
     application_state VARCHAR(50) DEFAULT 'submitted',
+    officer_comment TEXT,
+    market_director_comment TEXT,
+    bureau_director_comment TEXT,
     reviewed_at TIMESTAMP,
     review_note TEXT,
     status CHAR(1) DEFAULT 'A',

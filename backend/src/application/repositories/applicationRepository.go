@@ -22,7 +22,7 @@ func NewRepository(db *gorm.DB) domains.Repository {
 
 func (r *repository) FindAll(filter requests.ApplicationFilter) ([]models.Application, error) {
 	var apps []models.Application
-	query := r.conn.Model(&models.Application{}).Where("status = 'A'")
+	query := r.conn.Model(&models.Application{}).Where("(status = 'A' OR status IS NULL OR status = '')")
 	if filter.MarketID != 0 {
 		query = query.Where("market_id = ?", filter.MarketID)
 	}
@@ -46,8 +46,9 @@ func (r *repository) FindAll(filter requests.ApplicationFilter) ([]models.Applic
 		}
 	}
 	if filter.Search != "" {
-		query = query.Where("applicant_name LIKE ? OR applicant_phone LIKE ? OR shop_name LIKE ? OR application_no LIKE ? OR subject LIKE ?",
-			"%"+filter.Search+"%", "%"+filter.Search+"%", "%"+filter.Search+"%", "%"+filter.Search+"%", "%"+filter.Search+"%")
+		searchTerm := "%" + filter.Search + "%"
+		query = query.Where("LOWER(applicant_name) LIKE LOWER(?) OR applicant_phone LIKE ? OR LOWER(shop_name) LIKE LOWER(?) OR LOWER(application_no) LIKE LOWER(?) OR LOWER(subject) LIKE LOWER(?)",
+			searchTerm, searchTerm, searchTerm, searchTerm, searchTerm)
 	}
 
 	err := query.Order("id DESC").Find(&apps).Error
@@ -66,7 +67,7 @@ func (r *repository) FindAll(filter requests.ApplicationFilter) ([]models.Applic
 
 func (r *repository) FindByID(id int) (*models.Application, error) {
 	var app models.Application
-	err := r.conn.Where("id = ? AND status = 'A'", id).First(&app).Error
+	err := r.conn.Where("id = ? AND (status = 'A' OR status IS NULL OR status = '')", id).First(&app).Error
 	if err != nil {
 		return nil, err
 	}
