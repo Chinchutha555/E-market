@@ -194,10 +194,11 @@ func SetupRouter() *gin.Engine {
 		{
 			appTypeGroup.GET("", appTypeHandler.GetApplicationTypes)
 			appTypeGroup.GET("/:id", appTypeHandler.GetApplicationTypeByID)
-			appTypeGroup.POST("", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin"), appTypeHandler.CreateApplicationType)
-			appTypeGroup.PUT("/:id", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin"), appTypeHandler.UpdateApplicationType)
-			appTypeGroup.DELETE("/:id", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin"), appTypeHandler.DeleteApplicationType)
-			appTypeGroup.PATCH("/:id/toggle", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin"), appTypeHandler.ToggleActive)
+			appTypeGroup.POST("", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff"), appTypeHandler.CreateApplicationType)
+			appTypeGroup.PUT("/:id", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff"), appTypeHandler.UpdateApplicationType)
+			appTypeGroup.DELETE("/:id", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff"), appTypeHandler.DeleteApplicationType)
+			appTypeGroup.PATCH("/:id/toggle", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff"), appTypeHandler.ToggleActive)
+			appTypeGroup.POST("/:id/toggle", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff"), appTypeHandler.ToggleActive)
 		}
 
 		// Contract Routes
