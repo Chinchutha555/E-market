@@ -10,7 +10,7 @@ import (
 	"emarket-api/databases"
 	"emarket-api/helpers"
 	"emarket-api/models"
-	"gorm.io/driver/sqlite"
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 

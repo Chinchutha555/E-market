@@ -61,7 +61,7 @@ func RequireRoles(allowedRoles ...string) gin.HandlerFunc {
 
 		hasPermission := false
 		for _, r := range allowedRoles {
-			if r == role {
+			if strings.EqualFold(r, role) || r == role {
 				hasPermission = true
 				break
 			}

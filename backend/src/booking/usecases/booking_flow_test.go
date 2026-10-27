@@ -274,3 +274,57 @@ func TestLifecycleClosesStaleWaitlistAfterPrimaryLeaseApplication(t *testing.T) 
 		t.Fatalf("notification count = %d, want 1", notificationCount)
 	}
 }
+
+func TestThreePeopleBookingCancelPromotesSecondAndMovesThirdUp(t *testing.T) {
+	db, h := newBookingFlow(t)
+	db.Create(&models.Stall{Ident: "THREE-01", MarketID: 1, MarketName: "ตลาดทดสอบ", MonthlyRent: 2500, StallStatus: "available", Status: "A"})
+
+	// 1. Person 1 books the stall
+	holder, err := h.uc.CreateBooking(101, baseBooking("THREE-01"))
+	if err != nil {
+		t.Fatalf("Person 1 create booking: %v", err)
+	}
+
+	// 2. Person 2 joins waitlist -> Position 1
+	w2, err := h.uc.CreateWaitlist(102, requests.CreateWaitlistRequest{StallIdent: "THREE-01"})
+	if err != nil {
+		t.Fatalf("Person 2 join waitlist: %v", err)
+	}
+	if w2.Position != 1 || w2.Status != "waiting" {
+		t.Fatalf("Person 2 initial waitlist: status=%s pos=%d, want waiting/1", w2.Status, w2.Position)
+	}
+
+	// 3. Person 3 joins waitlist -> Position 2
+	w3, err := h.uc.CreateWaitlist(103, requests.CreateWaitlistRequest{StallIdent: "THREE-01"})
+	if err != nil {
+		t.Fatalf("Person 3 join waitlist: %v", err)
+	}
+	if w3.Position != 2 || w3.Status != "waiting" {
+		t.Fatalf("Person 3 initial waitlist: status=%s pos=%d, want waiting/2", w3.Status, w3.Position)
+	}
+
+	// 4. Person 1 cancels booking
+	_, err = h.uc.CancelBookingStall(holder.ID, "THREE-01", 101, "tenant", "ขอยกเลิกการจอง")
+	if err != nil {
+		t.Fatalf("Person 1 cancel booking: %v", err)
+	}
+
+	// 5. Verify Person 2 is now offered (ถึงสิทธิ์)
+	var reloadedW2 models.Waitlist
+	if err := db.First(&reloadedW2, w2.ID).Error; err != nil {
+		t.Fatalf("reload Person 2: %v", err)
+	}
+	if reloadedW2.Status != "offered" || reloadedW2.Position != 1 || reloadedW2.ExpiresAt == nil {
+		t.Fatalf("Person 2 after cancel: status=%s pos=%d expires=%v, want offered/1", reloadedW2.Status, reloadedW2.Position, reloadedW2.ExpiresAt)
+	}
+
+	// 6. Verify Person 3 queue has moved up to position 1 (คิวเลื่อนขึ้นมาเป็นคิวที่ 1)
+	var reloadedW3 models.Waitlist
+	if err := db.First(&reloadedW3, w3.ID).Error; err != nil {
+		t.Fatalf("reload Person 3: %v", err)
+	}
+	if reloadedW3.Status != "waiting" || reloadedW3.Position != 1 {
+		t.Fatalf("Person 3 after cancel: status=%s pos=%d, want waiting/1", reloadedW3.Status, reloadedW3.Position)
+	}
+}
+

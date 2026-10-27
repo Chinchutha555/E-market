@@ -25,7 +25,7 @@ func NewUseCase(repo domains.Repository) domains.UseCase {
 
 func toApplicationResponse(a *models.Application) responses.ApplicationResponse {
 	monthlyRate := a.MonthlyRate
-	if monthlyRate <= 0 {
+	if monthlyRate <= 0 && a.ApplicationType != "general" && !strings.HasPrefix(a.ApplicationNo, "GEN-") {
 		monthlyRate = 3600
 	}
 	periodMonths := a.LeaseTermMonths
@@ -36,12 +36,32 @@ func toApplicationResponse(a *models.Application) responses.ApplicationResponse 
 	if startDate == "" {
 		startDate = a.CreatedAt.AddDate(0, 0, 7).Format("2006-01-02")
 	}
+
+	appType := a.ApplicationType
+	if appType == "" {
+		if strings.HasPrefix(a.ApplicationNo, "GEN-") {
+			appType = "general"
+		} else if a.BookingID != nil || (a.StallIdent != "" && a.StallIdent != "-") {
+			appType = "stall_lease"
+		} else {
+			appType = "general"
+		}
+	}
+	subject := a.Subject
+	if subject == "" && appType == "general" {
+		subject = a.ShopName
+	}
+
 	return responses.ApplicationResponse{
 		ID:                    a.ID,
 		ApplicationNo:         a.ApplicationNo,
 		ApplicationNumber:     a.ApplicationNo,
+		ApplicationType:       appType,
+		Subject:               subject,
+		BookingID:             a.BookingID,
 		StallID:               a.StallID,
 		MarketID:              a.MarketID,
+		MarketName:            a.MarketName,
 		StallIdent:            a.StallIdent,
 		StallNumber:           a.StallIdent,
 		ApplicantName:         a.ApplicantName,
@@ -51,9 +71,11 @@ func toApplicationResponse(a *models.Application) responses.ApplicationResponse 
 		ApplicantIDCard:       a.ApplicantIDCard,
 		ApplicantEmail:        a.ApplicantEmail,
 		ApplicantAddress:      a.ApplicantAddress,
+		Details:               a.Details,
 		ShopName:              a.ShopName,
 		ProductCategory:       a.ProductCategory,
 		ProductType:           a.ProductCategory,
+		ProposedRentType:      a.ProposedRentType,
 		RequestedStartDate:    startDate,
 		LeaseTermMonths:       periodMonths,
 		RequestedPeriodMonths: periodMonths,
@@ -97,13 +119,45 @@ func (u *useCase) GetApplicationByID(id int) (*responses.ApplicationResponse, er
 }
 
 func (u *useCase) CreateApplication(userID int, req requests.CreateApplicationRequest) (*responses.ApplicationResponse, error) {
+	appType := strings.TrimSpace(req.ApplicationType)
+	var parsedBookingID *int
+	switch v := req.BookingID.(type) {
+	case float64:
+		idVal := int(v)
+		if idVal > 0 {
+			parsedBookingID = &idVal
+		}
+	case int:
+		if v > 0 {
+			parsedBookingID = &v
+		}
+	}
+
 	stallIdent := strings.TrimSpace(req.StallIdent)
 	if stallIdent == "" {
 		stallIdent = strings.TrimSpace(req.StallNumber)
 	}
-	if stallIdent == "" {
-		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาระบุรหัสแผงค้า")
+
+	if appType == "" {
+		if parsedBookingID != nil {
+			appType = "stall_lease"
+		} else if stallIdent != "" && stallIdent != "-" {
+			appType = "stall_lease"
+		} else {
+			appType = "general"
+		}
 	}
+
+	if appType == "stall_lease" {
+		if stallIdent == "" {
+			return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาระบุรหัสแผงค้า")
+		}
+	} else {
+		if stallIdent == "" {
+			stallIdent = "-"
+		}
+	}
+
 	applicantName := strings.TrimSpace(req.ApplicantName)
 	if applicantName == "" {
 		applicantName = strings.TrimSpace(req.TenantName)
@@ -128,24 +182,40 @@ func (u *useCase) CreateApplication(userID int, req requests.CreateApplicationRe
 		productCategory = strings.TrimSpace(req.ProductType)
 	}
 	if productCategory == "" {
-		productCategory = "สินค้าทั่วไป"
+		if appType == "general" {
+			productCategory = "คำร้องทั่วไป"
+		} else {
+			productCategory = "สินค้าทั่วไป"
+		}
 	}
+	subject := strings.TrimSpace(req.Subject)
 	shopName := strings.TrimSpace(req.ShopName)
 	if shopName == "" {
-		shopName = applicantName
+		if subject != "" {
+			shopName = subject
+		} else {
+			shopName = applicantName
+		}
+	}
+	if subject == "" && appType == "general" {
+		subject = shopName
 	}
 	leaseTerm := req.LeaseTermMonths
 	if leaseTerm <= 0 {
 		leaseTerm = req.RequestedPeriodMonths
 	}
 	if leaseTerm <= 0 {
-		leaseTerm = 12
+		if appType == "general" {
+			leaseTerm = 1
+		} else {
+			leaseTerm = 12
+		}
 	}
 	monthlyRate := req.MonthlyRate
 	if monthlyRate <= 0 {
 		monthlyRate = req.Fee
 	}
-	if monthlyRate <= 0 {
+	if monthlyRate <= 0 && appType == "stall_lease" {
 		monthlyRate = 3600
 	}
 	startDate := strings.TrimSpace(req.RequestedStartDate)
@@ -157,17 +227,56 @@ func (u *useCase) CreateApplication(userID int, req requests.CreateApplicationRe
 	switch v := req.StallID.(type) {
 	case float64:
 		idVal := int(v)
-		parsedStallID = &idVal
+		if idVal > 0 {
+			parsedStallID = &idVal
+		}
 	case int:
-		idVal := v
-		parsedStallID = &idVal
+		if v > 0 {
+			parsedStallID = &v
+		}
 	}
 
-	appNo := fmt.Sprintf("APP-%s-%06d", time.Now().Format("20060102"), time.Now().UnixMicro()%1000000)
+	var parsedMarketID *int
+	switch v := req.MarketID.(type) {
+	case float64:
+		idVal := int(v)
+		if idVal > 0 {
+			parsedMarketID = &idVal
+		}
+	case int:
+		if v > 0 {
+			parsedMarketID = &v
+		}
+	}
+
+	prefix := "APP"
+	if appType == "general" {
+		prefix = "GEN"
+	}
+	appNo := fmt.Sprintf("%s-%s-%06d", prefix, time.Now().Format("20060102"), time.Now().UnixMicro()%1000000)
+
+	reviewNote := strings.TrimSpace(req.ReviewNote)
+	details := strings.TrimSpace(req.Details)
+	if details == "" {
+		details = reviewNote
+	}
+	if reviewNote == "" {
+		reviewNote = details
+	}
+	marketName := strings.TrimSpace(req.MarketName)
+	proposedRentType := strings.TrimSpace(req.ProposedRentType)
+	if proposedRentType == "" {
+		proposedRentType = "monthly"
+	}
 
 	app := models.Application{
 		ApplicationNo:      appNo,
+		ApplicationType:    appType,
+		Subject:            subject,
+		BookingID:          parsedBookingID,
 		StallID:            parsedStallID,
+		MarketID:           parsedMarketID,
+		MarketName:         marketName,
 		StallIdent:         stallIdent,
 		ApplicantName:      applicantName,
 		ApplicantPhone:     applicantPhone,
@@ -179,6 +288,9 @@ func (u *useCase) CreateApplication(userID int, req requests.CreateApplicationRe
 		RequestedStartDate: startDate,
 		LeaseTermMonths:    leaseTerm,
 		MonthlyRate:        monthlyRate,
+		ProposedRentType:   proposedRentType,
+		Details:            details,
+		ReviewNote:         reviewNote,
 		ApplicationState:   "pending_officer",
 	}
 	if userID > 0 {
@@ -260,7 +372,16 @@ func (u *useCase) Action(id int, userID int, req requests.ApplicationActionReque
 
 	if strings.ToLower(req.Action) == "reject" {
 		updateReq.Status = "rejected"
-		updateReq.OfficerComment = comment
+		switch app.ApplicationState {
+		case "pending_officer":
+			updateReq.OfficerComment = comment
+		case "pending_market_director", "pending_debt_check", "debt_pending":
+			updateReq.MarketDirectorComment = comment
+		case "pending_bureau_director":
+			updateReq.BureauDirectorComment = comment
+		default:
+			updateReq.OfficerComment = comment
+		}
 	} else if req.Status != "" {
 		updateReq.Status = req.Status
 	} else if comment != "" {

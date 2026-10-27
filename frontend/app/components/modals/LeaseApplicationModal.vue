@@ -328,44 +328,54 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     const periodMonths = Number(form.value.requested_period_months) || 12
-    const appNumbers: string[] = []
-    for (const targetRecord of selectedStallRecords.value) {
-      const rawId = targetRecord?.stall_id || targetRecord?.stall_number || props.stall?.id || 1
-      const numericStallId = typeof rawId === 'number'
-        ? rawId
-        : (typeof rawId === 'string' && /^\d+$/.test(rawId) ? Number(rawId) : undefined)
-      const stallCode = targetRecord?.stall_number || props.stall?.stall_number || ''
-      const monthlyRate = Number(targetRecord?.stall_monthly_rate || targetRecord?.monthly_rent || 3600)
-      const res: any = await post('/applications', {
-        stall_id: numericStallId,
-        stall_ident: stallCode,
-        stall_number: stallCode,
-        market_name: targetRecord?.market_name || props.stall?.market_name || 'ตลาดนัดจตุจักร',
-        booking_id: targetRecord?.id || null,
-        monthly_rate: monthlyRate,
-        applicant_name: form.value.applicant_name,
-        applicant_id_card: form.value.applicant_id_card,
-        applicant_phone: form.value.applicant_phone,
-        applicant_email: form.value.applicant_email,
-        applicant_address: form.value.applicant_address,
-        shop_name: form.value.shop_name,
-        product_type: form.value.product_type,
-        product_category: form.value.product_type,
+    const base = activeBookingRecord.value || props.booking
+    const mId = base?.market_id || props.stall?.market_id
+    const mName = base?.market_name || props.stall?.market_name || 'ตลาด กทม.'
+
+    const targetRecords = selectedStallRecords.value.length > 0 ? selectedStallRecords.value : (base ? [base] : [])
+    let lastAppNo = ''
+
+    for (const rec of targetRecords) {
+      const sIdent = rec.stall_number || rec.stall_ident || props.stall?.stall_number || '-'
+      const sId = rec.stall_id || props.stall?.id
+      const bId = rec.id || base?.id
+      const monthlyRate = Number(rec.stall_monthly_rate || rec.monthly_rent || 3600)
+
+      const payload = {
+        application_type: 'stall_lease',
+        booking_id: bId,
+        stall_id: sId,
+        stall_ident: sIdent,
+        stall_number: sIdent,
+        market_id: mId,
+        market_name: mName,
+        applicant_name: form.value.applicant_name.trim(),
+        applicant_phone: form.value.applicant_phone.trim(),
+        applicant_id_card: form.value.applicant_id_card.trim(),
+        applicant_email: form.value.applicant_email.trim(),
+        applicant_address: form.value.applicant_address.trim() || '-',
+        shop_name: form.value.shop_name.trim(),
+        product_category: form.value.product_type.trim() || 'สินค้าทั่วไป',
+        product_type: form.value.product_type.trim() || 'สินค้าทั่วไป',
         requested_start_date: form.value.requested_start_date,
-        requested_period_months: periodMonths,
         lease_term_months: periodMonths,
-        proposed_rent_type: form.value.proposed_rent_type
-      })
-      const createdApp = res?.data || res
-      const appNo = createdApp?.application_number || createdApp?.application_no || res?.application_number || res?.application_no || ''
-      if (appNo) appNumbers.push(appNo)
+        requested_period_months: periodMonths,
+        monthly_rate: monthlyRate,
+        proposed_rent_type: form.value.proposed_rent_type || 'monthly'
+      }
+
+      const res: any = await post('/applications', payload)
+      const data = res?.data || res
+      if (data?.application_no || data?.application_number) {
+        lastAppNo = data.application_no || data.application_number
+      }
     }
 
-    successAppNumber.value = appNumbers.join(', ')
+    successAppNumber.value = lastAppNo || 'APP-COMPLETED'
     isSuccess.value = true
     emit('success')
   } catch (err: any) {
-    await showError(err?.data?.detail || err?.data?.error?.message || err?.data?.message || 'เกิดข้อผิดพลาดในการยื่นคำร้อง', 'ยื่นคำร้องไม่สำเร็จ')
+    await showError(err?.data?.detail || err?.data?.error?.message || err?.data?.message || err?.message || 'เกิดข้อผิดพลาดในการยื่นคำร้อง', 'ยื่นคำร้องไม่สำเร็จ')
   } finally {
     submitting.value = false
   }

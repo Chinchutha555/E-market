@@ -1,20 +1,24 @@
 package requests
 
 type ApplicationFilter struct {
-	MarketID   int    `form:"market_id"`
-	CreatedBy  int    `form:"created_by"`
-	StallIdent string `form:"stall_ident"`
-	Status     string `form:"status"`
-	Search     string `form:"search"`
-	Page       string `form:"page"`
-	Limit      string `form:"limit"`
+	MarketID        int    `form:"market_id"`
+	CreatedBy       int    `form:"created_by"`
+	StallIdent      string `form:"stall_ident"`
+	Status          string `form:"status"`
+	ApplicationType string `form:"application_type"`
+	Search          string `form:"search"`
+	Page            string `form:"page"`
+	Limit           string `form:"limit"`
 }
 
 type CreateApplicationRequest struct {
+	ApplicationType       string      `json:"application_type"`
+	Subject               string      `json:"subject"`
 	BookingID             interface{} `json:"booking_id"`
 	StallID               interface{} `json:"stall_id"`
 	StallIdent            string      `json:"stall_ident"`
 	StallNumber           string      `json:"stall_number"`
+	MarketID              interface{} `json:"market_id"`
 	MarketName            string      `json:"market_name"`
 	ApplicantName         string      `json:"applicant_name"`
 	TenantName            string      `json:"tenant_name"`
@@ -33,6 +37,9 @@ type CreateApplicationRequest struct {
 	RequestedPeriodMonths int         `json:"requested_period_months"`
 	MonthlyRate           float64     `json:"monthly_rate"`
 	Fee                   float64     `json:"fee"`
+	ProposedRentType      string      `json:"proposed_rent_type"`
+	ReviewNote            string      `json:"review_note"`
+	Details               string      `json:"details"`
 }
 
 type UpdateApplicationStatusRequest struct {

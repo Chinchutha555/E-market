@@ -20,6 +20,8 @@ __pycache__/
 venv/
 ENV/
 env/
+*.exe
+
 
 # Databases
 *.db

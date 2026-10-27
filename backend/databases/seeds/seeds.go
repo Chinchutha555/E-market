@@ -322,6 +322,8 @@ func SeedAll(db *gorm.DB) error {
 
 	// Backfill scope for records created before market_id was introduced.
 	db.Exec("UPDATE application SET market_id = (SELECT market_id FROM stall WHERE stall.id = application.stall_id OR stall.ident = application.stall_ident LIMIT 1) WHERE market_id IS NULL")
+	db.Exec("UPDATE application SET market_name = (SELECT name FROM market WHERE market.id = application.market_id LIMIT 1) WHERE (market_name IS NULL OR market_name = '') AND market_id IS NOT NULL")
+	db.Exec("UPDATE application SET details = review_note WHERE (details IS NULL OR details = '') AND review_note IS NOT NULL AND review_note != ''")
 	db.Exec("UPDATE contract SET market_id = (SELECT market_id FROM stall WHERE stall.id = contract.stall_id OR stall.ident = contract.stall_ident LIMIT 1) WHERE market_id IS NULL")
 	db.Exec("UPDATE contract SET tenant_user_id = (SELECT created_by FROM application WHERE application.id = contract.application_id LIMIT 1) WHERE tenant_user_id IS NULL AND application_id IS NOT NULL")
 	db.Exec("UPDATE contract SET tenant_user_id = (SELECT created_by FROM booking WHERE booking.stall_ident = contract.stall_ident AND created_by IS NOT NULL ORDER BY booking.id DESC LIMIT 1) WHERE tenant_user_id IS NULL")
@@ -442,6 +444,26 @@ func SeedAll(db *gorm.DB) error {
 				db.Model(&models.Booking{}).Where("id = ?", bk.ID).Updates(updates)
 			}
 		}
+	}
+
+	// 10. Seed Application Types (ประเภทคำร้อง / เรื่องที่ขอ)
+	var appTypeCount int64
+	db.Model(&models.ApplicationType{}).Count(&appTypeCount)
+	if appTypeCount == 0 {
+		defaultTypes := []models.ApplicationType{
+			{Title: "ขออนุญาตปรับปรุง/ต่อเติมแผงค้า", Code: "stall_renovation", Description: "ขออนุญาตดัดแปลง ตกแต่ง หรือติดตั้งสิ่งอำนวยความสะดวกในแผงค้า", IsActive: true, SortOrder: 1},
+			{Title: "ขอเปลี่ยน/เพิ่มประเภทสินค้าที่จำหน่าย", Code: "product_change", Description: "ขอเปลี่ยนแปลงหรือเพิ่มหมวดหมู่สินค้าที่วางจำหน่ายในแผงค้า", IsActive: true, SortOrder: 2},
+			{Title: "ขอออกหนังสือรับรองการเช่าแผงค้า", Code: "lease_certificate", Description: "ขอเอกสารหนังสือรับรองสิทธิการเช่าแผงเพื่อนำไปประกอบธุรกรรม", IsActive: true, SortOrder: 3},
+			{Title: "ขอผ่อนผันเวลาเปิด-ปิดแผงค้า", Code: "hours_waiver", Description: "ขอเปิดหรือปิดร้านนอกเวลาทำการปกติของตลาด", IsActive: true, SortOrder: 4},
+			{Title: "แจ้งปัญหา / ร้องเรียนการใช้งานพื้นที่ตลาด", Code: "complaint_maintenance", Description: "แจ้งซ่อมแซมสิ่งอำนวยความสะดวก ไฟฟ้า น้ำประปา หรือข้อร้องเรียนทั่วไป", IsActive: true, SortOrder: 5},
+			{Title: "ขอโอนสิทธิ์การเช่าแผงค้า", Code: "lease_transfer", Description: "ขอเปลี่ยนตัวผู้เช่าหรือโอนสิทธิ์การเช่าแผงค้าให้ผู้อื่น", IsActive: true, SortOrder: 6},
+			{Title: "ขอยกเลิกสัญญาเช่าก่อนกำหนด", Code: "early_termination", Description: "ขอยกเลิกสัญญาเช่าแผงค้าและส่งมอบพื้นที่คืนก่อนสิ้นสุดสัญญา", IsActive: true, SortOrder: 7},
+			{Title: "เรื่องอื่นๆ", Code: "other", Description: "คำร้องหรือเรื่องติดต่ออื่นๆ นอกเหนือจากหัวข้อข้างต้น", IsActive: true, SortOrder: 99},
+		}
+		if err := db.Create(&defaultTypes).Error; err != nil {
+			return err
+		}
+		log.Println("Seeded default application types successfully")
 	}
 
 	return nil

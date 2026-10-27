@@ -36,12 +36,31 @@ func (r *repository) FindAll(filter requests.ApplicationFilter) ([]models.Applic
 	if filter.Status != "" {
 		query = query.Where("application_state = ?", filter.Status)
 	}
+	if filter.ApplicationType != "" {
+		if filter.ApplicationType == "general" {
+			query = query.Where("application_type = 'general' OR application_no LIKE 'GEN-%'")
+		} else if filter.ApplicationType == "stall_lease" {
+			query = query.Where("(application_type = 'stall_lease' OR application_type = '' OR application_type IS NULL) AND application_no NOT LIKE 'GEN-%'")
+		} else {
+			query = query.Where("application_type = ?", filter.ApplicationType)
+		}
+	}
 	if filter.Search != "" {
-		query = query.Where("applicant_name LIKE ? OR applicant_phone LIKE ? OR shop_name LIKE ? OR application_no LIKE ?",
-			"%"+filter.Search+"%", "%"+filter.Search+"%", "%"+filter.Search+"%", "%"+filter.Search+"%")
+		query = query.Where("applicant_name LIKE ? OR applicant_phone LIKE ? OR shop_name LIKE ? OR application_no LIKE ? OR subject LIKE ?",
+			"%"+filter.Search+"%", "%"+filter.Search+"%", "%"+filter.Search+"%", "%"+filter.Search+"%", "%"+filter.Search+"%")
 	}
 
 	err := query.Order("id DESC").Find(&apps).Error
+	if err == nil {
+		for i := range apps {
+			if apps[i].MarketName == "" && apps[i].MarketID != nil && *apps[i].MarketID > 0 {
+				var mkt models.Market
+				if r.conn.Where("id = ?", *apps[i].MarketID).First(&mkt).Error == nil {
+					apps[i].MarketName = mkt.Name
+				}
+			}
+		}
+	}
 	return apps, err
 }
 
@@ -51,6 +70,12 @@ func (r *repository) FindByID(id int) (*models.Application, error) {
 	if err != nil {
 		return nil, err
 	}
+	if app.MarketName == "" && app.MarketID != nil && *app.MarketID > 0 {
+		var mkt models.Market
+		if r.conn.Where("id = ?", *app.MarketID).First(&mkt).Error == nil {
+			app.MarketName = mkt.Name
+		}
+	}
 	return &app, nil
 }
 
@@ -59,157 +84,179 @@ func (r *repository) Create(app *models.Application) error {
 	app.CreatedAt = now
 	app.UpdatedAt = now
 	app.Status = "A"
+
+	// Resolve MarketID and MarketName
+	if app.MarketID == nil && app.MarketName != "" {
+		var mkt models.Market
+		if r.conn.Where("name = ? OR name_en = ?", app.MarketName, app.MarketName).First(&mkt).Error == nil {
+			app.MarketID = &mkt.ID
+		}
+	}
 	if app.MarketID == nil {
 		var stall models.Stall
 		query := r.conn.Where("status = 'A'")
 		if app.StallID != nil && *app.StallID > 0 {
 			query = query.Where("id = ?", *app.StallID)
-		} else {
+		} else if app.StallIdent != "" && app.StallIdent != "-" {
 			query = query.Where("ident = ?", app.StallIdent)
 		}
-		if query.First(&stall).Error == nil {
+		if query.First(&stall).Error == nil && stall.MarketID > 0 {
 			app.MarketID = &stall.MarketID
 		}
 	}
+	if app.MarketName == "" && app.MarketID != nil && *app.MarketID > 0 {
+		var mkt models.Market
+		if r.conn.Where("id = ?", *app.MarketID).First(&mkt).Error == nil {
+			app.MarketName = mkt.Name
+		}
+	}
+
 	return r.conn.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(app).Error; err != nil {
 			return err
 		}
-		// 1. Mark the primary holder booking for this stall as lease_applied and append timeline
-		var activeBookings []models.Booking
-		tx.Model(&models.Booking{}).
-			Where("stall_ident = ? AND status = 'A' AND queue_number = 0 AND booking_status IN ('interested', 'approved', 'pending_decision', 'pending_approval')", app.StallIdent).
-			Find(&activeBookings)
 
-		for _, bk := range activeBookings {
-			var tl []responses.TimelineItem
-			if bk.Timeline != "" {
-				_ = json.Unmarshal([]byte(bk.Timeline), &tl)
-			}
-			actor := app.ApplicantName
-			if actor == "" {
-				actor = bk.ApplicantName
-			}
-			if actor == "" {
-				actor = "ผู้เช่า"
-			}
-			tl = append(tl, responses.TimelineItem{
-				Action:    "ยื่นคำร้องขอเช่าแผงค้า",
-				ActorRole: "tenant",
-				ActorName: actor,
-				Timestamp: now.Format("2006-01-02T15:04:05Z07:00"),
-				Note:      fmt.Sprintf("ส่งคำร้องขอเช่าแผงค้าเข้าสู่ระบบเรียบร้อยแล้ว รหัสคำร้อง: %s", app.ApplicationNo),
-			})
-			tlBytes, _ := json.Marshal(tl)
-			_ = tx.Model(&models.Booking{}).Where("id = ?", bk.ID).Updates(map[string]interface{}{
-				"booking_status": "lease_applied",
-				"timeline":       string(tlBytes),
-				"updated_at":     now,
-			}).Error
-		}
+		// Only link bookings and update stall status for stall_lease applications
+		if (app.ApplicationType == "stall_lease" || app.ApplicationType == "") && app.StallIdent != "" && app.StallIdent != "-" {
+			// 1. Mark the primary holder booking for this stall as lease_applied and append timeline
+			var activeBookings []models.Booking
+			tx.Model(&models.Booking{}).
+				Where("stall_ident = ? AND status = 'A' AND queue_number = 0 AND booking_status IN ('interested', 'approved', 'pending_decision', 'pending_approval')", app.StallIdent).
+				Find(&activeBookings)
 
-		// 2. Automatically close all backup waiting queue bookings for this stall and notify each queued tenant
-		var backupQueues []models.Booking
-		tx.Model(&models.Booking{}).
-			Where("stall_ident = ? AND status = 'A' AND (queue_number > 0 OR booking_status = 'waiting_queue') AND booking_status NOT IN ('rejected', 'cancelled', 'not_interested', 'no_show', 'lease_applied', 'completed', 'terminated')", app.StallIdent).
-			Find(&backupQueues)
-
-		for _, q := range backupQueues {
-			var qTl []responses.TimelineItem
-			if q.Timeline != "" {
-				_ = json.Unmarshal([]byte(q.Timeline), &qTl)
+			for _, bk := range activeBookings {
+				var tl []responses.TimelineItem
+				if bk.Timeline != "" {
+					_ = json.Unmarshal([]byte(bk.Timeline), &tl)
+				}
+				actor := app.ApplicantName
+				if actor == "" {
+					actor = bk.ApplicantName
+				}
+				if actor == "" {
+					actor = "ผู้เช่า"
+				}
+				tl = append(tl, responses.TimelineItem{
+					Action:    "ยื่นคำร้องขอเช่าแผงค้า",
+					ActorRole: "tenant",
+					ActorName: actor,
+					Timestamp: now.Format("2006-01-02T15:04:05Z07:00"),
+					Note:      fmt.Sprintf("ส่งคำร้องขอเช่าแผงค้าเข้าสู่ระบบเรียบร้อยแล้ว รหัสคำร้อง: %s", app.ApplicationNo),
+				})
+				tlBytes, _ := json.Marshal(tl)
+				_ = tx.Model(&models.Booking{}).Where("id = ?", bk.ID).Updates(map[string]interface{}{
+					"booking_status": "lease_applied",
+					"timeline":       string(tlBytes),
+					"updated_at":     now,
+				}).Error
 			}
-			qTl = append(qTl, responses.TimelineItem{
-				Action:    "ปิดคิวสำรองอัตโนมัติ (ผู้จองหลักยื่นคำร้องเช่าแล้ว)",
-				ActorRole: "system",
-				ActorName: "ระบบจัดการคิวอัตโนมัติ",
-				Timestamp: now.Format("2006-01-02T15:04:05Z07:00"),
-				Note:      "ผู้จองคิวหลักได้ยื่นคำร้องขอเช่าแผงนี้สำเร็จแล้ว ระบบจึงปิดคิวสำรองของคุณโดยอัตโนมัติ",
-			})
-			qTlBytes, _ := json.Marshal(qTl)
-			closeNote := "ผู้จองคิวหลักได้ยื่นคำร้องเช่าแผงนี้สำเร็จแล้ว (ปิดคิวสำรองอัตโนมัติ)"
-			_ = tx.Model(&models.Booking{}).Where("id = ?", q.ID).Updates(map[string]interface{}{
-				"booking_status": "cancelled",
-				"queue_number":   0,
-				"note":           closeNote,
-				"timeline":       string(qTlBytes),
-				"updated_at":     now,
-			}).Error
 
-			qID := q.ID
-			closeNotif := models.Notification{
-				RecipientRole:   "tenant",
-				RecipientUserID: q.CreatedBy,
-				RecipientName:   q.ApplicantName,
-				Type:            "cancelled",
-				StatusCode:      "cancelled",
-				StatusLabel:     "ปิดคิวสำรอง",
-				Title:           fmt.Sprintf("ปิดคิวสำรองแผง %s (%s)", q.StallIdent, q.BookingNo),
-				Message:         fmt.Sprintf("ผู้จองคิวหลักได้ยื่นคำร้องเช่าแผง %s สำเร็จแล้ว ระบบได้ปิดคิวสำรองของคุณ ท่านสามารถเลือกจองแผงอื่นได้", q.StallIdent),
-				BookingID:       &qID,
-				BookingNumber:   q.BookingNo,
-				StallNumber:     q.StallIdent,
-				MarketName:      q.MarketName,
-				ProjectName:     q.ProjectName,
-				TargetURL:       "/bookings/" + fmt.Sprint(q.ID) + "?role=tenant",
+			// 2. Automatically close all backup waiting queue bookings for this stall and notify each queued tenant
+			var backupQueues []models.Booking
+			tx.Model(&models.Booking{}).
+				Where("stall_ident = ? AND status = 'A' AND (queue_number > 0 OR booking_status = 'waiting_queue') AND booking_status NOT IN ('rejected', 'cancelled', 'not_interested', 'no_show', 'lease_applied', 'completed', 'terminated')", app.StallIdent).
+				Find(&backupQueues)
+
+			for _, q := range backupQueues {
+				var qTl []responses.TimelineItem
+				if q.Timeline != "" {
+					_ = json.Unmarshal([]byte(q.Timeline), &qTl)
+				}
+				qTl = append(qTl, responses.TimelineItem{
+					Action:    "ปิดคิวสำรองอัตโนมัติ (ผู้จองหลักยื่นคำร้องเช่าแล้ว)",
+					ActorRole: "system",
+					ActorName: "ระบบจัดการคิวอัตโนมัติ",
+					Timestamp: now.Format("2006-01-02T15:04:05Z07:00"),
+					Note:      "ผู้จองคิวหลักได้ยื่นคำร้องขอเช่าแผงนี้สำเร็จแล้ว ระบบจึงปิดคิวสำรองของคุณโดยอัตโนมัติ",
+				})
+				qTlBytes, _ := json.Marshal(qTl)
+				closeNote := "ผู้จองคิวหลักได้ยื่นคำร้องเช่าแผงนี้สำเร็จแล้ว (ปิดคิวสำรองอัตโนมัติ)"
+				_ = tx.Model(&models.Booking{}).Where("id = ?", q.ID).Updates(map[string]interface{}{
+					"booking_status": "cancelled",
+					"queue_number":   0,
+					"note":           closeNote,
+					"timeline":       string(qTlBytes),
+					"updated_at":     now,
+				}).Error
+
+				qID := q.ID
+				closeNotif := models.Notification{
+					RecipientRole:   "tenant",
+					RecipientUserID: q.CreatedBy,
+					RecipientName:   q.ApplicantName,
+					Type:            "cancelled",
+					StatusCode:      "cancelled",
+					StatusLabel:     "ปิดคิวสำรอง",
+					Title:           fmt.Sprintf("ปิดคิวสำรองแผง %s (%s)", q.StallIdent, q.BookingNo),
+					Message:         fmt.Sprintf("ผู้จองคิวหลักได้ยื่นคำร้องเช่าแผง %s สำเร็จแล้ว ระบบได้ปิดคิวสำรองของคุณ ท่านสามารถเลือกจองแผงอื่นได้", q.StallIdent),
+					BookingID:       &qID,
+					BookingNumber:   q.BookingNo,
+					StallNumber:     q.StallIdent,
+					MarketName:      q.MarketName,
+					ProjectName:     q.ProjectName,
+					TargetURL:       "/bookings/" + fmt.Sprint(q.ID) + "?role=tenant",
+				}
+				_ = tx.Create(&closeNotif).Error
 			}
-			_ = tx.Create(&closeNotif).Error
-		}
 
-		// 3. Close the new per-stall Waitlist as soon as the primary holder
-		// submits a lease application. These records are separate from the
-		// legacy queue bookings above and must be notified individually.
-		var activeWaitlist []models.Waitlist
-		if err := tx.Where("stall_ident = ? AND status IN ('waiting', 'offered')", app.StallIdent).
-			Order("position ASC, id ASC").Find(&activeWaitlist).Error; err != nil {
-			return err
-		}
-		for i := range activeWaitlist {
-			item := &activeWaitlist[i]
-			if err := tx.Model(item).Updates(map[string]interface{}{
-				"status":         "cancelled",
-				"dismiss_reason": "ตัดสิทธิ์เนื่องจากผู้จองหลักยื่นคำร้องขอเช่าแผงสำเร็จ",
-				"expires_at":     nil,
-				"updated_at":     now,
-			}).Error; err != nil {
+			// 3. Close the per-stall Waitlist as soon as the primary holder
+			// submits a lease application. These records are separate from the
+			// legacy queue bookings above and must be notified individually.
+			var activeWaitlist []models.Waitlist
+			if err := tx.Where("stall_ident = ? AND status IN ('waiting', 'offered')", app.StallIdent).
+				Order("position ASC, id ASC").Find(&activeWaitlist).Error; err != nil {
 				return err
 			}
+			for i := range activeWaitlist {
+				item := &activeWaitlist[i]
+				if err := tx.Model(item).Updates(map[string]interface{}{
+					"status":         "cancelled",
+					"dismiss_reason": "ตัดสิทธิ์เนื่องจากผู้จองหลักยื่นคำร้องขอเช่าแผงสำเร็จ",
+					"expires_at":     nil,
+					"updated_at":     now,
+				}).Error; err != nil {
+					return err
+				}
 
-			closeNotif := models.Notification{
-				RecipientRole:   "tenant",
-				RecipientUserID: &item.TenantID,
-				RecipientName:   item.TenantName,
-				Type:            "waitlist_cancelled",
-				StatusCode:      "waitlist_cancelled",
-				StatusLabel:     "แผงถูกเช่าแล้ว",
-				Title:           fmt.Sprintf("แผง %s ถูกเช่าแล้ว", item.StallIdent),
-				Message:         fmt.Sprintf("แผง %s ที่คุณลงชื่อรอคิวมีผู้จองหลักยื่นคำร้องขอเช่าแล้ว ระบบจึงปิดรายการรอคิวของคุณ คุณสามารถเลือกแผงอื่นที่ว่างหรือเข้าคิวแผงอื่นได้", item.StallIdent),
-				StallNumber:     item.StallIdent,
-				MarketName:      item.MarketName,
-				ProjectName:     item.ProjectName,
-				TargetURL:       "/bookings?tab=interests",
+				closeNotif := models.Notification{
+					RecipientRole:   "tenant",
+					RecipientUserID: &item.TenantID,
+					RecipientName:   item.TenantName,
+					Type:            "waitlist_cancelled",
+					StatusCode:      "waitlist_cancelled",
+					StatusLabel:     "แผงถูกเช่าแล้ว",
+					Title:           fmt.Sprintf("แผง %s ถูกเช่าแล้ว", item.StallIdent),
+					Message:         fmt.Sprintf("แผง %s ที่คุณลงชื่อรอคิวมีผู้จองหลักยื่นคำร้องขอเช่าแล้ว ระบบจึงปิดรายการรอคิวของคุณ คุณสามารถเลือกแผงอื่นที่ว่างหรือเข้าคิวแผงอื่นได้", item.StallIdent),
+					StallNumber:     item.StallIdent,
+					MarketName:      item.MarketName,
+					ProjectName:     item.ProjectName,
+					TargetURL:       "/bookings?tab=interests",
+				}
+				if err := tx.Create(&closeNotif).Error; err != nil {
+					return err
+				}
 			}
-			if err := tx.Create(&closeNotif).Error; err != nil {
-				return err
-			}
-		}
 
-		// 4. Upsert stall to occupied
-		var stallCount int64
-		tx.Model(&models.Stall{}).Where("ident = ?", app.StallIdent).Count(&stallCount)
-		if stallCount == 0 {
-			newStall := models.Stall{
-				Ident:       app.StallIdent,
-				Name:        "แผงค้า " + app.StallIdent,
-				StallStatus: "occupied",
-				Floor:       "1",
-				Status:      "A",
+			// 4. Upsert stall to occupied
+			var stallCount int64
+			tx.Model(&models.Stall{}).Where("ident = ?", app.StallIdent).Count(&stallCount)
+			if stallCount == 0 {
+				newStall := models.Stall{
+					Ident:       app.StallIdent,
+					Name:        "แผงค้า " + app.StallIdent,
+					StallStatus: "occupied",
+					Floor:       "1",
+					Status:      "A",
+				}
+				if app.MarketID != nil {
+					newStall.MarketID = *app.MarketID
+				}
+				_ = tx.Create(&newStall).Error
+			} else {
+				_ = tx.Model(&models.Stall{}).
+					Where("ident = ?", app.StallIdent).
+					Update("stall_status", "occupied").Error
 			}
-			_ = tx.Create(&newStall).Error
-		} else {
-			_ = tx.Model(&models.Stall{}).
-				Where("ident = ?", app.StallIdent).
-				Update("stall_status", "occupied").Error
 		}
 		return nil
 	})

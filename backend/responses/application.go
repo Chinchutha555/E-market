@@ -6,8 +6,12 @@ type ApplicationResponse struct {
 	ID                    int        `json:"id"`
 	ApplicationNo         string     `json:"application_no"`
 	ApplicationNumber     string     `json:"application_number"`
+	ApplicationType       string     `json:"application_type"`
+	Subject               string     `json:"subject,omitempty"`
+	BookingID             *int       `json:"booking_id,omitempty"`
 	StallID               *int       `json:"stall_id,omitempty"`
 	MarketID              *int       `json:"market_id,omitempty"`
+	MarketName            string     `json:"market_name,omitempty"`
 	StallIdent            string     `json:"stall_ident"`
 	StallNumber           string     `json:"stall_number"`
 	ApplicantName         string     `json:"applicant_name"`
@@ -17,9 +21,11 @@ type ApplicationResponse struct {
 	ApplicantIDCard       string     `json:"applicant_id_card"`
 	ApplicantEmail        string     `json:"applicant_email,omitempty"`
 	ApplicantAddress      string     `json:"applicant_address,omitempty"`
+	Details               string     `json:"details,omitempty"`
 	ShopName              string     `json:"shop_name"`
 	ProductCategory       string     `json:"product_category"`
 	ProductType           string     `json:"product_type"`
+	ProposedRentType      string     `json:"proposed_rent_type,omitempty"`
 	RequestedStartDate    string     `json:"requested_start_date"`
 	LeaseTermMonths       int        `json:"lease_term_months"`
 	RequestedPeriodMonths int        `json:"requested_period_months"`

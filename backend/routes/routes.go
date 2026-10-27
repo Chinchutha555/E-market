@@ -24,6 +24,10 @@ import (
 	appRepoPkg "emarket-api/src/application/repositories"
 	appUsecasePkg "emarket-api/src/application/usecases"
 
+	appTypeHandlerPkg "emarket-api/src/application_type/handlers"
+	appTypeRepoPkg "emarket-api/src/application_type/repositories"
+	appTypeUsecasePkg "emarket-api/src/application_type/usecases"
+
 	contractHandlerPkg "emarket-api/src/contract/handlers"
 	contractRepoPkg "emarket-api/src/contract/repositories"
 	contractUsecasePkg "emarket-api/src/contract/usecases"
@@ -78,6 +82,10 @@ func SetupRouter() *gin.Engine {
 	appRepo := appRepoPkg.NewRepository(db)
 	appUC := appUsecasePkg.NewUseCase(appRepo)
 	appHandler := appHandlerPkg.NewHandler(appUC)
+
+	appTypeRepo := appTypeRepoPkg.NewRepository(db)
+	appTypeUC := appTypeUsecasePkg.NewUseCase(appTypeRepo)
+	appTypeHandler := appTypeHandlerPkg.NewHandler(appTypeUC)
 
 	contractRepo := contractRepoPkg.NewRepository(db)
 	contractUC := contractUsecasePkg.NewUseCase(contractRepo)
@@ -173,12 +181,23 @@ func SetupRouter() *gin.Engine {
 		{
 			appGroup.GET("", appHandler.GetApplications)
 			appGroup.GET("/:id", middlewares.RequireResourceAccess(db, "application"), appHandler.GetApplicationByID)
-			appGroup.POST("", middlewares.RequireRoles("tenant"), appHandler.CreateApplication)
+			appGroup.POST("", middlewares.RequireRoles("tenant", "admin", "staff"), appHandler.CreateApplication)
 			appGroup.POST("/:id/action", middlewares.RequireRoles("admin", "staff"), middlewares.RequireResourceAccess(db, "application"), appHandler.Action)
 			appGroup.POST("/clear", middlewares.RequireRoles("admin", "staff"), func(c *gin.Context) {
 				c.JSON(http.StatusOK, responses.SuccessResponse(gin.H{"cleared": true}, http.StatusOK))
 			})
 			appGroup.PATCH("/:id/status", middlewares.RequireRoles("admin", "staff"), middlewares.RequireResourceAccess(db, "application"), appHandler.UpdateApplicationStatus)
+		}
+
+		// Application Type Routes (จัดการประเภทคำร้อง)
+		appTypeGroup := api.Group("/application-types")
+		{
+			appTypeGroup.GET("", appTypeHandler.GetApplicationTypes)
+			appTypeGroup.GET("/:id", appTypeHandler.GetApplicationTypeByID)
+			appTypeGroup.POST("", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin"), appTypeHandler.CreateApplicationType)
+			appTypeGroup.PUT("/:id", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin"), appTypeHandler.UpdateApplicationType)
+			appTypeGroup.DELETE("/:id", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin"), appTypeHandler.DeleteApplicationType)
+			appTypeGroup.PATCH("/:id/toggle", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin"), appTypeHandler.ToggleActive)
 		}
 
 		// Contract Routes

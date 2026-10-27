@@ -4,11 +4,6 @@
     <AppHeader />
 
     <div class="content-body market-detail-page">
-      <!-- Breadcrumb -->
-      <div v-if="!isStaff" class="md-breadcrumb-row">
-        <AppBreadcrumb :current="currentMarket.name" backTo="/" />
-      </div>
-
       <header class="md-page-heading">
         <div>
           <h2>รายละเอียดตลาด</h2>
@@ -454,9 +449,16 @@ const route = useRoute()
 const { get } = useApi()
 const { role } = useAuth()
 const { applyMarketOverride, getMarketOverride } = useMarketOverrides()
+const { resetTestData } = useResetTestData()
 const isOfficer = computed(() => role.value === 'admin' || role.value === 'staff')
 const isStaff = computed(() => role.value === 'staff')
 const isAdmin = computed(() => role.value === 'admin')
+
+const handleClearAllData = async () => {
+  await resetTestData(async () => {
+    await loadMarketDetailData(route.query.market)
+  })
+}
 
 const buildInitialMarket = (queryVal?: any) => {
   const cfg = getMarketGisConfig(String(queryVal || '1'))
