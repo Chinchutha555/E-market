@@ -1135,31 +1135,188 @@
             class="officer-kpi-ribbon officer-status-kpi-ribbon"
             :class="{ 'compact-card-gap': officerViewMode === 'project' }"
           >
-            <button type="button" class="kpi-ribbon-card kpi-all" :class="{ active: officerActiveTab === 'all' }" @click="officerActiveTab = 'all'">
-              <span class="kpi-icon-box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1"></rect></svg></span>
-              <span class="kpi-text-box"><span class="kpi-title">ทั้งหมด</span><span class="kpi-value-row"><strong class="kpi-count">{{ officerDirectBookingsCount }}</strong><span class="kpi-unit-pill">รายการ</span></span></span>
-            </button>
-            <button type="button" class="kpi-ribbon-card kpi-pending" :class="{ active: officerActiveTab === 'pending' }" @click="officerActiveTab = 'pending'">
-              <span class="kpi-icon-box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
-              <span class="kpi-text-box"><span class="kpi-title">รออนุมัติ</span><span class="kpi-value-row"><strong class="kpi-count">{{ officerCountPending }}</strong><span class="kpi-unit-pill">รายการ</span></span></span>
-            </button>
-            <button type="button" class="kpi-ribbon-card kpi-upcoming" :class="{ active: officerActiveTab === 'approved' }" @click="officerActiveTab = 'approved'">
-              <span class="kpi-icon-box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></span>
-              <span class="kpi-text-box"><span class="kpi-title">นัดหมายแล้ว</span><span class="kpi-value-row"><strong class="kpi-count">{{ officerCountApproved }}</strong><span class="kpi-unit-pill">รายการ</span></span></span>
-            </button>
-            <button type="button" class="kpi-ribbon-card kpi-interested" :class="{ active: officerActiveTab === 'interested' }" @click="officerActiveTab = 'interested'">
-              <span class="kpi-icon-box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></span>
-              <span class="kpi-text-box"><span class="kpi-title">รอยื่นคำร้อง</span><span class="kpi-value-row"><strong class="kpi-count">{{ officerCountInterested }}</strong><span class="kpi-unit-pill">รายการ</span></span></span>
-            </button>
-            <button type="button" class="kpi-ribbon-card kpi-applied" :class="{ active: officerActiveTab === 'applied' }" @click="officerActiveTab = 'applied'">
-              <span class="kpi-icon-box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="13" y2="17"></line></svg></span>
-              <span class="kpi-text-box"><span class="kpi-title">ยื่นคำร้องสำเร็จ</span><span class="kpi-value-row"><strong class="kpi-count">{{ officerCountApplied }}</strong><span class="kpi-unit-pill">รายการ</span></span></span>
-            </button>
-            <button type="button" class="kpi-ribbon-card kpi-cancelled" :class="{ active: officerActiveTab === 'cancelled' }" @click="officerActiveTab = 'cancelled'">
-              <span class="kpi-icon-box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></span>
-              <span class="kpi-text-box"><span class="kpi-title">ยกเลิก</span><span class="kpi-value-row"><strong class="kpi-count">{{ officerCountCancelled }}</strong><span class="kpi-unit-pill">รายการ</span></span></span>
-            </button>
+            <!-- 1. รายการทั้งหมด -->
+            <div
+              class="kpi-ribbon-card kpi-all"
+              :class="{ active: officerActiveTab === 'all' }"
+              @click="officerActiveTab = 'all'"
+              role="button"
+              tabindex="0"
+            >
+              <div class="kpi-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+              </div>
+              <div class="kpi-text-box">
+                <div class="kpi-title">ทั้งหมด</div>
+                <div class="kpi-value-row">
+                  <span class="kpi-count">{{ officerDirectBookingsCount }}</span>
+                  <span class="kpi-unit-pill">รายการ</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. รอดำเนินการ -->
+            <div
+              class="kpi-ribbon-card kpi-pending"
+              :class="{ active: officerActiveTab === 'pending' }"
+              @click="officerActiveTab = 'pending'"
+              role="button"
+              tabindex="0"
+            >
+              <div class="kpi-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </div>
+              <div class="kpi-text-box">
+                <div class="kpi-title">รอดำเนินการ</div>
+                <div class="kpi-value-row">
+                  <span class="kpi-count">{{ officerCountPendingCombined }}</span>
+                  <span class="kpi-unit-pill">รายการ</span>
+                </div>
+              </div>
+
+              <!-- Info Tooltip Button (มุมบนขวาของการ์ด) -->
+              <div
+                class="kpi-info-wrapper"
+                @mouseenter="showOfficerPendingTooltip = true"
+                @mouseleave="showOfficerPendingTooltip = false"
+                @click.stop="toggleOfficerPendingTooltip"
+              >
+                <button
+                  type="button"
+                  class="kpi-info-btn"
+                  aria-label="ดูรายละเอียดสถานะในกลุ่มรอดำเนินการ"
+                  title="ดูรายละเอียดสถานะย่อย"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                </button>
+
+                <!-- Rich Tooltip Popover -->
+                <transition name="fade-slide">
+                  <div v-if="showOfficerPendingTooltip" class="kpi-info-popover" @click.stop>
+                    <div class="kpi-popover-header">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                      <span>สถานะในกลุ่มรอดำเนินการ ({{ officerCountPendingCombined }})</span>
+                    </div>
+                    <div class="kpi-popover-body">
+                      <div class="kpi-popover-item" :class="{ 'is-selected': officerSubFilter === 'pending_approval' }" @click="setOfficerSubFilter('pending_approval')">
+                        <span class="kpi-status-dot amber"></span>
+                        <span class="kpi-status-name">รออนุมัติ</span>
+                        <span class="kpi-status-val">{{ officerCountPending }}</span>
+                      </div>
+                      <div class="kpi-popover-item" :class="{ 'is-selected': officerSubFilter === 'approved' }" @click="setOfficerSubFilter('approved')">
+                        <span class="kpi-status-dot green"></span>
+                        <span class="kpi-status-name">นัดหมายแล้ว</span>
+                        <span class="kpi-status-val">{{ officerCountApproved }}</span>
+                      </div>
+                      <div class="kpi-popover-item" :class="{ 'is-selected': officerSubFilter === 'interested' }" @click="setOfficerSubFilter('interested')">
+                        <span class="kpi-status-dot blue"></span>
+                        <span class="kpi-status-name">รอยื่นคำร้อง</span>
+                        <span class="kpi-status-val">{{ officerCountInterested }}</span>
+                      </div>
+                    </div>
+                    <div v-if="officerSubFilter !== 'all'" class="kpi-popover-reset" @click="setOfficerSubFilter('all')">
+                      <span>แสดงทั้งหมดในรอดำเนินการ</span>
+                    </div>
+                  </div>
+                </transition>
+              </div>
+            </div>
+
+            <!-- 3. ยื่นคำร้องสำเร็จ (สีม่วง) -->
+            <div
+              class="kpi-ribbon-card kpi-applied"
+              :class="{ active: officerActiveTab === 'applied' }"
+              @click="officerActiveTab = 'applied'"
+              role="button"
+              tabindex="0"
+            >
+              <div class="kpi-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </div>
+              <div class="kpi-text-box">
+                <div class="kpi-title">ยื่นคำร้องสำเร็จ</div>
+                <div class="kpi-value-row">
+                  <span class="kpi-count">{{ officerCountApplied }}</span>
+                  <span class="kpi-unit-pill">รายการ</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. ยกเลิก -->
+            <div
+              class="kpi-ribbon-card kpi-cancelled"
+              :class="{ active: officerActiveTab === 'cancelled' }"
+              @click="officerActiveTab = 'cancelled'"
+              role="button"
+              tabindex="0"
+            >
+              <div class="kpi-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+              </div>
+              <div class="kpi-text-box">
+                <div class="kpi-title">ยกเลิก</div>
+                <div class="kpi-value-row">
+                  <span class="kpi-count">{{ officerCountCancelled }}</span>
+                  <span class="kpi-unit-pill">รายการ</span>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <!-- Officer Sub-filters when "รอดำเนินการ" is Active -->
+          <transition name="fade-slide">
+            <div v-if="officerActiveTab === 'pending'" class="tenant-subfilter-bar" style="margin-top: -12px; margin-bottom: 22px;">
+              <button
+                type="button"
+                class="subfilter-chip chip-all"
+                :class="{ active: officerSubFilter === 'all' }"
+                @click="officerSubFilter = 'all'"
+              >
+                <span>ทั้งหมด</span>
+                <span class="subfilter-badge">{{ officerCountPendingCombined }}</span>
+              </button>
+              <button
+                type="button"
+                class="subfilter-chip chip-amber"
+                :class="{ active: officerSubFilter === 'pending_approval' }"
+                @click="officerSubFilter = 'pending_approval'"
+              >
+                <span class="subfilter-dot"></span>
+                <span>รออนุมัติ</span>
+                <span class="subfilter-badge">{{ officerCountPending }}</span>
+              </button>
+              <button
+                type="button"
+                class="subfilter-chip chip-green"
+                :class="{ active: officerSubFilter === 'approved' }"
+                @click="officerSubFilter = 'approved'"
+              >
+                <span class="subfilter-dot"></span>
+                <span>นัดหมายแล้ว</span>
+                <span class="subfilter-badge">{{ officerCountApproved }}</span>
+              </button>
+              <button
+                type="button"
+                class="subfilter-chip chip-blue"
+                :class="{ active: officerSubFilter === 'interested' }"
+                @click="officerSubFilter = 'interested'"
+              >
+                <span class="subfilter-dot"></span>
+                <span>รอยื่นคำร้อง</span>
+                <span class="subfilter-badge">{{ officerCountInterested }}</span>
+              </button>
+            </div>
+          </transition>
 
           <AppBookingListSkeleton v-if="loading" :count="2" />
 
@@ -1173,6 +1330,15 @@
             <template v-if="officerMarketBookings.length > 0 && officerActiveTab !== 'all'">
               <div class="empty-eyebrow">สถานะที่เลือก</div>
               <div class="empty-title">ยังไม่มีรายการ{{ getOfficerTabName(officerActiveTab) }}</div>
+              <button
+                v-if="officerActiveTab === 'pending' && officerSubFilter !== 'all'"
+                type="button"
+                class="btn btn-outline-primary btn-sm"
+                @click="officerSubFilter = 'all'"
+                style="margin-top: 14px;"
+              >
+                แสดงทั้งหมดในรอดำเนินการ
+              </button>
             </template>
             <template v-else-if="officerSearchQuery">
               <div class="empty-title">ไม่พบรายการที่ตรงกับ "{{ officerSearchQuery }}"</div>
@@ -2760,6 +2926,17 @@ const officerSection = ref<'bookings' | 'waiting'>('bookings')
 const officerWaitlistSubTab = ref<'active' | 'history'>('active')
 const stallQueueModalTab = ref<'active' | 'history'>('active')
 const officerActiveTab = ref<'all' | 'pending' | 'waiting' | 'approved' | 'interested' | 'applied' | 'cancelled'>('all')
+const officerSubFilter = ref<'all' | 'pending_approval' | 'approved' | 'interested'>('all')
+const showOfficerPendingTooltip = ref(false)
+const toggleOfficerPendingTooltip = () => {
+  showOfficerPendingTooltip.value = !showOfficerPendingTooltip.value
+}
+const setOfficerSubFilter = (val: 'all' | 'pending_approval' | 'approved' | 'interested') => {
+  officerSubFilter.value = val
+  if (officerActiveTab.value !== 'pending') {
+    officerActiveTab.value = 'pending'
+  }
+}
 const officerOnlyToday = ref(false)
 const officerViewMode = ref<'project' | 'table'>('project')
 const officerSearchQuery = ref('')
@@ -3721,6 +3898,10 @@ const officerDirectBookingsCount = computed(() => {
   return officerMarketBookings.value.filter(b => !isQueueBooking(b)).length
 })
 
+const officerCountPendingCombined = computed(() => {
+  return officerCountPending.value + officerCountApproved.value + officerCountInterested.value
+})
+
 const filteredOfficerBookings = computed(() => {
   const searchQuery = officerSearchQuery.value.trim().toLowerCase().replace('#', '')
   // A direct booking-number search should be global. Otherwise a stale market
@@ -3738,7 +3919,21 @@ const filteredOfficerBookings = computed(() => {
   if (officerActiveTab.value === 'all') {
     list = list.filter(b => !isQueueBooking(b))
   } else if (officerActiveTab.value === 'pending') {
-    list = list.filter(b => !isQueueBooking(b) && (b.status === 'pending_approval' || b.status === 'pending' || b.status === 'pending_slot'))
+    if (officerSubFilter.value === 'pending_approval') {
+      list = list.filter(b => !isQueueBooking(b) && (b.status === 'pending_approval' || b.status === 'pending' || b.status === 'pending_slot'))
+    } else if (officerSubFilter.value === 'approved') {
+      list = list.filter(b => !isQueueBooking(b) && b.status === 'approved')
+      if (officerOnlyToday.value) {
+        list = list.filter(b => b.visit_date?.includes('19 ตุลาคม') || b.visit_date?.includes('วันนี้') || !b.visit_date)
+      }
+    } else if (officerSubFilter.value === 'interested') {
+      list = list.filter(b => !isQueueBooking(b) && b.status === 'interested')
+    } else {
+      list = list.filter(b =>
+        !isQueueBooking(b) &&
+        ['pending', 'pending_approval', 'pending_slot', 'approved', 'interested'].includes(b.status)
+      )
+    }
   } else if (officerActiveTab.value === 'waiting') {
     list = list.filter(b => isQueueBooking(b))
   } else if (officerActiveTab.value === 'approved') {
@@ -3764,10 +3959,15 @@ const filteredOfficerBookings = computed(() => {
 
 const getOfficerTabName = (tab: string) => {
   switch (tab) {
-    case 'pending': return 'รอเจ้าหน้าที่อนุมัติ'
+    case 'pending': {
+      if (officerSubFilter.value === 'pending_approval') return 'รออนุมัติ'
+      if (officerSubFilter.value === 'approved') return 'นัดหมายแล้ว'
+      if (officerSubFilter.value === 'interested') return 'รอยื่นคำร้อง'
+      return 'รอดำเนินการ'
+    }
     case 'waiting': return 'รอคิว'
-    case 'approved': return 'นัดหมายสำเร็จ'
-    case 'interested': return 'รอผู้เช่ายื่นคำร้อง'
+    case 'approved': return 'นัดหมายแล้ว'
+    case 'interested': return 'รอยื่นคำร้อง'
     case 'applied': return 'ยื่นคำร้องสำเร็จ'
     case 'cancelled': return 'ยกเลิก'
     default: return 'ทั้งหมด'
@@ -4017,6 +4217,15 @@ const officerDisplayGroups = computed(() => {
       projectBookingCount: project.bookingCount,
       projectActionableCount: project.actionableCount
     })))
+})
+
+watch(officerActiveTab, () => {
+  officerSubFilter.value = 'all'
+  officerCurrentPage.value = 1
+})
+
+watch(officerSubFilter, () => {
+  officerCurrentPage.value = 1
 })
 
 watch(officerViewMode, () => {
@@ -5108,6 +5317,7 @@ const saveBookingReturnContext = (b: any) => {
       selectedMarket: officerSelectedMarket.value,
       section: officerSection.value,
       activeTab: officerActiveTab.value,
+      subFilter: officerSubFilter.value,
       onlyToday: officerOnlyToday.value,
       viewMode: officerViewMode.value,
       search: officerSearchQuery.value,
@@ -5158,6 +5368,7 @@ const restoreBookingReturnContext = async () => {
       officerSelectedMarket.value = context.officer.selectedMarket || 'all'
       officerSection.value = context.officer.section || (context.officer.activeTab === 'waiting' ? 'waiting' : 'bookings')
       officerActiveTab.value = (context.officer.activeTab === 'waiting' ? 'all' : context.officer.activeTab) || 'all'
+      officerSubFilter.value = context.officer.subFilter || 'all'
       officerOnlyToday.value = !!context.officer.onlyToday
       officerViewMode.value = context.officer.viewMode || 'project'
       officerSearchQuery.value = context.officer.search || ''
@@ -7417,9 +7628,9 @@ onMounted(async () => {
   margin-bottom: 34px;
 }
 
-/* เจ้าหน้าที่มี 6 สถานะหลักในรายการจอง: จอกว้างแบ่งเป็น 6 คอลัมน์สมมาตร */
+/* เจ้าหน้าที่มี 4 สถานะหลักในรายการจอง: จอกว้างแบ่งเป็น 4 คอลัมน์สมมาตรเหมือนผู้เช่า */
 .officer-status-kpi-ribbon {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-bottom: 32px;
 }
 
@@ -7427,9 +7638,9 @@ onMounted(async () => {
   margin-bottom: 32px;
 }
 
-@media (max-width: 1400px) {
+@media (max-width: 1200px) {
   .officer-status-kpi-ribbon {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
