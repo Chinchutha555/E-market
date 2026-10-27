@@ -54,12 +54,12 @@
               <span>ขอเช่าแผงค้า</span>
             </NuxtLink>
 
-            <!-- Manage Application Types (Admin Only) -->
+            <!-- Manage Application Types (Admin & Staff) -->
             <NuxtLink
-              v-if="isAdmin"
+              v-if="isAdminOrStaff"
               to="/applications/types"
               class="btn-table-manage-types"
-              title="จัดการประเภทคำร้อง (เฉพาะผู้ดูแลระบบ)"
+              title="จัดการประเภทคำร้อง (ผู้ดูแลระบบและเจ้าหน้าที่)"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="4" y1="21" x2="4" y2="14"></line>
@@ -776,10 +776,10 @@
             <div class="preset-label-header">
               <label class="form-label" style="margin-bottom: 0;">ประเภทคำร้อง / เรื่องที่ขอ <span class="text-danger">*</span></label>
               <NuxtLink
-                v-if="isAdmin"
+                v-if="isAdminOrStaff"
                 to="/applications/types"
                 class="btn-manage-types-shortcut"
-                title="จัดการรายการประเภทคำร้องในระบบ (เฉพาะผู้ดูแลระบบ)"
+                title="จัดการรายการประเภทคำร้องในระบบ (เฉพาะผู้ดูแลระบบและเจ้าหน้าที่)"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="4" y1="21" x2="4" y2="14"></line>
@@ -933,7 +933,8 @@ import { useNotifications } from '~/composables/useNotifications'
 
 const { get, post } = useApi()
 const authStore = useAuthStore()
-const { user, currentUser, isTenant, isAdmin, role } = useAuth()
+const { user, currentUser, isTenant, isAdmin, isStaff, role } = useAuth()
+const isAdminOrStaff = computed(() => isAdmin.value || isStaff.value || ['admin', 'staff'].includes(role.value || authStore.role || ''))
 const { showAlert, showConfirm, showSuccess, showError } = useAppAlert()
 const { fetchNotifications } = useNotifications()
 const { resetTestData } = useResetTestData()
@@ -1410,6 +1411,7 @@ const getCurrentUserProfile = () => {
 }
 
 const openCreateGeneralModal = () => {
+  loadApplicationTypes()
   const profile = getCurrentUserProfile()
   const initialSubject = generalPresetSubjects.value[0] || 'ขออนุญาตปรับปรุง/ต่อเติมแผงค้า'
   generalForm.value = {

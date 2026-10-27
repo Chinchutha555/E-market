@@ -63,9 +63,9 @@
               </svg>
             </button>
 
-            <!-- Add New Type CTA (Admin Only) -->
+            <!-- Add New Type CTA (Admin & Staff) -->
             <AppButton
-              v-if="isAdmin"
+              v-if="isAdminOrStaff"
               variant="primary"
               size="md"
               @click="openCreateModal"
@@ -134,7 +134,7 @@
                 <th>ประเภทคำร้อง / เรื่องที่ขอ</th>
                 <th>คำอธิบายเพิ่มเติม</th>
                 <th style="width: 140px; text-align: center;">สถานะ</th>
-                <th v-if="isAdmin" style="width: 160px; text-align: right;">การจัดการ</th>
+                <th v-if="isAdminOrStaff" style="width: 160px; text-align: right;">การจัดการ</th>
               </tr>
             </thead>
             <tbody>
@@ -144,6 +144,9 @@
                 </td>
                 <td>
                   <div class="type-title-text">{{ t.title }}</div>
+                  <div v-if="t.code" class="type-code-sub">
+                    <span class="type-code-tag">{{ t.code }}</span>
+                  </div>
                 </td>
                 <td>
                   <div class="type-desc-text">{{ t.description || '-' }}</div>
@@ -157,7 +160,7 @@
                     <span>{{ t.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน' }}</span>
                   </span>
                 </td>
-                <td v-if="isAdmin" style="text-align: right;">
+                <td v-if="isAdminOrStaff" style="text-align: right;">
                   <div class="table-actions-cell">
                     <!-- Toggle Active Button -->
                     <button
@@ -217,7 +220,7 @@
           </svg>
           <div class="empty-title">ไม่พบประเภทคำร้องตามเงื่อนไขที่ค้นหา</div>
           <div class="empty-subtitle">ลองเปลี่ยนคำค้นหา หรือกดปุ่มด้านล่างเพื่อเพิ่มประเภทคำร้องใหม่</div>
-          <AppButton v-if="isAdmin" variant="primary" size="sm" style="margin-top: 14px;" @click="openCreateModal">
+          <AppButton v-if="isAdminOrStaff" variant="primary" size="sm" style="margin-top: 14px;" @click="openCreateModal">
             เพิ่มประเภทคำร้องใหม่
           </AppButton>
         </div>
@@ -282,6 +285,20 @@
               type="text"
               class="form-input"
               placeholder="เช่น ขออนุญาตปรับปรุง/ต่อเติมแผงค้า"
+            />
+          </div>
+
+          <!-- Code (Slug / Identifier) -->
+          <div class="form-group">
+            <label class="form-label" for="type-code">
+              รหัสอ้างอิง / Code <span class="text-hint">(ภาษาอังกฤษ/ตัวเลข เช่น stall_renovation หรือเว้นว่างเพื่อสร้างอัตโนมัติ)</span>
+            </label>
+            <input
+              id="type-code"
+              v-model="form.code"
+              type="text"
+              class="form-input"
+              placeholder="เช่น stall_repair, general_doc (เว้นว่างได้)"
             />
           </div>
 
@@ -359,15 +376,16 @@ definePageMeta({
     if (!import.meta.client) return
     const auth = useAuthStore()
     auth.hydrate()
-    if (auth.role !== 'admin') {
+    if (auth.role !== 'admin' && auth.role !== 'staff') {
       return navigateTo(auth.role === 'staff' ? '/staff' : '/applications', { replace: true })
     }
   }
 })
 
 const authStore = useAuthStore()
-const { isAdmin } = useAuth()
-const { get, post, put, del } = useApi()
+const { isAdmin, isStaff } = useAuth()
+const isAdminOrStaff = computed(() => isAdmin.value || isStaff.value || ['admin', 'staff'].includes(authStore.role || ''))
+const { get, post, put, patch, del } = useApi()
 const { showConfirm, showSuccess, showError } = useAppAlert()
 
 const loading = ref(true)
@@ -405,8 +423,9 @@ const filteredTypes = computed(() => {
     if (searchQuery.value.trim()) {
       const q = searchQuery.value.trim().toLowerCase()
       const title = String(item.title || '').toLowerCase()
+      const code = String(item.code || '').toLowerCase()
       const desc = String(item.description || '').toLowerCase()
-      if (!title.includes(q) && !desc.includes(q)) {
+      if (!title.includes(q) && !code.includes(q) && !desc.includes(q)) {
         return false
       }
     }
@@ -425,8 +444,10 @@ const loadTypes = async () => {
   loading.value = true
   try {
     const res = await get<any>('/application-types')
-    if (res.status && res.data) {
+    if (res && res.status && res.data) {
       typesList.value = Array.isArray(res.data) ? res.data : []
+    } else if (Array.isArray(res)) {
+      typesList.value = res
     }
   } catch (err: any) {
     await showError(err?.data?.detail || 'ไม่สามารถโหลดข้อมูลประเภทคำร้องได้', 'ข้อผิดพลาด')
@@ -480,29 +501,25 @@ const saveType = async () => {
 
   submitting.value = true
   try {
+    const payload = {
+      title: form.value.title.trim(),
+      code: form.value.code ? form.value.code.trim() : undefined,
+      description: form.value.description ? form.value.description.trim() : '',
+      sort_order: Number(form.value.sort_order) || 0,
+      is_active: Boolean(form.value.is_active)
+    }
+
     if (editingItem.value) {
-      await put(`/application-types/${editingItem.value.id}`, {
-        title: form.value.title.trim(),
-        code: form.value.code ? form.value.code.trim() : undefined,
-        description: form.value.description.trim(),
-        sort_order: Number(form.value.sort_order) || 0,
-        is_active: form.value.is_active
-      })
+      await put(`/application-types/${editingItem.value.id}`, payload)
       await showSuccess('บันทึกการแก้ไขประเภทคำร้องเรียบร้อยแล้ว', 'สำเร็จ')
     } else {
-      await post('/application-types', {
-        title: form.value.title.trim(),
-        code: form.value.code ? form.value.code.trim() : undefined,
-        description: form.value.description.trim(),
-        sort_order: Number(form.value.sort_order) || 0,
-        is_active: form.value.is_active
-      })
+      await post('/application-types', payload)
       await showSuccess('เพิ่มประเภทคำร้องใหม่เรียบร้อยแล้ว', 'สำเร็จ')
     }
     closeModal()
     await loadTypes()
   } catch (err: any) {
-    formError.value = err?.data?.detail || err?.data?.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล'
+    formError.value = err?.data?.detail || err?.data?.message || err?.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล'
   } finally {
     submitting.value = false
   }
@@ -523,7 +540,11 @@ const toggleTypeStatus = async (item: any) => {
   if (!confirmed) return
 
   try {
-    await post(`/application-types/${item.id}/toggle`, {})
+    try {
+      await patch(`/application-types/${item.id}/toggle`, {})
+    } catch {
+      await post(`/application-types/${item.id}/toggle`, {})
+    }
     item.is_active = !item.is_active
     await showSuccess(`เปลี่ยนสถานะเป็น ${nextStatusText} เรียบร้อยแล้ว`, 'สำเร็จ')
   } catch (err: any) {
@@ -562,6 +583,24 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.type-code-sub {
+  margin-top: 4px;
+}
+.type-code-tag {
+  display: inline-block;
+  font-family: monospace;
+  font-size: 0.75rem; /* 12px */
+  background: #f1f5f9;
+  color: #475569;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+.text-hint {
+  font-weight: 400;
+  color: #94a3b8;
+  font-size: 0.75rem; /* 12px */
+}
 /* Breadcrumb */
 .page-breadcrumb-nav {
   display: flex;

@@ -110,7 +110,14 @@ func (u *useCase) UpdateApplicationType(id uint, req requests.UpdateApplicationT
 		item.Title = strings.TrimSpace(req.Title)
 	}
 	if req.Code != "" {
-		item.Code = strings.TrimSpace(req.Code)
+		newCode := strings.TrimSpace(req.Code)
+		if newCode != item.Code {
+			existing, _ := u.repo.FindByCode(newCode)
+			if existing != nil && existing.ID != item.ID {
+				return nil, responses.NewAppErr(http.StatusBadRequest, "รหัสประเภทคำร้อง (Code) นี้ถูกใช้งานแล้ว")
+			}
+			item.Code = newCode
+		}
 	}
 	item.Description = strings.TrimSpace(req.Description)
 	if req.IsActive != nil {
