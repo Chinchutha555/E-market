@@ -1794,6 +1794,14 @@ const revisionError = ref('')
 const revIdCardCopy = ref<File | null>(null)
 const revIdCardCopyError = ref('')
 const revIdCardInputRef = ref<HTMLInputElement | null>(null)
+
+const formatFileSize = (bytes: number) => {
+  if (!bytes || bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1)
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+}
 const isRevDragging = ref(false)
 const revIdCardPreviewUrl = ref('')
 
@@ -2588,8 +2596,7 @@ const getAllCommentsList = (app: any) => {
 const processApproval = async (app: any, defaultComment: string) => {
   const confirmed = await showConfirm(
     `ยืนยันการอนุมัติคำร้องเลขที่ ${app.application_number} หรือไม่?`,
-    'ยืนยันการอนุมัติ',
-    { confirmButtonText: 'อนุมัติคำร้อง', cancelButtonText: 'ยกเลิก' }
+    { title: 'ยืนยันการอนุมัติ', type: 'info', confirmText: 'อนุมัติคำร้อง', cancelText: 'ยกเลิก' }
   )
   if (!confirmed) return
 
@@ -2734,7 +2741,7 @@ const generalForm = ref({
 
 const openCreateGeneralModal = () => {
   generalForm.value = {
-    applicant_name: (currentUser.value?.first_name ? `${currentUser.value.first_name} ${currentUser.value.last_name || ''}` : '') || user.value?.name || '',
+    applicant_name: currentUser.value?.full_name || user.value?.full_name || '',
     applicant_phone: currentUser.value?.phone || user.value?.phone || '',
     applicant_id_card: '',
     applicant_email: currentUser.value?.email || user.value?.email || '',
@@ -2783,6 +2790,7 @@ const submitGeneralApplication = async () => {
   } finally {
     generalSubmitting.value = false
   }
+}
 const exportReport = () => {
   const list = filteredApplications.value
   if (!list || list.length === 0) {
