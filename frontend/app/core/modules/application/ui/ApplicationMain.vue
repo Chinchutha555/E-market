@@ -2,7 +2,6 @@
   <div class="application-main-page">
     <AppHeader />
     <div class="page-container">
-      <AppBreadcrumb v-if="returnUrl" :items="crumbItems" current="รายการคำร้องทั้งหมด" :back-to="backTo" />
       <!-- Loading Skeleton State -->
       <div v-if="loading" class="skeleton-loading-container">
         <div class="skeleton-line skeleton-header"></div>
@@ -152,7 +151,7 @@
                   <div class="kpi-popover-body">
                     <div class="kpi-popover-item" :class="{ 'is-selected': pendingSubFilter === 'pending_officer' }" @click="pendingSubFilter = 'pending_officer'; activeTab = 'pending'; currentPage = 1">
                       <span class="kpi-status-dot amber"></span>
-                      <span class="kpi-status-name">รอเจ้าหน้าที่ตรวจสอบ/span>
+                      <span class="kpi-status-name">รอ จนท. ตรวจสอบ</span>
                       <span class="kpi-status-val">{{ countPendingOfficer }}</span>
                     </div>
                     <div class="kpi-popover-item" :class="{ 'is-selected': pendingSubFilter === 'pending_debt' }" @click="pendingSubFilter = 'pending_debt'; activeTab = 'pending'; currentPage = 1">
@@ -1771,7 +1770,6 @@
 </template>
 
 <script setup lang="ts">
-const { returnUrl, backTo, crumbItems } = useReturnTo({ label: 'รายการคำร้อง', to: '/applications' })
 import { useAuthStore } from '~/core/modules/auth/store/AuthStore'
 import { useNotifications } from '~/composables/useNotifications'
 
@@ -2785,8 +2783,6 @@ const submitGeneralApplication = async () => {
   } finally {
     generalSubmitting.value = false
   }
-}
-
 const exportReport = () => {
   const list = filteredApplications.value
   if (!list || list.length === 0) {
