@@ -152,7 +152,7 @@
                   <div class="kpi-popover-body">
                     <div class="kpi-popover-item" :class="{ 'is-selected': pendingSubFilter === 'pending_officer' }" @click="pendingSubFilter = 'pending_officer'; activeTab = 'pending'; currentPage = 1">
                       <span class="kpi-status-dot amber"></span>
-                      <span class="kpi-status-name">รอ จนท. ตรวจสอบ</span>
+                      <span class="kpi-status-name">รอเจ้าหน้าที่ตรวจสอบ/span>
                       <span class="kpi-status-val">{{ countPendingOfficer }}</span>
                     </div>
                     <div class="kpi-popover-item" :class="{ 'is-selected': pendingSubFilter === 'pending_debt' }" @click="pendingSubFilter = 'pending_debt'; activeTab = 'pending'; currentPage = 1">
