@@ -4200,7 +4200,7 @@ onUnmounted(() => {
 }
 
 .legend-box.occupied {
-  background: #cbd5e1;
+  background: #475569;
 }
 
 .legend-box.reserved {

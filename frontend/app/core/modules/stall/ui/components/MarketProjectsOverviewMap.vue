@@ -840,7 +840,8 @@ const props = withDefaults(defineProps<{
   selectedStallKeys?: string[]
   myBookedStallCodes?: string[]
   stallStatusOverrides?: Record<string, 'available' | 'reserved' | 'occupied'>
-  stallStatusFilter?: 'all' | 'available' | 'reserved' | 'occupied'
+  stallStatusFilter?: 'all' | 'available' | 'reserved' | 'occupied' | 'action_required'
+  actionRequiredStallCodes?: string[]
   onlyAvailable?: boolean
   categoryFilter?: string | null
   mapStyle?: 'standard' | 'dark' | 'satellite'
@@ -859,6 +860,7 @@ const props = withDefaults(defineProps<{
   myBookedStallCodes: () => [],
   stallStatusOverrides: () => ({}),
   stallStatusFilter: 'all',
+  actionRequiredStallCodes: () => [],
   onlyAvailable: false,
   categoryFilter: null,
   mapStyle: 'standard',
@@ -906,7 +908,7 @@ const setMapStyle = (mode: 'standard' | 'satellite') => {
 
 const searchQuery = ref('')
 const rentFilter = ref<'all' | 'under-2000' | '2000-3000' | 'over-3000'>('all')
-const availabilityFilter = ref<'available' | 'reserved' | 'occupied' | 'all'>('all')
+const availabilityFilter = ref<'available' | 'reserved' | 'occupied' | 'action_required' | 'all'>('all')
 const zoneFilter = ref('all')
 const readinessFilter = ref<'all' | 'ready' | 'missing-stalls' | 'incomplete-stalls'>('all')
 // Inputs keep draft values. The map only reads the applied values after the
@@ -915,7 +917,7 @@ const draftCategoryFilter = ref(props.categoryFilter || '')
 const appliedCategoryFilter = ref(props.categoryFilter || '')
 const appliedSearchQuery = ref('')
 const appliedRentFilter = ref<'all' | 'under-2000' | '2000-3000' | 'over-3000'>('all')
-const appliedAvailabilityFilter = ref<'available' | 'reserved' | 'occupied' | 'all'>('all')
+const appliedAvailabilityFilter = ref<'available' | 'reserved' | 'occupied' | 'action_required' | 'all'>('all')
 const appliedZoneFilter = ref('all')
 const appliedReadinessFilter = ref<'all' | 'ready' | 'missing-stalls' | 'incomplete-stalls'>('all')
 const showAdvancedFilters = ref(false)
@@ -1280,12 +1282,21 @@ const selectMarketFloor = (floorId: string) => {
   })
 }
 
+const actionRequiredCodeSet = computed(() => new Set(
+  (props.actionRequiredStallCodes || []).map(code => String(code || '').trim().toUpperCase()).filter(Boolean)
+))
+
 const matchesStallFiltersWith = (
   stall: MapStall,
   rent: typeof rentFilter.value,
   availability: typeof availabilityFilter.value
 ) => {
-  if (availability !== 'all' && stall.status !== availability) return false
+  if (availability === 'action_required') {
+    const cleanCode = String(stall.code || '').trim().toUpperCase()
+    if (!actionRequiredCodeSet.value.has(cleanCode)) return false
+  } else if (availability !== 'all' && stall.status !== availability) {
+    return false
+  }
   if (rent === 'under-2000' && stall.monthlyRent >= 2000) return false
   if (rent === '2000-3000' && (stall.monthlyRent < 2000 || stall.monthlyRent > 3000)) return false
   if (rent === 'over-3000' && stall.monthlyRent <= 3000) return false
@@ -2522,17 +2533,16 @@ const setupProjectLayers = () => {
           'case',
           ['==', ['get', 'status'], 'available'], '#86efac',
           ['==', ['get', 'status'], 'reserved'], '#fed7aa',
-          '#f1f5f9'
+          '#94a3b8'
         ],
         ['==', ['get', 'status'], 'available'], '#10b981',
         ['==', ['get', 'status'], 'reserved'], '#f59e0b',
-        '#cbd5e1'
+        '#475569'
       ],
       'fill-opacity': [
         'case',
         ['boolean', ['get', 'isSelected'], false], 1,
-        ['boolean', ['get', 'isDimmed'], false], 0.22,
-        ['==', ['get', 'status'], 'occupied'], 0.85,
+        ['boolean', ['get', 'isDimmed'], false], 0.32,
         1
       ],
       'fill-outline-color': '#ffffff'
@@ -3443,12 +3453,12 @@ const showPopupForProject = (p: ProjectZone, lngLat: [number, number]) => {
           <div class="mlp-occ-bar">
             <i style="width:${pct(available)}%;background:#10b981"></i>
             <i style="width:${pct(reserved)}%;background:#f59e0b"></i>
-            <i style="width:${pct(occupied)}%;background:#cbd5e1"></i>
+            <i style="width:${pct(occupied)}%;background:#475569"></i>
           </div>
           <div class="mlp-occ-legend">
             <span><i style="background:#10b981"></i>ว่าง <b style="color:#059669">${available}</b></span>
             <span><i style="background:#f59e0b"></i>ติดจอง <b style="color:#d97706">${reserved}</b></span>
-            <span><i style="background:#cbd5e1"></i>มีผู้เช่า <b>${occupied}</b></span>
+            <span><i style="background:#475569"></i>มีผู้เช่า <b>${occupied}</b></span>
           </div>
         </div>
 
@@ -3877,23 +3887,7 @@ const renderZoneLabels = () => {
   // while making it explicit that each coloured frame is a selectable project.
   if (zoom < 15.5) return
 
-  const labelPoints = visibleProjects.map(project => ({
-    project,
-    point: map.project(projectToLngLat(project))
-  }))
-  const placedBoxes: Array<{ left: number; right: number; top: number; bottom: number }> = []
-  const compactOffsets: Array<[number, number]> = [
-    [0, 0], [0, -28], [28, 0], [0, 28], [-28, 0],
-    [28, -28], [28, 28], [-28, 28], [-28, -28],
-    [0, -56], [56, 0], [0, 56], [-56, 0],
-    [56, -28], [56, 28], [-56, 28], [-56, -28]
-  ]
-  const boxesOverlap = (
-    a: { left: number; right: number; top: number; bottom: number },
-    b: { left: number; right: number; top: number; bottom: number }
-  ) => !(a.right + 4 < b.left || a.left > b.right + 4 || a.bottom + 4 < b.top || a.top > b.bottom + 4)
-
-  labelPoints.forEach(({ project: p, point }, index) => {
+  visibleProjects.forEach((p) => {
     const showFloorContext = marketFloors.value.length > 1 && selectedMarketFloorId.value === 'all'
     const projectFloorLabel = getProjectActualFloorIds(p)
       .map(floorId => {
@@ -3901,40 +3895,7 @@ const renderZoneLabels = () => {
         return getFloorDisplayLabel(fl || floorId)
       })
       .join('/')
-    const floorContextWidth = showFloorContext ? projectFloorLabel.length * 7 + 14 : 0
-    const fullWidth = 78 + String(p.sectionNumber).length * 7 + floorContextWidth
-    const hasNearbyLabel = labelPoints.some(({ point: otherPoint }, otherIndex) => (
-      otherIndex !== index &&
-      Math.abs(point.x - otherPoint.x) < fullWidth + 12 &&
-      Math.abs(point.y - otherPoint.y) < 34
-    ))
-    const isCompact = useCompactLabels || hasNearbyLabel
-    const labelWidth = isCompact
-      ? Math.max(22, String(p.sectionNumber).length * 7 + 10 + floorContextWidth)
-      : fullWidth
-    const labelHeight = isCompact ? 22 : 28
-    const offsets = isCompact ? compactOffsets : [[0, 0] as [number, number]]
-    let markerOffset: [number, number] | null = null
-
-    for (const offset of offsets) {
-      const centerX = point.x + offset[0]
-      const centerY = point.y + offset[1]
-      const box = {
-        left: centerX - labelWidth / 2,
-        right: centerX + labelWidth / 2,
-        top: centerY - labelHeight / 2,
-        bottom: centerY + labelHeight / 2
-      }
-      if (!placedBoxes.some(placed => boxesOverlap(box, placed))) {
-        placedBoxes.push(box)
-        markerOffset = offset
-        break
-      }
-    }
-
-    // Extremely dense clusters can exhaust every safe offset. In that case,
-    // skip the duplicate badge instead of drawing unreadable text on top.
-    if (!markerOffset) return
+    const isCompact = useCompactLabels
 
     const el = document.createElement('div')
     el.className = 'maplibre-zone-number-badge'
@@ -3957,12 +3918,8 @@ const renderZoneLabels = () => {
     el.addEventListener('mouseenter', () => {
       setHoveredProject(p)
       map.getCanvas().style.cursor = 'pointer'
-      const projectPoint = map.project(projectToLngLat(p))
-      const popupPoint = map.unproject([
-        projectPoint.x + markerOffset[0],
-        projectPoint.y + markerOffset[1]
-      ])
-      showPopupForProject(p, [popupPoint.lng, popupPoint.lat])
+      const lngLat = projectToLngLat(p)
+      showPopupForProject(p, lngLat)
     })
     el.addEventListener('mouseleave', () => {
       if (hoveredProject.value?.id === p.id) setHoveredProject(null)
@@ -3970,7 +3927,8 @@ const renderZoneLabels = () => {
       hoverPopup?.remove()
     })
 
-    const marker = new maplibregl.Marker({ element: el, anchor: 'center', offset: markerOffset })
+    // ตรึง Marker ให้อยู่ที่จุดศูนย์กลางของ Polygon ตัวเองเสมอ (offset [0, 0])
+    const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
       .setLngLat(projectToLngLat(p))
       .addTo(map)
 
@@ -4086,6 +4044,12 @@ watch(() => props.stallStatusFilter, (status) => {
   appliedAvailabilityFilter.value = status
   refreshSources()
 })
+
+watch(() => props.actionRequiredStallCodes, () => {
+  if (appliedAvailabilityFilter.value === 'action_required') {
+    refreshSources()
+  }
+}, { deep: true })
 
 watch(() => [props.selectedStallCodes, props.selectedStallKeys], () => {
   map?.getSource('project-stalls')?.setData(getStallsGeoJson())
@@ -6628,7 +6592,7 @@ onUnmounted(cleanupMapResources)
 
 .sw-available { background: #10b981; }
 .sw-reserved { background: #f59e0b; }
-.sw-occupied { background: #cbd5e1; }
+.sw-occupied { background: #475569; }
 .sw-selected { background: #2563eb; }
 
 .smp-hint {
@@ -6810,7 +6774,8 @@ onUnmounted(cleanupMapResources)
   font-size: 11px;
   font-weight: 700;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  transition: all 0.2s ease;
+  /* ห้าม transition: all หรือ transform เพราะจะทำให้ Marker ดีเลย์/ลอยตามตอนลากแผนที่ */
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
   user-select: none;
   white-space: nowrap;
 }
@@ -6819,6 +6784,7 @@ onUnmounted(cleanupMapResources)
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  transition: transform 0.15s ease;
 }
 
 .zone-badge-inner .badge-num {
@@ -6846,11 +6812,15 @@ onUnmounted(cleanupMapResources)
   color: #93c5fd;
 }
 
+.maplibre-zone-number-badge:hover .zone-badge-inner,
+.maplibre-zone-number-badge.is-project-hovered .zone-badge-inner {
+  transform: scale(1.15);
+}
+
 .maplibre-zone-number-badge:hover,
 .maplibre-zone-number-badge.is-project-hovered {
   background: #2563eb;
   border-color: #ffffff;
-  transform: scale(1.15);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4), 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
@@ -6859,10 +6829,13 @@ onUnmounted(cleanupMapResources)
   color: #ffffff;
 }
 
+.maplibre-zone-number-badge.is-selected .zone-badge-inner {
+  transform: scale(1.2);
+}
+
 .maplibre-zone-number-badge.is-selected {
   background: #2563eb;
   border-color: #ffffff;
-  transform: scale(1.2);
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.45), 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 
