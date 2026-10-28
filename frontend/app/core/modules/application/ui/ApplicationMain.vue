@@ -2785,34 +2785,6 @@ const submitGeneralApplication = async () => {
   }
 }
 
-const openDetails = async (app: any) => {
-  const isStall = isStallLease(app)
-  const typeText = isStall ? 'คำร้องขอเช่าแผงค้า' : 'คำร้องทั่วไป'
-  const stallText = isStall
-    ? `\nแผงค้า: ${app.stall_number || app.stall_ident}`
-    : (app.stall_number && app.stall_number !== '-' ? `\nแผงที่เกี่ยวข้อง: ${app.stall_number}` : '\nแผงค้า: คำร้องทั่วไป (ไม่มีแผง)')
-  const marketText = app.market_name ? `\nตลาด: ${app.market_name}` : ''
-  const subjectText = isStall
-    ? `\nชื่อร้านค้า: ${app.shop_name} (${app.product_type || app.product_category || 'ทั่วไป'})`
-    : `\nหัวข้อคำร้อง: ${app.subject || app.shop_name || 'คำร้องทั่วไป'}`
-  const idCardText = app.applicant_id_card ? `\nเลขประจำตัว ปชช.: ${app.applicant_id_card}` : ''
-  const emailText = app.applicant_email ? `\nอีเมล: ${app.applicant_email}` : ''
-  const addressText = app.applicant_address && app.applicant_address !== '-' ? `\nที่อยู่: ${app.applicant_address}` : ''
-  const detailText = (app.details || app.review_note)
-    ? `\nรายละเอียดคำร้อง: ${app.details || app.review_note}`
-    : ''
-
-  const comments = getAllCommentsList(app)
-  const commentDetails = comments.length > 0
-    ? '\n\nบันทึกความเห็นการพิจารณา:\n' + comments.map(c => `• ${c.role} (${c.step}): ${c.text}`).join('\n')
-    : ''
-
-  await showAlert(
-    `ประเภท: ${typeText}\nเลขที่คำร้อง: ${app.application_number || app.application_no}${marketText}${stallText}${subjectText}\nผู้ยื่นคำร้อง: ${app.applicant_name} (โทร. ${app.applicant_phone})${idCardText}${emailText}${addressText}\nสถานะ: ${getStatusLabel(app.status)}\nขั้นตอน: ${getActionActorInfo(app).actionText}${detailText}${commentDetails}`,
-    { title: 'รายละเอียดคำร้อง', type: 'info' }
-  )
-}
-
 const exportReport = () => {
   const list = filteredApplications.value
   if (!list || list.length === 0) {
@@ -2856,7 +2828,7 @@ const exportReport = () => {
       `"${(app.product_type || app.product_category || '-').replace(/"/g, '""')}"`,
       `"${(app.details || app.review_note || '-').replace(/"/g, '""')}"`,
       `"${(app.created_at?.slice(0, 10) || '-').replace(/"/g, '""')}"`,
-      `"${getStatusLabel(app.status)}"`,
+      `"${getStatusBadgeLabel(app.status)}"`,
       `"${getActionActorInfo(app).actionText.replace(/"/g, '""')}"`,
       `"${note.replace(/"/g, '""')}"`
     ].join(',')
@@ -2874,45 +2846,6 @@ const exportReport = () => {
   URL.revokeObjectURL(url)
 
   showSuccess(`ส่งออกรายงานคำร้อง ${list.length} รายการ เป็นไฟล์ CSV เรียบร้อยแล้ว`, 'ส่งออกรายงานสำเร็จ')
-}
-
-const getStatusBadgeClass = (status: string) => {
-  switch (status) {
-    case 'pending_officer':
-    case 'pending_debt_check':
-    case 'pending_market_director':
-    case 'pending_bureau_director':
-      return 'badge-soft-blue'
-    case 'debt_pending':
-      return 'badge-soft-warning'
-    case 'approved':
-      return 'badge-soft-success'
-    case 'revision_required':
-      return 'badge-soft-warning'
-    case 'rejected':
-      return 'badge-soft-danger'
-    default:
-      return 'badge-soft-gray'
-  }
-}
-
-const getStatusLabel = (status: string) => {
-  switch (status) {
-    case 'pending_officer':
-    case 'pending_debt_check':
-    case 'debt_pending':
-    case 'pending_market_director':
-    case 'pending_bureau_director':
-      return 'รอตรวจสอบ'
-    case 'approved':
-      return 'อนุมัติ'
-    case 'revision_required':
-      return 'ส่งกลับแก้ไข'
-    case 'rejected':
-      return 'ไม่อนุมัติ'
-    default:
-      return status || '-'
-  }
 }
 
 // History Panel
