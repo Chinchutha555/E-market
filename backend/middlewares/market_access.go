@@ -42,7 +42,7 @@ func ScopeMarketQuery(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		query := c.Request.URL.Query()
 		switch GetUserRole(c) {
-		case "staff":
+		case "staff", "market_director":
 			ids, err := StaffMarketIDs(db, GetUserID(c))
 			if err != nil || len(ids) == 0 {
 				query.Set("market_id", "-1")
@@ -135,6 +135,10 @@ func RequireResourceAccess(db *gorm.DB, kind string) gin.HandlerFunc {
 			forbidMarket(c)
 			return
 		}
+		if GetUserRole(c) == "bureau_director" && kind == "application" {
+			c.Next()
+			return
+		}
 		if GetUserRole(c) == "tenant" {
 			if resource.OwnerID == nil || *resource.OwnerID != GetUserID(c) {
 				forbidMarket(c)
@@ -164,9 +168,10 @@ func RequireStallPayloadAccess(db *gorm.DB) gin.HandlerFunc {
 		}
 		c.Request.Body = io.NopCloser(bytes.NewReader(body))
 		var payload struct {
-			StallID     int    `json:"stall_id"`
-			StallIdent  string `json:"stall_ident"`
-			StallNumber string `json:"stall_number"`
+			ApplicationID int    `json:"application_id"`
+			StallID       int    `json:"stall_id"`
+			StallIdent    string `json:"stall_ident"`
+			StallNumber   string `json:"stall_number"`
 		}
 		if json.Unmarshal(body, &payload) != nil {
 			forbidMarket(c)
@@ -176,6 +181,29 @@ func RequireStallPayloadAccess(db *gorm.DB) gin.HandlerFunc {
 		if ident == "" {
 			ident = payload.StallNumber
 		}
+
+		if GetUserRole(c) == "tenant" {
+			if payload.ApplicationID <= 0 {
+				forbidMarket(c)
+				return
+			}
+			var app models.Application
+			if err := db.Where("id = ? AND status = 'A'", payload.ApplicationID).First(&app).Error; err != nil {
+				forbidMarket(c)
+				return
+			}
+			if app.CreatedBy == nil || *app.CreatedBy != GetUserID(c) {
+				forbidMarket(c)
+				return
+			}
+			if app.ApplicationState != "approved" && app.ApplicationState != "contract_pending" {
+				forbidMarket(c)
+				return
+			}
+			c.Next()
+			return
+		}
+
 		var stall models.Stall
 		query := db.Select("market_id").Where("status = 'A'")
 		if payload.StallID > 0 {
@@ -202,7 +230,7 @@ func CanManageMarket(db *gorm.DB, userID int, role string, marketID int) bool {
 	if role == "admin" {
 		return true
 	}
-	if role != "staff" || userID <= 0 || marketID <= 0 {
+	if (role != "staff" && role != "market_director") || userID <= 0 || marketID <= 0 {
 		return false
 	}
 	var count int64

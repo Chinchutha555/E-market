@@ -25,6 +25,8 @@ type CreateApplicationRequest struct {
 	ApplicantPhone        string      `json:"applicant_phone"`
 	TenantPhone           string      `json:"tenant_phone"`
 	ApplicantIDCard       string      `json:"applicant_id_card"`
+	ApplicantAge          *int        `json:"applicant_age"`
+	IDCardCopyBase64      string      `json:"id_card_copy_base64"`
 	IDCard                string      `json:"id_card"`
 	ApplicantEmail        string      `json:"applicant_email"`
 	ApplicantAddress      string      `json:"applicant_address"`

@@ -72,7 +72,7 @@ func (u *useCase) GetContractByID(id int) (*responses.ContractResponse, error) {
 	return &res, nil
 }
 
-func (u *useCase) CreateContract(userID int, req requests.CreateContractRequest) (*responses.ContractResponse, error) {
+func (u *useCase) CreateContract(userID int, userRole string, req requests.CreateContractRequest) (*responses.ContractResponse, error) {
 	stallIdent := strings.TrimSpace(req.StallIdent)
 	if stallIdent == "" {
 		stallIdent = strings.TrimSpace(req.StallNumber)
@@ -137,6 +137,13 @@ func (u *useCase) CreateContract(userID int, req requests.CreateContractRequest)
 		stallIDPtr = &req.StallID
 	}
 
+	contractState := "active"
+	if userRole == "tenant" {
+		contractState = "pending"
+	} else if req.Status != "" {
+		contractState = req.Status
+	}
+
 	contract := models.Contract{
 		ContractNumber:  contractNo,
 		ApplicationID:   appID,
@@ -150,20 +157,50 @@ func (u *useCase) CreateContract(userID int, req requests.CreateContractRequest)
 		EndDate:         endDate,
 		MonthlyRental:   monthlyRental,
 		SecurityDeposit: securityDeposit,
-		ContractState:   "active",
+		ContractState:   contractState,
 	}
 	if userID > 0 {
 		contract.CreatedBy = &userID
 		contract.UpdatedBy = &userID
+		if userRole == "tenant" {
+			contract.TenantUserID = &userID
+		}
 	}
 
 	if err := u.repo.Create(&contract); err != nil {
+		if errors.Is(err, domains.ErrApplicationNotApproved) {
+			return nil, responses.NewAppErr(http.StatusConflict, "คำร้องยังไม่ได้รับอนุมัติขั้นสุดท้าย หรือไม่ตรงกับแผงที่เลือก")
+		}
 		logs.Error(err)
 		return nil, responses.NewInternalServerError()
 	}
 
 	res := toContractResponse(&contract)
 	return &res, nil
+}
+
+func (u *useCase) ApproveContract(id int, userID int) (*responses.ContractResponse, error) {
+	contract, err := u.repo.Approve(id, userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, responses.NewAppErr(http.StatusNotFound, "ไม่พบข้อมูลสัญญา")
+		}
+		logs.Error(err)
+		return nil, responses.NewInternalServerError()
+	}
+	res := toContractResponse(contract)
+	return &res, nil
+}
+
+func (u *useCase) RejectContract(id int, userID int, reason string) error {
+	if err := u.repo.Reject(id, userID, reason); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return responses.NewAppErr(http.StatusNotFound, "ไม่พบข้อมูลสัญญา")
+		}
+		logs.Error(err)
+		return responses.NewInternalServerError()
+	}
+	return nil
 }
 
 func (u *useCase) TerminateContract(id int, userID int) error {

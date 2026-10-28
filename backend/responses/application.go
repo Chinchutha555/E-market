@@ -19,6 +19,8 @@ type ApplicationResponse struct {
 	ApplicantPhone        string     `json:"applicant_phone"`
 	TenantPhone           string     `json:"tenant_phone"`
 	ApplicantIDCard       string     `json:"applicant_id_card"`
+	ApplicantAge          *int       `json:"applicant_age,omitempty"`
+	HasIDCardCopy         bool       `json:"has_id_card_copy"`
 	ApplicantEmail        string     `json:"applicant_email,omitempty"`
 	ApplicantAddress      string     `json:"applicant_address,omitempty"`
 	Details               string     `json:"details,omitempty"`

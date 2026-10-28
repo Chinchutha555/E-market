@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -69,6 +70,8 @@ func toApplicationResponse(a *models.Application) responses.ApplicationResponse 
 		ApplicantPhone:        a.ApplicantPhone,
 		TenantPhone:           a.ApplicantPhone,
 		ApplicantIDCard:       a.ApplicantIDCard,
+		ApplicantAge:          a.ApplicantAge,
+		HasIDCardCopy:         len(a.IDCardCopy) > 0,
 		ApplicantEmail:        a.ApplicantEmail,
 		ApplicantAddress:      a.ApplicantAddress,
 		Details:               a.Details,
@@ -119,6 +122,25 @@ func (u *useCase) GetApplicationByID(id int) (*responses.ApplicationResponse, er
 }
 
 func (u *useCase) CreateApplication(userID int, req requests.CreateApplicationRequest) (*responses.ApplicationResponse, error) {
+	if req.ApplicantAge != nil && (*req.ApplicantAge < 1 || *req.ApplicantAge > 120) {
+		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาระบุอายุระหว่าง 1 ถึง 120 ปี")
+	}
+	var idCardCopy []byte
+	var idCardCopyType string
+	if req.IDCardCopyBase64 != "" {
+		if len(req.IDCardCopyBase64) > 4*1024*1024 {
+			return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "ไฟล์สำเนาบัตรประชาชนต้องไม่เกิน 3 MB")
+		}
+		var err error
+		idCardCopy, err = base64.StdEncoding.DecodeString(req.IDCardCopyBase64)
+		if err != nil || len(idCardCopy) == 0 || len(idCardCopy) > 3*1024*1024 {
+			return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "ไฟล์สำเนาบัตรประชาชนไม่ถูกต้อง")
+		}
+		idCardCopyType = http.DetectContentType(idCardCopy)
+		if idCardCopyType != "application/pdf" && idCardCopyType != "image/jpeg" && idCardCopyType != "image/png" {
+			return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "รองรับไฟล์ PDF, JPG หรือ PNG เท่านั้น")
+		}
+	}
 	appType := strings.TrimSpace(req.ApplicationType)
 	var parsedBookingID *int
 	switch v := req.BookingID.(type) {
@@ -281,6 +303,9 @@ func (u *useCase) CreateApplication(userID int, req requests.CreateApplicationRe
 		ApplicantName:      applicantName,
 		ApplicantPhone:     applicantPhone,
 		ApplicantIDCard:    idCard,
+		ApplicantAge:       req.ApplicantAge,
+		IDCardCopy:         idCardCopy,
+		IDCardCopyType:     idCardCopyType,
 		ApplicantEmail:     strings.TrimSpace(req.ApplicantEmail),
 		ApplicantAddress:   address,
 		ShopName:           shopName,
@@ -366,42 +391,50 @@ func (u *useCase) Action(id int, userID int, req requests.ApplicationActionReque
 		comment = strings.TrimSpace(req.Reason)
 	}
 
-	updateReq := requests.UpdateApplicationStatusRequest{
-		Reason: comment,
+	if app.ApplicationState == "pending_officer" {
+		action := strings.ToLower(strings.TrimSpace(req.Action))
+		if (action == "return_revision" || action == "reject") && comment == "" {
+			return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาระบุหมายเหตุ")
+		}
+		status := ""
+		switch action {
+		case "approve":
+			status = "pending_market_director"
+		case "return_revision":
+			status = "revision_required"
+		case "reject":
+			status = "rejected"
+		default:
+			return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "การดำเนินการไม่ถูกต้อง")
+		}
+		return u.UpdateStatus(id, userID, requests.UpdateApplicationStatusRequest{Status: status, Reason: comment, OfficerComment: comment})
 	}
-
-	if strings.ToLower(req.Action) == "reject" {
+	if app.ApplicationState != "pending_market_director" && app.ApplicationState != "pending_bureau_director" {
+		return nil, responses.NewAppErr(http.StatusConflict, "คำร้องไม่ได้อยู่ในขั้นที่สามารถพิจารณาได้")
+	}
+	action := strings.ToLower(strings.TrimSpace(req.Action))
+	if (action == "return_revision" || action == "reject") && comment == "" {
+		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาระบุหมายเหตุ")
+	}
+	updateReq := requests.UpdateApplicationStatusRequest{Reason: comment}
+	switch action {
+	case "return_revision":
+		updateReq.Status = "revision_required"
+	case "reject":
 		updateReq.Status = "rejected"
-		switch app.ApplicationState {
-		case "pending_officer":
-			updateReq.OfficerComment = comment
-		case "pending_market_director", "pending_debt_check", "debt_pending":
-			updateReq.MarketDirectorComment = comment
-		case "pending_bureau_director":
-			updateReq.BureauDirectorComment = comment
-		default:
-			updateReq.OfficerComment = comment
-		}
-	} else if req.Status != "" {
-		updateReq.Status = req.Status
-	} else if comment != "" {
-		// Step-by-step approval workflow matching ApplicationMain.vue (Officer -> Market Director -> Bureau Director -> Approved)
-		switch app.ApplicationState {
-		case "pending_officer":
-			updateReq.Status = "pending_market_director"
-			updateReq.OfficerComment = comment
-		case "pending_market_director":
+	case "approve":
+		if app.ApplicationState == "pending_market_director" {
 			updateReq.Status = "pending_bureau_director"
-			updateReq.MarketDirectorComment = comment
-		case "pending_bureau_director":
-			updateReq.Status = "approved"
-			updateReq.BureauDirectorComment = comment
-		default:
+		} else {
 			updateReq.Status = "approved"
 		}
-	} else {
-		updateReq.Status = "approved"
+	default:
+		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "การดำเนินการไม่ถูกต้อง")
 	}
-
+	if app.ApplicationState == "pending_market_director" {
+		updateReq.MarketDirectorComment = comment
+	} else {
+		updateReq.BureauDirectorComment = comment
+	}
 	return u.UpdateStatus(id, userID, updateReq)
 }

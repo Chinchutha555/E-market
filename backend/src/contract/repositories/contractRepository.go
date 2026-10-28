@@ -85,23 +85,58 @@ func (r *repository) Create(contract *models.Contract) error {
 		}
 	}
 	return r.conn.Transaction(func(tx *gorm.DB) error {
+		if contract.ApplicationID != nil {
+			targetAppState := "completed"
+			if contract.ContractState == "pending" {
+				targetAppState = "contract_pending"
+			}
+			result := tx.Model(&models.Application{}).
+				Where("id = ? AND application_state IN ('approved', 'contract_pending') AND stall_ident = ? AND status = ?", *contract.ApplicationID, contract.StallIdent, "A").
+				Update("application_state", targetAppState)
+			if result.Error != nil {
+				return result.Error
+			}
+			if result.RowsAffected != 1 {
+				return domains.ErrApplicationNotApproved
+			}
+		}
 		if err := tx.Create(contract).Error; err != nil {
 			return err
 		}
-		// Upsert stall status to occupied
+		// Upsert stall status
+		targetStallStatus := "occupied"
+		if contract.ContractState == "pending" {
+			targetStallStatus = "reserved"
+		}
 		var stallCount int64
 		tx.Model(&models.Stall{}).Where("ident = ?", contract.StallIdent).Count(&stallCount)
 		if stallCount == 0 {
 			newStall := models.Stall{
 				Ident:       contract.StallIdent,
 				Name:        "แผงค้า " + contract.StallIdent,
-				StallStatus: "occupied",
+				StallStatus: targetStallStatus,
 				Floor:       "1",
 				Status:      "A",
 			}
 			_ = tx.Create(&newStall).Error
 		} else {
-			_ = tx.Model(&models.Stall{}).Where("ident = ?", contract.StallIdent).Update("stall_status", "occupied").Error
+			_ = tx.Model(&models.Stall{}).Where("ident = ?", contract.StallIdent).Update("stall_status", targetStallStatus).Error
+		}
+
+		if contract.ContractState == "pending" {
+			// Notify staff about new pending contract review
+			notif := models.Notification{
+				RecipientRole: "staff",
+				Type:          "contract_submitted",
+				StatusCode:    "pending",
+				StatusLabel:   "รอตรวจสัญญา",
+				Title:         fmt.Sprintf("สัญญาเช่าใหม่แผง %s รอการตรวจสอบ", contract.StallIdent),
+				Message:       fmt.Sprintf("ผู้เช่า %s ได้จัดทำสัญญาเช่าเลขที่ %s สำหรับแผง %s เรียบร้อยแล้ว กรุณาเข้าตรวจสอบสัญญา", contract.TenantName, contract.ContractNumber, contract.StallIdent),
+				StallNumber:   contract.StallIdent,
+				TargetURL:     "/contracts?status=pending",
+			}
+			_ = tx.Create(&notif).Error
+			return nil
 		}
 
 		// If this contract is for an active booking, complete that booking and append timeline
@@ -127,13 +162,6 @@ func (r *repository) Create(contract *models.Contract) error {
 				"timeline":       string(tlBytes),
 				"updated_at":     now,
 			}).Error
-		}
-
-		// If application_id was provided, update application state
-		if contract.ApplicationID != nil && *contract.ApplicationID > 0 {
-			_ = tx.Model(&models.Application{}).
-				Where("id = ?", *contract.ApplicationID).
-				Update("application_state", "completed").Error
 		}
 
 		// Close any remaining active waitlist on this stall as contract has been finalized
@@ -239,6 +267,137 @@ func (r *repository) Terminate(contractID int) error {
 			_ = tx.Save(&nextQueue).Error
 			_ = tx.Model(&models.Stall{}).Where("ident = ?", contract.StallIdent).Update("stall_status", "reserved").Error
 		}
+		return nil
+	})
+}
+
+func (r *repository) Approve(contractID int, userID int) (*models.Contract, error) {
+	var contract models.Contract
+	if err := r.conn.Where("id = ? AND status = 'A'", contractID).First(&contract).Error; err != nil {
+		return nil, err
+	}
+	now := time.Now()
+	contract.ContractState = "active"
+	contract.UpdatedBy = &userID
+	contract.UpdatedAt = now
+
+	err := r.conn.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&contract).Error; err != nil {
+			return err
+		}
+		// If linked to an application, complete the application
+		if contract.ApplicationID != nil {
+			_ = tx.Model(&models.Application{}).
+				Where("id = ?", *contract.ApplicationID).
+				Update("application_state", "completed").Error
+		}
+		// Set stall status to occupied
+		_ = tx.Model(&models.Stall{}).
+			Where("ident = ?", contract.StallIdent).
+			Update("stall_status", "occupied").Error
+
+		// Complete linked bookings
+		var activeBookings []models.Booking
+		tx.Model(&models.Booking{}).
+			Where("stall_ident = ? AND status = 'A' AND booking_status NOT IN ('rejected', 'cancelled', 'completed', 'terminated')", contract.StallIdent).
+			Find(&activeBookings)
+		for _, bk := range activeBookings {
+			var tl []responses.TimelineItem
+			if bk.Timeline != "" {
+				_ = json.Unmarshal([]byte(bk.Timeline), &tl)
+			}
+			tl = append(tl, responses.TimelineItem{
+				Action:    "ตรวจสอบและอนุมัติสัญญาเช่าสำเร็จ",
+				ActorRole: "officer",
+				ActorName: "เจ้าหน้าที่ตลาด",
+				Timestamp: now.Format("2006-01-02T15:04:05Z07:00"),
+				Note:      fmt.Sprintf("เจ้าหน้าที่ได้ตรวจสอบและอนุมัติสัญญาเช่าเรียบร้อยแล้ว เลขที่สัญญา: %s", contract.ContractNumber),
+			})
+			tlBytes, _ := json.Marshal(tl)
+			_ = tx.Model(&models.Booking{}).Where("id = ?", bk.ID).Updates(map[string]interface{}{
+				"booking_status": "completed",
+				"timeline":       string(tlBytes),
+				"updated_at":     now,
+			}).Error
+		}
+
+		// Close any remaining active waitlist on this stall
+		var activeWaitlist []models.Waitlist
+		if err := tx.Where("stall_ident = ? AND status IN ('waiting', 'offered')", contract.StallIdent).Find(&activeWaitlist).Error; err == nil {
+			for i := range activeWaitlist {
+				wItem := &activeWaitlist[i]
+				_ = tx.Model(wItem).Updates(map[string]interface{}{
+					"status":         "cancelled",
+					"dismiss_reason": "ตัดสิทธิ์เนื่องจากสัญญาเช่าได้รับการอนุมัติเรียบร้อย",
+					"expires_at":     nil,
+					"updated_at":     now,
+				}).Error
+			}
+		}
+
+		// Notify tenant
+		notif := models.Notification{
+			RecipientRole:   "tenant",
+			RecipientUserID: contract.TenantUserID,
+			RecipientName:   contract.TenantName,
+			Type:            "contract_approved",
+			StatusCode:      "active",
+			StatusLabel:     "สัญญาอนุมัติแล้ว",
+			Title:           fmt.Sprintf("สัญญาเช่าแผง %s ได้รับการอนุมัติแล้ว", contract.StallIdent),
+			Message:         fmt.Sprintf("เจ้าหน้าที่ได้ตรวจสอบและอนุมัติสัญญาเช่าเลขที่ %s สำหรับแผง %s เรียบร้อยแล้ว สัญญามีผลบังคับใช้แล้ว", contract.ContractNumber, contract.StallIdent),
+			StallNumber:     contract.StallIdent,
+			TargetURL:       "/contracts",
+		}
+		_ = tx.Create(&notif).Error
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &contract, nil
+}
+
+func (r *repository) Reject(contractID int, userID int, reason string) error {
+	var contract models.Contract
+	if err := r.conn.Where("id = ? AND status = 'A'", contractID).First(&contract).Error; err != nil {
+		return err
+	}
+	now := time.Now()
+	contract.ContractState = "terminated"
+	contract.UpdatedBy = &userID
+	contract.UpdatedAt = now
+
+	return r.conn.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&contract).Error; err != nil {
+			return err
+		}
+		if contract.ApplicationID != nil {
+			_ = tx.Model(&models.Application{}).
+				Where("id = ?", *contract.ApplicationID).
+				Update("application_state", "approved").Error
+		}
+		_ = tx.Model(&models.Stall{}).
+			Where("ident = ?", contract.StallIdent).
+			Update("stall_status", "available").Error
+
+		if reason == "" {
+			reason = "ข้อมูลสัญญาไม่ถูกต้องหรือไม่ครบถ้วน"
+		}
+
+		notif := models.Notification{
+			RecipientRole:   "tenant",
+			RecipientUserID: contract.TenantUserID,
+			RecipientName:   contract.TenantName,
+			Type:            "contract_rejected",
+			StatusCode:      "rejected",
+			StatusLabel:     "สัญญาไม่ผ่านการอนุมัติ",
+			Title:           fmt.Sprintf("สัญญาเช่าแผง %s ไม่ผ่านการอนุมัติ", contract.StallIdent),
+			Message:         fmt.Sprintf("สัญญาเช่าเลขที่ %s ไม่ผ่านการอนุมัติ: %s คุณสามารถกลับไปตรวจสอบและจัดทำสัญญาใหม่ได้", contract.ContractNumber, reason),
+			StallNumber:     contract.StallIdent,
+			TargetURL:       "/applications",
+		}
+		_ = tx.Create(&notif).Error
 		return nil
 	})
 }

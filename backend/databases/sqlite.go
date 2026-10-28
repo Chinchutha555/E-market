@@ -39,6 +39,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.Notification{},
 		&models.Application{},
 		&models.ApplicationType{},
+		&models.Debt{},
 		&models.Contract{},
 		&models.Item{},
 	)

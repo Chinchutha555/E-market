@@ -90,6 +90,7 @@ func (h *Handler) GetContractByID(c *gin.Context) {
 // @Router /contracts [post]
 func (h *Handler) CreateContract(c *gin.Context) {
 	userID := middlewares.GetUserID(c)
+	userRole := middlewares.GetUserRole(c)
 	var req requests.CreateContractRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		respondError(c, err)
@@ -100,12 +101,66 @@ func (h *Handler) CreateContract(c *gin.Context) {
 		return
 	}
 
-	res, err := h.useCase.CreateContract(userID, req)
+	res, err := h.useCase.CreateContract(userID, userRole, req)
 	if err != nil {
 		respondError(c, err)
 		return
 	}
 	c.JSON(http.StatusCreated, responses.SuccessResponse(res, http.StatusCreated))
+}
+
+// ApproveContract godoc
+// @Summary อนุมัติ/เปิดใช้งานสัญญาเช่า (Admin / Staff / Market Director)
+// @Tags Contracts
+// @ID approve-contract
+// @Security BearerAuth
+// @Produce json
+// @Param id path int true "Contract ID"
+// @Success 200 {object} responses.Success{data=responses.ContractResponse}
+// @Router /contracts/{id}/approve [post]
+func (h *Handler) ApproveContract(c *gin.Context) {
+	userID := middlewares.GetUserID(c)
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		respondError(c, responses.NewAppErr(http.StatusBadRequest, "ID ไม่ถูกต้อง"))
+		return
+	}
+
+	res, err := h.useCase.ApproveContract(id, userID)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, responses.SuccessResponse(res, http.StatusOK))
+}
+
+// RejectContract godoc
+// @Summary ปฏิเสธ/ส่งกลับสัญญาเช่า (Admin / Staff / Market Director)
+// @Tags Contracts
+// @ID reject-contract
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Contract ID"
+// @Param body body requests.ReviewContractRequest false "เหตุผล"
+// @Success 200 {object} responses.Success
+// @Router /contracts/{id}/reject [post]
+func (h *Handler) RejectContract(c *gin.Context) {
+	userID := middlewares.GetUserID(c)
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		respondError(c, responses.NewAppErr(http.StatusBadRequest, "ID ไม่ถูกต้อง"))
+		return
+	}
+
+	var req requests.ReviewContractRequest
+	_ = c.ShouldBindJSON(&req)
+
+	if err := h.useCase.RejectContract(id, userID, req.Reason); err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, responses.SuccessResponse(gin.H{"rejected": true}, http.StatusOK))
 }
 
 // TerminateContract godoc

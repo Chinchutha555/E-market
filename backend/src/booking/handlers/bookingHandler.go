@@ -160,7 +160,7 @@ func (h *Handler) CreateWaitlist(c *gin.Context) {
 func (h *Handler) GetMyWaitlist(c *gin.Context) {
 	role := middlewares.GetUserRole(c)
 	userID := middlewares.GetUserID(c)
-	if role == "admin" || role == "staff" {
+	if role == "admin" || role == "staff" || role == "market_director" {
 		userID = 0
 	}
 	res, err := h.useCase.GetMyWaitlist(userID)
@@ -281,7 +281,7 @@ func (h *Handler) UpdateBookingStatus(c *gin.Context) {
 		return
 	}
 	req.ActorRole = middlewares.GetUserRole(c)
-	req.ByOfficer = req.ByOfficer || req.ActorRole == "admin" || req.ActorRole == "staff"
+	req.ByOfficer = req.ByOfficer || req.ActorRole == "admin" || req.ActorRole == "staff" || req.ActorRole == "market_director"
 
 	res, err := h.useCase.UpdateStatus(id, userID, req)
 	if err != nil {
@@ -293,7 +293,7 @@ func (h *Handler) UpdateBookingStatus(c *gin.Context) {
 
 func (h *Handler) transition(c *gin.Context, status string, officerOnly bool) {
 	role := middlewares.GetUserRole(c)
-	if officerOnly && role != "admin" && role != "staff" {
+	if officerOnly && role != "admin" && role != "staff" && role != "market_director" {
 		respondError(c, responses.NewAppErr(http.StatusForbidden, "เฉพาะเจ้าหน้าที่เท่านั้นที่ดำเนินการนี้ได้"))
 		return
 	}
@@ -333,7 +333,7 @@ func (h *Handler) transition(c *gin.Context, status string, officerOnly bool) {
 		MeetingPoint:    body.MeetingPoint,
 		EscortOfficer:   body.EscortOfficer,
 		OfficerNotes:    body.OfficerNotes,
-		ByOfficer:       body.ByOfficer || role == "admin" || role == "staff",
+		ByOfficer:       body.ByOfficer || role == "admin" || role == "staff" || role == "market_director",
 		StallIdent:      body.StallIdent,
 		CancelAll:       body.CancelAll,
 		ActorRole:       role,
@@ -400,7 +400,7 @@ func (h *Handler) Decide(c *gin.Context) {
 
 func (h *Handler) OfficerRecordProxy(c *gin.Context) {
 	role := middlewares.GetUserRole(c)
-	if role != "admin" && role != "staff" {
+	if role != "admin" && role != "staff" && role != "market_director" {
 		respondError(c, responses.NewAppErr(http.StatusForbidden, "เฉพาะเจ้าหน้าที่เท่านั้นที่ดำเนินการนี้ได้"))
 		return
 	}

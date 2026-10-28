@@ -5390,7 +5390,7 @@ const handleClearAllData = async () => {
 watch(
   () => (authRole && (authRole as any).value !== undefined ? (authRole as any).value : authRole),
   (newRole) => {
-    if (newRole === 'admin' || newRole === 'staff') {
+    if (newRole === 'admin' || newRole === 'staff' || newRole === 'market_director' || newRole === 'bureau_director') {
       currentRole.value = 'officer'
     } else {
       currentRole.value = 'tenant'
@@ -5451,7 +5451,7 @@ const restoreBookingReturnContext = async () => {
   try {
     const context = JSON.parse(rawContext)
     if (!context?.bookingId || Date.now() - Number(context.savedAt || 0) > 30 * 60 * 1000) return
-    const expectedRole = (authRole.value === 'admin' || authRole.value === 'staff') ? 'officer' : 'tenant'
+    const expectedRole = (authRole.value === 'admin' || authRole.value === 'staff' || authRole.value === 'market_director' || authRole.value === 'bureau_director') ? 'officer' : 'tenant'
     if (context.role && context.role !== expectedRole) return
     const savedTenantPage = Number(context.tenant?.page) || 1
     const savedOfficerPage = Number(context.officer?.page) || 1
