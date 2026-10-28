@@ -101,6 +101,51 @@
      - **หน้าอื่น / ปุ่มลูกศร**: กรอบแบบ ghost/subtle border `border: 1px solid #e2e8f0`, ขอบมน `border-radius: 8px`
      - เมื่อผู้ใช้เปลี่ยนจำนวนรายการต่อหน้า (Items per page) ให้รีเซ็ตกลับไปที่หน้า 1 เสมอเพื่อป้องกันหน้าเกิน
 
+## Operational List & Card View Standards (มาตรฐานหน้ารายการ การ์ด และตารางปฏิบัติการ)
+
+สำหรับหน้าจอจัดการข้อมูลหลัก (เช่น การจอง Bookings, สัญญา Contracts, คำร้อง Applications, หนี้ค้าง Debts):
+
+1. **Top KPI Ribbon Cards (แถบการ์ดสถิติและตัวกรองสถานะด้านบน)**:
+   - ให้วางแถบ KPI Ribbon (`.officer-kpi-ribbon`) ด้านบนสุดของการ์ดตาราง/เนื้อหา
+   - การ์ดแต่ละใบประกอบด้วย:
+     - ไอคอนในกล่องมน (`.kpi-icon-box`, border-radius 12px)
+     - ชื่อกลุ่มสถานะ (`.kpi-title`, font-size 0.8rem, color #64748b)
+     - ตัวเลขสถิติ (`.kpi-count`, font-size 1.45rem, font-weight 800) พร้อมป้ายหน่วย (`.kpi-unit-pill`, เช่น "สัญญา", "รายการ")
+   - สีประจำสถานะ:
+     - **ทั้งหมด (All)**: `.kpi-all` (ฟ้า/น้ำเงิน `#2563eb`)
+     - **รอดำเนินการ / รอตรวจ (Pending)**: `.kpi-pending` (ส้มอำพัน `#d97706`)
+     - **ใช้งานอยู่ / อนุมัติ (Active/Approved)**: `.kpi-applied` หรือ `.kpi-active` (เขียว `#16a34a` หรือ ม่วง `#7c3aed`)
+     - **หมดสัญญา / ประวัติ (Expired)**: `.kpi-expired` (เทาสลレート `#64748b`)
+     - **ยกเลิก / ปฏิเสธ (Terminated/Cancelled)**: `.kpi-terminated` (แดง `#dc2626`)
+   - การคลิกที่ KPI Card จะตั้งค่าฟิลเตอร์สถานะ (`selectedStatus`) พร้อมไฮไลต์กรอบและเงาแบบ `.active` ทันที
+
+2. **View Mode Segmented Control (สวิตช์สลับมุมมองตารางและการ์ด)**:
+   - วาง `AppSegmentedControl` ในแถบเครื่องมือด้านขวาของหัวการ์ด
+   - ตัวเลือกมาตรฐาน:
+     ```ts
+     const viewMode = ref<'table' | 'cards'>('table')
+     const viewModeOptions = [
+       { value: 'table', label: 'ตาราง', icon: 'table' },
+       { value: 'cards', label: 'การ์ด', icon: 'card' }
+     ]
+     ```
+
+3. **Card Grid View Structure (โครงสร้างการ์ดข้อมูล)**:
+   - ใช้กริด `.contract-cards-grid` หรือ `.cards-grid` (`grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))`, gap 16px-20px)
+   - ขอบการ์ดมน 14px, พื้นหลังขาว, เงาละมุน, hover ยกตัวเล็กน้อย
+   - โครงสร้างภายในการ์ด:
+     - **Header**: ไอคอนวงกลมนำสายตา, รหัสอ้างอิงเอกสาร (คลิกดูรายละเอียดได้), วันที่สร้าง/รอบชำระ, และ ป้ายสถานะ Soft Pill Badge
+     - **Body Context**: ป้ายแผงค้า (Stall Badge), ชื่อร้านค้า/ธุรกิจ, ข้อมูลผู้เช่า/เบอร์โทร, ช่วงเวลาสัญญา, และ ยอดเงินตัวหนา (`font-weight: 700`)
+     - **Footer Actions**: วางปุ่มคำสั่งด้วย `AppButton` สอดคล้องกับสิทธิ์ (เช่น ตรวจสอบ/อนุมัติ, ดูสัญญา, สิ้นสุดสัญญา)
+
+4. **Table View Standard (มุมมองตารางมาตรฐาน)**:
+   - คอลัมน์ชัดเจน, ฟอนต์ตารางขนาด `0.875rem (14px)`, ความสูงแถวโปร่งสบาย
+   - ยอดเงินใช้ตัวหนา `#1e293b`
+   - คอลัมน์จัดการด้านขวาสุดใช้ `AppButton` ขนาด `sm` สไตล์ Outlined/Primary
+
+5. **Universal Pagination**:
+   - ใช้ `AppPagination.vue` ครอบคลุมทั้งโหมดตารางและโหมดการ์ด
+
 ## Modal & Confirmation Dialog Standards (มาตรฐานการแจ้งเตือนและการยืนยันทั้งระบบ)
 
 ### 1. กฎเหล็ก (Strict Rules)

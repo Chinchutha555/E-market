@@ -206,6 +206,10 @@
         <span v-if="applicationActionCount > 0" class="sidebar-action-badge" :aria-label="`มีคำร้องที่ต้องจัดการ ${applicationActionCount} รายการ`">{{ formatBadgeCount(applicationActionCount) }}</span>
       </NuxtLink>
 
+      <NuxtLink to="/debts" class="nav-icon-link" :class="{ active: route.path.startsWith('/debts') }" :title="isExpanded ? '' : 'หนี้ค้างชำระ'">
+        <span class="nav-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></svg></span>
+        <span v-if="isExpanded" class="nav-label">หนี้ค้างชำระ</span>
+      </NuxtLink>
       <!-- 4. Contracts -->
       <NuxtLink
         to="/contracts"

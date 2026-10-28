@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"emarket-api/models"
+
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -45,6 +46,18 @@ func SeedAll(db *gorm.DB) error {
 		db.Where("username = ?", t.Username).Attrs(t).FirstOrCreate(&existing)
 	}
 
+	// Director demo accounts are only created in an explicitly configured local environment.
+	if os.Getenv("APP_ENV") == "development" || os.Getenv("APP_ENV") == "test" {
+		for _, director := range []models.User{
+			{Username: "market_director_demo", Password: hashPassword("marketdemo1234"), FullName: "ผู้อำนวยการตลาด (ทดสอบ)", Role: "market_director", Status: "A"},
+			{Username: "bureau_director_demo", Password: hashPassword("bureaudemo1234"), FullName: "ผู้อำนวยการสำนักตลาด (ทดสอบ)", Role: "bureau_director", Status: "A"},
+		} {
+			var existing models.User
+			if err := db.Where("username = ?", director.Username).Attrs(director).FirstOrCreate(&existing).Error; err != nil {
+				return err
+			}
+		}
+	}
 	// 2. Seed 12 BMA Markets
 	var marketCount int64
 	db.Model(&models.Market{}).Count(&marketCount)
@@ -331,6 +344,20 @@ func SeedAll(db *gorm.DB) error {
 		if err := db.Where("user_id = ? AND market_id = ?", staff.ID, market.ID).
 			FirstOrCreate(&assignment).Error; err != nil {
 			return err
+		}
+	}
+	// Scope the market director demo accounts to markets so they have assignments to review applications.
+	if len(marketsForStaff) > 0 {
+		var directors []models.User
+		if err := db.Where("role = ?", "market_director").Find(&directors).Error; err == nil {
+			for _, director := range directors {
+				for _, m := range marketsForStaff {
+					assignment := models.MarketStaffAssignment{UserID: director.ID, MarketID: m.ID}
+					if err := db.Where("user_id = ? AND market_id = ?", director.ID, m.ID).FirstOrCreate(&assignment).Error; err != nil {
+						return err
+					}
+				}
+			}
 		}
 	}
 	// Keep the legacy demo account usable while treating it as a normal

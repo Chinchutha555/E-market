@@ -678,7 +678,7 @@ func (u *useCase) groupBookingModels(bookings []models.Booking) []responses.Book
 }
 
 func canManageBookings(role string) bool {
-	return role == "admin" || role == "staff"
+	return role == "admin" || role == "staff" || role == "market_director"
 }
 
 func (u *useCase) GetBookings(filter requests.BookingFilter, actorID int, actorRole string) ([]responses.BookingResponse, error) {

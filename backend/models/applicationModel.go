@@ -15,6 +15,9 @@ type Application struct {
 	ApplicantName         string     `gorm:"size:255;not null;column:applicant_name" json:"applicant_name"`
 	ApplicantPhone        string     `gorm:"size:50;not null;column:applicant_phone" json:"applicant_phone"`
 	ApplicantIDCard       string     `gorm:"size:50;column:applicant_id_card" json:"applicant_id_card"`
+	ApplicantAge          *int       `gorm:"column:applicant_age" json:"applicant_age,omitempty"`
+	IDCardCopy            []byte     `gorm:"column:id_card_copy" json:"-"`
+	IDCardCopyType        string     `gorm:"size:50;column:id_card_copy_type" json:"-"`
 	ShopName              string     `gorm:"size:255;not null;column:shop_name" json:"shop_name"`
 	ProductCategory       string     `gorm:"size:255;column:product_category" json:"product_category"`
 	LeaseTermMonths       int        `gorm:"default:12;column:lease_term_months" json:"lease_term_months"`

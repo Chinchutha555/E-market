@@ -28,4 +28,9 @@ type CreateContractRequest struct {
 	RentalFee       float64 `json:"rental_fee"`
 	SecurityDeposit float64 `json:"security_deposit"`
 	AdvancePayment  float64 `json:"advance_payment"`
+	Status          string  `json:"status"`
+}
+
+type ReviewContractRequest struct {
+	Reason string `json:"reason"`
 }

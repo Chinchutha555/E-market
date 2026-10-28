@@ -86,6 +86,14 @@
               <strong>admin</strong> / <span>admin1234</span>
             </div>
           </button>
+            <button type="button" class="btn-quick" @click="fillCredentials('market_director_demo', 'marketdemo1234')">
+              <div class="quick-badge badge-staff">ผอ.ตลาด (ทดสอบ)</div>
+              <div class="quick-user-info"><strong>market_director_demo</strong> / <span>marketdemo1234</span></div>
+            </button>
+            <button type="button" class="btn-quick" @click="fillCredentials('bureau_director_demo', 'bureaudemo1234')">
+              <div class="quick-badge badge-staff">ผอ.สำนักตลาด (ทดสอบ)</div>
+              <div class="quick-user-info"><strong>bureau_director_demo</strong> / <span>bureaudemo1234</span></div>
+            </button>
           <section class="staff-demo-accounts" aria-label="บัญชีเจ้าหน้าที่ตลาดทั้ง 12 แห่ง">
             <div class="staff-demo-heading">
               <span>บัญชีเจ้าหน้าที่ตลาด 12 แห่ง</span>
@@ -344,7 +352,7 @@ const handleLogin = async () => {
 }
 
 .quick-badge {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 6px;
