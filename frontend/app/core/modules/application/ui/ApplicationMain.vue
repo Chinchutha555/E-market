@@ -932,6 +932,7 @@ import { useAuthStore } from '~/core/modules/auth/store/AuthStore'
 import { useNotifications } from '~/composables/useNotifications'
 
 const { get, post } = useApi()
+const route = useRoute()
 const authStore = useAuthStore()
 const { user, currentUser, isTenant, role } = useAuth()
 const isAdminOrStaff = computed(() => ['admin', 'staff'].includes(role.value || authStore.role || ''))
@@ -948,7 +949,13 @@ const handleClearAllData = async () => {
 const loading = ref(true)
 const applications = ref<any[]>([])
 const marketsList = ref<any[]>([])
-const searchQuery = ref('')
+const searchQuery = ref(typeof route.query.search === 'string' ? route.query.search : '')
+
+watch(() => route.query.search, (val) => {
+  if (typeof val === 'string') {
+    searchQuery.value = val
+  }
+})
 const activeTab = ref('all')
 const typeFilter = ref<'all' | 'stall_lease' | 'general'>('all')
 const currentPage = ref(1)
@@ -1650,6 +1657,9 @@ onMounted(() => {
     if (saved === 'table' || saved === 'card') {
       viewMode.value = saved
     }
+  }
+  if (route.query.search) {
+    searchQuery.value = String(route.query.search)
   }
   loadApplications()
   loadMarkets()

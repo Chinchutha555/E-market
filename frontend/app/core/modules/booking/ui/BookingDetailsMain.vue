@@ -4,9 +4,9 @@
 
     <main class="content-body detail-container">
       <AppBreadcrumb
-        :items="[{ label: 'รายการจอง', to: '/bookings' }]"
+        :items="returnCrumbItems"
         :current="booking ? `รายละเอียด ${formatBookingNumber(booking.booking_number)}` : 'รายละเอียดการจอง'"
-        back-to="/bookings"
+        :back-to="returnBackTo"
       />
 
       <div v-if="loading" class="detail-skeleton" aria-label="กำลังโหลดรายละเอียดการจอง">
@@ -565,6 +565,7 @@ import { useNotifications } from '~/composables/useNotifications'
 
 const route = useRoute()
 const router = useRouter()
+const { backTo: returnBackTo, crumbItems: returnCrumbItems } = useReturnTo({ label: 'รายการจอง', to: '/bookings' })
 const { get, post } = useApi()
 const { user, role: authRole } = useAuth()
 const { showConfirm, showSuccess, showError } = useAppAlert()
