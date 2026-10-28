@@ -518,5 +518,127 @@ func SeedAll(db *gorm.DB) error {
 		log.Println("Seeded default application types successfully")
 	}
 
+	// 11. Seed Contracts
+	var contractCount int64
+	db.Model(&models.Contract{}).Count(&contractCount)
+	if contractCount == 0 {
+		mID := 1
+		contracts := []models.Contract{
+			{
+				ContractNumber: "CNT-2026-JJ-16-232-01", StallIdent: "JJ-16-232", MarketID: &mID,
+				TenantName: "คุณสมศักดิ์ มั่งคั่ง", TenantPhone: "081-889-9221", TenantIDCard: "3-1006-00421-44-1",
+				ShopName: "ร้านค้าทั่วไป", StartDate: "2026-01-01", EndDate: "2026-12-31",
+				MonthlyRental: 2000, SecurityDeposit: 4000, ContractState: "active", Status: "A",
+			},
+			{
+				ContractNumber: "CNT-2026-JJ-17-392-01", StallIdent: "JJ-17-392", MarketID: &mID,
+				TenantName: "สมชาย ใจดี", TenantPhone: "081-234-5678", TenantIDCard: "1-1004-99882-12-1",
+				ShopName: "เสื้อผ้าแฟชั่นและคราฟต์", StartDate: "2026-01-01", EndDate: "2026-12-31",
+				MonthlyRental: 1800, SecurityDeposit: 3600, ContractState: "active", Status: "A",
+			},
+			{
+				ContractNumber: "CNT-2026-JJ-17-434-01", StallIdent: "JJ-17-434", MarketID: &mID,
+				TenantName: "วิชัย เจริญทรัพย์", TenantPhone: "086-778-9900", TenantIDCard: "2-1005-44321-77-2",
+				ShopName: "ร้านกระเป๋าและเครื่องหนัง", StartDate: "2026-02-01", EndDate: "2027-01-31",
+				MonthlyRental: 2200, SecurityDeposit: 4400, ContractState: "active", Status: "A",
+			},
+			{
+				ContractNumber: "CNT-2026-JJ-19-267-01", StallIdent: "JJ-19-267", MarketID: &mID,
+				TenantName: "นภาพร รัตนศิลป์", TenantPhone: "089-111-2233", TenantIDCard: "1-1004-88421-13-9",
+				ShopName: "ร้านเครื่องเงินและจิวเวลรี่", StartDate: "2026-03-01", EndDate: "2027-02-28",
+				MonthlyRental: 2500, SecurityDeposit: 5000, ContractState: "active", Status: "A",
+			},
+			{
+				ContractNumber: "CNT-2026-JJ-19-260-01", StallIdent: "JJ-19-260", MarketID: &mID,
+				TenantName: "คุณกิตติศักดิ์ เจริญพร", TenantPhone: "085-334-1122", TenantIDCard: "3-1007-88214-99-0",
+				ShopName: "ของแต่งบ้านวินเทจ", StartDate: "2026-01-01", EndDate: "2026-12-31",
+				MonthlyRental: 2000, SecurityDeposit: 4000, ContractState: "active", Status: "A",
+			},
+			{
+				ContractNumber: "CNT-2025-JJ-16-232-02", StallIdent: "JJ-16-232", MarketID: &mID,
+				TenantName: "คุณกมลชนก แสงทอง", TenantPhone: "089-245-7810", TenantIDCard: "1-1008-33214-55-6",
+				ShopName: "ร้านเครื่องดื่มสมุนไพร", StartDate: "2025-01-01", EndDate: "2025-12-31",
+				MonthlyRental: 1800, SecurityDeposit: 3600, ContractState: "expired", Status: "A",
+			},
+			{
+				ContractNumber: "CNT-2025-JJ-17-392-02", StallIdent: "JJ-17-392", MarketID: &mID,
+				TenantName: "คุณประวิทย์ วัฒนกิจ", TenantPhone: "086-441-9082", TenantIDCard: "1-1009-44123-66-7",
+				ShopName: "ของเล่นและของสะสม", StartDate: "2025-01-01", EndDate: "2025-12-31",
+				MonthlyRental: 1600, SecurityDeposit: 3200, ContractState: "expired", Status: "A",
+			},
+		}
+		if err := db.Create(&contracts).Error; err != nil {
+			return err
+		}
+		log.Println("Seeded default contracts successfully")
+	}
+
+	// 12. Seed Tenant Debt
+	var debtCount int64
+	db.Model(&models.Debt{}).Count(&debtCount)
+	if debtCount == 0 {
+		debts := []models.Debt{
+			{TenantID: 3, MarketID: 1, Description: "ค้างชำระค่าเช่าแผง JJ-16-232 งวดตุลาคม 2569", AmountSatang: 200000, Status: "outstanding", CreatedBy: 1},
+			{TenantID: 4, MarketID: 1, Description: "ค้างชำระค่าน้ำ-ค่าไฟแผง JJ-19-267 ประจำเดือนกันยายน 2569", AmountSatang: 85000, Status: "outstanding", CreatedBy: 1},
+			{TenantID: 5, MarketID: 1, Description: "ค้างชำระค่าธรรมเนียมขยะมูลฝอยประจำไตรมาส 3", AmountSatang: 45000, Status: "cleared", CreatedBy: 1},
+		}
+		if err := db.Create(&debts).Error; err != nil {
+			return err
+		}
+		log.Println("Seeded default tenant debts successfully")
+	}
+
+	// 13. Seed Additional Bookings & Applications
+	var appCount int64
+	db.Model(&models.Application{}).Count(&appCount)
+	if appCount <= 4 {
+		mID := 1
+		extraApps := []models.Application{
+			{
+				ApplicationNo: "APP-20261028-101234", StallIdent: "JJ-16-230", MarketID: &mID, MarketName: "ตลาดนัดจตุจักร",
+				ApplicantName: "คุณณภัทร วงศ์สว่าง", ApplicantPhone: "089-555-4321", ApplicantIDCard: "1-1002-33441-22-3",
+				ShopName: "ร้านเซรามิกและของแต่งบ้าน", ProductCategory: "ของแต่งบ้าน", LeaseTermMonths: 12, MonthlyRate: 2000,
+				ApplicationState: "pending_officer", Status: "A", Subject: "ขอเช่าพื้นที่แผงค้าใหม่",
+			},
+			{
+				ApplicationNo: "APP-20261028-202345", StallIdent: "JJ-16-231", MarketID: &mID, MarketName: "ตลาดนัดจตุจักร",
+				ApplicantName: "คุณจิราพร บุญมี", ApplicantPhone: "084-222-3344", ApplicantIDCard: "1-1003-44552-33-4",
+				ShopName: "ร้านขนมไทยโบราณ", ProductCategory: "อาหารและเครื่องดื่ม", LeaseTermMonths: 12, MonthlyRate: 1800,
+				ApplicationState: "submitted", Status: "A", Subject: "ขอเช่าพื้นที่แผงค้าใหม่",
+			},
+			{
+				ApplicationNo: "APP-20261028-303456", StallIdent: "JJ-17-390", MarketID: &mID, MarketName: "ตลาดนัดจตุจักร",
+				ApplicantName: "คุณศิริชัย แซ่ตั้ง", ApplicantPhone: "087-999-8877", ApplicantIDCard: "1-1004-55663-44-5",
+				ShopName: "ร้านอุปกรณ์แคมป์ปิ้ง", ProductCategory: "ทั่วไป", LeaseTermMonths: 12, MonthlyRate: 2200,
+				ApplicationState: "approved", Status: "A", Subject: "ขอเช่าพื้นที่แผงค้าใหม่",
+			},
+		}
+		_ = db.Create(&extraApps).Error
+	}
+
+	var totalBookings int64
+	db.Model(&models.Booking{}).Count(&totalBookings)
+	if totalBookings <= 6 {
+		mID := 1
+		extraBookings := []models.Booking{
+			{
+				BookingNo: "BK-20261028-091100", StallIdent: "JJ-16-230", MarketID: &mID, MarketName: "ตลาดนัดจตุจักร",
+				ApplicantName: "คุณณภัทร วงศ์สว่าง", ApplicantPhone: "089-555-4321", BusinessType: "ของแต่งบ้าน",
+				VisitDate: "2026-11-02", VisitTime: "10:00 - 11:00", BookingStatus: "approved", Status: "A",
+			},
+			{
+				BookingNo: "BK-20261028-112200", StallIdent: "JJ-16-231", MarketID: &mID, MarketName: "ตลาดนัดจตุจักร",
+				ApplicantName: "คุณจิราพร บุญมี", ApplicantPhone: "084-222-3344", BusinessType: "อาหารและเครื่องดื่ม",
+				VisitDate: "2026-11-02", VisitTime: "14:00 - 15:00", BookingStatus: "pending_approval", Status: "A",
+			},
+			{
+				BookingNo: "BK-20261028-143300", StallIdent: "JJ-17-390", MarketID: &mID, MarketName: "ตลาดนัดจตุจักร",
+				ApplicantName: "คุณศิริชัย แซ่ตั้ง", ApplicantPhone: "087-999-8877", BusinessType: "ทั่วไป",
+				VisitDate: "2026-11-03", VisitTime: "11:00 - 12:00", BookingStatus: "lease_applied", Status: "A",
+			},
+		}
+		_ = db.Create(&extraBookings).Error
+	}
+
 	return nil
 }

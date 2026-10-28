@@ -17,7 +17,7 @@ onMounted(async () => {
     if (profile.status && profile.data) auth.setUser(profile.data)
   }
   const market = auth.currentUser?.assigned_markets?.[0]
-  if (market) await navigateTo(`/stalls/manage?market=${market.id}&mode=inspect`, { replace: true })
+  if (market) await navigateTo(`/stalls/map?market=${market.id}`, { replace: true })
 })
 
 definePageMeta({
@@ -30,7 +30,7 @@ definePageMeta({
     if (session.role !== 'staff') return navigateTo('/', { replace: true })
     const market = session.currentUser?.assigned_markets?.[0]
     if (!market) return
-    return navigateTo(`/stalls/manage?market=${market.id}&mode=inspect`, { replace: true })
+    return navigateTo(`/stalls/map?market=${market.id}`, { replace: true })
   }
 })
 </script>

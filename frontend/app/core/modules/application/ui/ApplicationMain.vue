@@ -2,6 +2,7 @@
   <div class="application-main-page">
     <AppHeader />
     <div class="page-container">
+      <AppBreadcrumb v-if="returnUrl" :items="crumbItems" current="รายการคำร้องทั้งหมด" :back-to="backTo" />
       <!-- Loading Skeleton State -->
       <div v-if="loading" class="skeleton-loading-container">
         <div class="skeleton-line skeleton-header"></div>
@@ -1770,6 +1771,7 @@
 </template>
 
 <script setup lang="ts">
+const { returnUrl, backTo, crumbItems } = useReturnTo({ label: 'รายการคำร้อง', to: '/applications' })
 import { useAuthStore } from '~/core/modules/auth/store/AuthStore'
 import { useNotifications } from '~/composables/useNotifications'
 

@@ -44,13 +44,17 @@
         <line x1="8" y1="2" x2="8" y2="18"></line>
         <line x1="16" y1="6" x2="16" y2="22"></line>
       </svg>
+      <svg v-else-if="option.icon === 'receipt'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"></path>
+        <path d="M8 8h8M8 12h8M8 16h5"></path>
+      </svg>
       <span>{{ option.label }}</span>
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
-type SegmentedIcon = 'market' | 'grid' | 'list' | 'card' | 'table' | 'map'
+type SegmentedIcon = 'market' | 'grid' | 'list' | 'card' | 'table' | 'map' | 'receipt'
 
 interface SegmentedOption {
   value: string

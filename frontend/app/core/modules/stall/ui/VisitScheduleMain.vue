@@ -337,7 +337,7 @@
                 </svg>
                 <div class="cdb-text">
                   <strong>ปิดรับนัดหมายทุก{{ activeWeeklyDay.dayName }}</strong>
-                  <p>ในหน้าจองของผู้เช่า วัน{{ activeWeeklyDay.dayName }}ของทุกสัปดาห์จะแสดงสถานะเป็น “ปิดรับนัดหมาย”</p>
+                  <p>ในหน้าจองของผู้เช่า {{ activeWeeklyDay.dayName }}ของทุกสัปดาห์จะแสดงสถานะเป็น “ปิดรับนัดหมาย”</p>
                 </div>
                 <button type="button" class="reopen-day-btn" @click="activeWeeklyDay.enabled = true">
                   เปิดรับนัดทุก{{ activeWeeklyDay.dayName }}
@@ -1162,7 +1162,7 @@ watch(marketId, () => {
 /* ======================================================== */
 .weekly-master-split {
   display: grid;
-  grid-template-columns: 310px 1fr;
+  grid-template-columns: 330px 1fr;
   gap: 20px;
   align-items: start;
   margin-top: 14px;
@@ -1173,11 +1173,11 @@ watch(marketId, () => {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
-  padding: 18px 16px;
+  padding: 20px 18px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .sidebar-head {
@@ -1189,29 +1189,30 @@ watch(marketId, () => {
 }
 
 .sidebar-title {
-  font-size: 0.95rem;
+  font-size: 1.08rem;
   font-weight: 700;
   color: #1e293b;
   margin: 0;
 }
 
 .sidebar-sub {
-  font-size: 0.72rem;
+  font-size: 0.85rem;
+  font-weight: 500;
   color: #64748b;
   display: block;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 .quick-copy-all-btn {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 10px;
+  padding: 6px 12px;
   background: #eff6ff;
   color: #2563eb;
   border: 1px solid #bfdbfe;
   border-radius: 7px;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1224,7 +1225,7 @@ watch(marketId, () => {
 .days-master-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .day-master-item {
@@ -1232,7 +1233,7 @@ watch(marketId, () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: #ffffff;
   border: 1.5px solid #f1f5f9;
   border-radius: 12px;
@@ -1254,12 +1255,12 @@ watch(marketId, () => {
 }
 
 .day-master-item.closed {
-  opacity: 0.75;
+  opacity: 0.78;
 }
 
 .dmi-indicator {
   width: 4px;
-  height: 24px;
+  height: 28px;
   border-radius: 2px;
   background: transparent;
   flex-shrink: 0;
@@ -1279,11 +1280,11 @@ watch(marketId, () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: 8px;
 }
 
 .dmi-name {
-  font-size: 0.88rem;
+  font-size: 0.96rem;
   font-weight: 700;
   color: #1e293b;
 }
@@ -1293,17 +1294,18 @@ watch(marketId, () => {
 }
 
 .dmi-bot-row {
-  margin-top: 3px;
-  font-size: 0.73rem;
+  margin-top: 4px;
+  font-size: 0.84rem;
 }
 
 .dmi-status-open {
   color: #16a34a;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .dmi-status-closed {
   color: #94a3b8;
+  font-weight: 500;
 }
 
 .dmi-arrow {
@@ -1320,20 +1322,21 @@ watch(marketId, () => {
 
 .sidebar-tip-box {
   display: flex;
+  align-items: center;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 11px 14px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   color: #64748b;
-  font-size: 0.73rem;
+  font-size: 0.84rem;
+  font-weight: 500;
   line-height: 1.45;
 }
 
 .sidebar-tip-box svg {
   flex-shrink: 0;
   color: #3b82f6;
-  margin-top: 1px;
 }
 
 /* RIGHT: Detail Panel */
@@ -1350,7 +1353,7 @@ watch(marketId, () => {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  padding: 18px 22px;
+  padding: 20px 24px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
@@ -1365,15 +1368,16 @@ watch(marketId, () => {
 }
 
 .ddh-day-title {
-  font-size: 1.25rem;
+  font-size: 1.32rem;
   font-weight: 700;
   color: #0f172a;
   margin: 0;
 }
 
 .ddh-subtitle {
-  margin: 4px 0 0;
-  font-size: 0.82rem;
+  margin: 5px 0 0;
+  font-size: 0.92rem;
+  font-weight: 500;
   color: #64748b;
 }
 
@@ -1386,8 +1390,8 @@ watch(marketId, () => {
 .day-toggle-switch {
   position: relative;
   display: inline-block;
-  width: 42px;
-  height: 24px;
+  width: 44px;
+  height: 25px;
 }
 
 .day-toggle-switch input {
@@ -1402,14 +1406,14 @@ watch(marketId, () => {
   inset: 0;
   background-color: #cbd5e1;
   transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 24px;
+  border-radius: 25px;
 }
 
 .day-toggle-switch .slider:before {
   position: absolute;
   content: "";
-  height: 18px;
-  width: 18px;
+  height: 19px;
+  width: 19px;
   left: 3px;
   bottom: 3px;
   background-color: white;
@@ -1423,11 +1427,11 @@ watch(marketId, () => {
 }
 
 .day-toggle-switch input:checked + .slider:before {
-  transform: translateX(18px);
+  transform: translateX(19px);
 }
 
 .toggle-text {
-  font-size: 0.84rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #64748b;
 }
@@ -1441,7 +1445,7 @@ watch(marketId, () => {
   display: flex;
   align-items: flex-end;
   gap: 14px;
-  padding: 16px 20px;
+  padding: 18px 22px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
@@ -1483,29 +1487,30 @@ watch(marketId, () => {
 }
 
 .sch-title {
-  font-size: 0.98rem;
+  font-size: 1.06rem;
   font-weight: 700;
   color: #1e293b;
   margin: 0;
 }
 
 .sch-sub {
-  font-size: 0.76rem;
+  font-size: 0.85rem;
+  font-weight: 500;
   color: #64748b;
   display: block;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 .btn-add-slot-top {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 8px 14px;
   background: #eff6ff;
   border: 1px solid #93c5fd;
   color: #2563eb;
   border-radius: 8px;
-  font-size: 0.78rem;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1516,7 +1521,7 @@ watch(marketId, () => {
 }
 
 .field-label {
-  font-size: 0.78rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: #334155;
 }
@@ -1546,7 +1551,7 @@ watch(marketId, () => {
   padding: 8px 12px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 0.84rem;
+  font-size: 0.9375rem;
   color: #1e293b;
   font-family: inherit;
   background: #ffffff;
@@ -1567,7 +1572,7 @@ watch(marketId, () => {
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #334155;
   cursor: pointer;
@@ -1597,18 +1602,18 @@ watch(marketId, () => {
 
 .slot-list-head {
   display: grid;
-  grid-template-columns: 235px 130px 1fr 84px 36px;
+  grid-template-columns: 245px 138px 1fr 90px 38px;
   align-items: center;
   gap: 12px;
   padding: 0 14px;
-  font-size: 0.74rem;
+  font-size: 0.825rem;
   font-weight: 600;
   color: #64748b;
 }
 
 .slot-row {
   display: grid;
-  grid-template-columns: 235px 130px 1fr 84px 36px;
+  grid-template-columns: 245px 138px 1fr 90px 38px;
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
@@ -1626,7 +1631,7 @@ watch(marketId, () => {
 
 .time-range-separator {
   color: #94a3b8;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -1638,7 +1643,7 @@ watch(marketId, () => {
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  height: 34px;
+  height: 38px;
   width: 100%;
   box-sizing: border-box;
   transition: all 0.15s ease;
@@ -1654,7 +1659,7 @@ watch(marketId, () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
+  width: 28px;
   height: 100%;
   border: none;
   background: #f8fafc;
@@ -1690,7 +1695,7 @@ watch(marketId, () => {
   border: none;
   background: transparent;
   text-align: right;
-  font-size: 0.88rem;
+  font-size: 0.9375rem;
   font-weight: 700;
   color: #1e293b;
   padding: 0;
@@ -1707,7 +1712,7 @@ watch(marketId, () => {
 }
 
 .cap-suffix {
-  font-size: 0.74rem;
+  font-size: 0.84rem;
   color: #64748b;
   font-weight: 500;
   margin-left: 4px;
@@ -1742,10 +1747,10 @@ watch(marketId, () => {
   width: 100%;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  padding: 8px 11px;
+  padding: 8px 12px;
   color: #1e293b;
   font-family: inherit;
-  font-size: 0.84rem;
+  font-size: 0.92rem;
 }
 
 .time-input:focus,
@@ -1804,10 +1809,10 @@ watch(marketId, () => {
 }
 
 .status-toggle-label {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: #94a3b8;
-  min-width: 24px;
+  min-width: 26px;
   transition: color 0.15s ease;
 }
 
@@ -1840,7 +1845,7 @@ watch(marketId, () => {
   border-radius: 10px;
   background: #f8fafc;
   color: #2563eb;
-  font-size: 0.82rem;
+  font-size: 0.875rem;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -1859,13 +1864,13 @@ watch(marketId, () => {
 .closed-day-banner {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  border-radius: 12px;
+  gap: 14px;
+  padding: 18px 22px;
+  border-radius: 14px;
   background: #fffbeb;
   border: 1px solid #fde68a;
   color: #92400e;
-  margin-top: 10px;
+  margin-top: 4px;
 }
 
 .closed-day-banner svg {
@@ -1875,28 +1880,36 @@ watch(marketId, () => {
 
 .closed-day-banner strong {
   display: block;
-  font-size: 0.88rem;
+  font-size: 1rem;
+  font-weight: 700;
   color: #78350f;
 }
 
 .closed-day-banner p {
-  margin: 3px 0 0;
-  font-size: 0.78rem;
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  font-weight: 500;
   color: #92400e;
 }
 
 .reopen-day-btn {
   margin-left: auto;
-  padding: 7px 14px;
+  padding: 9px 18px;
   background: #2563eb;
   color: #ffffff;
   border: none;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  border-radius: 9px;
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   font-family: inherit;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.reopen-day-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
 }
 
 /* Mode 2: Calendar & Overrides Styles */
@@ -2014,10 +2027,10 @@ watch(marketId, () => {
 .date-status.status-closed { color: #94a3b8; }
 
 .date-badge {
-  font-size: 0.65rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
+  padding: 3px 9px;
+  border-radius: 6px;
   white-space: nowrap;
 }
 
