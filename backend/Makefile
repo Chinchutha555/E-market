@@ -1,10 +1,10 @@
 .PHONY: run build test swag migrate-up migrate-down docker-up docker-down
 
 run:
-	go run main.go
+	go run -ldflags="-linkmode=external" main.go
 
 build:
-	go build -o bin/emarket-api main.go
+	go build -ldflags="-linkmode=external" -o bin/emarket-api main.go
 
 test:
 	go test -v ./...
