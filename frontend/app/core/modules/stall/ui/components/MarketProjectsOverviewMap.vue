@@ -2,7 +2,7 @@
   <div class="projects-master-container" :class="{ 'is-preview-mode': previewMode }">
     <!-- Top Interactive Filter & Quick Search Bar -->
     <Teleport :to="canTeleportToolbar ? '#step1-map-toolbar' : 'body'" :disabled="!canTeleportToolbar">
-    <div v-if="!previewMode" class="master-map-top-bar">
+    <div v-if="!previewMode && !isOverviewPage" class="master-map-top-bar">
       <div class="master-map-tools-right">
         <!-- Search Input with Clear Button -->
         <div class="search-input-group">
@@ -194,7 +194,7 @@
     </div>
 
     <!-- MapLibre GL JS Interactive Map Container -->
-    <div class="maplibre-overview-wrapper" :class="{ 'is-drawing-active': isDrawingZone || isDrawingStall || isAddingFacility, 'is-map-loading': isMapLoading }">
+    <div class="maplibre-overview-wrapper" :class="{ 'is-drawing-active': isDrawingZone || isDrawingStall || isAddingFacility, 'is-map-loading': isMapLoading, 'has-ov-panel': isOverviewPage && !!ovPanel }">
       <div :id="containerId" ref="mapContainerRef" class="maplibre-overview-canvas"></div>
 
       <div v-if="isMapLoading" class="map-loading-skeleton" aria-busy="true" aria-label="กำลังเตรียมผังตลาด">
@@ -217,7 +217,7 @@
       </div>
 
       <div
-        v-if="managementMode && !activeProject && !isDrawingZone && !isDrawingStall && !isAddingFacility && !isDeletingStall && !isPolygonEditMode && !isStallPolygonEditMode"
+        v-if="managementMode && !inspectOnly && !activeProject && !isDrawingZone && !isDrawingStall && !isAddingFacility && !isDeletingStall && !isPolygonEditMode && !isStallPolygonEditMode"
         class="map-project-guidance map-staff-guidance"
         role="status"
       >
@@ -600,7 +600,7 @@
 
       <!-- Drill-down Panel: แสดงเมื่อคลิกเข้าโครงการ (แผงย่อยวาดอยู่ในกรอบบนแผนที่) -->
       <transition name="smp-slide">
-        <aside v-if="!previewMode && activeProject && activeLayout" class="stall-mode-panel" aria-label="รายละเอียดโครงการ">
+        <aside v-if="!previewMode && activeProject && activeLayout" class="stall-mode-panel" :class="{ 'is-swapped-out': hideProjectPanel }" :aria-hidden="hideProjectPanel" aria-label="รายละเอียดโครงการ">
           <div class="smp-back-section">
             <button id="btn-back-overview" type="button" class="smp-back-btn" @click="handleBackOverviewClick">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -757,6 +757,157 @@
         </div>
       </transition>
 
+<!-- หน้าข้อมูลตลาด: แถบเครื่องมือ 3 ปุ่ม (ค้นหา / กรอง / ชั้นข้อมูล) + แผงสไลด์จากขวา -->
+      <template v-if="isOverviewPage && !previewMode">
+        <nav class="ov-rail" :class="{ 'is-shifted': !!ovPanel, 'is-hidden': hideRail }" aria-label="เครื่องมือแผนที่">
+          <button type="button" class="ov-rail-btn" :class="{ active: ovPanel === 'search' }" title="ค้นหา" aria-label="ค้นหา" :aria-expanded="ovPanel === 'search'" aria-controls="ov-slide-panel" @click="toggleOvPanel('search')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </button>
+          <button type="button" class="ov-rail-btn" :class="{ active: ovPanel === 'filter' }" title="ตัวกรอง" aria-label="ตัวกรอง" :aria-expanded="ovPanel === 'filter'" aria-controls="ov-slide-panel" @click="toggleOvPanel('filter')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10m-7 6h4"></path></svg>
+            <span v-if="ovFilterBadge" class="ov-rail-badge">{{ ovFilterBadge }}</span>
+          </button>
+          <button type="button" class="ov-rail-btn" :class="{ active: ovPanel === 'layers' }" title="ชั้นข้อมูล" aria-label="ชั้นข้อมูล" :aria-expanded="ovPanel === 'layers'" aria-controls="ov-slide-panel" @click="toggleOvPanel('layers')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            <span v-if="legendCategories.length" class="ov-rail-badge">{{ legendCategories.length }}</span>
+          </button>
+        </nav>
+
+        <transition name="ov-slide">
+          <aside v-if="ovPanel" id="ov-slide-panel" class="ov-slide" role="dialog" aria-modal="false" :aria-label="ovTitle">
+            <header class="ov-slide-head">
+              <span class="ov-slide-icon" aria-hidden="true">
+                <svg v-if="ovPanel === 'search'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <svg v-else-if="ovPanel === 'filter'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10m-7 6h4"></path></svg>
+                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+              </span>
+              <div class="ov-slide-title">
+                <h3>{{ ovTitle }}</h3>
+                <p>{{ ovSubtitle }}</p>
+              </div>
+              <button type="button" class="ov-slide-close" aria-label="ปิดแผง" @click="ovPanel = null">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+              </button>
+            </header>
+
+            <div class="ov-slide-body">
+              <!-- ค้นหา -->
+              <template v-if="ovPanel === 'search'">
+                <label class="ov-search">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <input
+                    ref="ovSearchInput"
+                    v-model="searchQuery"
+                    type="search"
+                    :placeholder="managementMode ? 'ค้นหาโซน รหัสแผง หรือประเภทสินค้า' : 'ค้นหาโครงการหรือหมวดหมู่สินค้า'"
+                    @input="handleSearchInput"
+                  />
+                  <button v-if="searchQuery" type="button" class="ov-search-clear" aria-label="ล้างคำค้นหา" @click="clearSearch">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+                  </button>
+                </label>
+                <div v-if="!searchQuery.trim() || !searchResults.length" class="ov-empty">
+                  <span class="ov-empty-icon" aria-hidden="true">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  </span>
+                  <strong>{{ searchQuery.trim() ? 'ไม่พบผลลัพธ์' : 'เริ่มค้นหา' }}</strong>
+                  <p>{{ searchQuery.trim() ? `ไม่พบ "${searchQuery}" ลองใช้คำอื่น` : 'พิมพ์ชื่อโซน/โครงการ รหัสแผง หรือประเภทสินค้า' }}</p>
+                </div>
+                <ul v-else class="ov-result-list">
+                  <li v-for="p in searchResults" :key="p.id">
+                    <button type="button" class="ov-result" @click="focusProject(p)">
+                      <span class="ov-swatch" :style="{ backgroundColor: projectColor(p) }"></span>
+                      <span class="ov-result-text">
+                        <strong>{{ p.name }}</strong>
+                        <small>{{ p.category || 'ไม่ระบุหมวด' }} · {{ (p.stalls?.length || p.totalStalls || 0).toLocaleString('th-TH') }} แผง</small>
+                      </span>
+                      <svg class="ov-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                  </li>
+                </ul>
+              </template>
+
+              <!-- ตัวกรอง: ชุดตัวกรองต่างกันตามโหมด -->
+              <template v-else-if="ovPanel === 'filter'">
+                <slot v-if="filterContext === 'costs'" name="filter-costs" />
+                <template v-else>
+                  <div v-if="managementMode" class="ov-field">
+                    <span class="ov-label">โซน / โครงการ</span>
+                    <AppSelect v-model="zoneFilter" :options="zoneOptions" placeholder="ทุกโซน" />
+                  </div>
+                  <div class="ov-field">
+                    <span class="ov-label">ประเภทสินค้า</span>
+                    <AppSelect :model-value="draftCategoryFilter" :options="categoryOptions" placeholder="เลือกหมวดหมู่" @update:model-value="handleCategoryChange" />
+                  </div>
+                  <div class="ov-field">
+                    <span class="ov-label">งบค่าเช่าต่อเดือน</span>
+                    <AppSelect v-model="rentFilter" :options="rentOptions" placeholder="งบค่าเช่าต่อเดือน" />
+                  </div>
+                  <div class="ov-field">
+                    <span class="ov-label">สถานะแผง</span>
+                    <AppSelect v-model="availabilityFilter" :options="availabilityOptions" placeholder="สถานะแผง" />
+                  </div>
+                  <div v-if="managementMode" class="ov-field">
+                    <span class="ov-label">ความพร้อมของข้อมูลผัง</span>
+                    <AppSelect v-model="readinessFilter" :options="readinessOptions" placeholder="ทั้งหมด" />
+                  </div>
+                  <p class="ov-result-summary">ผลลัพธ์ <strong>{{ previewFilteredProjectCount }}</strong> โครงการ · <strong>{{ previewFilteredStallCount.toLocaleString('th-TH') }}</strong> แผง</p>
+                </template>
+              </template>
+
+              <!-- ชั้นข้อมูล -->
+              <template v-else>
+                <section class="ov-section">
+                  <h4>แผนที่ฐาน</h4>
+                  <div class="ov-basemaps">
+                    <button v-for="b in basemapOptions" :key="b.value" type="button" class="ov-basemap" :class="{ active: currentStyle === b.value }" :aria-pressed="currentStyle === b.value" @click="setMapStyle(b.value)">
+                      <span class="ov-basemap-thumb" :class="`is-${b.value}`" aria-hidden="true">
+                        <svg v-if="currentStyle === b.value" class="ov-basemap-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </span>
+                      <span>{{ b.label }}</span>
+                    </button>
+                  </div>
+                </section>
+                <section class="ov-section">
+                  <div class="ov-section-head">
+                    <h4>สีโครงการ</h4>
+                    <button v-if="legendCategories.length" type="button" class="ov-chip-clear" @click="clearLegendCategories">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+                      ล้างตัวกรอง ({{ legendCategories.length }})
+                    </button>
+                  </div>
+                  <p class="ov-hint">สีของกรอบโครงการบนแผนที่ เลือกได้หลายหมวดเพื่อกรองให้เห็นเฉพาะหมวดนั้น</p>
+                  <ul class="ov-legend" role="group" aria-label="สีโครงการ">
+                    <li v-for="cat in categoryStats" :key="cat.name">
+                      <button type="button" class="ov-legend-item" :class="{ active: legendCategories.includes(cat.name), dimmed: legendCategories.length > 0 && !legendCategories.includes(cat.name) }" :aria-pressed="legendCategories.includes(cat.name)" @click="toggleLegendCategory(cat.name)">
+                        <span class="ov-tile" :style="{ backgroundColor: cat.color }" :title="`${cat.projectCount} โครงการ`">{{ cat.projectCount }}</span>
+                        <span class="ov-legend-text">
+                          <strong>{{ cat.name }}</strong>
+                          <small>โครงการ {{ cat.projectNumbers.join(', ') }}</small>
+                        </span>
+                        <span class="ov-check" aria-hidden="true">
+                          <svg v-if="legendCategories.includes(cat.name)" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </span>
+                      </button>
+                    </li>
+                  </ul>
+                </section>
+              </template>
+            </div>
+
+            <footer v-if="ovPanel === 'filter'" class="ov-slide-foot">
+              <template v-if="filterContext === 'costs'">
+                <AppButton variant="secondary" size="md" full-width @click="emit('reset-cost-filters')">ล้างค่า</AppButton>
+              </template>
+              <template v-else>
+                <AppButton variant="secondary" size="md" @click="clearAllFilters">ล้างค่า</AppButton>
+                <AppButton variant="primary" size="md" @click="applyFiltersFromPanel">ดูผลลัพธ์ ({{ previewFilteredProjectCount }})</AppButton>
+              </template>
+            </footer>
+          </aside>
+        </transition>
+      </template>
+
       <!-- Floating Layer Legend Control inside map (มุมซ้ายล่าง - สีโดดเด่นสะดุดตา) -->
       <div v-if="!previewMode && !activeProject" class="map-floating-legend-container">
         <!-- Floating Capsule Button -->
@@ -821,7 +972,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import AppButton from '~/components/AppButton.vue'
 import AppSelect, { type SelectOption } from '~/components/AppSelect.vue'
 import type { ProjectZone, ProjectFloor, MarketFacility } from '../../data/market_gis_types'
@@ -848,6 +999,11 @@ const props = withDefaults(defineProps<{
   previewMode?: boolean
   managementMode?: boolean
   inspectOnly?: boolean
+  isOverviewPage?: boolean
+  filterContext?: 'data' | 'costs'
+  filterBadge?: number
+  hideRail?: boolean
+  hideProjectPanel?: boolean
   managedProjects?: ProjectZone[]
   managedFacilities?: MarketFacility[]
 }>(), {
@@ -867,6 +1023,11 @@ const props = withDefaults(defineProps<{
   previewMode: false,
   managementMode: false,
   inspectOnly: false,
+  isOverviewPage: false,
+  filterContext: 'data',
+  filterBadge: 0,
+  hideRail: false,
+  hideProjectPanel: false,
   managedProjects: () => [],
   managedFacilities: () => []
 })
@@ -885,14 +1046,16 @@ const emit = defineEmits<{
   (e: 'requestExitProject'): void
   (e: 'exitProject'): void
   (e: 'update:categoryFilter', cat: string | null): void
-  (e: 'update:mapStyle', style: 'standard' | 'satellite'): void
+  (e: 'update:mapStyle', style: 'standard' | 'satellite' | 'dark'): void
+  (e: 'reset-cost-filters'): void
+  (e: 'clearStallSelection'): void
   (e: 'update:onlyAvailable', val: boolean): void
 }>()
 
 // Active Map Style Mode ('standard' = Street, 'satellite' = Imagery)
-const currentStyle = ref<'standard' | 'satellite'>(props.mapStyle === 'satellite' ? 'satellite' : 'standard')
+const currentStyle = ref<'standard' | 'satellite' | 'dark'>(props.mapStyle === 'satellite' ? 'satellite' : props.mapStyle === 'dark' ? 'dark' : 'standard')
 
-const setMapStyle = (mode: 'standard' | 'satellite') => {
+const setMapStyle = (mode: 'standard' | 'satellite' | 'dark') => {
   if (currentStyle.value === mode) return
   currentStyle.value = mode
   emit('update:mapStyle', mode)
@@ -915,6 +1078,10 @@ const readinessFilter = ref<'all' | 'ready' | 'missing-stalls' | 'incomplete-sta
 // user presses “ค้นหา”, so changing a dropdown never shifts the map mid-task.
 const draftCategoryFilter = ref(props.categoryFilter || '')
 const appliedCategoryFilter = ref(props.categoryFilter || '')
+// กรองหลายหมวดจากสีโครงการ (ชั้นข้อมูล) แยกจากตัวกรองหมวดเดี่ยวในหน้าตัวกรอง
+const legendCategories = ref<string[]>([])
+// สถานะแผงที่ตั้งจากการ์ด KPI ด้านบน ไม่นับเป็นตัวกรองบนปุ่มตัวกรอง
+const availabilityFromCard = ref(false)
 const appliedSearchQuery = ref('')
 const appliedRentFilter = ref<'all' | 'under-2000' | '2000-3000' | 'over-3000'>('all')
 const appliedAvailabilityFilter = ref<'available' | 'reserved' | 'occupied' | 'action_required' | 'all'>('all')
@@ -1338,7 +1505,8 @@ const projectMatchesAllFiltersWith = (
   zone = 'all',
   readiness: typeof readinessFilter.value = 'all'
 ) => {
-  const matchesCategory = !category || project.category === category
+  const matchesCategory = (!category || project.category === category) &&
+    (legendCategories.value.length === 0 || legendCategories.value.includes(project.category))
   const matchesZone = zone === 'all' || project.id === zone
   const matchesReadiness = readiness === 'all' || getProjectReadiness(project) === readiness
   return matchesCategory && matchesZone && matchesReadiness && matchesSearchWith(project, query) && projectHasMatchingStallWith(project, rent, availability)
@@ -2282,7 +2450,7 @@ const add3DBuildings = () => {
       minzoom: 15,
       filter: ['!=', ['get', 'hide_3d'], true],
       paint: {
-        'fill-extrusion-color': getBuildingColorExpr(props.mapStyle),
+        'fill-extrusion-color': getBuildingColorExpr(currentStyle.value),
         'fill-extrusion-height': [
           'interpolate', ['linear'], ['zoom'],
           15, 0,
@@ -2337,13 +2505,29 @@ const initMap = () => {
   container.__mapInstance = map
 
   // Standard Navigation Controls (Zoom, Compass)
-  map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right')
+  const navControl = new maplibregl.NavigationControl({ visualizePitch: true })
+  map.addControl(navControl, 'bottom-right')
+
+  // หน้าข้อมูลตลาด: รวมปุ่มปรับกึ่งกลางเข้าชุดปุ่มซูม/เข็มทิศ (ปุ่มลอยเดิมถูกซ่อนด้วย CSS)
+  if (props.isOverviewPage) {
+    const navGroup: HTMLElement | undefined = (navControl as any)._container
+    if (navGroup) {
+      const recenterBtn = document.createElement('button')
+      recenterBtn.type = 'button'
+      recenterBtn.className = 'map-ctrl-recenter-btn'
+      recenterBtn.title = 'ปรับมุมมองกลับสู่กึ่งกลาง'
+      recenterBtn.setAttribute('aria-label', 'ปรับมุมมองกลับสู่กึ่งกลาง')
+      recenterBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>'
+      recenterBtn.addEventListener('click', () => recenterMapView())
+      navGroup.appendChild(recenterBtn)
+    }
+  }
 
   hoverPopup = new maplibregl.Popup({
     closeButton: false,
     closeOnClick: false,
     offset: 8,
-    maxWidth: '320px',
+    maxWidth: '380px',
     className: 'mlp-popup'
   })
 
@@ -3867,8 +4051,13 @@ const bindMapEvents = () => {
       : []
     if (projHit.length) {
       const p = getMostSpecificProjectHit(projHit)
-      if (p && p.id !== activeProjectId.value) openProject(p)
+      if (p && p.id !== activeProjectId.value) {
+        openProject(p)
+        return
+      }
     }
+    // คลิกพื้นที่ว่าง (หรือพื้นที่โครงการที่เปิดอยู่) บนหน้าข้อมูลตลาด = ล้างการเลือกแผง กลับไปแผงโครงการ
+    if (props.isOverviewPage && activeProjectId.value) emit('clearStallSelection')
   })
 }
 
@@ -3970,6 +4159,7 @@ const clearSearch = () => {
 }
 
 const clearAllFilters = () => {
+  availabilityFromCard.value = false
   searchQuery.value = ''
   rentFilter.value = 'all'
   availabilityFilter.value = 'all'
@@ -4014,7 +4204,7 @@ const handleCategorySelect = (e: Event) => {
 
 // Watchers for reactive updates
 watch(() => props.mapStyle, (newStyle) => {
-  const target = newStyle === 'satellite' ? 'satellite' : 'standard'
+  const target = newStyle === 'satellite' ? 'satellite' : newStyle === 'dark' ? 'dark' : 'standard'
   if (target !== currentStyle.value) {
     setMapStyle(target)
   }
@@ -4040,6 +4230,7 @@ watch(() => props.onlyAvailable, (onlyAvailable) => {
 })
 
 watch(() => props.stallStatusFilter, (status) => {
+  availabilityFromCard.value = status !== 'all'
   availabilityFilter.value = status
   appliedAvailabilityFilter.value = status
   refreshSources()
@@ -4127,6 +4318,59 @@ const finishActiveTools = () => {
   }
   refreshSources()
 }
+
+// ---------------- หน้าข้อมูลตลาด: แผงสไลด์ ค้นหา / กรอง / ชั้นข้อมูล ----------------
+const ovPanel = ref<'search' | 'filter' | 'layers' | null>(null)
+const ovSearchInput = ref<HTMLInputElement | null>(null)
+const ovTitle = computed(() => ovPanel.value === 'search' ? 'ค้นหา' : ovPanel.value === 'filter' ? (props.filterContext === 'costs' ? 'ตัวกรองค่าใช้จ่าย' : 'ตัวกรอง') : 'ชั้นข้อมูล')
+const ovSubtitle = computed(() => ovPanel.value === 'search'
+  ? 'หาโซน โครงการ หรือรหัสแผง'
+  : ovPanel.value === 'filter'
+    ? (props.filterContext === 'costs' ? 'หาบิลที่ต้องติดตาม' : 'หาแผงและโซนที่ตรงเงื่อนไข')
+    : 'เลือกแผนที่ฐานและดูความหมายของสี')
+// กรองจากสีโครงการ (ชั้นข้อมูล) แยกจากตัวกรอง จึงไม่นับในตัวเลขบนปุ่มตัวกรอง
+const ovFilterBadge = computed(() => (props.filterContext === 'costs'
+  ? props.filterBadge
+  : advancedFilterCount.value - (availabilityFromCard.value && appliedAvailabilityFilter.value !== 'all' ? 1 : 0)))
+const basemapOptions: { value: 'standard' | 'satellite' | 'dark'; label: string }[] = [
+  { value: 'standard', label: 'แผนที่ปกติ' },
+  { value: 'dark', label: 'โหมดมืด' },
+  { value: 'satellite', label: 'ดาวเทียม' }
+]
+const toggleOvPanel = (panel: 'search' | 'filter' | 'layers') => {
+  ovPanel.value = ovPanel.value === panel ? null : panel
+  // preventScroll: แผงกำลังสไลด์เข้าจากนอกจอ ถ้า focus แบบปกติเบราว์เซอร์จะเลื่อน container ไปหาช่องค้นหา ทำให้แผนที่เคลื่อนผิดปกติ
+  if (ovPanel.value === 'search') nextTick(() => ovSearchInput.value?.focus({ preventScroll: true }))
+}
+const searchResults = computed(() => {
+  const q = searchQuery.value.trim()
+  if (!q) return []
+  return overviewProjects.value.filter(p => matchesSearchWith(p, q)).slice(0, 30)
+})
+const projectColor = (p: ProjectZone) => categories.value.find(c => c.name === p.category)?.color || '#94a3b8'
+const focusProject = (p: ProjectZone) => {
+  if (map) map.flyTo({ center: projectToLngLat(p), zoom: 17.5, duration: 800 })
+}
+const toggleLegendCategory = (name: string) => {
+  legendCategories.value = legendCategories.value.includes(name)
+    ? legendCategories.value.filter(n => n !== name)
+    : [...legendCategories.value, name]
+  refreshSources()
+}
+const clearLegendCategories = () => {
+  legendCategories.value = []
+  refreshSources()
+}
+const applyFiltersFromPanel = () => {
+  availabilityFromCard.value = false
+  applyFilters()
+  ovPanel.value = null
+}
+const onOvKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Escape' && ovPanel.value) ovPanel.value = null
+}
+onMounted(() => { if (process.client) window.addEventListener('keydown', onOvKeydown) })
+onBeforeUnmount(() => { if (process.client) window.removeEventListener('keydown', onOvKeydown) })
 
 defineExpose({ enterProject, exitProject, resize, finishActiveTools, focusSelectedStalls, focusBookedStalls })
 
@@ -6919,7 +7163,7 @@ onUnmounted(cleanupMapResources)
 
 .mlp {
   font-family: 'Bai Jamjuree', sans-serif;
-  width: 310px;
+  width: 360px;
   max-width: 100%;
 }
 .mlp-stall-tooltip { width: auto; min-width: 0; max-width: 220px; padding: 9px 14px; color: #0f172a; font-size: 0.9375rem; font-weight: 700; line-height: 1.35; white-space: nowrap; }
@@ -7695,4 +7939,196 @@ onUnmounted(cleanupMapResources)
   100% { transform: scale(1); opacity: 1; }
 }
 
+
+/* ===== หน้าข้อมูลตลาด: แถบเครื่องมือ + แผงสไลด์จากขวา ===== */
+.ov-rail { position: absolute; top: 50%; right: 0; z-index: 120; display: flex; flex-direction: column; gap: 4px; padding: 5px; border: 1px solid rgba(226, 232, 240, 0.95); border-radius: 14px; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14); transform: translateY(-50%); transition: right 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease; }
+.ov-rail.is-shifted { right: min(380px, 92vw); }
+.ov-rail.is-hidden { opacity: 0; pointer-events: none; }
+.ov-rail-btn { position: relative; width: 42px; height: 42px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: #475569; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
+.ov-rail-btn:hover { background: #f1f5f9; color: #1e293b; }
+.ov-rail-btn.active { background: #eff6ff; color: #2563eb; }
+.ov-rail-btn:focus-visible { outline: 2px solid #93c5fd; outline-offset: 1px; }
+.ov-rail-badge { position: absolute; top: 3px; right: 3px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 9999px; background: #2563eb; color: #fff; font-size: 0.75rem; font-weight: 700; line-height: 16px; text-align: center; }
+
+.ov-slide { overscroll-behavior: contain; position: absolute; z-index: 140; top: 0; right: 0; bottom: 0; box-sizing: border-box; width: min(380px, 92vw); display: flex; flex-direction: column; background: #ffffff; border-left: 1px solid #e2e8f0; box-shadow: -12px 0 32px rgba(15, 23, 42, 0.16); }
+.ov-slide-enter-active, .ov-slide-leave-active { transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease; }
+.ov-slide-enter-from, .ov-slide-leave-to { transform: translateX(100%); opacity: 0.6; }
+.ov-slide-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid #f1f5f9; }
+.ov-slide-head h3 { margin: 0; color: #0f172a; font-size: 1.125rem; font-weight: 700; }
+.ov-slide-close { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; cursor: pointer; }
+.ov-slide-close:hover { background: #f1f5f9; }
+.ov-slide-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 16px; -webkit-overflow-scrolling: touch; }
+.ov-slide-foot { flex: 0 0 auto; display: flex; justify-content: space-between; gap: 8px; padding: 12px 18px; border-top: 1px solid #f1f5f9; }
+.ov-search { position: relative; display: flex; align-items: center; }
+.ov-search > svg { position: absolute; left: 13px; color: #94a3b8; pointer-events: none; }
+.ov-search input { box-sizing: border-box; width: 100%; height: 42px; padding: 0 38px 0 38px; border: 1px solid #cbd5e1; border-radius: 10px; color: #1e293b; font-family: inherit; font-size: 0.9375rem; font-weight: 500; outline: none; }
+.ov-search input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
+.ov-search-clear { position: absolute; right: 8px; width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: #64748b; cursor: pointer; }
+.ov-search-clear:hover { background: #f1f5f9; }
+.ov-hint { margin: 0; color: #64748b; font-size: 0.875rem; font-weight: 500; line-height: 1.5; }
+.ov-result-list, .ov-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ov-result { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #eef2f6; border-radius: 12px; background: #fff; text-align: left; cursor: pointer; font-family: inherit; }
+.ov-result:hover { background: #f8fafc; border-color: #dbeafe; }
+.ov-result-text, .ov-legend-text { display: flex; flex-direction: column; min-width: 0; }
+.ov-result-text strong, .ov-legend-text strong { color: #1e293b; font-size: 0.9375rem; font-weight: 600; }
+.ov-result-text small, .ov-legend-text small { color: #64748b; font-size: 0.8125rem; font-weight: 500; }
+.ov-swatch { flex: 0 0 auto; width: 16px; height: 16px; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12); }
+.ov-legend-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 10px; border: 1px solid transparent; border-radius: 10px; background: #f8fafc; text-align: left; font-family: inherit; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease; }
+.ov-legend-item:hover { background: #f1f5f9; }
+.ov-legend-item:focus-visible { outline: 2px solid #93c5fd; outline-offset: 1px; }
+.ov-legend-item.active { border-color: #93c5fd; background: #eff6ff; }
+.ov-legend-item.dimmed { opacity: 0.55; }
+.ov-legend-check { flex: 0 0 auto; margin-left: auto; color: #2563eb; }
+.ov-legend-clear { margin: 0 0 10px; padding: 0; border: 0; background: none; color: #2563eb; font-family: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+.ov-legend-clear:hover { text-decoration: underline; }
+.ov-field { display: flex; flex-direction: column; gap: 6px; }
+.ov-label { color: #475569; font-size: 0.875rem; font-weight: 600; }
+.ov-result-summary { margin: 0; padding: 10px 12px; border-radius: 10px; background: #eff6ff; color: #475569; font-size: 0.875rem; font-weight: 500; }
+.ov-result-summary strong { color: #2563eb; font-weight: 700; }
+.ov-section h4 { margin: 0 0 10px; color: #1e293b; font-size: 1rem; font-weight: 700; }
+.ov-section .ov-hint { margin-bottom: 10px; }
+.ov-basemaps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ov-basemap { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px 4px 8px; border: 2px solid transparent; border-radius: 12px; background: #f8fafc; color: #475569; font-family: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+.ov-basemap:hover { background: #f1f5f9; }
+.ov-basemap.active { border-color: #2563eb; background: #eff6ff; color: #2563eb; }
+.ov-basemap-thumb { width: 100%; aspect-ratio: 1; border-radius: 8px; background-size: cover; }
+.ov-basemap-thumb.is-standard { background: linear-gradient(135deg, transparent 46%, #fde68a 47% 53%, transparent 54%), linear-gradient(45deg, transparent 46%, #fff 47% 53%, transparent 54%), #e8eef6; }
+.ov-basemap-thumb.is-satellite { background: radial-gradient(circle at 30% 35%, #3f6b3a 0 22%, transparent 23%), radial-gradient(circle at 70% 65%, #6b5a3a 0 24%, transparent 25%), #1f3a2a; }
+.ov-basemap-thumb.is-dark { background: linear-gradient(135deg, transparent 46%, #475569 47% 53%, transparent 54%), linear-gradient(45deg, transparent 46%, #334155 47% 53%, transparent 54%), #0f172a; }
+@media (max-width: 720px) {
+  .ov-rail.is-shifted { opacity: 0; pointer-events: none; }
+}
+
+/* ===== ปรับโฉมแผงสไลด์ / แถบเครื่องมือ ===== */
+.ov-rail { padding: 6px; gap: 4px; border-right: 0; border-radius: 14px 0 0 14px; }
+.ov-rail-btn { width: 40px; height: 40px; border-radius: 8px; }
+.ov-rail-btn { display: flex; align-items: center; justify-content: center; }
+.ov-rail-label { font-size: 0.75rem; font-weight: 600; line-height: 1; letter-spacing: 0.01em; }
+.ov-rail-badge { top: 2px; right: 2px; }
+.ov-slide { border-radius: 18px 0 0 18px; }
+.ov-slide-head { gap: 12px; padding: 18px 18px 14px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); }
+.ov-slide-icon { flex: 0 0 auto; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: #eff6ff; color: #2563eb; }
+.ov-slide-title { flex: 1 1 auto; min-width: 0; }
+.ov-slide-title h3 { margin: 0; }
+.ov-slide-title p { margin: 2px 0 0; color: #64748b; font-size: 0.8125rem; font-weight: 500; }
+.ov-slide-body { gap: 18px; padding: 18px; }
+.ov-slide-foot { padding: 14px 18px; background: #fff; box-shadow: 0 -6px 16px rgba(15, 23, 42, 0.04); }
+.ov-slide-foot > * { flex: 1 1 0; }
+.ov-search input { height: 46px; border-radius: 12px; background: #f8fafc; }
+.ov-search input:focus { background: #fff; }
+.ov-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 32px 16px; border: 1px dashed #dbe3ee; border-radius: 14px; background: #f8fafc; text-align: center; }
+.ov-empty-icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: #eff6ff; color: #2563eb; }
+.ov-empty strong { color: #1e293b; font-size: 0.9375rem; font-weight: 700; }
+.ov-empty p { margin: 0; color: #64748b; font-size: 0.875rem; font-weight: 500; line-height: 1.5; }
+.ov-result { border-radius: 14px; transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease; }
+.ov-result:hover { transform: translateX(-2px); }
+.ov-chevron { flex: 0 0 auto; margin-left: auto; color: #94a3b8; }
+.ov-section { padding: 14px; border: 1px solid #eef2f6; border-radius: 16px; background: #fff; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03); }
+.ov-basemaps { gap: 8px; }
+.ov-basemap { gap: 8px; padding: 6px 6px 10px; border-radius: 14px; transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease; }
+.ov-basemap:hover { transform: translateY(-1px); }
+.ov-basemap-thumb { position: relative; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08); }
+.ov-basemap-check { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; padding: 4px; box-sizing: border-box; border-radius: 50%; background: #2563eb; color: #fff; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4); }
+.ov-legend { gap: 6px; }
+.ov-legend-item { padding: 10px 12px; border-radius: 12px; }
+.ov-swatch { width: 20px; height: 20px; border-radius: 7px; }
+.ov-legend-count { flex: 0 0 auto; margin-left: auto; min-width: 26px; padding: 2px 8px; border-radius: 9999px; background: #e2e8f0; color: #475569; font-size: 0.8125rem; font-weight: 700; text-align: center; }
+.ov-field { padding: 12px; border: 1px solid #eef2f6; border-radius: 14px; background: #f8fafc; }
+.ov-result-summary { padding: 12px 14px; border-radius: 12px; }
+@media (max-width: 720px) {
+  .ov-slide { border-radius: 0; }
+}
+
+/* เปิดแผงสไลด์: ดันปุ่มซูม/เข็มทิศ/กึ่งกลาง และเครดิตแผนที่ ออกมาทางซ้ายของแผง ไม่ให้ถูกบัง */
+.maplibre-overview-wrapper .maplibregl-ctrl-bottom-right { transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1); }
+.maplibre-overview-wrapper.has-ov-panel .maplibregl-ctrl-bottom-right { transform: translateX(calc(-1 * min(380px, 92vw))); }
+@media (max-width: 720px) { .maplibre-overview-wrapper.has-ov-panel .maplibregl-ctrl-bottom-right { transform: none; opacity: 0; pointer-events: none; } }
+
+/* ===== ชั้นข้อมูล: รายการสีโครงการแบบเรียบ อ่านง่าย ===== */
+.ov-section { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.ov-section + .ov-section { padding-top: 18px; border-top: 1px solid #f1f5f9; }
+.ov-section h4 { margin: 0 0 4px; font-size: 1rem; }
+.ov-section .ov-hint { margin: 0 0 12px; font-size: 0.8125rem; line-height: 1.5; color: #94a3b8; }
+.ov-legend { gap: 2px; margin: 0 -8px; }
+.ov-legend-item { padding: 10px 8px; gap: 12px; align-items: center; border: 0; border-radius: 10px; background: transparent; }
+.ov-legend-item:hover { background: #f8fafc; }
+.ov-legend-item.active { background: #eff6ff; }
+.ov-legend-item.dimmed { opacity: 0.5; }
+.ov-legend .ov-swatch { width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.18); }
+.ov-legend-text { flex: 1 1 auto; min-width: 0; gap: 1px; }
+.ov-legend-text strong { color: #1e293b; font-size: 0.9375rem; font-weight: 600; line-height: 1.35; }
+.ov-legend-text small { color: #94a3b8; font-size: 0.8125rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ov-legend-count { min-width: 0; padding: 0; background: none; color: #94a3b8; font-size: 0.875rem; font-weight: 600; }
+.ov-legend-item.active .ov-legend-count { display: none; }
+.ov-legend-clear { margin: 0 0 8px; }
+
+/* ตัวกรอง: ไม่ใส่กรอบครอบแต่ละช่อง */
+.ov-field { padding: 0; border: 0; border-radius: 0; background: transparent; }
+
+.ov-tile { flex: 0 0 auto; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; color: #fff; font-size: 0.9375rem; font-weight: 700; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.18); }
+.ov-legend-item.active .ov-tile { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2563eb; }
+
+.ov-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.ov-section-head h4 { margin: 0; }
+.ov-chip-clear { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 12px; border: 1px solid #fca5a5; border-radius: 9999px; background: #fff; color: #dc2626; font-family: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease; }
+.ov-chip-clear:hover { background: #fef2f2; }
+.ov-chip-clear:focus-visible { outline: 2px solid #fca5a5; outline-offset: 2px; }
+
+/* ===== สีโครงการ: เลือกได้หลายหมวด ===== */
+.ov-legend { gap: 0; margin: 0; border: 1px solid #eef2f6; border-radius: 14px; overflow: hidden; }
+.ov-legend li + li { border-top: 1px solid #f1f5f9; }
+.ov-legend-item { padding: 12px 14px; border-radius: 0; background: #fff; }
+.ov-legend-item:hover { background: #f8fafc; }
+.ov-legend-item.active { background: #f5f9ff; }
+.ov-legend-item.dimmed { opacity: 0.55; }
+.ov-legend-item.active .ov-tile { box-shadow: none; }
+.ov-check { flex: 0 0 auto; width: 20px; height: 20px; display: grid; place-items: center; border: 2px solid #cbd5e1; border-radius: 6px; color: #fff; transition: background 0.15s ease, border-color 0.15s ease; }
+.ov-legend-item.active .ov-check { background: #2563eb; border-color: #2563eb; }
+.ov-tile { width: 34px; height: 34px; }
+
+/* เพิ่มระยะขอบซ้าย-ขวาของแผงสไลด์ */
+.ov-slide-head { padding-left: 24px; padding-right: 24px; }
+.ov-slide-body { padding-left: 24px; padding-right: 24px; }
+.ov-slide-foot { padding-left: 24px; padding-right: 24px; }
+@media (max-width: 720px) {
+  .ov-slide-head, .ov-slide-body, .ov-slide-foot { padding-left: 18px; padding-right: 18px; }
+}
+
+/* ซ่อนปุ่มล้างของเบราว์เซอร์ในช่อง type=search เพราะมีปุ่มล้างของระบบอยู่แล้ว */
+.ov-search input::-webkit-search-cancel-button,
+.ov-search input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
+
+/* ปุ่มล้างตัวกรองในชั้นข้อมูล: ย่อให้เล็กลง */
+.ov-chip-clear { height: 26px; padding: 0 10px; gap: 4px; font-size: 0.8125rem; font-weight: 600; }
+.ov-chip-clear svg { width: 11px; height: 11px; }
+
+/* การ์ดโครงการบนแผนที่ (ตอนชี้): ขยายตัวอักษรให้อ่านง่ายตามมาตรฐานระบบ */
+.mlp-body { padding: 16px 18px 14px; }
+.mlp-title strong { font-size: 1.1875rem; }
+.mlp-pill { font-size: 0.875rem; padding: 4px 12px; }
+.mlp-building-badge { font-size: 0.8125rem; }
+.mlp-sub { font-size: 0.9375rem; line-height: 1.45; }
+.mlp-tile { padding: 10px 12px; }
+.mlp-tile-label { font-size: 0.875rem; }
+.mlp-tile-value { font-size: 1.3125rem; }
+.mlp-tile-value small { font-size: 0.875rem; }
+.mlp-tile-note { font-size: 0.8125rem; }
+.mlp-occ-head { font-size: 0.875rem; }
+.mlp-occ-legend { font-size: 0.9375rem; gap: 14px; }
+.mlp-occ-legend i { width: 10px; height: 10px; }
+.mlp-hint { font-size: 0.875rem; line-height: 1.5; }
+.mlp-queue-title { font-size: 0.9375rem; }
+.mlp-queue-desc { font-size: 0.8125rem; }
+
+/* การ์ดโครงการบนแผนที่: เพิ่มระยะห่างแนวตั้งให้โปร่งขึ้น */
+.mlp-body { padding: 20px 20px 18px; }
+.mlp-head { margin-bottom: 4px; }
+.mlp-sub { margin-top: 6px; }
+.mlp-tiles { margin-top: 16px; gap: 12px; }
+.mlp-tile { padding: 14px 14px 12px; }
+.mlp-occ { margin-top: 20px; }
+.mlp-occ-head { margin-bottom: 8px; }
+.mlp-occ-bar { height: 8px; margin: 10px 0 12px; }
+.mlp-occ-legend { margin-top: 12px; }
+.mlp-hint { margin-top: 18px; padding-top: 14px; }
 </style>

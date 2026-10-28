@@ -3,6 +3,7 @@
     <AppHeader />
 
     <div class="tracking-container">
+      <AppBreadcrumb v-if="returnUrl" :items="crumbItems" current="รายการจองทั้งหมด" :back-to="backTo" />
       <!-- ============================================================ -->
       <!-- SECTION 1: TENANT VIEW (มุมมองผู้เช่า - มีแบ่ง Accordion ตามตลาด) -->
       <!-- ============================================================ -->
@@ -2861,6 +2862,7 @@
 </template>
 
 <script setup lang="ts">
+const { returnUrl, backTo, crumbItems } = useReturnTo({ label: 'รายการจอง', to: '/bookings' })
 import {
   getBookingVisitDates,
   setCachedScheduleBookings,
