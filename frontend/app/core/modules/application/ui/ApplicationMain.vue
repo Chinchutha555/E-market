@@ -2,7 +2,6 @@
   <div class="application-main-page">
     <AppHeader />
     <div class="page-container">
-      <AppBreadcrumb v-if="returnUrl" :items="crumbItems" current="รายการคำร้องทั้งหมด" :back-to="backTo" />
       <!-- Loading Skeleton State -->
       <div v-if="loading" class="skeleton-loading-container">
         <div class="skeleton-line skeleton-header"></div>
@@ -152,7 +151,7 @@
                   <div class="kpi-popover-body">
                     <div class="kpi-popover-item" :class="{ 'is-selected': pendingSubFilter === 'pending_officer' }" @click="pendingSubFilter = 'pending_officer'; activeTab = 'pending'; currentPage = 1">
                       <span class="kpi-status-dot amber"></span>
-                      <span class="kpi-status-name">รอเจ้าหน้าที่ตรวจสอบ/span>
+                      <span class="kpi-status-name">รอ จนท. ตรวจสอบ</span>
                       <span class="kpi-status-val">{{ countPendingOfficer }}</span>
                     </div>
                     <div class="kpi-popover-item" :class="{ 'is-selected': pendingSubFilter === 'pending_debt' }" @click="pendingSubFilter = 'pending_debt'; activeTab = 'pending'; currentPage = 1">
@@ -1771,7 +1770,6 @@
 </template>
 
 <script setup lang="ts">
-const { returnUrl, backTo, crumbItems } = useReturnTo({ label: 'รายการคำร้อง', to: '/applications' })
 import { useAuthStore } from '~/core/modules/auth/store/AuthStore'
 import { useNotifications } from '~/composables/useNotifications'
 
@@ -1796,6 +1794,14 @@ const revisionError = ref('')
 const revIdCardCopy = ref<File | null>(null)
 const revIdCardCopyError = ref('')
 const revIdCardInputRef = ref<HTMLInputElement | null>(null)
+
+const formatFileSize = (bytes: number) => {
+  if (!bytes || bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1)
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+}
 const isRevDragging = ref(false)
 const revIdCardPreviewUrl = ref('')
 
@@ -2590,8 +2596,7 @@ const getAllCommentsList = (app: any) => {
 const processApproval = async (app: any, defaultComment: string) => {
   const confirmed = await showConfirm(
     `ยืนยันการอนุมัติคำร้องเลขที่ ${app.application_number} หรือไม่?`,
-    'ยืนยันการอนุมัติ',
-    { confirmButtonText: 'อนุมัติคำร้อง', cancelButtonText: 'ยกเลิก' }
+    { title: 'ยืนยันการอนุมัติ', type: 'info', confirmText: 'อนุมัติคำร้อง', cancelText: 'ยกเลิก' }
   )
   if (!confirmed) return
 
@@ -2736,7 +2741,7 @@ const generalForm = ref({
 
 const openCreateGeneralModal = () => {
   generalForm.value = {
-    applicant_name: (currentUser.value?.first_name ? `${currentUser.value.first_name} ${currentUser.value.last_name || ''}` : '') || user.value?.name || '',
+    applicant_name: currentUser.value?.full_name || user.value?.full_name || '',
     applicant_phone: currentUser.value?.phone || user.value?.phone || '',
     applicant_id_card: '',
     applicant_email: currentUser.value?.email || user.value?.email || '',
@@ -2786,7 +2791,6 @@ const submitGeneralApplication = async () => {
     generalSubmitting.value = false
   }
 }
-
 const exportReport = () => {
   const list = filteredApplications.value
   if (!list || list.length === 0) {
