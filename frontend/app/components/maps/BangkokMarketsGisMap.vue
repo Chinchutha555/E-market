@@ -23,21 +23,6 @@
         </button>
       </div>
 
-      <button
-        type="button"
-        class="map-floating-recenter-btn"
-        @click="recenterMap"
-        title="กลับสู่ศูนย์กลาง กทม."
-      >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="22" y1="12" x2="18" y2="12"></line>
-          <line x1="6" y1="12" x2="2" y2="12"></line>
-          <line x1="12" y1="6" x2="12" y2="2"></line>
-          <line x1="12" y1="22" x2="12" y2="18"></line>
-        </svg>
-        <span>ศูนย์กลาง กทม.</span>
-      </button>
     </div>
 
     <!-- MapLibre Map Canvas Container -->
@@ -61,6 +46,8 @@
 </template>
 
 <script setup lang="ts">
+import { addStandardMapControls } from '~/utils/mapControls'
+const { showWarning } = useAppAlert()
 const props = defineProps<{
   markets: any[]
   selectedMarketId?: number | null
@@ -245,7 +232,11 @@ const initMap = () => {
   })
 
   // Add standard navigation controls (zoom, pitch, compass)
-  map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right')
+  addStandardMapControls(maplibregl, map, {
+    onFit: () => recenterMap(),
+    fitTitle: 'กลับสู่ศูนย์กลาง กทม.',
+    notify: showWarning
+  })
 
   map.on('moveend', () => {
     saveMapState()

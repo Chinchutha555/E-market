@@ -441,6 +441,8 @@
 </template>
 
 <script setup lang="ts">
+import { addStandardMapControls } from '~/utils/mapControls'
+const { showWarning } = useAppAlert()
 import { loadMarketGisJson } from '../data/market_loader'
 import { getMarketStallSummary, type MarketStallSummary, type StallStatus } from '../data/market_stall_layout'
 import { getMarketGisConfig } from '../data/markets_registry'
@@ -592,7 +594,11 @@ const initMap = () => {
     zoom: 15
   })
 
-  map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right')
+  addStandardMapControls(maplibregl, map, {
+    onFit: () => map.flyTo({ center: [lng, lat], zoom: 15, pitch: 0, bearing: 0, essential: true }),
+    fitTitle: 'กลับสู่ตำแหน่งตลาด',
+    notify: showWarning
+  })
 
   // Create custom marker pin
   const el = document.createElement('div')
