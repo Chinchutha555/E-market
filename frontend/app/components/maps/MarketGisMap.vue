@@ -48,16 +48,6 @@
           </button>
         </div>
 
-        <button class="gis-btn" @click="recenterMap" title="กลับสู่จุดศูนย์กลางตลาด" style="display: inline-flex; align-items: center; gap: 6px;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="22" y1="12" x2="18" y2="12"></line>
-            <line x1="6" y1="12" x2="2" y2="12"></line>
-            <line x1="12" y1="6" x2="12" y2="2"></line>
-            <line x1="12" y1="22" x2="12" y2="18"></line>
-          </svg>
-          <span>รีเซ็ตมุมมอง</span>
-        </button>
       </div>
     </div>
 
@@ -173,6 +163,8 @@
 </template>
 
 <script setup lang="ts">
+import { addStandardMapControls } from '~/utils/mapControls'
+const { showWarning } = useAppAlert()
 const props = defineProps<{
   zones: any[]
 }>()
@@ -284,7 +276,11 @@ const initMap = () => {
   })
 
   // Add zoom and pitch navigation controls
-  map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right')
+  addStandardMapControls(maplibregl, map, {
+    onFit: () => recenterMap(),
+    fitTitle: 'กลับสู่จุดศูนย์กลางตลาด',
+    notify: showWarning
+  })
 
   hoverPopup = new maplibregl.Popup({
     closeButton: false,

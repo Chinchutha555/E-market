@@ -1857,6 +1857,8 @@ html[data-theme='dark'] {
   background-color: #ffffff;
   filter: invert(0.84) hue-rotate(180deg) brightness(1.04) saturate(1.45) contrast(1.06);
 }
+/* กลับสีรูป วิดีโอ และแผนที่ให้เป็นสีธรรมชาติ: ชดเชยค่าความต่างและความสดให้หักล้างกับตัวกรองของหน้าเว็บ */
+/* (ตัวกรองหน้าเว็บบีบช่วงความสว่างลงเหลือ ~75% การกลับด้วยค่า invert อย่างเดียวจะได้ภาพหม่น ไม่ชัด) */
 html[data-theme='dark'] img,
 html[data-theme='dark'] video,
 html[data-theme='dark'] picture,
@@ -1864,9 +1866,9 @@ html[data-theme='dark'] iframe,
 html[data-theme='dark'] .maplibre-overview-canvas,
 html[data-theme='dark'] .maplibregl-map,
 html[data-theme='dark'] [data-keep-colors] {
-  filter: hue-rotate(180deg) invert(1);
+  filter: hue-rotate(180deg) invert(1) contrast(1.334) saturate(0.69);
 }
-/* รูปที่ซ้อนอยู่ในส่วนที่กลับสีกลับอยู่แล้ว ไม่กลับซ้ำ */
+/* รูปที่ซ้อนอยู่ในส่วนที่กลับสีอยู่แล้ว ไม่กลับซ้ำ */
 html[data-theme='dark'] .maplibre-overview-canvas img,
 html[data-theme='dark'] .maplibre-overview-canvas video,
 html[data-theme='dark'] .maplibregl-map img,
@@ -1896,3 +1898,25 @@ html[data-theme='dark'] [data-keep-colors] img {
 }
 .map-ctrl-recenter-btn:hover { background: rgba(0, 0, 0, 0.05); }
 .map-ctrl-recenter-btn svg { width: 22px; height: 22px; }
+
+/* หัวเว็บบนจอแคบ: ชื่อระบบและข้อความผู้ใช้ไม่ตกบรรทัด ไม่ให้แถบหัวสูงขึ้น */
+.top-navbar .navbar-left { min-width: 0; flex: 0 1 auto; overflow: hidden; }
+.top-navbar .navbar-left .brand-title-text { white-space: nowrap; }
+.top-navbar .navbar-left .bma-pill-badge { min-width: 0; overflow: hidden; white-space: nowrap; }
+.top-navbar .navbar-left .bma-text-full,
+.top-navbar .navbar-left .bma-text-short { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.top-navbar .navbar-right .user-info-text { min-width: 0; max-width: 190px; }
+.top-navbar .navbar-right .user-name-text,
+.top-navbar .navbar-right .user-role-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1100px) {
+  .top-navbar .navbar-right { gap: 10px; }
+  .top-navbar .navbar-right .user-info-text { max-width: 130px; }
+}
+@media (max-width: 900px) {
+  .top-navbar .navbar-right .user-info-text { display: none; }
+}
+
+/* เครดิตแผนที่บนจอเล็ก: จำกัดความกว้างไม่ให้ยาวไปบังปุ่มลอยมุมซ้ายล่าง */
+@media (max-width: 720px) {
+  .maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib { max-width: calc(100vw - 150px); }
+}

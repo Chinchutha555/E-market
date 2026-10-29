@@ -629,24 +629,24 @@
                   <div class="issd-header">
                     <div v-if="isMapOverviewMode" class="issd-return-row">
                       <button
-                          type="button"
+                        type="button"
                         class="issd-return-btn"
-                        :aria-label="stallDrawerMode === 'full-detail' ? 'กลับไปสรุปแผง' : 'กลับไปข้อมูลโครงการ'"
-                        @click="stallDrawerMode === 'full-detail' ? backToMiniDetail() : (stallDrawerMode === 'edit' && !isCreatingNewStall ? cancelStallEdit() : closeStall())"
+                        :aria-label="stallDrawerMode === 'edit' ? 'รายละเอียดแผง' : (selectedProject?.name ? `กลับไป ${selectedProject.name}` : 'กลับ')"
+                        @click="stallDrawerMode === 'edit' && !isCreatingNewStall ? cancelStallEdit() : closeStall()"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                        <span>{{ stallDrawerMode === 'full-detail' ? 'สรุปแผง' : (stallDrawerMode === 'edit' ? 'รายละเอียดแผง' : (selectedProject?.name || 'กลับ')) }}</span>
+                        <span>{{ stallDrawerMode === 'edit' ? 'รายละเอียดแผง' : (selectedProject?.name || 'กลับ') }}</span>
                       </button>
                     </div>
                     <div class="issd-header-top">
                       <div class="issd-title-group">
                         <button
-                          v-if="!isMapOverviewMode && ((stallDrawerMode === 'edit' && !isCreatingNewStall) || stallDrawerMode === 'full-detail')"
+                          v-if="!isMapOverviewMode && (stallDrawerMode === 'edit' && !isCreatingNewStall)"
                           type="button"
                           class="issd-back-btn"
-                          :title="stallDrawerMode === 'full-detail' ? 'กลับไปแบบสรุปย่อ' : 'กลับไปดูรายละเอียด'"
+                          title="กลับไปดูรายละเอียด"
                           aria-label="ย้อนกลับ"
-                          @click="stallDrawerMode === 'full-detail' ? backToMiniDetail() : cancelStallEdit()"
+                          @click="cancelStallEdit()"
                         >
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="15 18 9 12 15 6"></polyline>
@@ -1218,18 +1218,102 @@
                         </div>
                       </div>
 
-                      <!-- Occupancy Card (แสดงเฉพาะแผงที่ไม่ว่าง เพราะสถานะว่างมีป้ายที่หัวอยู่แล้ว) -->
-                      <!-- ผู้เช่าปัจจุบัน (สไตล์เดียวกับ Drawer หน้าแรก) -->
-                      <div v-if="stallEdit.stall_status === 'occupied' && currentStallContract" class="issd-card-section issd-occupant-card is-occupied">
+                      <!-- Occupancy & Status Card -->
+                      <!-- 1. กรณีแผงว่าง (available) -->
+                      <div
+                        v-if="stallEdit.stall_status === 'available'"
+                        class="issd-card-section issd-occupant-card is-available"
+                      >
+                        <div class="issd-available-line">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                          <strong>พร้อมเปิดรับจอง</strong>
+                        </div>
+                      </div>
+
+                      <!-- 2. กรณีติดจอง (reserved หรือมีรายการจอง/คำร้อง) -->
+                      <div
+                        v-else-if="stallEdit.stall_status === 'reserved' || (stallEdit.stall_status !== 'occupied' && (currentStallBooking || currentStallApplication))"
+                        class="issd-card-section issd-occupant-card is-reserved"
+                      >
+                        <!-- ส่วนผู้จอง / ผู้ยื่นคำร้อง -->
+                        <div class="issd-person-row">
+                          <div class="issd-person-avatar is-reserved">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                          </div>
+                          <div class="issd-person-info">
+                            <span class="issd-person-role">{{ currentStallApplication ? 'ผู้ยื่นคำร้องขอเช่า' : 'ผู้จองเข้าชมพื้นที่' }}</span>
+                            <strong class="issd-person-name">{{ currentStallBooking?.tenant_name || currentStallBooking?.applicant_name || currentStallApplication?.applicant_name || 'ผู้ขอจองเข้าชมพื้นที่' }}</strong>
+                          </div>
+                          <a
+                            v-if="currentStallBooking?.tenant_phone || currentStallBooking?.applicant_phone || currentStallApplication?.applicant_phone"
+                            :href="`tel:${currentStallBooking?.tenant_phone || currentStallBooking?.applicant_phone || currentStallApplication?.applicant_phone}`"
+                            class="issd-phone-link"
+                            title="คลิกเพื่อโทรออก"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            <span>{{ currentStallBooking?.tenant_phone || currentStallBooking?.applicant_phone || currentStallApplication?.applicant_phone }}</span>
+                          </a>
+                        </div>
+
+                        <!-- ส่วนข้อมูลการจอง / คำร้อง -->
+                        <div class="issd-subdoc-box is-reserved">
+                          <div class="issd-subdoc-row">
+                            <span class="subdoc-k">{{ currentStallApplication ? 'เลขที่คำร้อง' : 'เลขที่การจอง' }}</span>
+                            <strong class="subdoc-v is-code">{{ currentStallApplication?.application_number || currentStallBooking?.booking_number || '-' }}</strong>
+                          </div>
+                          <div class="issd-subdoc-row">
+                            <span class="subdoc-k">{{ currentStallBooking?.visit_date ? 'วันนัดชมแผง' : 'สถานะรายการ' }}</span>
+                            <span class="subdoc-v">
+                              <template v-if="currentStallBooking?.visit_date">
+                                {{ formatThaiDateOnly(currentStallBooking.visit_date) }} {{ currentStallBooking.visit_time || currentStallBooking.visit_time_slot || '' }}
+                              </template>
+                              <template v-else>
+                                {{ currentStallBooking ? getBookingStatusBadgeLabel(currentStallBooking.booking_status || currentStallBooking.status) : 'รอพิจารณาอนุมัติ' }}
+                              </template>
+                            </span>
+                          </div>
+                        </div>
+                        <div v-if="currentStallApplication" class="issd-occupant-action-strip">
+                          <NuxtLink
+                            :to="withStallReturn(currentStallApplication.id ? `/applications/${currentStallApplication.id}` : `/applications?search=${encodeURIComponent(currentStallApplication.application_number || stallEdit.ident)}`)"
+                            class="issd-occupant-action-btn is-app"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <span>ดูคำร้องขอเช่าแผง</span>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                          </NuxtLink>
+                        </div>
+                        <div v-else-if="currentStallBooking" class="issd-occupant-action-strip">
+                          <NuxtLink
+                            :to="withStallReturn(currentStallBooking.id ? `/bookings/${currentStallBooking.id}` : `/bookings?search=${encodeURIComponent(currentStallBooking.booking_number || stallEdit.ident)}`)"
+                            class="issd-occupant-action-btn is-booking"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span>ดูการจองนัดหมาย</span>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                          </NuxtLink>
+                        </div>
+                      </div>
+
+                      <!-- 3. กรณีมีผู้เช่าตามสัญญา (occupied หรือมี active contract) -->
+                      <div
+                        v-else-if="stallEdit.stall_status === 'occupied' || currentStallContract"
+                        class="issd-card-section issd-occupant-card is-occupied"
+                      >
                         <div class="issd-person-row">
                           <div class="issd-person-avatar is-occupied">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                           </div>
                           <div class="issd-person-info">
                             <span class="issd-person-role">ผู้เช่าปัจจุบัน</span>
-                            <strong class="issd-person-name">{{ currentStallContract.tenant_name || '-' }}</strong>
+                            <strong class="issd-person-name">{{ currentStallContract?.tenant_name || currentStallContract?.name || (!String(stallEdit.name || '').startsWith('แผง') && stallEdit.name) || '-' }}</strong>
                           </div>
-                          <a v-if="currentStallContract.tenant_phone" :href="`tel:${currentStallContract.tenant_phone}`" class="issd-phone-link" title="คลิกเพื่อโทรออก">
+                          <a
+                            v-if="currentStallContract?.tenant_phone"
+                            :href="`tel:${currentStallContract.tenant_phone}`"
+                            class="issd-phone-link"
+                            title="คลิกเพื่อโทรออก"
+                          >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                             <span>{{ currentStallContract.tenant_phone }}</span>
                           </a>
@@ -1237,25 +1321,108 @@
                         <div class="issd-subdoc-box">
                           <div class="issd-subdoc-row">
                             <span class="subdoc-k">เลขที่สัญญา</span>
-                            <strong class="subdoc-v is-code">{{ currentStallContract.contract_number || '-' }}</strong>
+                            <strong class="subdoc-v is-code">{{ currentStallContract?.contract_number || '-' }}</strong>
                           </div>
                           <div class="issd-subdoc-row">
                             <span class="subdoc-k">ระยะสัญญา</span>
                             <span class="subdoc-v">
-                              {{ formatThaiDateOnly(currentStallContract.start_date) }} – {{ formatThaiDateOnly(currentStallContract.end_date) }}
-                              <em class="subdoc-duration">({{ getShortContractDurationText(currentStallContract.start_date, currentStallContract.end_date) }})</em>
+                              {{ formatThaiDateOnly(currentStallContract?.start_date) }} – {{ formatThaiDateOnly(currentStallContract?.end_date) }}
+                              <em class="subdoc-duration">({{ getShortContractDurationText(currentStallContract?.start_date, currentStallContract?.end_date) }})</em>
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div v-if="stallEdit.stall_status && stallEdit.stall_status !== 'available' && !(stallEdit.stall_status === 'occupied' && currentStallContract)" class="issd-occupancy-box" :class="`is-${stallEdit.stall_status}`">
+                      <div v-if="stallEdit.stall_status && stallEdit.stall_status !== 'available' && !(stallEdit.stall_status === 'occupied' || currentStallContract)" class="issd-occupancy-box" :class="`is-${stallEdit.stall_status}`">
                         <div class="issd-occupancy-head">
                           <span>{{ inspectStallOccupancy.heading }}</span>
                           <small v-if="inspectStallOccupancy.refCode">{{ inspectStallOccupancy.refCode }}</small>
                         </div>
                         <strong>{{ inspectStallOccupancy.primaryText }}</strong>
                         <p v-if="inspectStallOccupancy.subText">{{ inspectStallOccupancy.subText }}</p>
+                      </div>
+
+                      <!-- Operational Snapshot (4 มิติสำคัญ — สามารถคลิกเพื่อเปลี่ยนแท็บได้ทันที) -->
+                      <div class="issd-mini-ops-grid is-full-view">
+                        <div
+                          class="issd-mini-ops-card is-clickable"
+                          :class="stallEdit.stall_status !== 'available' && overduePaymentCount > 0 ? 'is-alert' : 'is-ok'"
+                          title="คลิกเพื่อดูการเงินและประวัติการชำระ"
+                          role="button"
+                          tabindex="0"
+                          @click="stallDetailTab = 'payments'"
+                          @keydown.enter="stallDetailTab = 'payments'"
+                        >
+                          <div class="ops-icon">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                          </div>
+                          <div class="ops-info">
+                            <span class="ops-label">การเงิน</span>
+                            <strong :class="stallEdit.stall_status !== 'available' && overduePaymentCount > 0 ? 'text-danger' : 'text-success'">
+                              {{ stallEdit.stall_status !== 'available' ? (overduePaymentCount > 0 ? `ค้าง ${overduePaymentCount} งวด` : 'ปกติ') : 'ไม่มีหนี้ค้าง' }}
+                            </strong>
+                          </div>
+                        </div>
+
+                        <div
+                          class="issd-mini-ops-card is-clickable"
+                          :class="stallEdit.stall_status !== 'available' && isContractExpiringSoon ? 'is-warning' : (currentStallContract ? 'is-ok' : '')"
+                          title="คลิกเพื่อดูสัญญาเช่า"
+                          role="button"
+                          tabindex="0"
+                          @click="stallDetailTab = 'contracts'"
+                          @keydown.enter="stallDetailTab = 'contracts'"
+                        >
+                          <div class="ops-icon">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                          </div>
+                          <div class="ops-info">
+                            <span class="ops-label">สัญญาเช่า</span>
+                            <strong :class="stallEdit.stall_status !== 'available' && isContractExpiringSoon ? 'text-warning' : (currentStallContract ? 'text-success' : '')">
+                              {{ currentStallContract ? (isContractExpiringSoon ? `เหลือ ${contractDaysRemaining} วัน` : 'ปกติ') : 'ไม่มี' }}
+                            </strong>
+                          </div>
+                        </div>
+
+                        <div
+                          class="issd-mini-ops-card is-clickable"
+                          :class="openMaintenanceCount > 0 ? 'is-warning' : ''"
+                          title="คลิกเพื่อดูรายการแจ้งซ่อม"
+                          role="button"
+                          tabindex="0"
+                          @click="stallDetailTab = 'maintenance'"
+                          @keydown.enter="stallDetailTab = 'maintenance'"
+                        >
+                          <div class="ops-icon">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                          </div>
+                          <div class="ops-info">
+                            <span class="ops-label">งานซ่อม</span>
+                            <strong :class="openMaintenanceCount > 0 ? 'text-warning' : ''">
+                              {{ openMaintenanceCount > 0 ? `กำลังซ่อม ${openMaintenanceCount}` : 'ไม่มี' }}
+                            </strong>
+                          </div>
+                        </div>
+
+                        <div
+                          class="issd-mini-ops-card is-clickable"
+                          :class="(currentStallWaitlistCount > 0 || currentStallBooking) ? 'is-info-tint' : ''"
+                          title="คลิกเพื่อดูข้อมูลการจองและคิวรอ"
+                          role="button"
+                          tabindex="0"
+                          @click="stallDetailTab = 'bookings'"
+                          @keydown.enter="stallDetailTab = 'bookings'"
+                        >
+                          <div class="ops-icon">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                          </div>
+                          <div class="ops-info">
+                            <span class="ops-label">จอง / คิวรอ</span>
+                            <strong>
+                              {{ currentStallWaitlistCount > 0 ? `${currentStallWaitlistCount} คิว` : (currentStallBooking ? '1 รายการ' : 'ไม่มี') }}
+                            </strong>
+                          </div>
+                        </div>
                       </div>
 
                       <!-- Detailed Specifications Grid -->
@@ -5552,7 +5719,7 @@ const cancelStallEdit = () => {
       }
     }
     resetStallErrors()
-    stallDrawerMode.value = 'detail'
+    stallDrawerMode.value = isInspectMode.value ? 'full-detail' : 'detail'
   }
 }
 const selectStall = async (mapStall: any) => {
@@ -5599,9 +5766,12 @@ const selectStall = async (mapStall: any) => {
     loadStallMaintenance(code)
     loadStallPayments(code)
     lastLoadedExtraStallCode.value = code.toUpperCase()
-    stallDrawerMode.value = 'detail'
+    stallDrawerMode.value = isInspectMode.value ? 'full-detail' : 'detail'
     showInspectStallOverlay.value = true
     showStallEditor.value = false
+    if (isInspectMode.value) {
+      void loadStallExtraDetails(false)
+    }
     return
   }
   stallEdit.value = {
@@ -5615,9 +5785,12 @@ const selectStall = async (mapStall: any) => {
   loadStallMaintenance(code)
   loadStallPayments(code)
   lastLoadedExtraStallCode.value = code.toUpperCase()
-  stallDrawerMode.value = 'detail'
+  stallDrawerMode.value = isInspectMode.value ? 'full-detail' : 'detail'
   showInspectStallOverlay.value = true
   showStallEditor.value = false
+  if (isInspectMode.value) {
+    void loadStallExtraDetails(false)
+  }
   get(`/stalls/${stored.id}/contracts`)
     .then((res) => {
       contracts.value = Array.isArray(unwrap(res)) ? unwrap(res) : []
@@ -6009,7 +6182,7 @@ const leftPanelWidth = computed(() => {
   return selectedProject.value ? '380px' : ''
 })
 const handleClearStallSelection = () => {
-  if (isMapOverviewMode.value && pageMode.value === 'view' && showInspectStallOverlay.value && stallDrawerMode.value === 'detail') closeStall()
+  if (isMapOverviewMode.value && pageMode.value === 'view' && showInspectStallOverlay.value) closeStall()
 }
 const onStallEsc = (e: KeyboardEvent) => {
   if (e.key !== 'Escape' || showInspectPhotoModal.value) return
@@ -7444,7 +7617,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 }
 
 /* แถบสลับโหมดหน้าข้อมูลตลาด (ดูข้อมูล / จัดการค่าใช้จ่าย) */
-.manage-page.is-map-page { --mp-top: 114px; --mp-top-2row: 208px; }
+.manage-page.is-map-page { --mp-top: 114px; --mp-top-2row: 190px; }
 .map-mode-float {
   position: absolute;
   top: 31px; /* กึ่งกลางแนวเดียวกับแถบการ์ด KPI */
@@ -7463,7 +7636,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 .map-mode-float :deep(.app-segmented-option:hover:not(.is-active)) { background: #f1f5f9; color: #1e293b; }
 .map-mode-float :deep(.app-segmented-option.is-active) { background: #2563eb; color: #fff; font-weight: 700; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.35); }
 @media (max-width: 1000px) {
-  .officer-summary-dashboard.is-map-floating { top: var(--mp-top-2row); }
+  .manage-page .officer-summary-dashboard.is-map-floating { top: var(--mp-top-2row); }
 }
 @media (max-width: 720px) { .map-mode-float { top: 10px; left: 10px; } .manage-page.is-map-page { --mp-top: 148px; --mp-top-2row: 148px; } }
 @media (max-width: 640px) {
@@ -8741,6 +8914,28 @@ button.market-map-kpi:hover {
   background: #fef3c7;
   color: #d97706;
 }
+.issd-mini-ops-grid.is-full-view {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+@media (max-width: 768px) {
+  .issd-mini-ops-grid.is-full-view {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.issd-mini-ops-card.is-clickable {
+  cursor: pointer;
+  transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.16s ease;
+}
+.issd-mini-ops-card.is-clickable:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07);
+}
+.issd-mini-ops-card.is-clickable:active {
+  transform: translateY(0);
+}
 
 /* Floating Filter Bar & Quick Stats in Sleek Pill/Chip Style (Non-overlapping) */
 .map-floating-overlay-bar {
@@ -9135,6 +9330,15 @@ button.market-map-kpi:hover {
 .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-collapsing) { animation: ovPanelCollapse 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-collapsing) { animation: none; }
+}
+
+/* จอไม่เกิน 1280px: การ์ด KPI กระชับขึ้น (ซ่อนกล่องไอคอน ลดระยะ) ไม่ให้ตัวเลขและป้าย "แผง" ถูกตัด */
+@media (max-width: 1280px) {
+  .market-map-kpi-strip { gap: 10px; }
+  .market-map-kpi { padding: 10px 12px; gap: 8px; }
+  .market-map-kpi.active { padding: 9px 11px; }
+  .market-map-kpi-icon { display: none; }
+  .market-map-kpi-copy strong { font-size: clamp(1.05rem, 2vw, 1.3rem); }
 }
 </style>
 

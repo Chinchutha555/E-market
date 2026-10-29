@@ -389,8 +389,6 @@
               </ClientOnly>
             </article>
           </div>
-
-          <div v-if="cancellationReason" class="notice danger"><strong>เหตุผลที่ยกเลิก</strong><span>{{ cancellationReason }}</span></div>
         </section>
       </template>
     </main>

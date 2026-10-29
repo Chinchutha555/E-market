@@ -974,6 +974,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import AppButton from '~/components/AppButton.vue'
+import { addStandardMapControls } from '~/utils/mapControls'
 import AppSelect, { type SelectOption } from '~/components/AppSelect.vue'
 import type { ProjectZone, ProjectFloor, MarketFacility } from '../../data/market_gis_types'
 import { getProjectStallLayout, getAllFloorLayoutsForProject, isOverviewBoundaryProject, clearLayoutCache, type MapStall, type ProjectStallLayout } from '../../data/market_stall_layout'
@@ -1057,6 +1058,7 @@ const currentStyle = ref<'standard' | 'satellite' | 'dark'>(props.mapStyle === '
 
 // เมื่อระบบอยู่โหมดมืด แผนที่ฐานแบบ "แผนที่ปกติ" จะใช้สไตล์มืดโดยอัตโนมัติ (ดาวเทียมคงเดิม)
 const { isDark: isSystemDark } = useTheme()
+const { showWarning: showMapWarning } = useAppAlert()
 const resolveStyle = (mode: 'standard' | 'satellite' | 'dark') => (mode === 'standard' && isSystemDark.value ? 'dark' : mode)
 const setMapStyle = (mode: 'standard' | 'satellite' | 'dark') => {
   if (currentStyle.value === mode) return
@@ -2328,39 +2330,32 @@ const standardStyle: any = {
 const darkStyle: any = {
   version: 8,
   sources: {
-    'esri-dark': {
+    // ใช้ไทล์ OpenStreetMap ชุดเดียวกับแผนที่ปกติ (ตัวหนังสือภาษาไทยคมและซูมได้ถึงระดับ 19) แล้วกลับความสว่างด้วย raster paint เป็นโทนมืด
+    // เลิกใช้ไทล์ Esri/CARTO ของเดิม: Esri จำกัดซูม 16 ทำให้ตัวหนังสือเบลอ ส่วน CARTO ต้องมี API key
+    'osm-dark': {
       type: 'raster',
       tiles: [
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
       ],
       tileSize: 256,
-      attribution: 'Tiles &copy; Esri',
-      maxzoom: 16
-    },
-    'esri-dark-labels': {
-      type: 'raster',
-      tiles: [
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'
-      ],
-      tileSize: 256,
-      attribution: 'Tiles &copy; Esri',
-      maxzoom: 16
+      attribution: '&copy; OpenStreetMap contributors',
+      maxzoom: 19
     }
   },
   layers: [
     {
-      id: 'esri-dark-layer',
+      id: 'osm-dark-layer',
       type: 'raster',
-      source: 'esri-dark',
+      source: 'osm-dark',
       minzoom: 0,
-      maxzoom: 22
-    },
-    {
-      id: 'esri-dark-labels-layer',
-      type: 'raster',
-      source: 'esri-dark-labels',
-      minzoom: 0,
-      maxzoom: 22
+      maxzoom: 22,
+      paint: {
+        'raster-brightness-min': 0.9,
+        'raster-brightness-max': 0.1,
+        'raster-hue-rotate': 180,
+        'raster-saturation': 0.15,
+        'raster-contrast': 0.15
+      }
     }
   ]
 }
@@ -2503,29 +2498,19 @@ const initMap = () => {
     maxPitch: 65,
     pitch: currentMarketPitch.value,
     bearing: currentMarketBearing.value,
-    canvasContextAttributes: { antialias: true }
+    canvasContextAttributes: { antialias: true },
+    attributionControl: { compact: true } // ย่อเครดิตเหลือปุ่ม i ไม่ให้แถบยาวบังปุ่มมุมล่างบนจอเล็ก
   })
   container.__mapInstance = map
 
   // Standard Navigation Controls (Zoom, Compass)
-  const navControl = new maplibregl.NavigationControl({ visualizePitch: true })
-  map.addControl(navControl, 'bottom-right')
-
-  // ทุกหน้า: รวมปุ่มปรับกึ่งกลางเข้าชุดปุ่มซูม/เข็มทิศ (ปุ่มลอยเดิมถูกซ่อนด้วย CSS)
-  {
-    const navGroup: HTMLElement | undefined = (navControl as any)._container
-    if (navGroup) {
-      const recenterBtn = document.createElement('button')
-      recenterBtn.type = 'button'
-      recenterBtn.className = 'map-ctrl-recenter-btn'
-      recenterBtn.title = 'ปรับมุมมองกลับสู่กึ่งกลาง'
-      recenterBtn.setAttribute('aria-label', 'ปรับมุมมองกลับสู่กึ่งกลาง')
-      recenterBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>'
-      recenterBtn.addEventListener('click', () => recenterMapView())
-      navGroup.appendChild(recenterBtn)
-      watchCtrlBaseline(navGroup)
-    }
-  }
+  // ชุดปุ่มควบคุมมาตรฐานของระบบ (ตำแหน่งของฉัน / ซูม / เข็มทิศ / ปรับมุมมอง) ใช้ร่วมกันทุกแผนที่
+  const navGroup = addStandardMapControls(maplibregl, map, {
+    onFit: () => recenterMapView(),
+    fitTitle: 'ปรับมุมมองให้เห็นทั้งพื้นที่',
+    notify: showMapWarning
+  })
+  if (navGroup) watchCtrlBaseline(navGroup)
 
   hoverPopup = new maplibregl.Popup({
     closeButton: false,
@@ -3699,11 +3684,13 @@ const renderSelectedStallPins = () => {
     el.className = 'booked-project-beacon-marker'
     el.innerHTML = `
       <div class="beacon-pin-bubble" title="คลิกเพื่อกลับไปยังแผงที่คุณเลือก (${bookedProject.value.name})">
-        <span class="beacon-pulse-ring"></span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-          <circle cx="12" cy="10" r="3"></circle>
-        </svg>
+        <span class="beacon-pin-icon">
+          <span class="beacon-pulse-ring"></span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+        </span>
         <span>แผงที่คุณจอง (${props.selectedStallCodes.join(', ')})</span>
       </div>
     `
@@ -7972,7 +7959,7 @@ onUnmounted(cleanupMapResources)
 
 
 /* ===== หน้าข้อมูลตลาด: แถบเครื่องมือ + แผงสไลด์จากขวา ===== */
-.ov-rail { position: absolute; top: 50%; right: 0; z-index: 120; display: flex; flex-direction: column; gap: 4px; padding: 5px; border: 1px solid rgba(226, 232, 240, 0.95); border-radius: 14px; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14); transform: translateY(-50%); transition: right 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease; }
+.ov-rail { position: absolute; top: 44%; right: 0; z-index: 120; display: flex; flex-direction: column; gap: 4px; padding: 5px; border: 1px solid rgba(226, 232, 240, 0.95); border-radius: 14px; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14); transform: translateY(-50%); transition: right 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease; }
 .ov-rail.is-shifted { right: min(380px, 92vw); }
 .ov-rail.is-hidden { opacity: 0; pointer-events: none; }
 .ov-rail-btn { position: relative; width: 42px; height: 42px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: #475569; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
@@ -8169,4 +8156,22 @@ onUnmounted(cleanupMapResources)
 
 /* แผนที่ฐานเหลือ 2 แบบ: ให้เต็มความกว้าง */
 .ov-basemaps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* หมุดแผงที่คุณจอง: วงกลมกระพริบอยู่กึ่งกลางไอคอนพอดี ไม่ล้นออกนอกแคปซูล */
+.beacon-pin-bubble { overflow: hidden; }
+.beacon-pin-icon { position: relative; display: inline-grid; place-items: center; flex: 0 0 18px; width: 18px; height: 18px; }
+.beacon-pin-icon svg { position: relative; z-index: 1; }
+.beacon-pin-icon .beacon-pulse-ring {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  animation: beaconPulseCentered 1.8s ease-out infinite;
+}
+@keyframes beaconPulseCentered {
+  0% { transform: scale(0.7); opacity: 0.95; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
 </style>
