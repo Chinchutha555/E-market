@@ -621,6 +621,7 @@
                     'is-management-mode': !isInspectMode,
                     'is-edit-mode': stallDrawerMode === 'edit',
                     'is-full-detail-mode': stallDrawerMode === 'full-detail',
+                    'is-collapsing': fullDetailCollapsing,
                     'is-left-dock': isMapOverviewMode
                   }"
                 >
@@ -1096,8 +1097,11 @@
                     <!-- Right Column: Main Content & Tab Footer -->
                     <div class="issd-full-main">
                       <!-- 1.1 Action Alert Card (at top of content area) -->
+                      <div v-if="fullDetailSettling" class="issd-full-skeleton" aria-hidden="true">
+                        <span></span><span></span><span></span>
+                      </div>
                       <div
-                        v-if="stallActionRichItems.length > 0"
+                        v-if="stallActionRichItems.length > 0 && !fullDetailSettling"
                         class="issd-action-alert-card"
                       >
                         <div
@@ -1176,6 +1180,7 @@
 
                       <!-- Scrollable Tab Content Body -->
                       <div
+                        v-if="!fullDetailSettling"
                         class="issd-body issd-body-full"
                         :class="{ 'is-fixed-tab-layout': stallDetailTab !== 'info' }"
                       >
@@ -1629,7 +1634,7 @@
                   </div>
 
                   <!-- 3B. Tab Action Footer (Inside Full Main) -->
-                  <div v-if="stallDetailTab !== 'info' && stallDetailTab !== 'history'" class="issd-footer issd-footer-full">
+                  <div v-if="!fullDetailSettling && stallDetailTab !== 'info' && stallDetailTab !== 'history'" class="issd-footer issd-footer-full">
                     <!-- Tab: ข้อมูลแผง (info) / ประวัติการดำเนินการ (history) -->
                     <template v-if="stallDetailTab === 'info' || stallDetailTab === 'history'">
                       <AppButton
@@ -4623,10 +4628,19 @@ const loadStallExtraDetails = async (forceReloadLocal = false) => {
   } catch {}
 }
 
+const fullDetailSettling = ref(false)
+const fullDetailCollapsing = ref(false)
 const openStallFullDetail = (tab?: 'info' | 'contracts' | 'subtenants' | 'payments' | 'maintenance' | 'bookings' | 'history') => {
   stallDrawerMode.value = 'full-detail'
   stallDetailTab.value = tab || 'info'
-  if (import.meta.client) {
+  if (import.meta.client && isMapOverviewMode.value) {
+    // หน้าข้อมูลตลาด: รออนิเมชันกล่องขยายจบก่อนค่อยวาดเนื้อหาหนักและโหลดข้อมูลเพิ่ม ไม่ให้งานหนักทับเฟรมอนิเมชัน (กระตุก)
+    fullDetailSettling.value = true
+    window.setTimeout(() => {
+      fullDetailSettling.value = false
+      void loadStallExtraDetails(false)
+    }, 340)
+  } else if (import.meta.client) {
     requestAnimationFrame(() => {
       void loadStallExtraDetails(false)
     })
@@ -4670,6 +4684,17 @@ const jumpToActionTab = (targetTab?: string) => {
 }
 
 const backToMiniDetail = () => {
+  fullDetailSettling.value = false
+  if (import.meta.client && isMapOverviewMode.value && stallDrawerMode.value === 'full-detail') {
+    // หน้าข้อมูลตลาด: กล่องหดกลับทางซ้ายด้วยอนิเมชัน แล้วค่อยสลับเป็นสรุปแผง
+    if (fullDetailCollapsing.value) return
+    fullDetailCollapsing.value = true
+    window.setTimeout(() => {
+      fullDetailCollapsing.value = false
+      stallDrawerMode.value = 'detail'
+    }, 280)
+    return
+  }
   stallDrawerMode.value = 'detail'
 }
 const stallDetailUrl = computed(() => {
@@ -5496,6 +5521,8 @@ const deleteProject = async (project: ProjectZone, stats?: { total: number; avai
 }
 const stallPayload = (form: any) => ({ ...form, market_id: resolvedMarketID.value, market_slug: marketId.value, market_name: marketName.value, zone_id: Number(form.zone_id), width: Number(form.width), depth: Number(form.depth), daily_rent: Number(form.daily_rent), monthly_rent: Number(form.monthly_rent) })
 const closeStall = () => {
+  fullDetailCollapsing.value = false
+  fullDetailSettling.value = false
   showStallEditor.value = false
   showInspectStallOverlay.value = false
   showInspectPhotoModal.value = false
@@ -7417,7 +7444,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 }
 
 /* แถบสลับโหมดหน้าข้อมูลตลาด (ดูข้อมูล / จัดการค่าใช้จ่าย) */
-.manage-page.is-map-page { --mp-top: 114px; --mp-top-2row: 256px; }
+.manage-page.is-map-page { --mp-top: 114px; --mp-top-2row: 208px; }
 .map-mode-float {
   position: absolute;
   top: 31px; /* กึ่งกลางแนวเดียวกับแถบการ์ด KPI */
@@ -7662,6 +7689,49 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 .has-left-panel .map-dashboard-fab { left: calc(18px + min(var(--lp-w), calc(100% - 36px)) + 12px); transition: left 0.2s ease; }
 @media (max-width: 720px) { .has-left-panel .map-dashboard-fab { display: none; } }
 
+/* ตัวเลือกชั้นอาคาร: แคปซูลมีตัวอักษร ที่มุมขวาล่าง ทางซ้ายของชุดปุ่มซูม ขอบล่างเสมอกับกลุ่มซูม */
+.is-fullscreen-map-panel :deep(.map-floating-top-controls) {
+  display: flex !important;
+  top: auto !important;
+  left: auto !important;
+  right: 62px !important;
+  bottom: var(--ov-ctrl-bottom, 39px) !important; /* วัดจากขอบล่างของชุดปุ่มซูมจริง */
+  z-index: 40 !important;
+  transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.is-fullscreen-map-panel :deep(.market-floor-switcher) {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  overflow: visible;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
+}
+.is-fullscreen-map-panel :deep(.market-floor-tab) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 0;
+  height: 38px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.is-fullscreen-map-panel :deep(.market-floor-tab:hover:not(.active)) { background: #f1f5f9; color: #0f172a; }
+.is-fullscreen-map-panel :deep(.market-floor-tab.active) { background: #2563eb; color: #ffffff; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3); }
+
+
 /* แผงโครงการและแผงรายละเอียดแผง: ความสูงเท่ากัน (ยืดจากใต้การ์ด KPI ถึงเหนือปุ่มแดชบอร์ด) */
 .is-fullscreen-map-panel :deep(.stall-mode-panel.stall-mode-panel),
 .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-left-dock) {
@@ -7776,14 +7846,6 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 }
 
 /* แสดงปุ่ม แผนที่/ดาวเทียม + ปรับกึ่งกลาง ในหน้าข้อมูลตลาด (วางมุมล่างซ้ายไม่ชน KPI และเครื่องมือด้านบน) */
-.is-fullscreen-map-panel :deep(.map-floating-top-controls) {
-  display: inline-flex !important;
-  top: auto !important;
-  right: auto !important;
-  left: 18px !important;
-  bottom: 18px !important;
-  z-index: 40 !important;
-}
 
 /* ซ่อนชั่วคราว: ปุ่มคำอธิบายสีโครงการ และสวิตช์ แผนที่/ดาวเทียม ในหน้าข้อมูลตลาด */
 .is-fullscreen-map-panel :deep(.map-floating-legend-container),
@@ -7791,19 +7853,6 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 .is-fullscreen-map-panel :deep(.map-floating-recenter-btn) {
   display: none !important;
 }
-.is-fullscreen-map-panel :deep(.map-ctrl-recenter-btn) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 29px;
-  height: 29px;
-  padding: 0;
-  border: 0;
-  border-top: 1px solid #ddd;
-  background: transparent;
-  cursor: pointer;
-}
-.is-fullscreen-map-panel :deep(.map-ctrl-recenter-btn:hover) { background: rgba(0, 0, 0, 0.05); }
 
 /* (เดิม) ยกปุ่มคำอธิบายสีโครงการ (กล่องสีน้ำเงิน) ขึ้นมาอยู่ด้านบนปุ่ม แผนที่/ดาวเทียม + ปรับกึ่งกลาง ไม่ให้ซ้อนกัน */
 .is-fullscreen-map-panel :deep(.map-floating-legend-container) {
@@ -7859,9 +7908,10 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 .market-map-kpi-strip {
   position: absolute;
   top: 18px;
-  left: 0;
-  right: 0;
-  width: min(1040px, calc(100% - 460px)); /* เว้นสองข้างเท่ากัน ให้อยู่กึ่งกลางแผนที่จริง และไม่ชนสวิตช์ทางซ้าย */
+  left: 228px; /* ถัดจากสวิตช์โหมด (กว้าง ~184px) แถวเดียวกัน */
+  right: 66px; /* เว้นที่ให้แถบเครื่องมือทางขวา */
+  width: auto;
+  max-width: 1100px;
   margin: 0 auto;
   z-index: 110;
   display: grid;
@@ -8175,11 +8225,6 @@ button.market-map-kpi:hover {
   top: var(--mp-top) !important;
 }
 
-@media (max-width: 1399px) {
-  .manage-page.is-map-page { --mp-top: 162px; }
-  .map-mode-float { top: 14px; }
-  .market-map-kpi-strip { top: 66px; width: min(1040px, calc(100% - 100px)); }
-}
 @media (max-width: 1000px) {
   .market-map-kpi-strip {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -9019,6 +9064,78 @@ button.market-map-kpi:hover {
 .map-mode-float :deep(.app-segmented-option.is-active) { background: #2563eb; color: #ffffff; font-weight: 700; box-shadow: none; }
 @media (max-width: 720px) { .map-mode-float :deep(.app-segmented-option) { min-width: 96px; padding: 0 12px; } }
 
+
+
+/* สวิตช์โหมดแบบการ์ดเตี้ยเท่าการ์ด KPI: อยู่แถวเดียวกัน ไอคอนบน ชื่อล่าง ตัวที่เลือกเป็นพื้นน้ำเงิน */
+.map-mode-float {
+  top: 18px;
+  left: 20px;
+  height: 72px;
+  box-sizing: border-box;
+  padding: 6px;
+  border: 1px solid rgba(226, 232, 240, 0.94);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.11);
+}
+.map-mode-float :deep(.app-segmented-control) { display: flex; gap: 4px; height: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.map-mode-float :deep(.app-segmented-control)::before { content: none; }
+.map-mode-float :deep(.app-segmented-option) {
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 84px;
+  min-height: 0;
+  height: 100%;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: transparent;
+  box-shadow: none;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.map-mode-float :deep(.app-segmented-option svg) { width: 22px; height: 22px; flex: 0 0 22px; }
+.map-mode-float :deep(.app-segmented-option:hover:not(.is-active)) { background: #f1f5f9; color: #1e293b; }
+.map-mode-float :deep(.app-segmented-option.is-active) { background: #2563eb; color: #ffffff; font-weight: 700; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3); }
+@media (max-width: 720px) {
+  .map-mode-float { top: 10px; left: 10px; height: 56px; }
+  .map-mode-float :deep(.app-segmented-option) { min-width: 72px; }
+  .map-mode-float :deep(.app-segmented-option svg) { width: 18px; height: 18px; flex-basis: 18px; }
+  .manage-page.is-map-page { --mp-top: 152px; --mp-top-2row: 152px; }
+  .market-map-kpi-strip { top: 76px; }
+}
+
+/* กด "ดูรายละเอียด": กล่องเฉลยออกทางขวา (ใช้ clip-path เปิดทีละส่วน ไม่ขยับความกว้างจริง จึงไม่คำนวณเลย์เอาต์ซ้ำทุกเฟรม ไม่กระตุก) */
+@keyframes ovPanelReveal {
+  from { clip-path: inset(0 47% 0 0 round 18px); }
+  to { clip-path: inset(0 0 0 0 round 18px); }
+}
+.is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode) { animation: ovPanelReveal 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode .issd-full-layout { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode) { animation: none; }
+}
+
+/* โครงว่างระหว่างรอกล่องขยายจบ */
+.issd-full-skeleton { display: flex; flex-direction: column; gap: 14px; padding: 18px 22px; }
+.issd-full-skeleton span { display: block; border-radius: 14px; background: linear-gradient(90deg, #eef2f6 25%, #f8fafc 50%, #eef2f6 75%); background-size: 200% 100%; animation: issdSkeleton 1.1s ease-in-out infinite; }
+.issd-full-skeleton span:nth-child(1) { height: 56px; }
+.issd-full-skeleton span:nth-child(2) { height: 150px; }
+.issd-full-skeleton span:nth-child(3) { height: 90px; }
+@keyframes issdSkeleton { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* กดย่อ: กล่องหดกลับทางซ้าย (ย้อนทิศของตอนขยาย) */
+@keyframes ovPanelCollapse {
+  from { clip-path: inset(0 0 0 0 round 18px); }
+  to { clip-path: inset(0 47% 0 0 round 18px); }
+}
+.is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-collapsing) { animation: ovPanelCollapse 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-collapsing) { animation: none; }
+}
 </style>
 
 <style>
