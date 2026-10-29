@@ -204,8 +204,8 @@ const handleLogout = async () => {
   .bma-text-short { display: inline; }
 }
 
-@media (max-width: 540px) {
-  .bma-pill-badge { display: none; }
+@media (max-width: 768px) {
+  .bma-pill-badge { display: none !important; }
 }
 
 .user-dropdown-arrow {
@@ -285,4 +285,13 @@ const handleLogout = async () => {
 }
 .theme-toggle-btn:hover { background: #f8fafc; color: #0f172a; }
 .theme-toggle-btn:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+
+@media (max-width: 768px) {
+  .top-navbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 35 !important;
+    background: #ffffff !important;
+  }
+}
 </style>
