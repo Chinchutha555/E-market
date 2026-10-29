@@ -861,7 +861,7 @@
                   <h4>แผนที่ฐาน</h4>
                   <div class="ov-basemaps">
                     <button v-for="b in basemapOptions" :key="b.value" type="button" class="ov-basemap" :class="{ active: currentStyle === b.value }" :aria-pressed="currentStyle === b.value" @click="setMapStyle(b.value)">
-                      <span class="ov-basemap-thumb" :class="`is-${b.value}`" aria-hidden="true">
+                      <span class="ov-basemap-thumb" :class="`is-${b.value}`" :data-keep-colors="b.value === 'satellite' ? '' : null" aria-hidden="true">
                         <svg v-if="currentStyle === b.value" class="ov-basemap-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                       </span>
                       <span>{{ b.label }}</span>
@@ -1055,13 +1055,16 @@ const emit = defineEmits<{
 // Active Map Style Mode ('standard' = Street, 'satellite' = Imagery)
 const currentStyle = ref<'standard' | 'satellite' | 'dark'>(props.mapStyle === 'satellite' ? 'satellite' : props.mapStyle === 'dark' ? 'dark' : 'standard')
 
+// เมื่อระบบอยู่โหมดมืด แผนที่ฐานแบบ "แผนที่ปกติ" จะใช้สไตล์มืดโดยอัตโนมัติ (ดาวเทียมคงเดิม)
+const { isDark: isSystemDark } = useTheme()
+const resolveStyle = (mode: 'standard' | 'satellite' | 'dark') => (mode === 'standard' && isSystemDark.value ? 'dark' : mode)
 const setMapStyle = (mode: 'standard' | 'satellite' | 'dark') => {
   if (currentStyle.value === mode) return
   currentStyle.value = mode
   emit('update:mapStyle', mode)
   if (!map) return
 
-  map.setStyle(getStyleConfig(mode))
+  map.setStyle(getStyleConfig(resolveStyle(mode)))
 
   map.once('styledata', () => {
     setupProjectLayers()
@@ -2450,7 +2453,7 @@ const add3DBuildings = () => {
       minzoom: 15,
       filter: ['!=', ['get', 'hide_3d'], true],
       paint: {
-        'fill-extrusion-color': getBuildingColorExpr(currentStyle.value),
+        'fill-extrusion-color': getBuildingColorExpr(resolveStyle(currentStyle.value)),
         'fill-extrusion-height': [
           'interpolate', ['linear'], ['zoom'],
           15, 0,
@@ -2492,7 +2495,7 @@ const initMap = () => {
 
   map = new maplibregl.Map({
     container,
-    style: getStyleConfig(currentStyle.value),
+    style: getStyleConfig(resolveStyle(currentStyle.value)),
     center: currentMarketCenter.value,
     zoom: props.previewMode ? (currentMarketZoom.value + 1.2) : currentMarketZoom.value,
     minZoom: 13.0,
@@ -2508,8 +2511,8 @@ const initMap = () => {
   const navControl = new maplibregl.NavigationControl({ visualizePitch: true })
   map.addControl(navControl, 'bottom-right')
 
-  // หน้าข้อมูลตลาด: รวมปุ่มปรับกึ่งกลางเข้าชุดปุ่มซูม/เข็มทิศ (ปุ่มลอยเดิมถูกซ่อนด้วย CSS)
-  if (props.isOverviewPage) {
+  // ทุกหน้า: รวมปุ่มปรับกึ่งกลางเข้าชุดปุ่มซูม/เข็มทิศ (ปุ่มลอยเดิมถูกซ่อนด้วย CSS)
+  {
     const navGroup: HTMLElement | undefined = (navControl as any)._container
     if (navGroup) {
       const recenterBtn = document.createElement('button')
@@ -2520,6 +2523,7 @@ const initMap = () => {
       recenterBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>'
       recenterBtn.addEventListener('click', () => recenterMapView())
       navGroup.appendChild(recenterBtn)
+      watchCtrlBaseline(navGroup)
     }
   }
 
@@ -4203,6 +4207,14 @@ const handleCategorySelect = (e: Event) => {
 }
 
 // Watchers for reactive updates
+watch(isSystemDark, () => {
+  if (!map) return
+  map.setStyle(getStyleConfig(resolveStyle(currentStyle.value)))
+  map.once('styledata', () => {
+    setupProjectLayers()
+    refreshSources()
+  })
+})
 watch(() => props.mapStyle, (newStyle) => {
   const target = newStyle === 'satellite' ? 'satellite' : newStyle === 'dark' ? 'dark' : 'standard'
   if (target !== currentStyle.value) {
@@ -4334,7 +4346,6 @@ const ovFilterBadge = computed(() => (props.filterContext === 'costs'
   : advancedFilterCount.value - (availabilityFromCard.value && appliedAvailabilityFilter.value !== 'all' ? 1 : 0)))
 const basemapOptions: { value: 'standard' | 'satellite' | 'dark'; label: string }[] = [
   { value: 'standard', label: 'แผนที่ปกติ' },
-  { value: 'dark', label: 'โหมดมืด' },
   { value: 'satellite', label: 'ดาวเทียม' }
 ]
 const toggleOvPanel = (panel: 'search' | 'filter' | 'layers') => {
@@ -4401,7 +4412,27 @@ onMounted(async () => {
   }
 })
 
+// วัดตำแหน่งขอบล่างของชุดปุ่มซูมจริง แล้วส่งเป็นตัวแปร --ov-ctrl-bottom ให้แถบเลือกชั้นวางขอบล่างเสมอกันเป๊ะ
+let ctrlBaselineObserver: ResizeObserver | null = null
+const watchCtrlBaseline = (navGroup: HTMLElement) => {
+  const wrapper = navGroup.closest('.maplibre-overview-wrapper') as HTMLElement | null
+  if (!wrapper || typeof ResizeObserver === 'undefined') return
+  const sync = () => {
+    const w = wrapper.getBoundingClientRect()
+    const g = navGroup.getBoundingClientRect()
+    if (!g.height) return
+    wrapper.style.setProperty('--ov-ctrl-bottom', `${Math.max(0, Math.round(w.bottom - g.bottom))}px`)
+  }
+  ctrlBaselineObserver?.disconnect()
+  ctrlBaselineObserver = new ResizeObserver(sync)
+  ctrlBaselineObserver.observe(wrapper)
+  const container = navGroup.parentElement?.parentElement
+  if (container) ctrlBaselineObserver.observe(container)
+  requestAnimationFrame(sync)
+}
 const cleanupMapResources = () => {
+  ctrlBaselineObserver?.disconnect()
+  ctrlBaselineObserver = null
   isUnmounted = true
   isMapLoading.value = true
   canTeleportToolbar.value = false
@@ -8042,7 +8073,8 @@ onUnmounted(cleanupMapResources)
 /* เปิดแผงสไลด์: ดันปุ่มซูม/เข็มทิศ/กึ่งกลาง และเครดิตแผนที่ ออกมาทางซ้ายของแผง ไม่ให้ถูกบัง */
 .maplibre-overview-wrapper .maplibregl-ctrl-bottom-right { transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1); }
 .maplibre-overview-wrapper.has-ov-panel .maplibregl-ctrl-bottom-right { transform: translateX(calc(-1 * min(380px, 92vw))); }
-@media (max-width: 720px) { .maplibre-overview-wrapper.has-ov-panel .maplibregl-ctrl-bottom-right { transform: none; opacity: 0; pointer-events: none; } }
+.maplibre-overview-wrapper.has-ov-panel .map-floating-top-controls { transform: translateX(calc(-1 * min(380px, 92vw))); }
+@media (max-width: 720px) { .maplibre-overview-wrapper.has-ov-panel .maplibregl-ctrl-bottom-right, .maplibre-overview-wrapper.has-ov-panel .map-floating-top-controls { transform: none; opacity: 0; pointer-events: none; } }
 
 /* ===== ชั้นข้อมูล: รายการสีโครงการแบบเรียบ อ่านง่าย ===== */
 .ov-section { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
@@ -8131,4 +8163,10 @@ onUnmounted(cleanupMapResources)
 .mlp-occ-bar { height: 8px; margin: 10px 0 12px; }
 .mlp-occ-legend { margin-top: 12px; }
 .mlp-hint { margin-top: 18px; padding-top: 14px; }
+
+/* ปุ่ม "ปรับกึ่งกลาง" แบบลอยเดิม ถูกรวมเข้าชุดปุ่มซูมแล้ว ทุกหน้า */
+.map-floating-recenter-btn { display: none !important; }
+
+/* แผนที่ฐานเหลือ 2 แบบ: ให้เต็มความกว้าง */
+.ov-basemaps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 </style>

@@ -1846,3 +1846,53 @@ button, input, select, textarea {
   font-weight: 700;
 }
 
+
+
+/* ================================================================ */
+/* โหมดมืดของระบบ (data-theme="dark" ที่ <html>)                      */
+/* ใช้การกลับสี + หมุนเฉดทั้งหน้า แล้วกลับสีรูปภาพ วิดีโอ และแผนที่     */
+/* ให้กลับเป็นสีธรรมชาติ ครอบคลุมทุกหน้าโดยไม่ต้องแก้สีทีละคอมโพเนนต์   */
+/* ================================================================ */
+html[data-theme='dark'] {
+  background-color: #ffffff;
+  filter: invert(0.84) hue-rotate(180deg) brightness(1.04) saturate(1.45) contrast(1.06);
+}
+html[data-theme='dark'] img,
+html[data-theme='dark'] video,
+html[data-theme='dark'] picture,
+html[data-theme='dark'] iframe,
+html[data-theme='dark'] .maplibre-overview-canvas,
+html[data-theme='dark'] .maplibregl-map,
+html[data-theme='dark'] [data-keep-colors] {
+  filter: hue-rotate(180deg) invert(1);
+}
+/* รูปที่ซ้อนอยู่ในส่วนที่กลับสีกลับอยู่แล้ว ไม่กลับซ้ำ */
+html[data-theme='dark'] .maplibre-overview-canvas img,
+html[data-theme='dark'] .maplibre-overview-canvas video,
+html[data-theme='dark'] .maplibregl-map img,
+html[data-theme='dark'] [data-keep-colors] img {
+  filter: none;
+}
+
+/* หน้าแผนที่: ปิดล้อมลำดับการซ้อนของการ์ด/แผงลอยบนแผนที่ (z-index สูงสุด ~140) ไว้ในหน้าตัวเอง */
+/* ไม่ให้ไปแข่งกับหัวเว็บ (เมนูผู้ใช้/แจ้งเตือนจึงอยู่เหนือการ์ด) และไม่ให้หัวเว็บอยู่เหนือพื้นหลังของ modal */
+.content-body.manage-page.is-map-page { isolation: isolate; }
+
+/* ปุ่มควบคุมแผนที่ (ซูม เข็มทิศ ปรับกึ่งกลาง): ขนาด 40px ทุกหน้า เท่ากับแถบเลือกชั้นและปุ่มเครื่องมืออื่น */
+.maplibregl-ctrl-group { border-radius: 8px; box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1); overflow: hidden; }
+.maplibregl-ctrl-group button { width: 40px; height: 40px; }
+.maplibregl-ctrl button .maplibregl-ctrl-icon { background-size: 26px 26px; }
+.map-ctrl-recenter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid #ddd;
+  background: transparent;
+  cursor: pointer;
+}
+.map-ctrl-recenter-btn:hover { background: rgba(0, 0, 0, 0.05); }
+.map-ctrl-recenter-btn svg { width: 22px; height: 22px; }

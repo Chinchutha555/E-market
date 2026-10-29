@@ -27,6 +27,19 @@
     </div>
 
     <div class="navbar-right" ref="headerRightRef">
+      <!-- สลับธีมสว่าง/มืด (อยู่ข้างปุ่มแจ้งเตือน) -->
+      <button
+        type="button"
+        class="theme-toggle-btn"
+        :title="isDark ? 'เปลี่ยนเป็นโหมดสว่าง' : 'เปลี่ยนเป็นโหมดมืด'"
+        :aria-label="isDark ? 'เปลี่ยนเป็นโหมดสว่าง' : 'เปลี่ยนเป็นโหมดมืด'"
+        :aria-pressed="isDark"
+        @click="toggleTheme"
+      >
+        <svg v-if="isDark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+        <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
       <!-- Notification Bell & Dropdown Central Component -->
       <AppNotificationDropdown
         ref="notifDropdownRef"
@@ -90,6 +103,7 @@ defineProps<{
 
 const { user, logout } = useAuth()
 const { isExpanded, toggle: toggleSidebar } = useSidebar()
+const { isDark, toggle: toggleTheme } = useTheme()
 
 const showDropdown = ref(false)
 const headerRightRef = ref<HTMLElement | null>(null)
@@ -254,4 +268,21 @@ const handleLogout = async () => {
   background: #fff1f2;
   color: #dc2626;
 }
+
+.theme-toggle-btn {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.theme-toggle-btn:hover { background: #f8fafc; color: #0f172a; }
+.theme-toggle-btn:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
 </style>
