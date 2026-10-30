@@ -510,4 +510,16 @@ watch(() => route.fullPath, () => {
   color: #2563eb;
   font-weight: 600;
 }
+
+@media (max-width: 768px) {
+  .brand-subtitle {
+    display: none !important;
+  }
+
+  .brand-text-block {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+}
 </style>

@@ -1679,7 +1679,16 @@ button, input, select, textarea {
     box-shadow: none;
   }
 
-  .sidebar .brand-text-block,
+  .sidebar .brand-text-block {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+
+  .sidebar .brand-subtitle {
+    display: none !important;
+  }
+
   .sidebar .nav-label {
     display: block !important;
   }
@@ -1716,6 +1725,10 @@ button, input, select, textarea {
   .top-navbar {
     padding: 0 14px;
     height: 58px;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 35 !important;
+    background: #ffffff !important;
   }
 
   .navbar-subtitle-text {
