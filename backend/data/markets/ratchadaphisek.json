@@ -20,10 +20,10 @@
       "color": "#ea580c",
       "stallsAvailable": 36,
       "totalStalls": 36,
-      "realAreaSqm": 144,
+      "realAreaSqm": 144.0,
       "centroid": [
-        100.4770704,
-        13.7212787
+        100.47706939285715,
+        13.721294985714286
       ],
       "coordinates": [
         [
@@ -133,12 +133,19 @@
             ]
           ],
           "center": [
-            100.4770639,
-            13.7211986
+            100.47709537499999,
+            13.721268125000002
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 26,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 9
+          }
         },
         {
           "code": "RDP-01-008",
@@ -177,12 +184,19 @@
             ]
           ],
           "center": [
-            100.4770988,
-            13.7212504
+            100.47709880000001,
+            13.72125035
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 27,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 8
+          }
         },
         {
           "code": "RDP-01-007",
@@ -225,12 +239,19 @@
             ]
           ],
           "center": [
-            100.4770707,
-            13.721163
+            100.47710172000002,
+            13.72123066
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 28,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 7
+          }
         },
         {
           "code": "RDP-01-018",
@@ -273,12 +294,19 @@
             ]
           ],
           "center": [
-            100.4770587,
-            13.7214587
+            100.4770576,
+            13.7214603
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 45,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 18
+          }
         },
         {
           "code": "RDP-01-017",
@@ -317,12 +345,19 @@
             ]
           ],
           "center": [
-            100.4770622,
-            13.7214409
+            100.477062175,
+            13.721440925
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 46,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 17
+          }
         },
         {
           "code": "RDP-01-016",
@@ -361,12 +396,19 @@
             ]
           ],
           "center": [
-            100.477097,
-            13.7214927
+            100.4770656,
+            13.721423150000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 48,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 16
+          }
         },
         {
           "code": "RDP-01-015",
@@ -405,12 +447,19 @@
             ]
           ],
           "center": [
-            100.4770715,
+            100.477071475,
             13.7213925
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 51,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 15
+          }
         },
         {
           "code": "RDP-01-014",
@@ -449,12 +498,19 @@
             ]
           ],
           "center": [
-            100.4771063,
-            13.7214443
+            100.47707489999999,
+            13.721374725
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 52,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 14
+          }
         },
         {
           "code": "RDP-01-013",
@@ -497,12 +553,19 @@
             ]
           ],
           "center": [
-            100.4770783,
-            13.721357
+            100.47707782,
+            13.72135504
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 54,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 13
+          }
         },
         {
           "code": "RDP-01-019",
@@ -549,12 +612,19 @@
             ]
           ],
           "center": [
-            100.4770188,
-            13.7214513
+            100.47702025000001,
+            13.721454683333333
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 56,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 19
+          }
         },
         {
           "code": "RDP-01-020",
@@ -594,11 +664,18 @@
           ],
           "center": [
             100.4770222,
-            13.7214336
+            13.721433575
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 57,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 20
+          }
         },
         {
           "code": "RDP-01-021",
@@ -637,12 +714,19 @@
             ]
           ],
           "center": [
-            100.4770256,
-            13.7214158
+            100.47702559999999,
+            13.721415825000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 60,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 21
+          }
         },
         {
           "code": "RDP-01-022",
@@ -681,12 +765,19 @@
             ]
           ],
           "center": [
-            100.4770629,
-            13.7214547
+            100.4770315,
+            13.72138515
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 62,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 22
+          }
         },
         {
           "code": "RDP-01-023",
@@ -726,11 +817,18 @@
           ],
           "center": [
             100.4770349,
-            13.7213674
+            13.721367375000002
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 63,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 23
+          }
         },
         {
           "code": "RDP-01-024",
@@ -777,12 +875,19 @@
             ]
           ],
           "center": [
-            100.4771012,
-            13.7214888
+            100.47704093333334,
+            13.721347033333332
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 66,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 24
+          }
         },
         {
           "code": "RDP-01-012",
@@ -825,12 +930,19 @@
             ]
           ],
           "center": [
-            100.4770827,
-            13.7213343
+            100.4770815,
+            13.72133594
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 68,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 12
+          }
         },
         {
           "code": "RDP-01-011",
@@ -869,12 +981,19 @@
             ]
           ],
           "center": [
-            100.4770546,
-            13.721247
+            100.477086075,
+            13.72131655
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 69,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 11
+          }
         },
         {
           "code": "RDP-01-010",
@@ -913,12 +1032,19 @@
             ]
           ],
           "center": [
-            100.4771209,
-            13.7213684
+            100.4770895,
+            13.721298775000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 70,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 10
+          }
         },
         {
           "code": "RDP-01-025",
@@ -965,12 +1091,19 @@
             ]
           ],
           "center": [
-            100.4770427,
-            13.721327
+            100.47704415,
+            13.7213303
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 71,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 25
+          }
         },
         {
           "code": "RDP-01-026",
@@ -1009,12 +1142,19 @@
             ]
           ],
           "center": [
-            100.4770775,
-            13.7213788
+            100.4770461,
+            13.7213092
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 72,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 26
+          }
         },
         {
           "code": "RDP-01-027",
@@ -1054,11 +1194,18 @@
           ],
           "center": [
             100.4770495,
-            13.7212914
+            13.721291425
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 75,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 27
+          }
         },
         {
           "code": "RDP-01-028",
@@ -1097,12 +1244,19 @@
             ]
           ],
           "center": [
-            100.4770868,
-            13.7213304
+            100.47705539999998,
+            13.721260775000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 77,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 28
+          }
         },
         {
           "code": "RDP-01-029",
@@ -1141,12 +1295,19 @@
             ]
           ],
           "center": [
-            100.4770273,
-            13.7211734
+            100.4770588,
+            13.721243025
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 78,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 29
+          }
         },
         {
           "code": "RDP-01-030",
@@ -1197,12 +1358,19 @@
             ]
           ],
           "center": [
-            100.4770308,
-            13.7211557
+            100.4770654,
+            13.721221885714286
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 81,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 30
+          }
         },
         {
           "code": "RDP-01-006",
@@ -1245,12 +1413,19 @@
             ]
           ],
           "center": [
-            100.477138,
-            13.7212795
+            100.4771054,
+            13.721211579999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 85,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 6
+          }
         },
         {
           "code": "RDP-01-005",
@@ -1289,12 +1464,19 @@
             ]
           ],
           "center": [
-            100.477047,
-            13.721053
+            100.47710997499999,
+            13.721192175
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 86,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 5
+          }
         },
         {
           "code": "RDP-01-004",
@@ -1333,12 +1515,19 @@
             ]
           ],
           "center": [
-            100.4771448,
-            13.721244
+            100.4771134,
+            13.721174399999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 88,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 4
+          }
         },
         {
           "code": "RDP-01-003",
@@ -1378,11 +1567,18 @@
           ],
           "center": [
             100.4771193,
-            13.7211438
+            13.721143750000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 91,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 3
+          }
         },
         {
           "code": "RDP-01-002",
@@ -1422,11 +1618,18 @@
           ],
           "center": [
             100.4771227,
-            13.721126
+            13.721125975
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 92,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 2
+          }
         },
         {
           "code": "RDP-01-001",
@@ -1469,12 +1672,19 @@
             ]
           ],
           "center": [
-            100.4770946,
-            13.7210386
+            100.47712562,
+            13.721106299999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 94,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 1
+          }
         },
         {
           "code": "RDP-01-031",
@@ -1521,12 +1731,19 @@
             ]
           ],
           "center": [
-            100.4770351,
-            13.721133
+            100.47706805,
+            13.721205916666667
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 95,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 31
+          }
         },
         {
           "code": "RDP-01-032",
@@ -1565,12 +1782,19 @@
             ]
           ],
           "center": [
-            100.4771014,
-            13.7212544
+            100.47707,
+            13.721184825000002
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 96,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 32
+          }
         },
         {
           "code": "RDP-01-033",
@@ -1610,11 +1834,18 @@
           ],
           "center": [
             100.4770734,
-            13.7211671
+            13.72116705
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 99,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 33
+          }
         },
         {
           "code": "RDP-01-034",
@@ -1653,12 +1884,19 @@
             ]
           ],
           "center": [
-            100.4770478,
-            13.7210668
+            100.4770793,
+            13.721136425000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 101,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 34
+          }
         },
         {
           "code": "RDP-01-035",
@@ -1697,12 +1935,19 @@
             ]
           ],
           "center": [
-            100.4770827,
-            13.7211186
+            100.47708270000001,
+            13.721118650000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 102,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 35
+          }
         },
         {
           "code": "RDP-01-036",
@@ -1753,12 +1998,19 @@
             ]
           ],
           "center": [
-            100.4770861,
-            13.7211009
+            100.47708965714286,
+            13.721097585714286
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 105,
+            "name": "แผงร้านค้า",
+            "zone": "M",
+            "number": 36
+          }
         }
       ]
     },
@@ -1770,10 +2022,10 @@
       "color": "#f59e0b",
       "stallsAvailable": 12,
       "totalStalls": 12,
-      "realAreaSqm": 38,
+      "realAreaSqm": 37.76,
       "centroid": [
-        100.4770242,
-        13.7211425
+        100.47702389090908,
+        13.721137645454547
       ],
       "coordinates": [
         [
@@ -1875,12 +2127,19 @@
             ]
           ],
           "center": [
-            100.4769411,
-            13.7209585
+            100.47699691999999,
+            13.7210808
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 1,
+            "name": "แผงร้านค้า",
+            "zone": "B",
+            "number": 12
+          }
         },
         {
           "code": "RDP-02-001",
@@ -1923,12 +2182,19 @@
             ]
           ],
           "center": [
-            100.4769766,
-            13.7211884
+            100.47697600000001,
+            13.721189659999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 2,
+            "name": "แผงร้านค้า",
+            "zone": "B",
+            "number": 1
+          }
         },
         {
           "code": "RDP-02-003",
@@ -1979,12 +2245,19 @@
             ]
           ],
           "center": [
-            100.4770935,
-            13.7213932
+            100.47700325714285,
+            13.72119557142857
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 29,
+            "name": "แผงร้านค้า",
+            "zone": "B",
+            "number": 3
+          }
         },
         {
           "code": "RDP-02-002",
@@ -2023,12 +2296,19 @@
             ]
           ],
           "center": [
-            100.4770462,
-            13.7213146
+            100.476990275,
+            13.7211909
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 30,
+            "name": "แผงร้านค้า",
+            "zone": "B",
+            "number": 2
+          }
         },
         {
           "code": "RDP-02-004",
@@ -2071,12 +2351,19 @@
             ]
           ],
           "center": [
-            100.4770744,
-            13.7212678
+            100.47704176,
+            13.72119988
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 97,
+            "name": "แผงร้านค้า",
+            "zone": "B",
+            "number": 4
+          }
         },
         {
           "code": "RDP-02-005",
@@ -2115,12 +2402,19 @@
             ]
           ],
           "center": [
-            100.4770464,
-            13.7211805
+            100.477046375,
+            13.721180474999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 98,
+            "name": "แผงร้านค้า",
+            "zone": "B",
+            "number": 5
+          }
         },
         {
           "code": "RDP-02-006",
@@ -2160,11 +2454,18 @@
           ],
           "center": [
             100.4770498,
-            13.7211627
+            13.721162725
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 100,
+            "name": "แผงร้านค้า",
+            "zone": "B",
+            "number": 6
+          }
         },
         {
           "code": "RDP-02-007",
@@ -2203,12 +2504,19 @@
             ]
           ],
           "center": [
-            100.4770557,
-            13.7211321
+            100.477055675,
+            13.721132075
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 103,
+            "name": "แผงร้านค้า",
+            "zone": "B",
+            "number": 7
+          }
         },
         {
           "code": "RDP-02-008",
@@ -2247,12 +2555,19 @@
             ]
           ],
           "center": [
-            100.4770276,
-            13.7210447
+            100.4770591,
+            13.7211143
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 104,
+            "name": "แผงร้านค้า",
+            "zone": "B",
+            "number": 8
+          }
         },
         {
           "code": "RDP-02-009",
@@ -2295,12 +2610,19 @@
             ]
           ],
           "center": [
-            100.477094,
-            13.7211661
+            100.47706202000002,
+            13.7210946
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 106,
+            "name": "แผงร้านค้า",
+            "zone": "B",
+            "number": 9
+          }
         },
         {
           "code": "RDP-02-010",
@@ -2351,12 +2673,19 @@
             ]
           ],
           "center": [
-            100.4770993,
-            13.7212512
+            100.47702454285714,
+            13.721084814285716
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 130,
+            "name": "แผงร้านค้า",
+            "zone": "B",
+            "number": 10
+          }
         },
         {
           "code": "RDP-02-011",
@@ -2395,12 +2724,19 @@
             ]
           ],
           "center": [
-            100.4770107,
-            13.7210847
+            100.47701067499999,
+            13.721084699999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 132,
+            "name": "แผงร้านค้า",
+            "zone": "B",
+            "number": 11
+          }
         }
       ]
     },
@@ -2412,10 +2748,10 @@
       "color": "#0284c7",
       "stallsAvailable": 12,
       "totalStalls": 12,
-      "realAreaSqm": 38,
+      "realAreaSqm": 37.76,
       "centroid": [
-        100.4770003,
-        13.7212668
+        100.47700410833335,
+        13.721257999999999
       ],
       "coordinates": [
         [
@@ -2521,12 +2857,19 @@
             ]
           ],
           "center": [
-            100.4768613,
-            13.7209592
+            100.47697302,
+            13.7212052
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 3,
+            "name": "แผงร้านค้า",
+            "zone": "D",
+            "number": 12
+          }
         },
         {
           "code": "RDP-03-001",
@@ -2569,12 +2912,19 @@
             ]
           ],
           "center": [
-            100.4769527,
-            13.7213127
+            100.47695210000002,
+            13.72131402
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 4,
+            "name": "แผงร้านค้า",
+            "zone": "D",
+            "number": 1
+          }
         },
         {
           "code": "RDP-03-003",
@@ -2625,12 +2975,19 @@
             ]
           ],
           "center": [
-            100.4770696,
-            13.7215176
+            100.47697935714287,
+            13.721319957142859
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 31,
+            "name": "แผงร้านค้า",
+            "zone": "D",
+            "number": 3
+          }
         },
         {
           "code": "RDP-03-002",
@@ -2669,12 +3026,19 @@
             ]
           ],
           "center": [
-            100.4770223,
-            13.7214389
+            100.47696637499999,
+            13.72131525
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 32,
+            "name": "แผงร้านค้า",
+            "zone": "D",
+            "number": 2
+          }
         },
         {
           "code": "RDP-03-010",
@@ -2725,12 +3089,19 @@
             ]
           ],
           "center": [
-            100.4771278,
-            13.7214915
+            100.47700064285713,
+            13.72120917142857
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 35,
+            "name": "แผงร้านค้า",
+            "zone": "D",
+            "number": 10
+          }
         },
         {
           "code": "RDP-03-011",
@@ -2769,12 +3140,19 @@
             ]
           ],
           "center": [
-            100.4769868,
+            100.476986775,
             13.7212091
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 36,
+            "name": "แผงร้านค้า",
+            "zone": "D",
+            "number": 11
+          }
         },
         {
           "code": "RDP-03-004",
@@ -2817,12 +3195,19 @@
             ]
           ],
           "center": [
-            100.477019,
-            13.7213226
+            100.47701786,
+            13.72132426
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 73,
+            "name": "แผงร้านค้า",
+            "zone": "D",
+            "number": 4
+          }
         },
         {
           "code": "RDP-03-005",
@@ -2861,12 +3246,19 @@
             ]
           ],
           "center": [
-            100.476991,
-            13.7212353
+            100.47702245,
+            13.72130485
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 74,
+            "name": "แผงร้านค้า",
+            "zone": "D",
+            "number": 5
+          }
         },
         {
           "code": "RDP-03-006",
@@ -2905,12 +3297,19 @@
             ]
           ],
           "center": [
-            100.4770259,
-            13.7212871
+            100.477025875,
+            13.721287075000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 76,
+            "name": "แผงร้านค้า",
+            "zone": "D",
+            "number": 6
+          }
         },
         {
           "code": "RDP-03-007",
@@ -2949,12 +3348,19 @@
             ]
           ],
           "center": [
-            100.4770947,
-            13.7213956
+            100.477031775,
+            13.72125645
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 79,
+            "name": "แผงร้านค้า",
+            "zone": "D",
+            "number": 7
+          }
         },
         {
           "code": "RDP-03-008",
@@ -2993,12 +3399,19 @@
             ]
           ],
           "center": [
-            100.4770352,
-            13.7212387
+            100.47703519999999,
+            13.721238675
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 80,
+            "name": "แผงร้านค้า",
+            "zone": "D",
+            "number": 8
+          }
         },
         {
           "code": "RDP-03-009",
@@ -3041,12 +3454,19 @@
             ]
           ],
           "center": [
-            100.4770071,
-            13.7211513
+            100.47703812,
+            13.721219
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 82,
+            "name": "แผงร้านค้า",
+            "zone": "D",
+            "number": 9
+          }
         }
       ]
     },
@@ -3058,10 +3478,10 @@
       "color": "#ab77c8",
       "stallsAvailable": 12,
       "totalStalls": 12,
-      "realAreaSqm": 38,
+      "realAreaSqm": 37.76,
       "centroid": [
-        100.4769765,
-        13.7213905
+        100.4769764,
+        13.721384790909092
       ],
       "coordinates": [
         [
@@ -3163,12 +3583,19 @@
             ]
           ],
           "center": [
-            100.4769492,
-            13.721331
+            100.47694912,
+            13.721329560000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 5,
+            "name": "แผงร้านค้า",
+            "zone": "F",
+            "number": 12
+          }
         },
         {
           "code": "RDP-04-001",
@@ -3211,12 +3638,19 @@
             ]
           ],
           "center": [
-            100.4769288,
-            13.7214371
+            100.4769282,
+            13.721438379999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 6,
+            "name": "แผงร้านค้า",
+            "zone": "F",
+            "number": 1
+          }
         },
         {
           "code": "RDP-04-010",
@@ -3271,12 +3705,19 @@
             ]
           ],
           "center": [
-            100.4769466,
-            13.7212681
+            100.47697752500001,
+            13.721334237499999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 33,
+            "name": "แผงร้านค้า",
+            "zone": "F",
+            "number": 10
+          }
         },
         {
           "code": "RDP-04-011",
@@ -3315,12 +3756,19 @@
             ]
           ],
           "center": [
-            100.4769629,
-            13.7213335
+            100.476962875,
+            13.721333475
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 34,
+            "name": "แผงร้านค้า",
+            "zone": "F",
+            "number": 11
+          }
         },
         {
           "code": "RDP-04-004",
@@ -3363,12 +3811,19 @@
             ]
           ],
           "center": [
-            100.4769637,
-            13.7213774
+            100.47699396,
+            13.72144864
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 58,
+            "name": "แผงร้านค้า",
+            "zone": "F",
+            "number": 4
+          }
         },
         {
           "code": "RDP-04-005",
@@ -3407,12 +3862,19 @@
             ]
           ],
           "center": [
-            100.4769986,
-            13.7214292
+            100.47699855,
+            13.72142925
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 59,
+            "name": "แผงร้านค้า",
+            "zone": "F",
+            "number": 5
+          }
         },
         {
           "code": "RDP-04-006",
@@ -3451,12 +3913,19 @@
             ]
           ],
           "center": [
-            100.477002,
-            13.7214115
+            100.47700197500001,
+            13.721411474999998
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 61,
+            "name": "แผงร้านค้า",
+            "zone": "F",
+            "number": 6
+          }
         },
         {
           "code": "RDP-04-007",
@@ -3495,12 +3964,19 @@
             ]
           ],
           "center": [
-            100.4769764,
-            13.7213112
+            100.477007875,
+            13.721380825
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 64,
+            "name": "แผงร้านค้า",
+            "zone": "F",
+            "number": 7
+          }
         },
         {
           "code": "RDP-04-008",
@@ -3539,12 +4015,19 @@
             ]
           ],
           "center": [
-            100.4769484,
-            13.7212239
+            100.4770113,
+            13.72136305
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 65,
+            "name": "แผงร้านค้า",
+            "zone": "F",
+            "number": 8
+          }
         },
         {
           "code": "RDP-04-009",
@@ -3587,12 +4070,19 @@
             ]
           ],
           "center": [
-            100.4770461,
-            13.7214149
+            100.47701422,
+            13.72134334
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 67,
+            "name": "แผงร้านค้า",
+            "zone": "F",
+            "number": 9
+          }
         },
         {
           "code": "RDP-04-003",
@@ -3643,12 +4133,19 @@
             ]
           ],
           "center": [
-            100.476832,
-            13.7211692
+            100.47695545714285,
+            13.721444328571426
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 127,
+            "name": "แผงร้านค้า",
+            "zone": "F",
+            "number": 3
+          }
         },
         {
           "code": "RDP-04-002",
@@ -3687,12 +4184,19 @@
             ]
           ],
           "center": [
-            100.4769425,
+            100.476942475,
             13.7214396
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 129,
+            "name": "แผงร้านค้า",
+            "zone": "F",
+            "number": 2
+          }
         }
       ]
     },
@@ -3704,10 +4208,10 @@
       "color": "#ea580c",
       "stallsAvailable": 12,
       "totalStalls": 12,
-      "realAreaSqm": 38,
+      "realAreaSqm": 37.75,
       "centroid": [
-        100.4771181,
-        13.7214164
+        100.47712432,
+        13.721423640000001
       ],
       "coordinates": [
         [
@@ -3805,12 +4309,19 @@
             ]
           ],
           "center": [
-            100.4770914,
-            13.7213536
+            100.47714747999999,
+            13.7214787
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 12,
+            "name": "แผงร้านค้า",
+            "zone": "E",
+            "number": 12
+          }
         },
         {
           "code": "RDP-05-001",
@@ -3853,12 +4364,19 @@
             ]
           ],
           "center": [
-            100.4772237,
-            13.7214948
+            100.47716840000001,
+            13.72136984
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 13,
+            "name": "แผงร้านค้า",
+            "zone": "E",
+            "number": 1
+          }
         },
         {
           "code": "RDP-05-010",
@@ -3909,12 +4427,19 @@
             ]
           ],
           "center": [
-            100.4770713,
-            13.7213661
+            100.47711985714287,
+            13.721474714285714
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 38,
+            "name": "แผงร้านค้า",
+            "zone": "E",
+            "number": 10
+          }
         },
         {
           "code": "RDP-05-011",
@@ -3953,12 +4478,19 @@
             ]
           ],
           "center": [
-            100.4771337,
-            13.7214748
+            100.47713372500002,
+            13.721474775
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 39,
+            "name": "แผงร้านค้า",
+            "zone": "E",
+            "number": 11
+          }
         },
         {
           "code": "RDP-05-009",
@@ -4005,12 +4537,19 @@
             ]
           ],
           "center": [
-            100.4770824,
-            13.721463
+            100.47708386666666,
+            13.721466366666668
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 43,
+            "name": "แผงร้านค้า",
+            "zone": "E",
+            "number": 9
+          }
         },
         {
           "code": "RDP-05-008",
@@ -4049,12 +4588,19 @@
             ]
           ],
           "center": [
-            100.4771173,
-            13.7215148
+            100.4770858,
+            13.721445249999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 44,
+            "name": "แผงร้านค้า",
+            "zone": "E",
+            "number": 8
+          }
         },
         {
           "code": "RDP-05-007",
@@ -4094,11 +4640,18 @@
           ],
           "center": [
             100.4770892,
-            13.7214275
+            13.721427475
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 47,
+            "name": "แผงร้านค้า",
+            "zone": "E",
+            "number": 7
+          }
         },
         {
           "code": "RDP-05-006",
@@ -4137,12 +4690,19 @@
             ]
           ],
           "center": [
-            100.4770951,
-            13.7213968
+            100.47709509999999,
+            13.72139685
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 49,
+            "name": "แผงร้านค้า",
+            "zone": "E",
+            "number": 6
+          }
         },
         {
           "code": "RDP-05-005",
@@ -4182,11 +4742,18 @@
           ],
           "center": [
             100.4770985,
-            13.7213791
+            13.721379075000002
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 50,
+            "name": "แผงร้านค้า",
+            "zone": "E",
+            "number": 5
+          }
         },
         {
           "code": "RDP-05-004",
@@ -4237,12 +4804,19 @@
             ]
           ],
           "center": [
-            100.4770705,
-            13.7212917
+            100.47710538571428,
+            13.721358014285713
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 53,
+            "name": "แผงร้านค้า",
+            "zone": "E",
+            "number": 4
+          }
         },
         {
           "code": "RDP-05-003",
@@ -4293,12 +4867,19 @@
             ]
           ],
           "center": [
-            100.4771238,
-            13.7213274
+            100.47714115714284,
+            13.721363914285714
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 119,
+            "name": "แผงร้านค้า",
+            "zone": "E",
+            "number": 3
+          }
         },
         {
           "code": "RDP-05-002",
@@ -4337,12 +4918,19 @@
             ]
           ],
           "center": [
-            100.4771541,
+            100.47715415,
             13.7213686
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 120,
+            "name": "แผงร้านค้า",
+            "zone": "E",
+            "number": 2
+          }
         }
       ]
     },
@@ -4354,10 +4942,10 @@
       "color": "#f59e0b",
       "stallsAvailable": 12,
       "totalStalls": 12,
-      "realAreaSqm": 38,
+      "realAreaSqm": 37.74,
       "centroid": [
-        100.4771421,
-        13.7212944
+        100.47714105833332,
+        13.721298558333336
       ],
       "coordinates": [
         [
@@ -4467,12 +5055,19 @@
             ]
           ],
           "center": [
-            100.4771713,
-            13.7213529
+            100.47717245,
+            13.721354499999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 14,
+            "name": "แผงร้านค้า",
+            "zone": "C",
+            "number": 12
+          }
         },
         {
           "code": "RDP-06-001",
@@ -4515,12 +5110,19 @@
             ]
           ],
           "center": [
-            100.4771357,
-            13.721123
+            100.47719229999998,
+            13.721245439999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 15,
+            "name": "แผงร้านค้า",
+            "zone": "C",
+            "number": 1
+          }
         },
         {
           "code": "RDP-06-009",
@@ -4571,12 +5173,19 @@
             ]
           ],
           "center": [
-            100.4771063,
-            13.7213387
+            100.4771079,
+            13.721342885714288
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 19,
+            "name": "แผงร้านค้า",
+            "zone": "C",
+            "number": 9
+          }
         },
         {
           "code": "RDP-06-008",
@@ -4615,12 +5224,19 @@
             ]
           ],
           "center": [
-            100.4770782,
-            13.7212513
+            100.4771097,
+            13.721320875
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 20,
+            "name": "แผงร้านค้า",
+            "zone": "C",
+            "number": 8
+          }
         },
         {
           "code": "RDP-06-007",
@@ -4660,11 +5276,18 @@
           ],
           "center": [
             100.4771131,
-            13.7213031
+            13.721303125
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 22,
+            "name": "แผงร้านค้า",
+            "zone": "C",
+            "number": 7
+          }
         },
         {
           "code": "RDP-06-006",
@@ -4704,11 +5327,18 @@
           ],
           "center": [
             100.477119,
-            13.7212725
+            13.721272475
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 23,
+            "name": "แผงร้านค้า",
+            "zone": "C",
+            "number": 6
+          }
         },
         {
           "code": "RDP-06-005",
@@ -4747,12 +5377,19 @@
             ]
           ],
           "center": [
-            100.4771224,
-            13.7212547
+            100.47712240000001,
+            13.721254700000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 24,
+            "name": "แผงร้านค้า",
+            "zone": "C",
+            "number": 5
+          }
         },
         {
           "code": "RDP-06-004",
@@ -4799,12 +5436,19 @@
             ]
           ],
           "center": [
-            100.4771573,
-            13.7213065
+            100.47712843333333,
+            13.721234333333335
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 25,
+            "name": "แผงร้านค้า",
+            "zone": "C",
+            "number": 4
+          }
         },
         {
           "code": "RDP-06-010",
@@ -4855,12 +5499,19 @@
             ]
           ],
           "center": [
-            100.4770952,
-            13.7212417
+            100.47714377142857,
+            13.721350342857145
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 40,
+            "name": "แผงร้านค้า",
+            "zone": "C",
+            "number": 10
+          }
         },
         {
           "code": "RDP-06-011",
@@ -4899,12 +5550,19 @@
             ]
           ],
           "center": [
-            100.4771576,
+            100.47715765000001,
             13.7213504
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 41,
+            "name": "แผงร้านค้า",
+            "zone": "C",
+            "number": 11
+          }
         },
         {
           "code": "RDP-06-003",
@@ -4955,12 +5613,19 @@
             ]
           ],
           "center": [
-            100.477308,
-            13.7215576
+            100.47716505714287,
+            13.721239528571429
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 122,
+            "name": "แผงร้านค้า",
+            "zone": "C",
+            "number": 3
+          }
         },
         {
           "code": "RDP-06-002",
@@ -4999,12 +5664,19 @@
             ]
           ],
           "center": [
-            100.477234,
-            13.7213679
+            100.47717804999999,
+            13.721244200000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 124,
+            "name": "แผงร้านค้า",
+            "zone": "C",
+            "number": 2
+          }
         }
       ]
     },
@@ -5016,10 +5688,10 @@
       "color": "#0284c7",
       "stallsAvailable": 12,
       "totalStalls": 12,
-      "realAreaSqm": 38,
+      "realAreaSqm": 37.75,
       "centroid": [
-        100.4771661,
-        13.721169
+        100.47716763636366,
+        13.72117750909091
       ],
       "coordinates": [
         [
@@ -5125,12 +5797,19 @@
             ]
           ],
           "center": [
-            100.4771392,
-            13.7211048
+            100.47719643333333,
+            13.721229683333334
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 16,
+            "name": "แผงร้านค้า",
+            "zone": "A",
+            "number": 12
+          }
         },
         {
           "code": "RDP-07-001",
@@ -5173,12 +5852,19 @@
             ]
           ],
           "center": [
-            100.4772156,
-            13.7211224
+            100.4772162,
+            13.72112108
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 17,
+            "name": "แผงร้านค้า",
+            "zone": "A",
+            "number": 1
+          }
         },
         {
           "code": "RDP-07-009",
@@ -5229,12 +5915,19 @@
             ]
           ],
           "center": [
-            100.4771302,
-            13.7212143
+            100.47713231428573,
+            13.721218600000002
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 83,
+            "name": "แผงร้านค้า",
+            "zone": "A",
+            "number": 9
+          }
         },
         {
           "code": "RDP-07-008",
@@ -5274,11 +5967,18 @@
           ],
           "center": [
             100.4771336,
-            13.7211965
+            13.721196525
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 84,
+            "name": "แผงร้านค้า",
+            "zone": "A",
+            "number": 8
+          }
         },
         {
           "code": "RDP-07-007",
@@ -5318,11 +6018,18 @@
           ],
           "center": [
             100.477137,
-            13.7211787
+            13.721178750000002
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 87,
+            "name": "แผงร้านค้า",
+            "zone": "A",
+            "number": 7
+          }
         },
         {
           "code": "RDP-07-006",
@@ -5361,12 +6068,19 @@
             ]
           ],
           "center": [
-            100.4771429,
-            13.7211481
+            100.47714290000002,
+            13.721148075
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 89,
+            "name": "แผงร้านค้า",
+            "zone": "A",
+            "number": 6
+          }
         },
         {
           "code": "RDP-07-005",
@@ -5405,12 +6119,19 @@
             ]
           ],
           "center": [
-            100.4771778,
-            13.7211999
+            100.4771463,
+            13.721130325
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 90,
+            "name": "แผงร้านค้า",
+            "zone": "A",
+            "number": 5
+          }
         },
         {
           "code": "RDP-07-004",
@@ -5461,12 +6182,19 @@
             ]
           ],
           "center": [
-            100.4771497,
-            13.7211126
+            100.47715295714285,
+            13.7211092
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 93,
+            "name": "แผงร้านค้า",
+            "zone": "A",
+            "number": 4
+          }
         },
         {
           "code": "RDP-07-003",
@@ -5517,12 +6245,19 @@
             ]
           ],
           "center": [
-            100.477225,
-            13.7211968
+            100.47718895714286,
+            13.721115142857144
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 116,
+            "name": "แผงร้านค้า",
+            "zone": "A",
+            "number": 3
+          }
         },
         {
           "code": "RDP-07-010",
@@ -5573,12 +6308,19 @@
             ]
           ],
           "center": [
-            100.4771191,
-            13.7211174
+            100.47716767142856,
+            13.721225985714286
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 121,
+            "name": "แผงร้านค้า",
+            "zone": "A",
+            "number": 10
+          }
         },
         {
           "code": "RDP-07-011",
@@ -5617,12 +6359,19 @@
             ]
           ],
           "center": [
-            100.4771815,
-            13.721226
+            100.47718155000001,
+            13.721226000000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 123,
+            "name": "แผงร้านค้า",
+            "zone": "A",
+            "number": 11
+          }
         },
         {
           "code": "RDP-07-002",
@@ -5661,12 +6410,19 @@
             ]
           ],
           "center": [
-            100.477146,
-            13.7209962
+            100.47720195000001,
+            13.72111985
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 125,
+            "name": "แผงร้านค้า",
+            "zone": "A",
+            "number": 2
+          }
         }
       ]
     },
@@ -5678,10 +6434,10 @@
       "color": "#ab77c8",
       "stallsAvailable": 10,
       "totalStalls": 10,
-      "realAreaSqm": 28,
+      "realAreaSqm": 27.82,
       "centroid": [
-        100.4771083,
-        13.7210854
+        100.47711736250001,
+        13.7210881625
       ],
       "coordinates": [
         [
@@ -5775,12 +6531,19 @@
             ]
           ],
           "center": [
-            100.4770005,
-            13.721064
+            100.47699866666666,
+            13.7210659
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 0,
+            "name": "แผงร้านค้า",
+            "zone": "G",
+            "number": 1
+          }
         },
         {
           "code": "RDP-08-010",
@@ -5823,12 +6586,19 @@
             ]
           ],
           "center": [
-            100.477331,
-            13.7213515
+            100.47721918,
+            13.72110554
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 18,
+            "name": "แผงร้านค้า",
+            "zone": "G",
+            "number": 10
+          }
         },
         {
           "code": "RDP-08-007",
@@ -5875,12 +6645,19 @@
             ]
           ],
           "center": [
-            100.477145,
-            13.7210757
+            100.47715436666665,
+            13.721094566666666
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 107,
+            "name": "แผงร้านค้า",
+            "zone": "G",
+            "number": 7
+          }
         },
         {
           "code": "RDP-08-006",
@@ -5923,12 +6700,19 @@
             ]
           ],
           "center": [
-            100.4771606,
-            13.7211526
+            100.47713006000001,
+            13.721089180000002
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 108,
+            "name": "แผงร้านค้า",
+            "zone": "G",
+            "number": 6
+          }
         },
         {
           "code": "RDP-08-005",
@@ -5975,12 +6759,19 @@
             ]
           ],
           "center": [
-            100.4770814,
-            13.7210641
+            100.47709076666666,
+            13.721082866666668
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 109,
+            "name": "แผงร้านค้า",
+            "zone": "G",
+            "number": 5
+          }
         },
         {
           "code": "RDP-08-004",
@@ -6023,12 +6814,19 @@
             ]
           ],
           "center": [
-            100.4770605,
-            13.7210602
+            100.47706642,
+            13.72107748
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 110,
+            "name": "แผงร้านค้า",
+            "zone": "G",
+            "number": 4
+          }
         },
         {
           "code": "RDP-08-008",
@@ -6075,12 +6873,19 @@
             ]
           ],
           "center": [
-            100.4772132,
-            13.7211483
+            100.47719183333334,
+            13.721102333333334
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 115,
+            "name": "แผงร้านค้า",
+            "zone": "G",
+            "number": 8
+          }
         },
         {
           "code": "RDP-08-009",
@@ -6119,12 +6924,19 @@
             ]
           ],
           "center": [
-            100.4771495,
-            13.7209779
+            100.47720545,
+            13.721101625
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 117,
+            "name": "แผงร้านค้า",
+            "zone": "G",
+            "number": 9
+          }
         },
         {
           "code": "RDP-08-003",
@@ -6171,12 +6983,19 @@
             ]
           ],
           "center": [
-            100.477038,
-            13.7210922
+            100.47702663333332,
+            13.72107185
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 131,
+            "name": "แผงร้านค้า",
+            "zone": "G",
+            "number": 3
+          }
         },
         {
           "code": "RDP-08-002",
@@ -6215,12 +7034,19 @@
             ]
           ],
           "center": [
-            100.4770142,
+            100.47701417500001,
             13.7210665
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 133,
+            "name": "แผงร้านค้า",
+            "zone": "G",
+            "number": 2
+          }
         }
       ]
     },
@@ -6232,10 +7058,10 @@
       "color": "#6366f1",
       "stallsAvailable": 10,
       "totalStalls": 10,
-      "realAreaSqm": 28,
+      "realAreaSqm": 27.55,
       "centroid": [
-        100.4770365,
-        13.7214746
+        100.4770213818182,
+        13.72147290909091
       ],
       "coordinates": [
         [
@@ -6337,12 +7163,19 @@
             ]
           ],
           "center": [
-            100.4769253,
-            13.7214553
+            100.47692522000001,
+            13.721453920000002
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 7,
+            "name": "แผงร้านค้า",
+            "zone": "H",
+            "number": 1
+          }
         },
         {
           "code": "RDP-09-010",
@@ -6385,12 +7218,19 @@
             ]
           ],
           "center": [
-            100.4772557,
-            13.7217429
+            100.4771445,
+            13.72149422
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 11,
+            "name": "แผงร้านค้า",
+            "zone": "H",
+            "number": 10
+          }
         },
         {
           "code": "RDP-09-009",
@@ -6429,12 +7269,19 @@
             ]
           ],
           "center": [
-            100.4770743,
-            13.7213693
+            100.477130225,
+            13.721493
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 37,
+            "name": "แผงร้านค้า",
+            "zone": "H",
+            "number": 9
+          }
         },
         {
           "code": "RDP-09-007",
@@ -6485,12 +7332,19 @@
             ]
           ],
           "center": [
-            100.4771427,
-            13.7216284
+            100.47708078571428,
+            13.721480942857143
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 111,
+            "name": "แผงร้านค้า",
+            "zone": "H",
+            "number": 7
+          }
         },
         {
           "code": "RDP-09-006",
@@ -6533,12 +7387,19 @@
             ]
           ],
           "center": [
-            100.4771218,
-            13.7216246
+            100.47705536000001,
+            13.72147784
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 112,
+            "name": "แผงร้านค้า",
+            "zone": "H",
+            "number": 6
+          }
         },
         {
           "code": "RDP-09-005",
@@ -6585,12 +7446,19 @@
             ]
           ],
           "center": [
-            100.4769697,
-            13.7213747
+            100.47701639999998,
+            13.721469766666667
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 113,
+            "name": "แผงร้านค้า",
+            "zone": "H",
+            "number": 5
+          }
         },
         {
           "code": "RDP-09-004",
@@ -6633,12 +7501,19 @@
             ]
           ],
           "center": [
-            100.4769488,
-            13.7213709
+            100.47699172,
+            13.72146614
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 114,
+            "name": "แผงร้านค้า",
+            "zone": "H",
+            "number": 4
+          }
         },
         {
           "code": "RDP-09-008",
@@ -6689,12 +7564,19 @@
             ]
           ],
           "center": [
-            100.4771533,
-            13.72157
+            100.47711724285715,
+            13.721488271428571
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 118,
+            "name": "แผงร้านค้า",
+            "zone": "H",
+            "number": 8
+          }
         },
         {
           "code": "RDP-09-003",
@@ -6745,12 +7627,19 @@
             ]
           ],
           "center": [
-            100.4770096,
-            13.7215847
+            100.47695285714285,
+            13.721457885714285
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 126,
+            "name": "แผงร้านค้า",
+            "zone": "H",
+            "number": 3
+          }
         },
         {
           "code": "RDP-09-002",
@@ -6789,12 +7678,19 @@
             ]
           ],
           "center": [
-            100.4769949,
-            13.7215815
+            100.47693897500001,
+            13.72145785
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 128,
+            "name": "แผงร้านค้า",
+            "zone": "H",
+            "number": 2
+          }
         }
       ]
     },
@@ -6806,10 +7702,10 @@
       "color": "#ea580c",
       "stallsAvailable": 9,
       "totalStalls": 9,
-      "realAreaSqm": 1879,
+      "realAreaSqm": 1878.54,
       "centroid": [
-        100.4772014,
-        13.7207497
+        100.47712302,
+        13.721174569999999
       ],
       "coordinates": [
         [
@@ -6903,12 +7799,19 @@
             ]
           ],
           "center": [
-            100.4771465,
-            13.720414
+            100.47714965,
+            13.72042015
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 136,
+            "name": "ซักล้าง",
+            "zone": "-",
+            "number": 1
+          }
         },
         {
           "code": "RDP-10-001-D02",
@@ -6947,12 +7850,19 @@
             ]
           ],
           "center": [
-            100.4772574,
-            13.7204587
+            100.47724837500002,
+            13.72043895
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 138,
+            "name": "เก็บของ",
+            "zone": "-",
+            "number": 1
+          }
         },
         {
           "code": "RDP-10-002",
@@ -6991,12 +7901,19 @@
             ]
           ],
           "center": [
-            100.4772661,
-            13.7204204
+            100.477277,
+            13.720444375000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 139,
+            "name": "เก็บของ",
+            "zone": "-",
+            "number": 2
+          }
         },
         {
           "code": "RDP-10-001-D03",
@@ -7035,12 +7952,19 @@
             ]
           ],
           "center": [
-            100.4771969,
-            13.7202268
+            100.4771977,
+            13.7202279
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 140,
+            "name": "ร้านฉอเล้ง",
+            "zone": "-",
+            "number": 1
+          }
         },
         {
           "code": "RDP-10-001-D04",
@@ -7079,12 +8003,19 @@
             ]
           ],
           "center": [
-            100.477287,
-            13.7202433
+            100.47728755,
+            13.720244475000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 141,
+            "name": "ร้านข้าวต้มปลา",
+            "zone": "-",
+            "number": 1
+          }
         },
         {
           "code": "RDP-10-001-D05",
@@ -7123,12 +8054,19 @@
             ]
           ],
           "center": [
-            100.4773721,
-            13.7202567
+            100.477374125,
+            13.7202611
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 142,
+            "name": "ร้านจิ้มจุ้ม",
+            "zone": "-",
+            "number": 1
+          }
         },
         {
           "code": "RDP-10-001-D06",
@@ -7167,12 +8105,19 @@
             ]
           ],
           "center": [
-            100.4773388,
+            100.477338825,
             13.7204266
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 143,
+            "name": "ร้านพลาสติก",
+            "zone": "-",
+            "number": 1
+          }
         },
         {
           "code": "RDP-10-001-D07",
@@ -7211,12 +8156,19 @@
             ]
           ],
           "center": [
-            100.4769391,
-            13.7220113
+            100.4769389,
+            13.722011275
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 144,
+            "name": "สนามกีฬา",
+            "zone": "-",
+            "number": 1
+          }
         },
         {
           "code": "RDP-10-001-D08",
@@ -7255,14 +8207,267 @@
             ]
           ],
           "center": [
-            100.4771021,
-            13.7221907
+            100.477102925,
+            13.722192549999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 145,
+            "name": "ท่าเรือ",
+            "zone": "-",
+            "number": 1
+          }
         }
       ]
+    }
+  ],
+  "siteFeatures": [
+    {
+      "type": "Feature",
+      "properties": {
+        "FID": 8,
+        "name": "สถานธนานุบาลกรุงเทพมหานคร",
+        "zone": "H",
+        "number": 1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.4768959,
+              13.7215718
+            ],
+            [
+              100.4768806,
+              13.7216514
+            ],
+            [
+              100.4769856,
+              13.7216706
+            ],
+            [
+              100.4770009,
+              13.7215911
+            ],
+            [
+              100.4769959,
+              13.7215902
+            ],
+            [
+              100.4769645,
+              13.7215844
+            ],
+            [
+              100.4769621,
+              13.7215839
+            ],
+            [
+              100.4769595,
+              13.7215835
+            ],
+            [
+              100.4769282,
+              13.7215777
+            ],
+            [
+              100.4769232,
+              13.7215768
+            ],
+            [
+              100.4769009,
+              13.7215727
+            ],
+            [
+              100.4768959,
+              13.7215718
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "FID": 134,
+        "name": "บันได",
+        "zone": "G",
+        "number": 1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.4770043,
+              13.721013
+            ],
+            [
+              100.4770459,
+              13.7210206
+            ],
+            [
+              100.477049,
+              13.7210054
+            ],
+            [
+              100.4770075,
+              13.7209973
+            ],
+            [
+              100.4770043,
+              13.721013
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "FID": 135,
+        "name": "บันได",
+        "zone": "G",
+        "number": 2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.4771922,
+              13.7210464
+            ],
+            [
+              100.4772338,
+              13.721054
+            ],
+            [
+              100.4772369,
+              13.7210388
+            ],
+            [
+              100.4771954,
+              13.7210308
+            ],
+            [
+              100.4771922,
+              13.7210464
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "FID": 137,
+        "name": "สุขา",
+        "zone": "-",
+        "number": 1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.4771943,
+              13.7204414
+            ],
+            [
+              100.4772324,
+              13.7204485
+            ],
+            [
+              100.4772371,
+              13.7204245
+            ],
+            [
+              100.477199,
+              13.7204175
+            ],
+            [
+              100.4771943,
+              13.7204414
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "FID": 146,
+        "name": "บันได",
+        "zone": "-",
+        "number": 3
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.4771218,
+              13.72029
+            ],
+            [
+              100.4771634,
+              13.7202976
+            ],
+            [
+              100.4771665,
+              13.7202824
+            ],
+            [
+              100.477125,
+              13.7202743
+            ],
+            [
+              100.4771218,
+              13.72029
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "FID": 147,
+        "name": "บันได",
+        "zone": "-",
+        "number": 4
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.4773662,
+              13.7203346
+            ],
+            [
+              100.4774078,
+              13.7203422
+            ],
+            [
+              100.4774109,
+              13.720327
+            ],
+            [
+              100.4773694,
+              13.7203189
+            ],
+            [
+              100.4773662,
+              13.7203346
+            ]
+          ]
+        ]
+      }
     }
   ]
 }

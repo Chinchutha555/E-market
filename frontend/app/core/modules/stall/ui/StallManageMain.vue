@@ -1656,7 +1656,7 @@
                             <polyline points="15 18 9 12 15 6"></polyline>
                           </svg>
                         </button>
-                        <strong>{{ stallDrawerMode === 'edit' ? (isCreatingNewStall ? 'เพิ่มแผงเช่าใหม่' : `แก้ไขแผง ${stallEdit.ident}`) : `แผง ${stallEdit.ident}` }}</strong>
+                        <strong>{{ stallDrawerMode === 'edit' ? (isCreatingNewStall ? 'เพิ่มแผงเช่าใหม่' : `แก้ไขแผง ${stallEdit.ident}`) : `แผง ${stallDisplayNumber}` }}</strong>
                         <span
                           v-if="stallDrawerMode !== 'edit'"
                           class="issd-status-pill"
@@ -1696,7 +1696,7 @@
                       title="คลิกเพื่อดูภาพแผงเช่าทั้งหมด"
                       @click="openInspectPhotoPreview(0)"
                     >
-                      <img :src="inspectStallPhotos[0]" :alt="`ภาพแผง ${stallEdit.ident}`" />
+                      <img :src="inspectStallPhotos[0]" :alt="`ภาพแผง ${stallDisplayNumber}`" />
                       <div class="issd-photo-count-badge">
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <span>{{ inspectStallPhotos.length }} รูป</span>
@@ -1736,7 +1736,7 @@
                       title="คลิกเพื่อดูภาพแผงเช่าทั้งหมด"
                       @click="openInspectPhotoPreview(0)"
                     >
-                      <img :src="inspectStallPhotos[0]" :alt="`ภาพแผง ${stallEdit.ident}`" />
+                      <img :src="inspectStallPhotos[0]" :alt="`ภาพแผง ${stallDisplayNumber}`" />
                       <div class="issd-photo-count-badge">
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                         <span>{{ inspectStallPhotos.length }} รูป</span>
@@ -2207,7 +2207,7 @@
                         title="คลิกเพื่อดูภาพแผงเช่าทั้งหมด"
                         @click="openInspectPhotoPreview(0)"
                       >
-                        <img :src="inspectStallPhotos[0]" :alt="`ภาพแผง ${stallEdit.ident}`" />
+                        <img :src="inspectStallPhotos[0]" :alt="`ภาพแผง ${stallDisplayNumber}`" />
                         <div class="issd-photo-count-badge">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                           <span>{{ inspectStallPhotos.length }} รูป (คลิกดูภาพขยาย)</span>
@@ -3048,7 +3048,7 @@
       <AppModal
         v-model="showAddSubtenantModal"
         title="เพิ่มผู้เช่าช่วง"
-        :description="`บันทึกข้อมูลผู้เช่าช่วงสำหรับแผงค้า ${stallEdit.ident || '-'}`"
+        :description="`บันทึกข้อมูลผู้เช่าช่วงสำหรับแผงค้า ${stallDisplayNumber || '-'}`"
       >
         <form class="issd-modal-form" novalidate @submit.prevent="saveSubtenant">
           <div class="issd-photo-upload-wrap full">
@@ -3152,7 +3152,7 @@
       <AppModal
         v-model="showAddMaintenanceModal"
         title="แจ้งซ่อม / ขออนุญาตดำเนินการ"
-        :description="`บันทึกรายการสำหรับแผงค้า ${stallEdit.ident || '-'}`"
+        :description="`บันทึกรายการสำหรับแผงค้า ${stallDisplayNumber || '-'}`"
       >
         <form class="issd-modal-form" novalidate @submit.prevent="saveMaintenance">
           <label>
@@ -3207,7 +3207,7 @@
       <AppModal
         v-model="showAddPaymentModal"
         title="บันทึกการชำระเงิน"
-        :description="`บันทึกประวัติรับชำระสำหรับแผงค้า ${stallEdit.ident || '-'}`"
+        :description="`บันทึกประวัติรับชำระสำหรับแผงค้า ${stallDisplayNumber || '-'}`"
       >
         <form class="issd-modal-form" novalidate @submit.prevent="savePayment">
           <label>
@@ -3245,7 +3245,7 @@
       <AppModal
         v-model="showContractModal"
         :title="isEditingContract ? 'แก้ไขสัญญาเช่า' : 'ออกสัญญาเช่าใหม่'"
-        :description="`จัดการสัญญาเช่าสำหรับแผงค้า ${stallEdit.ident || '-'}`"
+        :description="`จัดการสัญญาเช่าสำหรับแผงค้า ${stallDisplayNumber || '-'}`"
       >
         <form class="issd-modal-form" novalidate @submit.prevent="saveContract">
           <label>
@@ -3357,7 +3357,7 @@
           <div class="inspect-photo-modal">
             <div class="ipm-head">
               <div>
-                <strong>ภาพตัวอย่างแผง {{ stallEdit.ident }}</strong>
+                <strong>ภาพตัวอย่างแผง {{ stallDisplayNumber }}</strong>
                 <span>{{ selectedProject?.name || stallEdit.project_name }} · {{ formatFloorDisplay(stallEdit.floor) }}</span>
               </div>
               <button type="button" class="ipm-close" aria-label="ปิดตัวอย่างภาพ" @click="showInspectPhotoModal = false">
@@ -3365,7 +3365,7 @@
               </button>
             </div>
             <div class="ipm-stage">
-              <img :src="inspectStallPhotos[inspectPhotoIndex]" :alt="`ภาพแผง ${stallEdit.ident}`" class="ipm-main-img" />
+              <img :src="inspectStallPhotos[inspectPhotoIndex]" :alt="`ภาพแผง ${stallDisplayNumber}`" class="ipm-main-img" />
               <button type="button" class="ipm-nav is-prev" aria-label="ภาพก่อนหน้า" @click="stepInspectPhoto(-1)">‹</button>
               <button type="button" class="ipm-nav is-next" aria-label="ภาพถัดไป" @click="stepInspectPhoto(1)">›</button>
               <span class="ipm-counter">{{ inspectPhotoIndex + 1 }} / {{ inspectStallPhotos.length }}</span>
@@ -4339,6 +4339,8 @@ const showInspectStallOverlay = ref(false)
 const showInspectPhotoModal = ref(false)
 const emptyStall = () => ({ id: 0, ident: '', name: '', description: '', category: '', zone_id: 1, zone_name: 'โซน A', project_name: selectedProject.value?.name || '', floor: '1', width: 2, depth: 2, daily_rent: 150, monthly_rent: 1800, stall_status: 'available', coordinates_geojson: '', published: false })
 const stallEdit = ref(emptyStall())
+const selectedStallSurveyNumber = ref('')
+const stallDisplayNumber = computed(() => selectedStallSurveyNumber.value || String(stallEdit.value.ident || ''))
 const inspectPhotoIndex = ref(0)
 const DEFAULT_INSPECT_STALL_PHOTOS = [
   '/images/stall_3d_perspective.jpg',
@@ -7284,7 +7286,7 @@ const updateStallPolygon = async (project: ProjectZone, updatedStall: any) => {
       ...stored,
       width: updatedStall.widthM || stored.width || 2,
       depth: updatedStall.depthM || stored.depth || 2,
-      coordinates_geojson: JSON.stringify({ type: 'Polygon', coordinates: [updatedStall.coordinates] })
+      coordinates_geojson: JSON.stringify({ type: 'Polygon', coordinates: [updatedStall.coordinates, ...(updatedStall.polygonHoles || [])] })
     }
     const sIdx = stalls.value.findIndex(s => String(s.ident || s.stall_ident).toUpperCase() === code.toUpperCase())
     if (sIdx >= 0) stalls.value[sIdx] = updatedRecord
@@ -7494,6 +7496,7 @@ const finishCloseStall = (preserveProjectMorph = false) => {
   stallDrawerMode.value = 'detail'
   stallDetailTab.value = 'info'
   pendingStallLayout.value = null
+  selectedStallSurveyNumber.value = ''
 }
 const closeStall = () => {
   clearStallDrawerResizeTimer()
@@ -7560,8 +7563,10 @@ const selectStall = async (mapStall: any) => {
   resetStallErrors()
   isMiniActionAlertExpanded.value = false
   const code = String(mapStall.code || mapStall.ident || '')
+  const sourceNumber = mapStall.sourceProperties?.number ?? mapStall.sourceProperties?.Number
+  selectedStallSurveyNumber.value = String(sourceNumber ?? '').trim()
   const stored = stalls.value.find(s => String(s.ident || s.stall_ident).toUpperCase() === code.toUpperCase())
-  const geometry = mapStall.coordinates?.length ? JSON.stringify({ type: 'Polygon', coordinates: [mapStall.coordinates] }) : ''
+  const geometry = mapStall.coordinates?.length ? JSON.stringify({ type: 'Polygon', coordinates: [mapStall.coordinates, ...(mapStall.polygonHoles || [])] }) : ''
   contracts.value = []
   stallHistory.value = []
   stallDetailTab.value = 'info'
