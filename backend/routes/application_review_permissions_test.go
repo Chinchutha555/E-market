@@ -44,7 +44,7 @@ func TestApplicationReviewerPermissions(t *testing.T) {
 	}
 	call := func(user models.User, action string) int {
 		token, _ := helpers.GenerateToken(user.ID, user.Username, user.Role)
-		payload, _ := json.Marshal(map[string]string{"action": action, "comment": "checked"})
+		payload, _ := json.Marshal(map[string]string{"action": action, "comment": "checked", "signature_base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="})
 		req := httptest.NewRequest("POST", "/api/v1/applications/"+strconv.Itoa(app.ID)+"/action", bytes.NewReader(payload))
 		req.Header.Set("Authorization", "Bearer "+token)
 		req.Header.Set("Content-Type", "application/json")

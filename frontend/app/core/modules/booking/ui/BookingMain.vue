@@ -2859,6 +2859,7 @@
       </div>
     </div>
   </div>
+  <ConfirmStallRentalModal :open="rentalConfirmOpen" :booking="rentalConfirmBooking" :loading="rentalConfirmLoading" @cancel="rentalConfirmOpen = false" @confirm="confirmRental" />
 </template>
 
 <script setup lang="ts">
@@ -5151,30 +5152,21 @@ const confirmReject = async () => {
   }
 }
 
-const handleMarkVisited = async (b: any) => {
-  const confirmed = await showConfirm(
-    `ยืนยันว่าคุณ ${b.tenant_name} เข้าชมแผง ${b.stall_number} เรียบร้อยแล้วใช่หรือไม่?\n(ระบบจะเปลี่ยนสถานะเป็น "รอผู้เช่ายื่นคำร้อง" เพื่อให้ผู้เช่ายื่นคำร้องขอเช่าแผงที่คงเหลือในใบจองนี้ได้ทันที)`,
-    {
-      title: 'ยืนยันการเช่า',
-      type: 'info',
-      confirmText: 'ยืนยันการเช่า',
-      cancelText: 'ยกเลิก'
-    }
-  )
-  if (confirmed) {
-    try {
-      await post(`/bookings/${b.id}/mark-visited`, {
-        officer_notes: 'เจ้าหน้าที่ยืนยันการเช่าเรียบร้อย รอผู้เช่ายื่นคำร้อง'
-      })
-      if (showDetailsModal.value) {
-        showDetailsModal.value = false
-      }
-      await loadBookings()
-      await showSuccess('ยืนยันการเช่าเรียบร้อยแล้ว สถานะเปลี่ยนเป็น "รอผู้เช่ายื่นคำร้อง"', 'สำเร็จ')
-    } catch (err: any) {
-      await showError(err?.data?.detail || 'เกิดข้อผิดพลาด', 'ข้อผิดพลาด')
-    }
-  }
+const rentalConfirmOpen = ref(false)
+const rentalConfirmBooking = ref<any>(null)
+const rentalConfirmLoading = ref(false)
+const handleMarkVisited = (b: any) => { rentalConfirmBooking.value = b; rentalConfirmOpen.value = true }
+const confirmRental = async (selection: { stallIdent: string; rentType: string }) => {
+  const b = rentalConfirmBooking.value
+  if (!b || rentalConfirmLoading.value) return
+  rentalConfirmLoading.value = true
+  try {
+    await post(`/bookings/${b.id}/mark-visited`, { stall_ident: selection.stallIdent, rental_type: selection.rentType, officer_notes: 'เจ้าหน้าที่ยืนยันการเช่า รอผู้เช่ายื่นคำร้อง' })
+    rentalConfirmOpen.value = false
+    if (showDetailsModal.value) showDetailsModal.value = false; await loadBookings()
+    await showSuccess('ยืนยันการเช่าแผง ' + selection.stallIdent + ' เรียบร้อยแล้ว', 'สำเร็จ')
+  } catch (err: any) { await showError(err?.data?.detail || err?.data?.message || 'เกิดข้อผิดพลาด', 'ไม่สำเร็จ') }
+  finally { rentalConfirmLoading.value = false }
 }
 
 const handleOfficerCancel = async (b: any) => {

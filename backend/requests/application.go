@@ -45,6 +45,8 @@ type CreateApplicationRequest struct {
 }
 
 type UpdateApplicationStatusRequest struct {
+	OfficerSignature      []byte `json:"-"`
+	OfficerSignatureType  string `json:"-"`
 	Status                string `json:"status" validate:"nonzero"`
 	Reason                string `json:"reason"`
 	OfficerComment        string `json:"officer_comment"`
@@ -53,8 +55,9 @@ type UpdateApplicationStatusRequest struct {
 }
 
 type ApplicationActionRequest struct {
-	Action  string `json:"action"` // "approve" or "reject"
-	Status  string `json:"status"`
-	Comment string `json:"comment"`
-	Reason  string `json:"reason"`
+	SignatureBase64 string `json:"signature_base64"`
+	Action          string `json:"action"` // "approve" or "reject"
+	Status          string `json:"status"`
+	Comment         string `json:"comment"`
+	Reason          string `json:"reason"`
 }

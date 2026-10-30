@@ -62,6 +62,7 @@ type CreateWaitlistRequest struct {
 }
 
 type UpdateBookingStatusRequest struct {
+	RentalType      string `json:"rental_type"`
 	Status          string `json:"status" validate:"nonzero"`
 	Reason          string `json:"reason"`
 	RejectionReason string `json:"rejection_reason"`

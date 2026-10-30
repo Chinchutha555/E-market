@@ -51,7 +51,7 @@ func TestOfficerReviewActionsAPI(t *testing.T) {
 			if err := db.Create(&app).Error; err != nil {
 				t.Fatal(err)
 			}
-			payload, _ := json.Marshal(map[string]string{"action": tc.action, "comment": tc.note})
+			payload, _ := json.Marshal(map[string]string{"action": tc.action, "comment": tc.note, "signature_base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="})
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/applications/"+strconv.Itoa(app.ID)+"/action", bytes.NewReader(payload))
 			req.Header.Set("Authorization", "Bearer "+token)
 			req.Header.Set("Content-Type", "application/json")

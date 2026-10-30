@@ -753,7 +753,12 @@ func (r *repository) Update(booking *models.Booking) error {
 				Message:   notifMsg,
 				BookingID: &bookingID, BookingNumber: booking.BookingNo, StallNumber: booking.StallIdent,
 				MarketName: booking.MarketName, ProjectName: booking.ProjectName,
-				TargetURL: "/bookings/" + fmt.Sprint(booking.ID) + "?role=tenant",
+				TargetURL: func() string {
+					if booking.BookingStatus == "interested" {
+						return "/applications?booking=" + fmt.Sprint(booking.ID)
+					}
+					return "/bookings/" + fmt.Sprint(booking.ID) + "?role=tenant"
+				}(),
 			}
 			if err := tx.Create(&notification).Error; err != nil {
 				return err

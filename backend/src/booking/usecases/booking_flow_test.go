@@ -328,3 +328,32 @@ func TestThreePeopleBookingCancelPromotesSecondAndMovesThirdUp(t *testing.T) {
 	}
 }
 
+func TestConfirmRentalOnlyUpdatesSelectedStall(t *testing.T) {
+	db, _ := newBookingFlow(t)
+	creator := 101
+	rows := []models.Booking{
+		{BookingNo: "CONFIRM-1", StallIdent: "C-01", AppointmentGroupID: "confirm-group", ApplicantName: "Tenant", ApplicantPhone: "0800000000", VisitDate: "2026-11-01", VisitTime: "09:00", BookingStatus: "approved", Status: "A", CreatedBy: &creator},
+		{BookingNo: "CONFIRM-2", StallIdent: "C-02", AppointmentGroupID: "confirm-group", ApplicantName: "Tenant", ApplicantPhone: "0800000000", VisitDate: "2026-11-01", VisitTime: "09:00", BookingStatus: "approved", Status: "A", CreatedBy: &creator},
+	}
+	if err := db.Create(&rows).Error; err != nil {
+		t.Fatal(err)
+	}
+	uc := bookinguc.NewUseCase(bookingrepo.NewRepository(db))
+	_, err := uc.UpdateStatus(rows[0].ID, 1, requests.UpdateBookingStatusRequest{Status: "interested", StallIdent: "C-02", RentalType: "contract", ActorRole: "staff", ByOfficer: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var notification models.Notification
+	if err := db.Where("booking_id = ? AND status_code = ?", rows[1].ID, "interested").First(&notification).Error; err != nil {
+		t.Fatal(err)
+	}
+	if notification.TargetURL != fmt.Sprintf("/applications?booking=%d", rows[1].ID) {
+		t.Fatalf("unexpected notification destination: %s", notification.TargetURL)
+	}
+	var one, two models.Booking
+	db.First(&one, rows[0].ID)
+	db.First(&two, rows[1].ID)
+	if one.BookingStatus != "approved" || one.RentalType != "" || two.BookingStatus != "interested" || two.RentalType != "contract" {
+		t.Fatalf("unexpected bookings: first=%s/%s second=%s/%s", one.BookingStatus, one.RentalType, two.BookingStatus, two.RentalType)
+	}
+}

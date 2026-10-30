@@ -3,6 +3,11 @@ package responses
 import "time"
 
 type ApplicationResponse struct {
+	HasOfficerSignature   bool       `json:"has_officer_signature"`
+	DocumentNumber        string     `json:"document_number,omitempty"`
+	TenantSignature       string     `json:"tenant_signature,omitempty"`
+	TenantSignedAt        *time.Time `json:"tenant_signed_at,omitempty"`
+	BookingNumber         string     `json:"booking_number,omitempty"`
 	ID                    int        `json:"id"`
 	ApplicationNo         string     `json:"application_no"`
 	ApplicationNumber     string     `json:"application_number"`

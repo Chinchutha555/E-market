@@ -1,0 +1,2 @@
+2026/10/30 10:00:31 SQLite connected successfully: ./emarket.db
+2026/10/30 10:00:33 🚀 e-Market API Server started on port 8080 (env: dev, mode: all)

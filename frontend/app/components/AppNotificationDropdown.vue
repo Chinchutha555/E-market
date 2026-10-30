@@ -327,6 +327,8 @@ const handleNotificationClick = async (item: INotificationItem) => {
         claimWaitlist: '1'
       }
     })
+  } else if (item.status_code === 'interested' && item.booking_id) {
+    router.push({ path: '/applications', query: { booking: String(item.booking_id) } })
   } else if (item.booking_id) {
     router.push({ path: `/bookings/${item.booking_id}` })
   } else if (item.target_url) {

@@ -378,6 +378,7 @@ func (u *useCase) toBookingResponse(b *models.Booking) responses.BookingResponse
 		ID:                          b.ID,
 		BookingNo:                   b.BookingNo,
 		BookingNumber:               b.BookingNo,
+		RentalType:                  b.RentalType,
 		StallID:                     b.StallID,
 		StallIdent:                  b.StallIdent,
 		StallNumber:                 b.StallIdent,
@@ -1212,6 +1213,12 @@ func (u *useCase) applyStatusToBookingRow(booking *models.Booking, userID int, r
 	if targetStatus == "visited" {
 		targetStatus = "interested"
 	}
+	if targetStatus == "interested" && req.RentalType != "" {
+		if req.RentalType != "temporary" && req.RentalType != "contract" && req.RentalType != "trial" {
+			return responses.NewAppErr(http.StatusBadRequest, "ประเภทการค้าไม่ถูกต้อง")
+		}
+		booking.RentalType = req.RentalType
+	}
 	booking.BookingStatus = targetStatus
 	booking.UpdatedBy = &userID
 	if strings.TrimSpace(req.MeetingPoint) != "" {
@@ -1313,6 +1320,12 @@ func (u *useCase) UpdateStatus(id int, userID int, req requests.UpdateBookingSta
 
 	groupID := strings.TrimSpace(booking.AppointmentGroupID)
 	targetStallIdent := strings.TrimSpace(req.StallIdent)
+	if req.RentalType != "" && targetStallIdent == "" {
+		return nil, responses.NewAppErr(http.StatusBadRequest, "กรุณาระบุแผงที่ยืนยันการเช่า")
+	}
+	if targetStallIdent != "" && groupID == "" && !strings.EqualFold(strings.TrimSpace(booking.StallIdent), targetStallIdent) {
+		return nil, responses.NewAppErr(http.StatusNotFound, "ไม่พบแผงที่ระบุในรายการจอง")
+	}
 
 	if groupID != "" {
 		siblings, err := u.repo.FindByGroupID(groupID)
@@ -1408,7 +1421,12 @@ func (u *useCase) UpdateStatus(id int, userID int, req requests.UpdateBookingSta
 					Message:   notifMsg,
 					BookingID: &bID, BookingNumber: primary.BookingNo, StallNumber: combinedStalls,
 					MarketName: primary.MarketName, ProjectName: combinedProjects,
-					TargetURL: "/bookings/" + fmt.Sprint(primary.ID) + "?role=tenant",
+					TargetURL: func() string {
+						if primary.BookingStatus == "interested" {
+							return "/applications?booking=" + fmt.Sprint(primary.ID)
+						}
+						return "/bookings/" + fmt.Sprint(primary.ID) + "?role=tenant"
+					}(),
 				}
 				_ = u.repo.CreateNotification(&groupNotif)
 			}
@@ -1416,6 +1434,10 @@ func (u *useCase) UpdateStatus(id int, userID int, req requests.UpdateBookingSta
 			grouped := u.groupBookingModels(updatedSiblings)
 			return &grouped[0], nil
 		}
+	}
+
+	if targetStallIdent != "" && !strings.EqualFold(strings.TrimSpace(booking.StallIdent), targetStallIdent) {
+		return nil, responses.NewAppErr(http.StatusNotFound, "ไม่พบแผงที่ระบุในรายการจอง")
 	}
 
 	if err := u.applyStatusToBookingRow(booking, userID, req); err != nil {

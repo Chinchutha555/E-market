@@ -73,6 +73,11 @@
             <span>1. ข้อมูลผู้ยื่นคำร้อง (Applicant Details)</span>
           </h4>
 
+          <div class="form-group">
+            <label class="form-label">คำนำหน้าชื่อ <b class="req-star">*</b></label>
+            <AppSelect v-model="applicantTitle" :options="applicantTitleOptions" placeholder="เลือกคำนำหน้า" :error="titleError" />
+          </div>
+
           <!-- ลำดับที่ 1: ชื่อ-นามสกุล -> ลำดับที่ 2: อายุ -->
           <div class="form-row">
             <div class="form-group">
@@ -484,6 +489,18 @@ const targetStallId = computed(() => {
   return activeBookingRecord.value?.stall_id || activeBookingRecord.value?.stall_number || props.stall?.id || 1
 })
 
+const applicantTitle = ref('')
+const titleError = ref('')
+const applicantTitleOptions = [
+  { value: 'นาย', label: 'นาย' },
+  { value: 'นาง', label: 'นาง' },
+  { value: 'นางสาว', label: 'นางสาว' }
+]
+const splitApplicantTitle = (value: string) => {
+  const name = String(value || '').trim()
+  const title = name.match(/^(นางสาว|นาย|นาง)(?=\s|[^\s])/u)?.[0] || ''
+  return { title, name: title ? name.slice(title.length).trim() : name }
+}
 const form = ref({
   applicant_name: '',
   applicant_age: '',
@@ -539,7 +556,7 @@ const validateForm = () => {
   validateField('shop_name')
   validateField('product_type')
   validateField('requested_start_date')
-  return !Object.values(errors).some(Boolean)
+  return !titleError.value && !Object.values(errors).some(Boolean)
 }
 
 watch(() => props.show, (newVal) => {
@@ -557,7 +574,9 @@ watch(() => props.show, (newVal) => {
     }
     const base = activeBookingRecord.value || props.booking
     if (base) {
-      form.value.applicant_name = base.tenant_name || ''
+      const parsedName = splitApplicantTitle(base.tenant_name || base.applicant_name || '')
+      applicantTitle.value = parsedName.title
+      form.value.applicant_name = parsedName.name
       form.value.applicant_phone = base.tenant_phone || ''
       form.value.applicant_email = base.tenant_email || ''
       form.value.applicant_id_card = base.tenant_id_card || ''
@@ -599,7 +618,7 @@ const handleSubmit = async () => {
         stall_number: sIdent,
         market_id: mId,
         market_name: mName,
-        applicant_name: form.value.applicant_name.trim(),
+        applicant_name: applicantTitle.value + ' ' + form.value.applicant_name.trim(),
         applicant_age: age,
         id_card_copy_base64: idCardCopyBase64,
         applicant_phone: form.value.applicant_phone.trim(),
@@ -613,7 +632,7 @@ const handleSubmit = async () => {
         lease_term_months: periodMonths,
         requested_period_months: periodMonths,
         monthly_rate: monthlyRate,
-        proposed_rent_type: form.value.proposed_rent_type || 'monthly'
+        proposed_rent_type: rec.rental_type || form.value.proposed_rent_type || 'monthly'
       }
 
       const res: any = await post('/applications', payload)
