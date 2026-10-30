@@ -3,15 +3,17 @@
     <AppHeader />
     <main
       class="content-body manage-page"
-      :class="{ 'is-map-page': isMapOverviewMode, 'has-left-panel': isMapOverviewMode && !!leftPanelWidth }"
-      :style="isMapOverviewMode && leftPanelWidth ? { '--lp-w': leftPanelWidth } : undefined"
+      :class="{ 'is-map-page': isMapOverviewMode, 'has-left-panel': isMapOverviewMode && !!leftPanelWidth, 'has-right-panel': isMapOverviewMode && !!rightSidePanelWidth }"
+      :style="isMapOverviewMode ? { ...(leftPanelWidth ? { '--lp-w': leftPanelWidth } : {}), ...(rightSidePanelWidth ? { '--side-w': `${rightSidePanelWidth}px` } : {}) } : undefined"
     >
       <!-- สวิตช์มุมมองแผนที่ (ข้อมูลแผง / การชำระเงิน / การจดมิเตอร์) แบบ Capsule Pill ลอยมุมซ้ายบน -->
-      <div v-if="isMapOverviewMode" ref="viewDropdownWrapRef" class="map-mode-dropdown-wrap">
+      <div v-if="isMapOverviewMode" ref="viewDropdownWrapRef" class="map-mode-dropdown-wrap" :class="{ 'is-compact': !!rightSidePanelWidth }">
         <button
           type="button"
           class="map-mode-trigger-btn"
           :class="{ 'is-open': isViewDropdownOpen }"
+          :title="currentModeOption.label"
+          :aria-label="`มุมมองแผนที่: ${currentModeOption.label}`"
           aria-haspopup="listbox"
           :aria-expanded="isViewDropdownOpen"
           @click="isViewDropdownOpen = !isViewDropdownOpen"
@@ -3434,7 +3436,7 @@ const viewModeOptions: {
     label: 'ข้อมูลแผง',
     desc: 'สถานะแผง สัญญา ผู้เช่า',
     tone: 'blue',
-    svgIcon: '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line>'
+    svgIcon: '<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path><path d="M2 7h20"></path><path d="M22 7v3a2 2 0 0 1-2 2 2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"></path>'
   },
   {
     value: 'payments',
@@ -9881,7 +9883,6 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 
 /* กันตัวอักษรในการ์ด KPI ล้นกรอบ */
 .market-map-kpi { overflow: hidden; }
-.market-map-kpi-icon { width: 34px; height: 34px; flex: 0 0 34px; }
 .market-map-kpi-copy { flex: 1 1 auto; min-width: 0; overflow: visible; }
 .market-map-kpi-copy small { max-width: 100%; }
 .market-map-kpi-copy strong { min-width: 0; max-width: 100%; overflow: visible; gap: 5px; font-size: clamp(1rem, 1.15vw, 1.3rem); }
@@ -9897,6 +9898,11 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-edit-mode) { width: min(440px, calc(100% - 36px)) !important; }
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode) {
     width: min(720px, calc(100% - 100px)) !important;
+  }
+  /* เปิดตัวกรอง/แดชบอร์ดทางขวาพร้อมกัน: แผงรายละเอียดหดให้พอดีพื้นที่ที่เหลือ ไม่ทับแผงขวา */
+  .manage-page.has-right-panel .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode) {
+    width: min(720px, calc(100% - var(--side-w, 380px) - 84px)) !important;
+    min-width: 420px;
   }
   .is-fullscreen-map-panel :deep(.issd-mobile-only) {
     display: none !important;
@@ -10238,8 +10244,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   box-shadow: none !important;
 }
 
-/* ซ่อนปุ่ม แผนที่/ดาวเทียม, ปรับกึ่งกลาง และ คำอธิบายสีโครงการ (เพราะมีในแถบเครื่องมือชั้นข้อมูลด้านขวาแล้ว) */
-.is-fullscreen-map-panel :deep(.map-floating-top-controls),
+/* ซ่อนปุ่ม แผนที่/ดาวเทียม, ปรับกึ่งกลาง และ คำอธิบายสีโครงการ (เพราะมีในแถบเครื่องมือชั้นข้อมูลด้านขวาแล้ว) — ไม่ซ่อนกล่อง map-floating-top-controls เพราะมีแถบเลือกชั้นอยู่ข้างใน */
 .is-fullscreen-map-panel :deep(.map-floating-style-switcher),
 .is-fullscreen-map-panel :deep(.map-floating-recenter-btn),
 .is-fullscreen-map-panel :deep(.map-floating-legend-container) {
@@ -11735,7 +11740,7 @@ button.ov-stall-priority-row.active {
   display: none;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
   .ov-dash-responsive-kpis {
     display: block !important;
   }
@@ -12209,7 +12214,8 @@ button.market-map-kpi:hover {
   top: var(--mp-top) !important;
 }
 
-@media (max-width: 1200px) {
+/* ซ่อนแถบการ์ดเฉพาะ iPad/มือถือ (ไม่เกิน 1024px) — Desktop ที่ย่อหน้าต่างยังแสดงการ์ดเสมอ */
+@media (max-width: 1024px) {
   .market-map-kpi-strip {
     display: none !important;
   }
@@ -12226,7 +12232,7 @@ button.market-map-kpi:hover {
   }
 }
 
-@media (min-width: 769px) and (max-width: 1200px) {
+@media (min-width: 769px) and (max-width: 1024px) {
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer) {
     top: 76px !important;
     max-height: calc(100% - 92px) !important;
@@ -13511,13 +13517,104 @@ button.market-map-kpi:hover {
 .issd-full-skeleton span:nth-child(3) { height: 90px; }
 @keyframes issdSkeleton { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
-/* จอไม่เกิน 1280px: การ์ด KPI กระชับขึ้น (ซ่อนกล่องไอคอน ลดระยะ) ไม่ให้ตัวเลขและป้าย "แผง" ถูกตัด */
-@media (max-width: 1280px) {
-  .market-map-kpi-strip { gap: 10px; }
-  .market-map-kpi { padding: 10px 12px; gap: 8px; }
-  .market-map-kpi.active { padding: 9px 11px; }
+/* การ์ด KPI ปรับตามความกว้างของแถบการ์ดเอง (ไม่ใช่ความกว้างจอ) จึงใช้ได้ทั้งตอนย่อหน้าต่างและตอนเปิดแผงข้าง */
+.market-map-kpi-strip { container-type: inline-size; container-name: kpi; }
+.market-map-kpi-copy small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* ป้ายชื่อการ์ดบรรทัดเดียวเสมอ (เดิมสำรองที่ 2 บรรทัดทำให้ห่างจากตัวเลขเกินไป) */
+.market-map-kpi-copy > small:first-child {
+  display: block;
+  min-height: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  -webkit-line-clamp: unset;
+}
+.market-map-kpi-copy { gap: 5px; } /* ระยะระหว่างชื่อการ์ดกับตัวเลข */
+@container kpi (max-width: 1130px) {
+  /* ยังไม่เปิดแผงข้าง: เก็บไอคอนไว้ ลดระยะในการ์ด และซ่อนป้ายหน่วย "แผง" (ตัวเลขกับชื่อการ์ดยังครบ ไม่ถูกตัด) */
+  .market-map-kpi { padding: 10px 6px 10px 10px; gap: 12px; }
+  .market-map-kpi.active { padding: 9px 5px 9px 9px; }
+  .market-map-kpi-copy small { font-size: 0.75rem; } /* 12px = ขนาดต่ำสุดของระบบ ให้ "ต้องดำเนินการ" แสดงครบในพื้นที่ที่เหลือ */
+  /* คำว่า "แผง" ยังแสดงอยู่ แต่เป็นตัวหนังสือเล็กธรรมดา ไม่ใช้ป้ายพื้นสี เพื่อประหยัดที่ให้ไอคอนอยู่ได้ */
+  .market-map-kpi-strip:not(.has-side-panel) .market-map-kpi .market-map-kpi-copy strong { font-size: 1.0625rem; gap: 6px; }
+  .market-map-kpi-strip:not(.has-side-panel) .market-map-kpi .market-map-kpi-copy strong em {
+    display: inline-block;
+    padding: 0;
+    background: transparent;
+    font-size: 0.75rem;
+    font-weight: 600;
+    align-self: flex-end;
+  }
+  /* เปิดแผงข้างแล้ว แถบแคบลง: ซ่อนไอคอนแทน แล้วคืนป้ายหน่วย "แผง" */
+  .market-map-kpi-strip.has-side-panel .market-map-kpi { padding: 10px 12px; gap: 0; }
+  .market-map-kpi-strip.has-side-panel .market-map-kpi.active { padding: 9px 11px; }
+  .market-map-kpi-strip.has-side-panel .market-map-kpi-icon { display: none; }
+  .market-map-kpi-strip.has-side-panel .market-map-kpi-copy small { font-size: 0.8125rem; }
+  .market-map-kpi-strip.has-side-panel .market-map-kpi-copy strong { font-size: 1.1875rem; }
+  .market-map-kpi-strip.has-side-panel .market-map-kpi-copy strong em { display: block; }
+}
+@container kpi (max-width: 900px) {
+  /* แคบจริงๆ แม้ยังไม่เปิดแผงข้าง: ซ่อนไอคอนด้วย */
   .market-map-kpi-icon { display: none; }
-  .market-map-kpi-copy strong { font-size: clamp(1.05rem, 2vw, 1.3rem); }
+  .market-map-kpi { padding: 10px 12px; gap: 0; }
+}
+@container kpi (max-width: 760px) {
+  /* แคบมาก: ซ่อนป้ายหน่วย "แผง" เหลือชื่อและตัวเลข */
+  .market-map-kpi { padding: 8px 10px; }
+  .market-map-kpi-copy small { font-size: 0.8125rem; }
+  .market-map-kpi-copy strong { font-size: 1.0625rem; }
+  .market-map-kpi-copy strong em { display: none !important; }
+}
+
+/* แถบการ์ดอยู่กึ่งกลางเสมอและเว้นทางซ้ายพอสำหรับตัวเลือกมุมมองเต็ม ไม่ให้ชนเมื่อย่อหน้าต่าง */
+/* แถบการ์ดอยู่กึ่งกลางของพื้นที่ที่เหลือ โดยเว้นซ้ายให้ตัวเลือกมุมมอง (ไม่ซ้อนกันทุกความกว้างจอ) */
+.market-map-kpi-strip:not(.has-side-panel) { left: 190px; right: 76px; width: auto; max-width: 1240px; margin: 0 auto; transform: none; }
+
+/* Desktop (กว้างกว่า 1024px) ตอนเปิดแผงข้างทางขวา (ตัวกรอง/ค้นหา/ชั้นข้อมูล/แดชบอร์ด): ตัวเลือกมุมมองย่อเหลือเฉพาะไอคอน */
+/* iPad และมือถือ (ไม่เกิน 1024px) ไม่ย่อ แสดงชื่อเหมือนเดิม */
+@media (min-width: 1025px) {
+  .map-mode-dropdown-wrap.is-compact .map-mode-trigger-btn { justify-content: center; width: 48px; padding: 0; gap: 0; }
+  .map-mode-dropdown-wrap.is-compact .map-mode-trigger-btn .trigger-text-group,
+  .map-mode-dropdown-wrap.is-compact .map-mode-trigger-btn .trigger-chevron { display: none; }
+  /* แถบการ์ดอยู่กึ่งกลางของพื้นที่ที่เหลือทางซ้ายของแผงข้างพอดี (ตัวเลือกมุมมองย่อแล้วจึงไม่ต้องเว้นที่ชดเชยไปทางขวา) */
+  .market-map-kpi-strip.has-side-panel {
+    left: calc((100% - var(--side-w, 380px)) / 2);
+    width: min(1050px, calc(100% - var(--side-w, 380px) - 170px));
+  }
+}
+
+/* Desktop จอไม่กว้าง (1025–1280px): แถบการ์ดไม่เว้นสองข้างเท่ากัน แต่ใช้พื้นที่ทางขวาของปุ่มมุมมองให้เต็ม เพื่อให้การ์ดทั้ง 6 ใบยังอ่านได้ */
+@media (min-width: 1025px) and (max-width: 1280px) {
+  .market-map-kpi-strip:not(.has-side-panel) { left: 190px; transform: none; width: calc(100% - 190px - 76px); max-width: none; }
+  /* เปิดแผงข้างบนจอเล็ก: การ์ดคงขนาดอ่านได้ (ไม่บีบ) แล้วเลื่อนแนวนอนดูใบที่เหลือได้ */
+  .market-map-kpi-strip.has-side-panel {
+    left: 85px;
+    transform: none;
+    width: calc(100% - var(--side-w, 380px) - 101px);
+    max-width: none;
+    grid-template-columns: repeat(6, minmax(118px, 1fr));
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    pointer-events: auto;
+    scrollbar-width: none;
+  }
+  .market-map-kpi-strip.has-side-panel::-webkit-scrollbar { display: none; }
+}
+
+/* รายละเอียดแผงแบบเต็มที่กว้างน้อย (เช่นตอนมีแผงขวาเปิดอยู่): แถบเมนูกลายเป็นแถบแท็บบนสุด เนื้อหาใช้พื้นที่เต็ม */
+.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode { container-type: inline-size; container-name: detail; }
+@container detail (max-width: 600px) {
+  .inspect-selected-stall-drawer .issd-full-layout { flex-direction: column; }
+  .inspect-selected-stall-drawer .issd-full-sidebar { width: 100%; border-right: 0; border-bottom: 1px solid #eef2f6; padding: 0 8px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .inspect-selected-stall-drawer .issd-full-sidebar::-webkit-scrollbar { display: none; }
+  .inspect-selected-stall-drawer .issd-sidebar-nav { flex-direction: row; gap: 2px; white-space: nowrap; }
+  .inspect-selected-stall-drawer .issd-sidebar-tab { width: auto; flex: 0 0 auto; padding: 11px 10px; border: 0; border-radius: 0; border-bottom: 3px solid transparent; background: transparent; box-shadow: none; }
+  .inspect-selected-stall-drawer .issd-sidebar-tab.active { background: transparent; color: #2563eb; border-bottom-color: #2563eb; }
+  .inspect-selected-stall-drawer .issd-sidebar-tab svg { display: none; }
+  .inspect-selected-stall-drawer .issd-kpi-grid.is-three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inspect-selected-stall-drawer .issd-full-main .issd-body-full { padding: 14px 14px 18px; }
+  .inspect-selected-stall-drawer .issd-full-main .issd-footer-full { padding: 12px 14px 14px; }
+  .inspect-selected-stall-drawer .issd-full-main .issd-tab-header-row.is-inline-controls { flex-wrap: wrap; }
 }
 </style>
 
