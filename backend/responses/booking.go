@@ -11,6 +11,7 @@ type TimelineItem struct {
 }
 
 type BookingResponse struct {
+	RentalType                  string            `json:"rental_type,omitempty"`
 	ID                          int               `json:"id"`
 	BookingNo                   string            `json:"booking_no"`
 	BookingNumber               string            `json:"booking_number"`

@@ -2,6 +2,28 @@
   <div class="application-main-page">
     <AppHeader />
     <div class="page-container">
+      <!-- Page Main Title & Actions (เหมือนหน้าการจองแผงเช่า) -->
+      <div class="page-header-row">
+        <div>
+          <h1 class="main-page-title">คำร้อง</h1>
+          <p class="page-subtitle">ติดตามสถานะและจัดการคำร้องขอเช่าแผงและคำร้องทั่วไป</p>
+        </div>
+
+        <div class="page-header-actions">
+          <AppButton
+            variant="danger-outline"
+            size="sm"
+            @click="handleClearAllData"
+            title="รีเซ็ตข้อมูลทดสอบ"
+          >
+            <template #prefix>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </template>
+            <span>รีเซ็ตข้อมูลทดสอบ</span>
+          </AppButton>
+        </div>
+      </div>
+
       <!-- Loading Skeleton State -->
       <div v-if="loading" class="skeleton-loading-container">
         <div class="skeleton-line skeleton-header"></div>
@@ -65,18 +87,6 @@
               <span>จัดการประเภทคำร้อง</span>
             </NuxtLink>
 
-            <!-- Reset Test Data Button -->
-            <AppButton
-              variant="danger-outline"
-              size="sm"
-              @click="handleClearAllData"
-              title="รีเซ็ตข้อมูลทดสอบ"
-            >
-              <template #prefix>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              </template>
-              <span>รีเซ็ต</span>
-            </AppButton>
           </div>
         </div>
 
@@ -169,6 +179,11 @@
                       <span class="kpi-status-name">รอ ผอ.สำนักตลาด</span>
                       <span class="kpi-status-val">{{ countPendingBureauDirector }}</span>
                     </div>
+                    <div class="kpi-popover-item" :class="{ 'is-selected': pendingSubFilter === 'revision_required' }" @click="pendingSubFilter = 'revision_required'; activeTab = 'pending'; currentPage = 1">
+                      <span class="kpi-status-dot orange"></span>
+                      <span class="kpi-status-name">ส่งกลับแก้ไข</span>
+                      <span class="kpi-status-val">{{ countRevisionRequired }}</span>
+                    </div>
                   </div>
                   <div v-if="pendingSubFilter !== 'all'" class="kpi-popover-reset" @click="pendingSubFilter = 'all'; currentPage = 1">
                     <span>แสดงทั้งหมดในรอดำเนินการ</span>
@@ -204,7 +219,7 @@
             </div>
           </div>
 
-          <!-- 4. ส่งกลับ/ไม่อนุมัติ (Soft Gray Theme) -->
+          <!-- 4. ยกเลิก (Soft Gray Theme) -->
           <div
             class="kpi-ribbon-card kpi-cancelled"
             :class="{ active: activeTab === 'rejected' }"
@@ -216,7 +231,7 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
             </div>
             <div class="kpi-text-box">
-              <div class="kpi-title">ยกเลิก/ส่งกลับ</div>
+              <div class="kpi-title">ยกเลิก</div>
               <div class="kpi-value-row">
                 <span class="kpi-count">{{ countRejected }}</span>
                 <span class="kpi-unit-pill">รายการ</span>
@@ -277,20 +292,30 @@
               <span>รอ ผอ.สำนักตลาด</span>
               <span class="subfilter-badge">{{ countPendingBureauDirector }}</span>
             </button>
+            <button
+              type="button"
+              class="subfilter-chip chip-orange"
+              :class="{ active: pendingSubFilter === 'revision_required' }"
+              @click="pendingSubFilter = 'revision_required'; currentPage = 1"
+            >
+              <span class="subfilter-dot"></span>
+              <span>ส่งกลับแก้ไข</span>
+              <span class="subfilter-badge">{{ countRevisionRequired }}</span>
+            </button>
           </div>
         </transition>
 
-        <!-- Application Type Filter Bar -->
+        <!-- Application Type Filter Bar + Project Sorting (บรรทัดเดียวกัน โดย Sort ไว้ขวาสุด) -->
         <div class="application-type-bar" style="margin-bottom: 22px;">
           <div class="type-filter-pills">
             <button
               type="button"
-              class="type-pill"
+              class="type-pill pill-all"
               :class="{ active: typeFilter === 'all' }"
               @click="typeFilter = 'all'; currentPage = 1"
             >
               <span>ประเภททั้งหมด</span>
-              <span class="type-pill-count">{{ applications.length }}</span>
+              <span class="type-pill-count">{{ currentSubsetApplications.length }}</span>
             </button>
             <button
               type="button"
@@ -305,7 +330,7 @@
                 <rect x="3" y="14" width="7" height="7"></rect>
               </svg>
               <span>คำร้องขอเช่าแผงค้า</span>
-              <span class="type-pill-count">{{ countByType('stall_lease') }}</span>
+              <span class="type-pill-count">{{ countStallLeaseInSubset }}</span>
             </button>
             <button
               type="button"
@@ -320,8 +345,123 @@
                 <line x1="16" y1="17" x2="8" y2="17"></line>
               </svg>
               <span>คำร้องทั่วไป</span>
-              <span class="type-pill-count">{{ countByType('general') }}</span>
+              <span class="type-pill-count">{{ countGeneralInSubset }}</span>
             </button>
+          </div>
+
+          <!-- Sort Order Dropdown (จัดให้อยู่ขวาสุดของแถวประเภท) -->
+          <div class="sort-dropdown-wrap sort-dropdown-right">
+            <button
+              type="button"
+              class="sort-toggle-btn"
+              :class="{ active: isSortDropdownOpen }"
+              @click="toggleSortDropdown"
+              :title="'จัดเรียง: ' + currentSortLabel"
+              aria-label="เลือกการจัดเรียงโครงการและคำร้อง"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="sort-toggle-icon"
+              >
+                <path d="M4 6h7"></path>
+                <path d="M4 12h5"></path>
+                <path d="M4 18h3"></path>
+                <path d="M17 6v12"></path>
+                <path d="m13 14 4 4 4-4"></path>
+              </svg>
+              <span>{{ currentSortLabel }}</span>
+              <svg
+                class="dropdown-chevron-icon"
+                :class="{ 'rotate-180': isSortDropdownOpen }"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <!-- Backdrop to close on click outside -->
+            <div v-if="isSortDropdownOpen" class="sort-dropdown-backdrop" @click="isSortDropdownOpen = false"></div>
+
+            <!-- Floating Sort Dropdown Menu -->
+            <div v-if="isSortDropdownOpen" class="sort-dropdown-menu" @click.stop>
+              <div class="sort-dropdown-header">จัดเรียงโครงการและคำร้อง</div>
+              <button
+                type="button"
+                class="sort-dropdown-item"
+                :class="{ selected: sortOrder === 'latest' }"
+                @click="setSortOrder('latest')"
+              >
+                <span class="sort-item-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </span>
+                <span class="sort-item-text">
+                  <strong>เข้ามาล่าสุด</strong>
+                  <small>โครงการและคำร้องที่เพิ่งส่งเข้ามา</small>
+                </span>
+                <svg v-if="sortOrder === 'latest'" class="sort-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </button>
+
+              <button
+                type="button"
+                class="sort-dropdown-item"
+                :class="{ selected: sortOrder === 'project_asc' }"
+                @click="setSortOrder('project_asc')"
+              >
+                <span class="sort-item-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m3 8 4-4 4 4"></path>
+                    <path d="M7 4v16"></path>
+                    <path d="M11 12h10"></path>
+                    <path d="M11 6h7"></path>
+                    <path d="M11 18h4"></path>
+                  </svg>
+                </span>
+                <span class="sort-item-text">
+                  <strong>โครงการ: น้อยไปมาก</strong>
+                  <small>เรียงจากโครงการที่ 1 → 99</small>
+                </span>
+                <svg v-if="sortOrder === 'project_asc'" class="sort-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </button>
+
+              <button
+                type="button"
+                class="sort-dropdown-item"
+                :class="{ selected: sortOrder === 'project_desc' }"
+                @click="setSortOrder('project_desc')"
+              >
+                <span class="sort-item-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m3 16 4 4 4-4"></path>
+                    <path d="M7 20V4"></path>
+                    <path d="M11 6h10"></path>
+                    <path d="M11 12h7"></path>
+                    <path d="M11 18h4"></path>
+                  </svg>
+                </span>
+                <span class="sort-item-text">
+                  <strong>โครงการ: มากไปน้อย</strong>
+                  <small>เรียงจากโครงการที่ 99 → 1</small>
+                </span>
+                <svg v-if="sortOrder === 'project_desc'" class="sort-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -388,6 +528,7 @@
                       </div>
 
                       <div class="top-row-right">
+                        <AppButton v-if="isStallLease(app)" variant="outline" size="sm" title="ดูตัวอย่างเอกสารคำร้อง" @click.stop="documentPreviewApplication = app"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>ตัวอย่างเอกสาร</AppButton>
                         <!-- Aggregate Status Badge Pill -->
                         <span class="status-pill-badge" :class="getStatusPillClass(app.status)">
                           {{ getStatusBadgeLabel(app.status) }}
@@ -451,7 +592,9 @@
                     </div>
 
                     <div class="collapsed-actions-group">
-                      <AppButton v-if="app.has_id_card_copy" variant="outline" size="sm" @click.stop="downloadIDCardCopy(app)">สำเนาบัตรประชาชน</AppButton>
+                      <AppButton v-if="canReview(app)" class="app-action-revision" variant="outline" size="sm" @click.stop="openRejectModal(app, 'return_revision')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>ส่งกลับแก้ไข</AppButton>
+                      <AppButton v-if="canReview(app)" class="app-action-reject" variant="danger-outline" size="sm" @click.stop="openRejectModal(app, 'reject')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></template>ไม่อนุมัติ</AppButton>
+                      <ApplicationActionsMenu size="sm" :show-document="false" :show-id-copy="app.has_id_card_copy" :can-review="false" :show-reject="false" @document="documentPreviewApplication = app" @id-copy="downloadIDCardCopy(app)" @revision="openRejectModal(app, 'return_revision')" @reject="openRejectModal(app, 'reject')" />
                       <AppButton
                         v-if="canTenantEdit(app)"
                         variant="primary"
@@ -470,7 +613,8 @@
                       <AppButton
                         variant="secondary"
                         size="sm"
-                        @click.stop="openDetails(app)"
+                        class="app-action-detail"
+                          @click.stop="openDetails(app)"
                         title="ดูรายละเอียดคำร้อง"
                       >
                         <template #prefix>
@@ -484,12 +628,12 @@
                           variant="primary"
                           size="sm"
                           @click.stop="processApproval(app, 'เจ้าหน้าที่ตรวจสอบเอกสารครบถ้วน ส่งต่อ ผอ.ตลาด')"
-                          title="อนุมัติส่งต่อ"
+                          title="อนุมัติ"
                         >
                           <template #prefix>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                           </template>
-                          <span>อนุมัติส่งต่อ</span>
+                          <span>อนุมัติ</span>
                         </AppButton>
                       </template>
                       <template v-else-if="canReview(app) && app.status === 'pending_market_director'">
@@ -630,33 +774,39 @@
                           <span>{{ isStallLease(app) ? 'ประเภทคำร้อง' : 'เรื่องที่ขอ' }}</span>
                         </div>
                         <div class="info-value-row">
-                          <span class="info-value-text">{{ isStallLease(app) ? 'ขอเช่าแผงค้า' : (app.subject || app.shop_name || 'คำร้องทั่วไป') }}</span>
+                          <span class="info-value-text">{{ isStallLease(app) ? 'ขอเช่าแผง' : (app.subject || app.shop_name || 'คำร้องทั่วไป') }}</span>
                         </div>
+                        <div v-if="isStallLease(app) && getRentalTypeLabel(app.proposed_rent_type)" class="cell-sub-meeting-point">{{ getRentalTypeLabel(app.proposed_rent_type) }}<template v-if="app.proposed_rent_type === 'contract' && (app.requested_period_months || app.lease_term_months)"> ({{ formatLeaseDuration(app.requested_period_months || app.lease_term_months) }})</template></div>
                         <div v-if="isStallLease(app) && app.stall_monthly_rate" class="cell-sub-meeting-point">
-                          <span>฿{{ Number(app.stall_monthly_rate).toLocaleString() }}/ด. ({{ app.requested_period_months || 12 }} เดือน)</span>
+                          <span>{{ Number(app.stall_monthly_rate).toLocaleString('th-TH') }} บาท/เดือน</span>
                         </div>
                         <div v-else-if="app.review_note" class="cell-sub-meeting-point">
                           <span>{{ app.review_note.slice(0, 35) }}{{ app.review_note.length > 35 ? '...' : '' }}</span>
                         </div>
                       </div>
 
-                      <!-- Col 3: แผงค้า -->
+                      <!-- Col 3: แผงค้า & ข้อมูลร้านค้า -->
                       <div class="info-column">
                         <div class="info-label">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                          <span>แผงค้า</span>
+                          <span>แผงค้า / ร้านค้า</span>
                         </div>
                         <div class="info-value-row">
                           <span class="stall-count-pill">
                             <span class="stall-code-strong">{{ app.stall_number && app.stall_number !== '-' ? app.stall_number : 'คำร้องทั่วไป' }}</span>
                           </span>
                         </div>
-                        <div v-if="app.shop_name" class="cell-sub-meeting-point">
-                          <span>{{ app.shop_name }}</span>
+                        <div v-if="app.shop_name" class="stall-shop-row">
+                          <span class="shop-prefix">ชื่อร้าน:</span>
+                          <strong class="shop-name-highlight">{{ app.shop_name }}</strong>
+                        </div>
+                        <div v-if="isStallLease(app) && (app.product_type || app.product_category)" class="shop-product">ประเภทสินค้า: {{ app.product_type || app.product_category }}</div>
+                        <div v-else-if="!isStallLease(app)" class="stall-shop-row text-muted">
+                          <span>คำร้องทั่วไป</span>
                         </div>
                       </div>
 
-                      <!-- Col 4: ผู้ขอเช่า / ผู้ยื่นคำร้อง -->
+                      <!-- Col 4: ผู้ขอเช่า / ผู้ยื่นคำร้อง (รวมอายุ เลขบัตรประชาชน และสำเนาบัตรประชาชน) -->
                       <div class="info-column">
                         <div class="info-label">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -664,11 +814,44 @@
                         </div>
                         <div class="info-value-row">
                           <span class="info-value-text">{{ app.applicant_name }}</span>
-                          <a v-if="app.applicant_phone" :href="'tel:' + app.applicant_phone" class="phone-call-btn" title="คลิกเพื่อโทรออกทันที">
+                          <span v-if="app.applicant_age" class="applicant-age-pill">
+                            {{ app.applicant_age }} ปี
+                          </span>
+
+                        </div>
+                        <!-- เลขบัตรประชาชน พร้อมปุ่มเปิดดูสำเนาบัตรประชาชน -->
+                        <div class="applicant-id-doc-row">
+                          <span v-if="app.applicant_id_card" class="applicant-id-mono">
+                            <span class="sub-label">เลขบัตร:</span> {{ app.applicant_id_card }}
+                          </span>
+                          <button
+                            v-if="app.has_id_card_copy"
+                            type="button"
+                            class="btn-id-card-pill"
+                            @click.stop="downloadIDCardCopy(app)"
+                            title="คลิกเพื่อเปิดดูสำเนาบัตรประชาชน"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                              <line x1="7" y1="8" x2="17" y2="8"></line>
+                              <line x1="7" y1="12" x2="13" y2="12"></line>
+                            </svg>
+                            <span>สำเนาบัตร</span>
+                          </button>
+                        </div>
+                        <div v-if="app.applicant_phone" class="applicant-phone-row"><a v-if="app.applicant_phone" :href="'tel:' + app.applicant_phone" class="phone-call-btn" title="คลิกเพื่อโทรออกทันที">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                             <span>{{ app.applicant_phone }}</span>
-                          </a>
-                        </div>
+                          </a></div>
+                      </div>
+                    </div>
+
+                    <!-- ข้อมูลเพิ่มเติมและรายละเอียดคำร้อง (แสดงแบบโปร่งสบาย ไม่ใช้กล่องข้อความ) -->
+                    <div v-if="app.details || app.description || (!isStallLease(app) && app.subject)" class="application-inline-meta-bar">
+                      <!-- รายละเอียดที่ผู้เช่ายื่นระบุ (แสดงเป็นข้อความโปร่งสะอาด ไม่มีกรอบกล่อง) -->
+                      <div v-if="app.details || app.description || (!isStallLease(app) && app.subject)" class="inline-details-row">
+                        <span class="details-lead-label">หมายเหตุ/รายละเอียด:</span>
+                        <span class="details-lead-text">{{ app.details || app.description || app.subject }}</span>
                       </div>
                     </div>
 
@@ -682,7 +865,9 @@
                       </div>
 
                       <div class="footer-right-actions">
-                        <AppButton v-if="app.has_id_card_copy" variant="outline" size="md" @click.stop="downloadIDCardCopy(app)">สำเนาบัตรประชาชน</AppButton>
+                        <AppButton v-if="canReview(app)" class="app-action-revision" variant="outline" size="md" @click.stop="openRejectModal(app, 'return_revision')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>ส่งกลับแก้ไข</AppButton>
+                        <AppButton v-if="canReview(app)" class="app-action-reject" variant="danger-outline" size="md" @click.stop="openRejectModal(app, 'reject')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></template>ไม่อนุมัติ</AppButton>
+                        <ApplicationActionsMenu size="md" :show-document="false" :show-id-copy="false" :can-review="false" :show-reject="false" @document="documentPreviewApplication = app" @id-copy="downloadIDCardCopy(app)" @revision="openRejectModal(app, 'return_revision')" @reject="openRejectModal(app, 'reject')" />
                         <AppButton
                           v-if="canTenantEdit(app)"
                           variant="primary"
@@ -702,6 +887,7 @@
                         <AppButton
                           variant="secondary"
                           size="md"
+                          class="app-action-detail"
                           @click.stop="openDetails(app)"
                           title="ดูรายละเอียดคำร้อง"
                         >
@@ -717,26 +903,12 @@
                             variant="primary"
                             size="md"
                             @click.stop="processApproval(app, 'เจ้าหน้าที่ตรวจสอบเอกสารครบถ้วน ส่งต่อ ผอ.ตลาด')"
-                            title="เจ้าหน้าที่ตรวจสอบและอนุมัติส่งต่อ"
+                            title="เจ้าหน้าที่ตรวจสอบและอนุมัติ"
                           >
                             <template #prefix>
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                             </template>
-                            <span>อนุมัติส่งต่อ</span>
-                          </AppButton>
-                          <AppButton
-                            variant="outline"
-                            size="md"
-                            @click.stop="openRejectModal(app, 'return_revision')"
-                          >
-                            <span>ส่งกลับแก้ไข</span>
-                          </AppButton>
-                          <AppButton
-                            variant="danger-outline"
-                            size="md"
-                            @click.stop="openRejectModal(app, 'reject')"
-                          >
-                            <span>ไม่อนุมัติ</span>
+                            <span>อนุมัติ</span>
                           </AppButton>
                         </template>
 
@@ -753,20 +925,6 @@
                             </template>
                             <span>ผอ. อนุมัติ</span>
                           </AppButton>
-                          <AppButton
-                            variant="outline"
-                            size="md"
-                            @click.stop="openRejectModal(app, 'return_revision')"
-                          >
-                            <span>ส่งกลับแก้ไข</span>
-                          </AppButton>
-                          <AppButton
-                            variant="danger-outline"
-                            size="md"
-                            @click.stop="openRejectModal(app, 'reject')"
-                          >
-                            <span>ไม่อนุมัติ</span>
-                          </AppButton>
                         </template>
 
                         <!-- Step 3: Bureau Director Review -->
@@ -781,20 +939,6 @@
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                             </template>
                             <span>ผอ.สำนัก อนุมัติ</span>
-                          </AppButton>
-                          <AppButton
-                            variant="outline"
-                            size="md"
-                            @click.stop="openRejectModal(app, 'return_revision')"
-                          >
-                            <span>ส่งกลับแก้ไข</span>
-                          </AppButton>
-                          <AppButton
-                            variant="danger-outline"
-                            size="md"
-                            @click.stop="openRejectModal(app, 'reject')"
-                          >
-                            <span>ไม่อนุมัติ</span>
                           </AppButton>
                         </template>
 
@@ -866,18 +1010,18 @@
         </div>
 
         <!-- View 2: Table View -->
-        <div v-else-if="viewMode === 'table'" class="table-container">
-          <table class="custom-table">
+        <div v-else-if="viewMode === 'table'" class="officer-table-container" role="region" aria-label="ตารางรายการคำร้อง" tabindex="0">
+          <table class="officer-custom-table">
             <thead>
               <tr>
-                <th style="width: 170px;">เลขที่คำร้อง</th>
-                <th style="width: 155px;">แผง / เรื่องที่ขอ</th>
-                <th>ผู้ยื่นคำร้อง</th>
-                <th>ชื่อร้าน / รายละเอียด</th>
-                <th style="width: 120px;">วันที่ยื่น / เริ่ม</th>
-                <th style="width: 165px;">สถานะพิจารณา</th>
-                <th style="min-width: 220px; max-width: 290px;">หมายเหตุการพิจารณา</th>
-                <th style="text-align: right; width: 175px;">การดำเนินการ</th>
+                <th scope="col" style="width: 170px;">เลขที่คำร้อง</th>
+                <th scope="col" style="width: 155px;">แผง / เรื่องที่ขอ</th>
+                <th scope="col">ผู้ยื่นคำร้อง</th>
+                <th scope="col">ชื่อร้าน / รายละเอียด</th>
+                <th scope="col" style="width: 120px;">วันที่ยื่น / เริ่ม</th>
+                <th scope="col" style="width: 165px;">สถานะพิจารณา</th>
+                <th scope="col" style="min-width: 220px; max-width: 290px;">หมายเหตุการพิจารณา</th>
+                <th scope="col" style="text-align: right; width: 175px;">การดำเนินการ</th>
               </tr>
             </thead>
             <tbody>
@@ -885,6 +1029,7 @@
                 <td>
                   <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                     <strong class="table-code-blue">{{ app.application_number }}</strong>
+                    <AppButton v-if="isStallLease(app)" variant="outline" size="sm" title="ดูตัวอย่างเอกสารคำร้อง" @click.stop="documentPreviewApplication = app"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>ตัวอย่างเอกสาร</AppButton>
                     <span v-if="isStallLease(app)" class="badge-type badge-type-stall">ขอเช่าแผง</span>
                     <span v-else class="badge-type badge-type-general">คำร้องทั่วไป</span>
                   </div>
@@ -968,7 +1113,9 @@
                   <div v-else class="text-empty-dash">-</div>
                 </td>
                 <td style="text-align: right;">
-                  <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px;">
+                  <div class="table-actions-cell">
+                    <AppButton v-if="canReview(app)" class="app-action-revision" variant="outline" size="sm" @click.stop="openRejectModal(app, 'return_revision')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>ส่งกลับแก้ไข</AppButton>
+                    <AppButton v-if="canReview(app)" class="app-action-reject" variant="danger-outline" size="sm" @click.stop="openRejectModal(app, 'reject')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></template>ไม่อนุมัติ</AppButton>
                     <!-- Step 1: Officer Review -->
                     <button
                       v-if="canReview(app) && app.status === 'pending_officer'"
@@ -1053,26 +1200,14 @@
                       </template>
                       <span>แก้ไขคำร้อง</span>
                     </AppButton>
-                    <AppButton v-if="app.has_id_card_copy" variant="outline" size="sm" @click="downloadIDCardCopy(app)">สำเนาบัตรประชาชน</AppButton>
-                    <template v-if="canReview(app) && app.status === 'pending_officer'">
-                      <button class="btn-table-action btn-table-primary" @click="processApproval(app, 'เจ้าหน้าที่ตรวจสอบเอกสารครบถ้วน ส่งต่อ ผอ.ตลาด')">อนุมัติส่งต่อ</button>
-                      <button class="btn-table-action btn-table-outline" @click="openRejectModal(app, 'return_revision')">ส่งกลับแก้ไข</button>
-                      <button class="btn-table-action btn-table-cancel" @click="openRejectModal(app, 'reject')">ไม่อนุมัติ</button>
-                    </template>
-                    <template v-else-if="canReview(app) && (app.status === 'pending_market_director' || app.status === 'pending_bureau_director')">
-                      <button class="btn-table-action btn-table-primary" @click="processApproval(app, 'พิจารณาอนุมัติคำร้อง')">อนุมัติ</button>
-                      <button class="btn-table-action btn-table-outline" @click="openRejectModal(app, 'return_revision')">ส่งกลับแก้ไข</button>
-                      <button class="btn-table-action btn-table-cancel" @click="openRejectModal(app, 'reject')">ไม่อนุมัติ</button>
-                    </template>
+
+
+                    <ApplicationActionsMenu size="sm" :show-document="false" :show-id-copy="app.has_id_card_copy" :can-review="false" :show-reject="false" @document="documentPreviewApplication = app" @id-copy="downloadIDCardCopy(app)" @revision="openRejectModal(app, 'return_revision')" @reject="openRejectModal(app, 'reject')" />
 
                     <!-- Detail Button -->
-                    <button
-                      class="btn-table-icon-edit"
-                      title="ดูรายละเอียด/จัดการคำร้อง"
-                      @click="openDetails(app)"
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path></svg>
-                    </button>
+                    <AppButton class="app-action-detail" variant="secondary" size="sm" title="ดูรายละเอียดคำร้อง" @click="openDetails(app)">
+                      <template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/></svg></template>รายละเอียด
+                    </AppButton>
                   </div>
                 </td>
               </tr>
@@ -1767,14 +1902,38 @@
       @close="showHistoryPanel = false"
     />
   </div>
+  <LeaseApplicationModal v-if="notificationBooking" :show="showNotificationLeaseModal" :booking="notificationBooking" :stall="null" @close="closeNotificationLeaseModal" @success="onNotificationLeaseSubmitted" />
+  <Teleport to="body">
+    <div v-if="idCopyPreviewUrl" class="id-copy-overlay" @click.self="closeIDCopyPreview">
+      <section class="id-copy-modal" role="dialog" aria-modal="true" aria-labelledby="id-copy-title">
+        <header class="id-copy-header">
+          <h2 id="id-copy-title">สำเนาบัตรประชาชน</h2>
+          <button type="button" class="id-copy-close" aria-label="ปิดหน้าต่าง" @click="closeIDCopyPreview"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </header>
+        <div class="id-copy-content">
+          <img v-if="idCopyPreviewType.startsWith('image/')" :src="idCopyPreviewUrl" alt="สำเนาบัตรประชาชน" />
+          <iframe v-else-if="idCopyPreviewType === 'application/pdf'" :src="idCopyPreviewUrl" title="สำเนาบัตรประชาชน"></iframe>
+          <p v-else>ไม่สามารถแสดงตัวอย่างไฟล์ประเภทนี้ได้</p>
+        </div>
+        <footer class="id-copy-footer"><AppButton variant="secondary" @click="closeIDCopyPreview">ปิด</AppButton></footer>
+      </section>
+    </div>
+  </Teleport>
+  <ApplicationDocumentPreview :application="documentPreviewApplication" @close="documentPreviewApplication = null" @signed="Object.assign(documentPreviewApplication, $event)" />
+  <OfficerSignatureModal :open="!!signatureTarget" @cancel="signatureTarget = null" @confirm="submitOfficerApproval" />
 </template>
 
 <script setup lang="ts">
+import ApplicationActionsMenu from '~/components/ApplicationActionsMenu.vue'
+import OfficerSignatureModal from '~/components/OfficerSignatureModal.vue'
+import ApplicationDocumentPreview from '~/components/ApplicationDocumentPreview.vue'
+const documentPreviewApplication = ref<any | null>(null)
 import { useAuthStore } from '~/core/modules/auth/store/AuthStore'
 import { useNotifications } from '~/composables/useNotifications'
 
 const { get, post, apiFetch } = useApi()
 const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 const { user, currentUser, isTenant, role } = useAuth()
 const isAdminOrStaff = computed(() => ['admin', 'staff'].includes(role.value || authStore.role || ''))
@@ -1784,9 +1943,39 @@ const canReview = (app: any) => {
     (app.status === 'pending_market_director' && currentRole === 'market_director') ||
     (app.status === 'pending_bureau_director' && currentRole === 'bureau_director')
 }
-const { showAlert, showConfirm, showSuccess, showError } = useAppAlert()
+const { showConfirm, showSuccess, showError } = useAppAlert()
 const { fetchNotifications } = useNotifications()
 const { resetTestData } = useResetTestData()
+
+const notificationBooking = ref<any>(null)
+const showNotificationLeaseModal = ref(false)
+const openNotificationBooking = async (bookingId: unknown) => {
+  if (!bookingId) return
+  try {
+    const result: any = await get(`/bookings/${encodeURIComponent(String(bookingId))}`)
+    const booking = result?.data || result
+    const sub = Array.isArray(booking?.sub_bookings) ? booking.sub_bookings.find((item: any) => String(item.id) === String(bookingId)) : null
+    const target = sub || booking
+    if (!target || !['interested', 'pending_decision'].includes(String(target.status))) {
+      await showError('รายการนี้ไม่พร้อมยื่นคำร้อง หรือได้ยื่นคำร้องไปแล้ว', 'ไม่สามารถยื่นคำร้อง')
+      return
+    }
+    notificationBooking.value = target
+    showNotificationLeaseModal.value = true
+  } catch (err: any) {
+    await showError(err?.data?.detail || err?.data?.message || 'ไม่สามารถโหลดข้อมูลการจองได้', 'ไม่สามารถยื่นคำร้อง')
+  }
+}
+const closeNotificationLeaseModal = () => {
+  showNotificationLeaseModal.value = false
+  notificationBooking.value = null
+  const query = { ...route.query }; delete query.booking
+  router.replace({ query })
+}
+const onNotificationLeaseSubmitted = async () => {
+  closeNotificationLeaseModal()
+  await loadApplications()
+}
 
 const revisionTarget = ref<any>(null)
 const revisionSaving = ref(false)
@@ -2053,7 +2242,7 @@ watch(() => route.query.search, (val) => {
   }
 })
 const activeTab = ref<'all' | 'pending' | 'approved' | 'rejected'>('all')
-const pendingSubFilter = ref<'all' | 'pending_officer' | 'pending_debt' | 'pending_market_director' | 'pending_bureau_director'>('all')
+const pendingSubFilter = ref<'all' | 'pending_officer' | 'pending_debt' | 'pending_market_director' | 'pending_bureau_director' | 'revision_required'>('all')
 const showPendingTooltip = ref(false)
 const typeFilter = ref<'all' | 'stall_lease' | 'general'>('all')
 const currentPage = ref(1)
@@ -2061,9 +2250,26 @@ const pageSize = ref(10)
 
 const viewMode = ref<'card' | 'table'>('card')
 const viewModeOptions = [
-  { value: 'card', label: 'การ์ด', icon: 'card' as const },
-  { value: 'table', label: 'ตาราง', icon: 'table' as const }
+  { value: 'card', label: 'ตลาด', title: 'มุมมองแยกกลุ่มตามตลาด', icon: 'market' as const },
+  { value: 'table', label: 'ตาราง', title: 'มุมมองตารางรายการคำร้อง', icon: 'table' as const }
 ]
+
+// Sort State for Projects & Applications
+const sortOrder = ref<'latest' | 'project_asc' | 'project_desc'>('latest')
+const isSortDropdownOpen = ref(false)
+const toggleSortDropdown = () => {
+  isSortDropdownOpen.value = !isSortDropdownOpen.value
+}
+const setSortOrder = (order: 'latest' | 'project_asc' | 'project_desc') => {
+  sortOrder.value = order
+  isSortDropdownOpen.value = false
+  currentPage.value = 1
+}
+const currentSortLabel = computed(() => {
+  if (sortOrder.value === 'project_asc') return 'โครงการ (น้อย → มาก)'
+  if (sortOrder.value === 'project_desc') return 'โครงการ (มาก → น้อย)'
+  return 'เข้ามาล่าสุด'
+})
 
 // Accordion & Card Expand State
 const openProjectGroups = ref<Record<string, boolean>>({})
@@ -2085,6 +2291,16 @@ const isCardExpanded = (id: number | string): boolean => {
 const toggleCardExpanded = (id: number | string) => {
   const current = isCardExpanded(id)
   openAppCards.value[id] = !current
+}
+
+const formatLeaseDuration = (value: number | string) => {
+  const months = Number(value)
+  return months > 0 && months % 12 === 0 ? `${months / 12} ปี` : `${months} เดือน`
+}
+
+const getRentalTypeLabel = (value: unknown) => {
+  const labels: Record<string, string> = { trial: 'ทดลองขาย', temporary: 'ทำการค้าแบบชั่วคราว', contract: 'ทำการค้าแบบมีสัญญา' }
+  return labels[String(value || '').toLowerCase()] || ''
 }
 
 // แยกแยะประเภทคำร้อง: คำร้องขอเช่าแผง vs คำร้องทั่วไป
@@ -2143,81 +2359,64 @@ const loadApplications = async () => {
   }
 }
 
-// Counts for KPI Ribbon Cards
+// Counts for Top Master KPI Ribbon Cards (ระดับแม่: ไม่ขึ้นกับ typeFilter)
 const countAll = computed(() => {
-  let list = Array.isArray(applications.value) ? applications.value : []
-  if (typeFilter.value === 'stall_lease') list = list.filter(a => isStallLease(a))
-  else if (typeFilter.value === 'general') list = list.filter(a => isGeneralApp(a))
+  const list = Array.isArray(applications.value) ? applications.value : []
   return list.length
 })
 
+const countRevisionRequired = computed(() => {
+  const list = Array.isArray(applications.value) ? applications.value : []
+  return list.filter(a => a.status === 'revision_required').length
+})
+
 const countPendingCombined = computed(() => {
-  let list = Array.isArray(applications.value) ? applications.value : []
-  if (typeFilter.value === 'stall_lease') list = list.filter(a => isStallLease(a))
-  else if (typeFilter.value === 'general') list = list.filter(a => isGeneralApp(a))
+  const list = Array.isArray(applications.value) ? applications.value : []
   return list.filter(a => [
     'pending_officer',
     'pending_debt_check',
     'debt_pending',
     'pending_market_director',
-    'pending_bureau_director'
+    'pending_bureau_director',
+    'revision_required',
+    'submitted'
   ].includes(a.status)).length
 })
 
 const countPendingOfficer = computed(() => {
-  let list = Array.isArray(applications.value) ? applications.value : []
-  if (typeFilter.value === 'stall_lease') list = list.filter(a => isStallLease(a))
-  else if (typeFilter.value === 'general') list = list.filter(a => isGeneralApp(a))
+  const list = Array.isArray(applications.value) ? applications.value : []
   return list.filter(a => a.status === 'pending_officer').length
 })
 
 const countPendingDebt = computed(() => {
-  let list = Array.isArray(applications.value) ? applications.value : []
-  if (typeFilter.value === 'stall_lease') list = list.filter(a => isStallLease(a))
-  else if (typeFilter.value === 'general') list = list.filter(a => isGeneralApp(a))
+  const list = Array.isArray(applications.value) ? applications.value : []
   return list.filter(a => a.status === 'pending_debt_check' || a.status === 'debt_pending').length
 })
 
 const countPendingMarketDirector = computed(() => {
-  let list = Array.isArray(applications.value) ? applications.value : []
-  if (typeFilter.value === 'stall_lease') list = list.filter(a => isStallLease(a))
-  else if (typeFilter.value === 'general') list = list.filter(a => isGeneralApp(a))
+  const list = Array.isArray(applications.value) ? applications.value : []
   return list.filter(a => a.status === 'pending_market_director').length
 })
 
 const countPendingBureauDirector = computed(() => {
-  let list = Array.isArray(applications.value) ? applications.value : []
-  if (typeFilter.value === 'stall_lease') list = list.filter(a => isStallLease(a))
-  else if (typeFilter.value === 'general') list = list.filter(a => isGeneralApp(a))
+  const list = Array.isArray(applications.value) ? applications.value : []
   return list.filter(a => a.status === 'pending_bureau_director').length
 })
 
 const countApproved = computed(() => {
-  let list = Array.isArray(applications.value) ? applications.value : []
-  if (typeFilter.value === 'stall_lease') list = list.filter(a => isStallLease(a))
-  else if (typeFilter.value === 'general') list = list.filter(a => isGeneralApp(a))
-  return list.filter(a => a.status === 'approved').length
+  const list = Array.isArray(applications.value) ? applications.value : []
+  return list.filter(a => ['approved', 'contract_pending', 'completed'].includes(a.status)).length
 })
 
 const countRejected = computed(() => {
-  let list = Array.isArray(applications.value) ? applications.value : []
-  if (typeFilter.value === 'stall_lease') list = list.filter(a => isStallLease(a))
-  else if (typeFilter.value === 'general') list = list.filter(a => isGeneralApp(a))
-  return list.filter(a => a.status === 'rejected' || a.status === 'revision_required').length
+  const list = Array.isArray(applications.value) ? applications.value : []
+  return list.filter(a => a.status === 'rejected' || a.status === 'cancelled').length
 })
 
-// Filtered Applications
-const filteredApplications = computed(() => {
+// Current Subset Applications: คำร้องที่ผ่านการกรองสถานะระดับ 1 (activeTab) และระดับ 2 (pendingSubFilter)
+const currentSubsetApplications = computed(() => {
   let list = Array.isArray(applications.value) ? applications.value : []
 
-  // Filter by Type
-  if (typeFilter.value === 'stall_lease') {
-    list = list.filter(a => isStallLease(a))
-  } else if (typeFilter.value === 'general') {
-    list = list.filter(a => isGeneralApp(a))
-  }
-
-  // Filter by Active Tab
   if (activeTab.value === 'pending') {
     if (pendingSubFilter.value === 'all') {
       list = list.filter(a => [
@@ -2225,21 +2424,47 @@ const filteredApplications = computed(() => {
         'pending_debt_check',
         'debt_pending',
         'pending_market_director',
-        'pending_bureau_director'
+        'pending_bureau_director',
+        'revision_required'
       ].includes(a.status))
     } else if (pendingSubFilter.value === 'pending_officer') {
-      list = list.filter(a => a.status === 'pending_officer')
+      list = list.filter(a => a.status === 'pending_officer' || a.status === 'submitted')
     } else if (pendingSubFilter.value === 'pending_debt') {
       list = list.filter(a => a.status === 'pending_debt_check' || a.status === 'debt_pending')
     } else if (pendingSubFilter.value === 'pending_market_director') {
       list = list.filter(a => a.status === 'pending_market_director')
     } else if (pendingSubFilter.value === 'pending_bureau_director') {
       list = list.filter(a => a.status === 'pending_bureau_director')
+    } else if (pendingSubFilter.value === 'revision_required') {
+      list = list.filter(a => a.status === 'revision_required')
     }
   } else if (activeTab.value === 'approved') {
-    list = list.filter(a => a.status === 'approved')
+    list = list.filter(a => ['approved', 'contract_pending', 'completed'].includes(a.status))
   } else if (activeTab.value === 'rejected') {
-    list = list.filter(a => a.status === 'rejected' || a.status === 'revision_required')
+    list = list.filter(a => a.status === 'rejected' || a.status === 'cancelled')
+  }
+
+  return list
+})
+
+// Subset counts for Type Filter Pills (เป็น subset ของการ์ดสรุปด้านบนเสมอ)
+const countStallLeaseInSubset = computed(() => {
+  return currentSubsetApplications.value.filter(a => isStallLease(a)).length
+})
+
+const countGeneralInSubset = computed(() => {
+  return currentSubsetApplications.value.filter(a => isGeneralApp(a)).length
+})
+
+// Filtered Applications: นำ subset ของสถานะมากรองประเภทและค้นหาต่อ
+const filteredApplications = computed(() => {
+  let list = currentSubsetApplications.value
+
+  // Filter by Type (subset ต่อจากสถานะ)
+  if (typeFilter.value === 'stall_lease') {
+    list = list.filter(a => isStallLease(a))
+  } else if (typeFilter.value === 'general') {
+    list = list.filter(a => isGeneralApp(a))
   }
 
   // Filter by Search Query
@@ -2255,7 +2480,28 @@ const filteredApplications = computed(() => {
     )
   }
 
-  return list
+  // Sorting
+  const sorted = [...list]
+  if (sortOrder.value === 'project_asc') {
+    sorted.sort((a, b) => {
+      const numA = getProjectNumber(a)
+      const numB = getProjectNumber(b)
+      if (numA !== numB) return numA - numB
+      return getApplicationTimestamp(b) - getApplicationTimestamp(a)
+    })
+  } else if (sortOrder.value === 'project_desc') {
+    sorted.sort((a, b) => {
+      const numA = getProjectNumber(a)
+      const numB = getProjectNumber(b)
+      if (numA !== numB) return numB - numA
+      return getApplicationTimestamp(b) - getApplicationTimestamp(a)
+    })
+  } else {
+    // latest
+    sorted.sort((a, b) => getApplicationTimestamp(b) - getApplicationTimestamp(a))
+  }
+
+  return sorted
 })
 
 const paginatedApplications = computed(() => {
@@ -2282,11 +2528,50 @@ const getApplicationProjectName = (app: any): string => {
   return app.market_name ? app.market_name : 'โครงการทั่วไป'
 }
 
+const getProjectNumber = (app: any): number => {
+  const projName = getApplicationProjectName(app)
+  const match = projName.match(/\d+/)
+  return match ? parseInt(match[0], 10) : 999999
+}
+
+const getApplicationTimestamp = (app: any): number => {
+  if (app.created_at) {
+    const t = new Date(app.created_at).getTime()
+    if (!isNaN(t)) return t
+  }
+  if (app.updated_at) {
+    const t = new Date(app.updated_at).getTime()
+    if (!isNaN(t)) return t
+  }
+  return Number(app.id) || 0
+}
+
+// Find overall latest application ID
+const overallLatestApplicationId = computed(() => {
+  const list = Array.isArray(applications.value) ? applications.value : []
+  if (list.length === 0) return null
+  let latest = list[0]
+  let maxT = getApplicationTimestamp(latest)
+  for (let i = 1; i < list.length; i++) {
+    const t = getApplicationTimestamp(list[i])
+    if (t > maxT) {
+      maxT = t
+      latest = list[i]
+    }
+  }
+  return latest.id
+})
+
+const isLatestApplication = (app: any): boolean => {
+  return overallLatestApplicationId.value !== null && app.id === overallLatestApplicationId.value
+}
+
 // Group paginated applications by project
 interface ApplicationProjectGroup {
   key: string
   projectName: string
   applications: any[]
+  hasLatest: boolean
 }
 
 const paginatedProjectGroups = computed<ApplicationProjectGroup[]>(() => {
@@ -2299,13 +2584,42 @@ const paginatedProjectGroups = computed<ApplicationProjectGroup[]>(() => {
       map.set(key, {
         key,
         projectName: projName,
-        applications: []
+        applications: [],
+        hasLatest: false
       })
     }
-    map.get(key)!.applications.push(app)
+    const group = map.get(key)!
+    group.applications.push(app)
+    if (isLatestApplication(app)) {
+      group.hasLatest = true
+    }
   })
 
-  return Array.from(map.values())
+  const groups = Array.from(map.values())
+
+  // Ensure groups themselves follow the selected sort order
+  if (sortOrder.value === 'project_asc') {
+    groups.sort((a, b) => {
+      const numA = parseInt(a.projectName.match(/\d+/)?.[0] || '999999', 10)
+      const numB = parseInt(b.projectName.match(/\d+/)?.[0] || '999999', 10)
+      return numA - numB
+    })
+  } else if (sortOrder.value === 'project_desc') {
+    groups.sort((a, b) => {
+      const numA = parseInt(a.projectName.match(/\d+/)?.[0] || '0', 10)
+      const numB = parseInt(b.projectName.match(/\d+/)?.[0] || '0', 10)
+      return numB - numA
+    })
+  } else {
+    // latest: group with the newest application on top
+    groups.sort((a, b) => {
+      const maxA = Math.max(...a.applications.map(app => getApplicationTimestamp(app)))
+      const maxB = Math.max(...b.applications.map(app => getApplicationTimestamp(app)))
+      return maxB - maxA
+    })
+  }
+
+  return groups
 })
 
 // Thai Date and Time Formats
@@ -2593,7 +2907,15 @@ const getAllCommentsList = (app: any) => {
 }
 
 // Approval and Actions
-const processApproval = async (app: any, defaultComment: string) => {
+const signatureTarget = ref<{ app: any; comment: string } | null>(null)
+const submitOfficerApproval = async (signature: string) => {
+  const target = signatureTarget.value
+  if (!target) return
+  signatureTarget.value = null
+  await processApproval(target.app, target.comment, signature)
+}
+const processApproval = async (app: any, defaultComment: string, signature = '') => {
+  if (isStallLease(app) && app.status === 'pending_officer' && !signature) { signatureTarget.value = { app, comment: defaultComment }; return }
   const confirmed = await showConfirm(
     `ยืนยันการอนุมัติคำร้องเลขที่ ${app.application_number} หรือไม่?`,
     { title: 'ยืนยันการอนุมัติ', type: 'info', confirmText: 'อนุมัติคำร้อง', cancelText: 'ยกเลิก' }
@@ -2603,7 +2925,8 @@ const processApproval = async (app: any, defaultComment: string) => {
   try {
     await post(`/applications/${app.id}/action`, {
       action: 'approve',
-      comment: defaultComment
+      comment: defaultComment,
+      signature_base64: signature
     })
     await loadApplications()
     await showSuccess('บันทึกการอนุมัติเรียบร้อยแล้ว', 'อนุมัติสำเร็จ')
@@ -2613,47 +2936,30 @@ const processApproval = async (app: any, defaultComment: string) => {
 }
 
 // Detail View
+const idCopyPreviewUrl = ref('')
+const idCopyPreviewType = ref('')
+const closeIDCopyPreview = () => {
+  if (idCopyPreviewUrl.value) URL.revokeObjectURL(idCopyPreviewUrl.value)
+  idCopyPreviewUrl.value = ''
+  idCopyPreviewType.value = ''
+}
+onBeforeUnmount(closeIDCopyPreview)
 const downloadIDCardCopy = async (app: any) => {
   try {
     const file = await apiFetch<Blob>(`/applications/${app.id}/id-card-copy`, { responseType: 'blob' })
-    const url = URL.createObjectURL(file)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'id-card-copy'
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
+    closeIDCopyPreview()
+    idCopyPreviewType.value = file.type.toLowerCase().split(';')[0] || ''
+    idCopyPreviewUrl.value = URL.createObjectURL(file)
   } catch {
-    await showError('ไม่สามารถเปิดสำเนาบัตรประชาชนได้ กรุณาตรวจสอบสิทธิ์', 'เกิดข้อผิดพลาด')
+    await showError('ไม่สามารถเปิดดูสำเนาบัตรประชาชนได้ กรุณาลองใหม่อีกครั้ง', 'เกิดข้อผิดพลาด')
   }
 }
-const openDetails = async (app: any) => {
-  const isStall = isStallLease(app)
-  const typeText = isStall ? 'คำร้องขอเช่าแผงค้า' : 'คำร้องทั่วไป'
-  const stallText = isStall
-    ? `\nแผงค้า: ${app.stall_number || app.stall_ident}`
-    : (app.stall_number && app.stall_number !== '-' ? `\nแผงที่เกี่ยวข้อง: ${app.stall_number}` : '\nแผงค้า: คำร้องทั่วไป (ไม่มีแผง)')
-  const marketText = app.market_name ? `\nตลาด: ${app.market_name}` : ''
-  const subjectText = isStall
-    ? `\nชื่อร้านค้า: ${app.shop_name} (${app.product_type || app.product_category || 'ทั่วไป'})`
-    : `\nหัวข้อคำร้อง: ${app.subject || app.shop_name || 'คำร้องทั่วไป'}`
-  const idCardText = `${app.applicant_id_card ? `\nเลขประจำตัว ปชช.: ${app.applicant_id_card}` : ''}${app.applicant_age ? `\nอายุ: ${app.applicant_age} ปี` : ''}`
-  const emailText = app.applicant_email ? `\nอีเมล: ${app.applicant_email}` : ''
-  const addressText = app.applicant_address && app.applicant_address !== '-' ? `\nที่อยู่: ${app.applicant_address}` : ''
-  const detailText = (app.details || app.review_note)
-    ? `\nรายละเอียดคำร้อง: ${app.details || app.review_note}`
-    : ''
-
-  const comments = getAllCommentsList(app)
-  const commentDetails = comments.length > 0
-    ? '\n\nบันทึกความเห็นการพิจารณา:\n' + comments.map(c => `• ${c.role} (${c.step}): ${c.text}`).join('\n')
-    : ''
-
-  await showAlert(
-    `ประเภท: ${typeText}\nเลขที่คำร้อง: ${app.application_number || app.application_no}${marketText}${stallText}${subjectText}\nผู้ยื่นคำร้อง: ${app.applicant_name} (โทร. ${app.applicant_phone})${idCardText}${emailText}${addressText}\nสถานะ: ${getStatusBadgeLabel(app.status)}\nขั้นตอน: ${getActionActorInfo(app).actionText}${detailText}${commentDetails}`,
-    { title: 'รายละเอียดคำร้อง', type: 'info' }
-  )
+const openDetails = (app: any) => {
+  if (!app?.id) return
+  router.push({
+    path: `/applications/${encodeURIComponent(String(app.id))}`,
+    query: { return: route.fullPath }
+  })
 }
 
 // Reject Modal State
@@ -2868,10 +3174,12 @@ const applicationHistory = computed(() => {
 // Watchers
 watch(activeTab, () => {
   pendingSubFilter.value = 'all'
+  typeFilter.value = 'all'
   currentPage.value = 1
 })
 
 watch(pendingSubFilter, () => {
+  typeFilter.value = 'all'
   currentPage.value = 1
 })
 
@@ -2901,11 +3209,40 @@ onMounted(async () => {
     loadMarkets(),
     loadApplications()
   ])
+  // เปิดหน้าต่างแก้ไขคำร้องอัตโนมัติเมื่อมาจากหน้ารายละเอียดการจอง (เฉพาะคำร้องที่ถูกส่งกลับ)
+  if (route.query.revise) {
+    const target = (Array.isArray(applications.value) ? applications.value : [])
+      .find((a: any) => String(a.id) === String(route.query.revise))
+    if (target && canTenantEdit(target)) openRevision(target)
+  }
+  if (route.query.booking) await openNotificationBooking(route.query.booking)
+})
+watch(() => route.query.booking, (value, previous) => {
+  if (value && value !== previous) openNotificationBooking(value)
 })
 </script>
 
 
 <style scoped>
+.top-row-right { flex-wrap: wrap; }
+.collapsed-actions-group :deep(.app-action-revision), .footer-right-actions :deep(.app-action-revision), .table-actions-cell :deep(.app-action-revision) { order: 1; }
+.collapsed-actions-group :deep(.app-action-reject), .footer-right-actions :deep(.app-action-reject), .table-actions-cell :deep(.app-action-reject) { order: 2; }
+.collapsed-actions-group :deep(.app-action-detail), .footer-right-actions :deep(.app-action-detail), .table-actions-cell :deep(.app-action-detail) { order: 3; }
+.collapsed-actions-group :deep(.more-root), .footer-right-actions :deep(.more-root), .table-actions-cell :deep(.more-root) { order: 4; }
+.id-copy-overlay { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 16px; background: rgba(15, 23, 42, .55); }
+.id-copy-modal { width: min(760px, 100%); max-height: 90vh; display: flex; flex-direction: column; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 35px rgba(15,23,42,.2); }
+.id-copy-header, .id-copy-footer { display: flex; align-items: center; padding: 16px 20px; }
+.id-copy-header { justify-content: space-between; border-bottom: 1px solid #e2e8f0; }
+.id-copy-header h2 { margin: 0; font-size: 1.125rem; color: #1e293b; }
+.id-copy-close { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 8px; background: #f1f5f9; color: #475569; cursor: pointer; }
+.id-copy-content { display: grid; place-items: center; overflow: auto; min-height: 240px; padding: 16px; background: #f8fafc; }
+.id-copy-content img { max-width: 100%; max-height: 65vh; object-fit: contain; }
+.id-copy-content iframe { width: 100%; height: 65vh; border: 0; background: white; }
+.id-copy-content p { font-size: .875rem; color: #64748b; }
+.id-copy-footer { justify-content: flex-end; border-top: 1px solid #e2e8f0; }
+
+.shop-product { color: #64748b; font-size: .875rem; overflow-wrap: anywhere; }
+.applicant-phone-row { margin-top: 6px; }
 
 /* -------------------------------------------------------------
  * Booking-Style Cards & KPI Ribbon Styles (Copied from BookingMain)
@@ -3245,6 +3582,8 @@ onMounted(async () => {
 .kpi-status-dot.blue { background: #2563eb; }
 .kpi-status-dot.purple { background: #8b5cf6; }
 .kpi-status-dot.green { background: #10b981; }
+.kpi-status-dot.orange { background: #ea580c; }
+.chip-orange .subfilter-dot { background: #ea580c; }
 
 .kpi-status-name {
   flex: 1;
@@ -3267,66 +3606,242 @@ onMounted(async () => {
   cursor: pointer;
 }
 
-/* Sub-filter bar */
+/* Sub-filter bar (Approval Status / สถานะการอนุมัติ) */
 .tenant-subfilter-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  margin-top: -12px;
+  margin-bottom: 22px;
 }
 
 .subfilter-chip {
+  appearance: none;
+  border-radius: 8px;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #475569;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  gap: 7px;
+  padding: 5px 12px;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
   white-space: nowrap;
 }
 
-.subfilter-chip:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+/* Badge number pill */
+.subfilter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: all 0.18s ease;
 }
 
-.subfilter-chip.active {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border-color: #93c5fd;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.1);
-}
-
+/* Dot indicators */
 .subfilter-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
+  display: inline-block;
   flex-shrink: 0;
 }
-.chip-amber .subfilter-dot { background: #f59e0b; }
-.chip-blue .subfilter-dot { background: #2563eb; }
-.chip-purple .subfilter-dot { background: #8b5cf6; }
-.chip-green .subfilter-dot { background: #10b981; }
 
-.subfilter-badge {
-  font-size: 0.75rem;
-  padding: 1px 6px;
-  border-radius: 10px;
+/* 1. All chip (Slate / Neutral) */
+.subfilter-chip.chip-all {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+.subfilter-chip.chip-all .subfilter-badge {
   background: #e2e8f0;
-  color: #334155;
-  margin-left: 2px;
+  color: #475569;
+}
+.subfilter-chip.chip-all:hover:not(.active) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+.subfilter-chip.chip-all.active {
+  background: #eff6ff;
+  border: 1.5px solid #3b82f6;
+  color: #1d4ed8;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.12);
+}
+.subfilter-chip.chip-all.active .subfilter-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 700;
 }
 
-.subfilter-chip.active .subfilter-badge {
-  background: #dbeafe;
+/* 2. Amber chip (รอ จนท. ตรวจสอบ) */
+.subfilter-chip.chip-amber {
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  color: #92400e;
+}
+.subfilter-chip.chip-amber .subfilter-dot {
+  background: #f59e0b;
+}
+.subfilter-chip.chip-amber .subfilter-badge {
+  background: #fef3c7;
+  color: #b45309;
+}
+.subfilter-chip.chip-amber:hover:not(.active) {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #78350f;
+}
+.subfilter-chip.chip-amber.active {
+  background: #fef3c7;
+  border: 1.5px solid #f59e0b;
+  color: #78350f;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.15);
+}
+.subfilter-chip.chip-amber.active .subfilter-badge {
+  background: #fde68a;
+  color: #78350f;
+  font-weight: 700;
+}
+
+/* 3. Blue chip (รอ ตรวจสอบหนี้) */
+.subfilter-chip.chip-blue {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
   color: #1e40af;
+}
+.subfilter-chip.chip-blue .subfilter-dot {
+  background: #3b82f6;
+}
+.subfilter-chip.chip-blue .subfilter-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.subfilter-chip.chip-blue:hover:not(.active) {
+  background: #dbeafe;
+  border-color: #bfdbfe;
+  color: #1e3a8a;
+}
+.subfilter-chip.chip-blue.active {
+  background: #dbeafe;
+  border: 1.5px solid #3b82f6;
+  color: #1e3a8a;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.15);
+}
+.subfilter-chip.chip-blue.active .subfilter-badge {
+  background: #bfdbfe;
+  color: #1e3a8a;
+  font-weight: 700;
+}
+
+/* 4. Purple chip (รอ ผอ.ตลาด) */
+.subfilter-chip.chip-purple {
+  background: #faf5ff;
+  border: 1px solid #f3e8ff;
+  color: #6b21a8;
+}
+.subfilter-chip.chip-purple .subfilter-dot {
+  background: #9333ea;
+}
+.subfilter-chip.chip-purple .subfilter-badge {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+.subfilter-chip.chip-purple:hover:not(.active) {
+  background: #f3e8ff;
+  border-color: #e9d5ff;
+  color: #581c87;
+}
+.subfilter-chip.chip-purple.active {
+  background: #f3e8ff;
+  border: 1.5px solid #9333ea;
+  color: #581c87;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(147, 51, 234, 0.15);
+}
+.subfilter-chip.chip-purple.active .subfilter-badge {
+  background: #e9d5ff;
+  color: #581c87;
+  font-weight: 700;
+}
+
+/* 5. Green chip (รอ ผอ.สำนักตลาด) */
+.subfilter-chip.chip-green {
+  background: #f0fdf4;
+  border: 1px solid #dcfce7;
+  color: #166534;
+}
+.subfilter-chip.chip-green .subfilter-dot {
+  background: #10b981;
+}
+.subfilter-chip.chip-green .subfilter-badge {
+  background: #dcfce7;
+  color: #15803d;
+}
+.subfilter-chip.chip-green:hover:not(.active) {
+  background: #dcfce7;
+  border-color: #bbf7d0;
+  color: #14532d;
+}
+.subfilter-chip.chip-green.active {
+  background: #dcfce7;
+  border: 1.5px solid #10b981;
+  color: #14532d;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.15);
+}
+.subfilter-chip.chip-green.active .subfilter-badge {
+  background: #bbf7d0;
+  color: #14532d;
+  font-weight: 700;
+}
+
+/* 6. Orange chip (ส่งกลับแก้ไข) */
+.subfilter-chip.chip-orange {
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+  color: #9a3412;
+}
+.subfilter-chip.chip-orange .subfilter-dot {
+  background: #ea580c;
+}
+.subfilter-chip.chip-orange .subfilter-badge {
+  background: #ffedd5;
+  color: #c2410c;
+}
+.subfilter-chip.chip-orange:hover:not(.active) {
+  background: #ffedd5;
+  border-color: #fed7aa;
+  color: #7c2d12;
+}
+.subfilter-chip.chip-orange.active {
+  background: #ffedd5;
+  border: 1.5px solid #ea580c;
+  color: #7c2d12;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(234, 88, 12, 0.15);
+}
+.subfilter-chip.chip-orange.active .subfilter-badge {
+  background: #fed7aa;
+  color: #7c2d12;
+  font-weight: 700;
 }
 
 /* Accordion Project Headers */
@@ -3938,14 +4453,14 @@ onMounted(async () => {
 .tone-action { color: #2563eb; }
 .tone-muted { color: #64748b; }
 
-/* Application Type Bar & Filter Pills */
+/* Application Type Bar & Filter Pills (สถานะประเภท) */
 .application-type-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 22px;
   padding-bottom: 14px;
   border-bottom: 1px solid #f1f5f9;
 }
@@ -3953,57 +4468,132 @@ onMounted(async () => {
 .type-filter-pills {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: #f8fafc;
-  padding: 4px;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 
 .type-pill {
+  appearance: none;
+  border-radius: 8px;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: #64748b;
-  font-size: 0.8125rem; /* 13px */
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  gap: 7px;
+  padding: 5px 12px;
   font-family: inherit;
-}
-
-.type-pill:hover:not(.active) {
-  color: #1e293b;
-  background: rgba(255, 255, 255, 0.6);
-}
-
-.type-pill.active {
-  background: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  white-space: nowrap;
 }
 
 .type-pill-count {
-  font-size: 0.75rem; /* 12px min floor */
-  padding: 1px 6px;
-  border-radius: 10px;
-  background: #f1f5f9;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: all 0.18s ease;
+}
+
+/* 1. All Type Chip (Slate / Neutral) */
+.type-pill.pill-all,
+.type-pill:not(.pill-stall):not(.pill-general) {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   color: #475569;
+}
+.type-pill.pill-all .type-pill-count,
+.type-pill:not(.pill-stall):not(.pill-general) .type-pill-count {
+  background: #e2e8f0;
+  color: #475569;
+}
+.type-pill.pill-all:hover:not(.active),
+.type-pill:not(.pill-stall):not(.pill-general):hover:not(.active) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+.type-pill.pill-all.active,
+.type-pill:not(.pill-stall):not(.pill-general).active {
+  background: #eff6ff;
+  border: 1.5px solid #3b82f6;
+  color: #1d4ed8;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.12);
+}
+.type-pill.pill-all.active .type-pill-count,
+.type-pill:not(.pill-stall):not(.pill-general).active .type-pill-count {
+  background: #dbeafe;
+  color: #1d4ed8;
   font-weight: 700;
 }
 
-.type-pill.active .type-pill-count {
-  background: #eff6ff;
-  color: #2563eb;
+/* 2. Stall Lease Chip (Emerald / Green Tone) */
+.type-pill.pill-stall {
+  background: #f0fdf4;
+  border: 1px solid #dcfce7;
+  color: #166534;
+}
+.type-pill.pill-stall .type-pill-count {
+  background: #dcfce7;
+  color: #15803d;
+}
+.type-pill.pill-stall:hover:not(.active) {
+  background: #dcfce7;
+  border-color: #bbf7d0;
+  color: #14532d;
+}
+.type-pill.pill-stall.active {
+  background: #dcfce7;
+  border: 1.5px solid #10b981;
+  color: #14532d;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.15);
+}
+.type-pill.pill-stall.active .type-pill-count {
+  background: #bbf7d0;
+  color: #14532d;
+  font-weight: 700;
 }
 
+/* 3. General Request Chip (Purple Tone) */
+.type-pill.pill-general {
+  background: #faf5ff;
+  border: 1px solid #f3e8ff;
+  color: #6b21a8;
+}
+.type-pill.pill-general .type-pill-count {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+.type-pill.pill-general:hover:not(.active) {
+  background: #f3e8ff;
+  border-color: #e9d5ff;
+  color: #581c87;
+}
+.type-pill.pill-general.active {
+  background: #f3e8ff;
+  border: 1.5px solid #9333ea;
+  color: #581c87;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(147, 51, 234, 0.15);
+}
 .type-pill.pill-general.active .type-pill-count {
-  background: #f5f3ff;
-  color: #6d28d9;
+  background: #e9d5ff;
+  color: #581c87;
+  font-weight: 700;
 }
 
 /* Secondary Button for Stall Leasing Action */
@@ -5325,6 +5915,519 @@ onMounted(async () => {
   border: 1px solid #fecaca;
   padding: 6px 10px;
   border-radius: 7px;
+}
+/* Table View: same design as the bookings table (officer-custom-table) */
+.officer-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  margin-top: 6px;
+}
+
+.officer-custom-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+  min-width: 1100px;
+}
+
+.officer-custom-table thead tr {
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.officer-custom-table th {
+  background: transparent !important;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  padding: 16px 20px;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.officer-custom-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
+}
+
+.officer-custom-table tr:hover td {
+  background: #f8fafc;
+}
+
+.officer-custom-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.table-actions-cell :deep(.app-btn) {
+  padding: 0 10px;
+  font-size: 0.8125rem;
+}
+/* Page layout, header & card shell: same as the bookings page */
+.application-main-page {
+  background-color: #f8fafc;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.application-main-page .page-container {
+  padding: 24px 32px 48px;
+  flex: 1;
+}
+
+.page-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 0 20px 0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-header-row .main-page-title {
+  margin: 0;
+}
+
+.main-page-title {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.page-subtitle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.page-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.table-card-container {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.card-header-row {
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.item-count-subtitle {
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+
+.header-right {
+  justify-content: flex-end;
+}
+
+/* ============================================================ */
+/* SORT ORDER DROPDOWN & TOGGLE BUTTON                          */
+/* ============================================================ */
+.sort-dropdown-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.sort-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sort-toggle-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.sort-toggle-btn.active {
+  border-color: #2563eb;
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.sort-toggle-icon {
+  color: #475569;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.sort-toggle-btn:hover .sort-toggle-icon,
+.sort-toggle-btn.active .sort-toggle-icon {
+  color: #2563eb;
+}
+
+.dropdown-chevron-icon {
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-chevron-icon.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.sort-dropdown-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: transparent;
+}
+
+.sort-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 50;
+  min-width: 270px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: fadeInMenu 0.15s ease-out;
+}
+
+@keyframes fadeInMenu {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sort-dropdown-header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 6px 10px 4px;
+}
+
+.sort-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #334155;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.sort-dropdown-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.sort-dropdown-item.selected {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.sort-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.sort-dropdown-item.selected .sort-item-icon {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.sort-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.sort-item-text strong {
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.sort-item-text small {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.1;
+}
+
+.sort-dropdown-item.selected .sort-item-text small {
+  color: #3b82f6;
+}
+
+.sort-check-icon {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+/* Latest Ribbon Badge (Accordion & Card) */
+.latest-ribbon-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-sizing: border-box;
+  height: 24px;
+  padding: 0 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 9999px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06);
+  user-select: none;
+}
+
+.latest-ribbon-badge .pulse-dot-sm {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #2563eb;
+  animation: pulseGlow 1.8s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulseGlow {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+}
+
+/* Stall Shop Name Row (ชื่อร้านตรงข้อมูลแผงค้า) */
+.stall-shop-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 0.8125rem; /* 13px */
+  line-height: 1.3;
+}
+
+.stall-shop-row .shop-prefix {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.stall-shop-row .shop-name-highlight {
+  color: #0f172a;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+/* Applicant Sub Info (อายุ เลขประจำตัวประชาชน และปุ่มดูสำเนาบัตร) */
+.applicant-age-pill {
+  font-size: 0.75rem; /* 12px min floor */
+  font-weight: 600;
+  color: #0369a1;
+  background: #e0f2fe;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.applicant-id-doc-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 0.8125rem; /* 13px */
+  font-family: inherit;
+}
+
+.applicant-id-mono {
+  font-family: inherit;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.applicant-id-mono .sub-label {
+  color: #64748b;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+.btn-id-card-pill {
+  appearance: none;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem; /* 12px min floor */
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  line-height: 1.2;
+}
+
+.btn-id-card-pill:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+/* Inline Metadata Bar (แสดงแบบโปร่งสบาย ไม่ใช้กล่องข้อความ) */
+.application-inline-meta-bar {
+  margin: 10px 18px 6px;
+  padding: 8px 0;
+  border-top: 1px dashed #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: transparent;
+}
+
+.meta-inline-items {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.inline-item-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem; /* 13px */
+}
+
+.inline-item-chip .meta-label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.inline-item-chip .meta-val {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.inline-item-chip .meta-val-muted {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.inline-doc-link-btn {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: #2563eb;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease;
+  font-family: inherit;
+}
+
+.inline-doc-link-btn:hover {
+  color: #1d4ed8;
+}
+
+/* รายละเอียดแบบข้อความโปร่ง ไม่มีกรอบกล่อง */
+.inline-details-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.8125rem; /* 13px */
+  line-height: 1.45;
+}
+
+.details-lead-label {
+  color: #64748b;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.details-lead-text {
+  color: #334155;
+  font-weight: 400;
+  word-break: break-word;
 }
 </style>
 

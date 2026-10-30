@@ -58,6 +58,37 @@ func SeedAll(db *gorm.DB) error {
 			}
 		}
 	}
+	// Director accounts for any environment (including production). Credentials come
+	// from environment variables and fall back to the demo credentials shown on the login
+	// page when unset, so the accounts always exist after deploy. Set the *_PASSWORD
+	// variables in production to use private credentials instead.
+	// Existing accounts are never modified, so passwords can be rotated in the database.
+	for _, d := range []struct {
+		userEnv, passEnv, nameEnv, defUser, defPass, defName, role string
+	}{
+		{"MARKET_DIRECTOR_USERNAME", "MARKET_DIRECTOR_PASSWORD", "MARKET_DIRECTOR_FULL_NAME", "market_director_demo", "marketdemo1234", "ผู้อำนวยการตลาด (ทดสอบ)", "market_director"},
+		{"BUREAU_DIRECTOR_USERNAME", "BUREAU_DIRECTOR_PASSWORD", "BUREAU_DIRECTOR_FULL_NAME", "bureau_director_demo", "bureaudemo1234", "ผู้อำนวยการสำนักตลาด (ทดสอบ)", "bureau_director"},
+	} {
+		pwd := os.Getenv(d.passEnv)
+		if pwd == "" {
+			pwd = d.defPass
+		}
+		username := os.Getenv(d.userEnv)
+		if username == "" {
+			username = d.defUser
+		}
+		fullName := os.Getenv(d.nameEnv)
+		if fullName == "" {
+			fullName = d.defName
+		}
+		var existing models.User
+		if err := db.Where("username = ?", username).
+			Attrs(models.User{Username: username, Password: hashPassword(pwd), FullName: fullName, Role: d.role, Status: "A"}).
+			FirstOrCreate(&existing).Error; err != nil {
+			return err
+		}
+	}
+
 	// 2. Seed 12 BMA Markets
 	var marketCount int64
 	db.Model(&models.Market{}).Count(&marketCount)

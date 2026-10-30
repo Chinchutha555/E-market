@@ -60,6 +60,11 @@ func toApplicationResponse(a *models.Application) responses.ApplicationResponse 
 		ApplicationType:       appType,
 		Subject:               subject,
 		BookingID:             a.BookingID,
+		BookingNumber:         a.BookingNumber,
+		DocumentNumber:        a.DocumentNumber,
+		TenantSignature:       a.TenantSignature,
+		HasOfficerSignature:   len(a.OfficerSignature) > 0,
+		TenantSignedAt:        a.TenantSignedAt,
 		StallID:               a.StallID,
 		MarketID:              a.MarketID,
 		MarketName:            a.MarketName,
@@ -344,6 +349,10 @@ func (u *useCase) UpdateStatus(id int, userID int, req requests.UpdateApplicatio
 
 	now := time.Now()
 	app.ApplicationState = req.Status
+	if len(req.OfficerSignature) > 0 {
+		app.OfficerSignature = req.OfficerSignature
+		app.OfficerSignatureType = req.OfficerSignatureType
+	}
 	if req.Reason != "" {
 		app.ReviewNote = req.Reason
 	}
@@ -407,7 +416,23 @@ func (u *useCase) Action(id int, userID int, req requests.ApplicationActionReque
 		default:
 			return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "การดำเนินการไม่ถูกต้อง")
 		}
-		return u.UpdateStatus(id, userID, requests.UpdateApplicationStatusRequest{Status: status, Reason: comment, OfficerComment: comment})
+		var signature []byte
+		var signatureType string
+		if action == "approve" && (app.ApplicationType == "stall_lease" || (app.ApplicationType == "" && !strings.HasPrefix(app.ApplicationNo, "GEN-") && (app.BookingID != nil || (app.StallIdent != "" && app.StallIdent != "-")))) {
+			if len(req.SignatureBase64) == 0 || len(req.SignatureBase64) > 4*1024*1024 {
+				return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาแนบลายเซ็นเจ้าหน้าที่ขนาดไม่เกิน 3 MB")
+			}
+			var decodeErr error
+			signature, decodeErr = base64.StdEncoding.DecodeString(req.SignatureBase64)
+			if decodeErr != nil || len(signature) == 0 || len(signature) > 3*1024*1024 {
+				return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "ไฟล์ลายเซ็นไม่ถูกต้อง")
+			}
+			signatureType = http.DetectContentType(signature)
+			if signatureType != "image/png" && signatureType != "image/jpeg" {
+				return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "รองรับลายเซ็น PNG หรือ JPEG เท่านั้น")
+			}
+		}
+		return u.UpdateStatus(id, userID, requests.UpdateApplicationStatusRequest{Status: status, Reason: comment, OfficerComment: comment, OfficerSignature: signature, OfficerSignatureType: signatureType})
 	}
 	if app.ApplicationState != "pending_market_director" && app.ApplicationState != "pending_bureau_director" {
 		return nil, responses.NewAppErr(http.StatusConflict, "คำร้องไม่ได้อยู่ในขั้นที่สามารถพิจารณาได้")

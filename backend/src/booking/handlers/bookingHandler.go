@@ -309,6 +309,7 @@ func (h *Handler) transition(c *gin.Context, status string, officerOnly bool) {
 		}
 	}
 	var body struct {
+		RentalType      string `json:"rental_type"`
 		Reason          string `json:"reason"`
 		RejectionReason string `json:"rejection_reason"`
 		MeetingPoint    string `json:"meeting_point"`
@@ -319,6 +320,10 @@ func (h *Handler) transition(c *gin.Context, status string, officerOnly bool) {
 		CancelAll       bool   `json:"cancel_all"`
 	}
 	_ = c.ShouldBindJSON(&body)
+	if status == "interested" && (strings.TrimSpace(body.StallIdent) == "" || (body.RentalType != "temporary" && body.RentalType != "contract" && body.RentalType != "trial")) {
+		respondError(c, responses.NewAppErr(http.StatusBadRequest, "กรุณาเลือกแผงและประเภทการค้า"))
+		return
+	}
 	reason := body.Reason
 	if reason == "" {
 		reason = body.RejectionReason
@@ -328,6 +333,7 @@ func (h *Handler) transition(c *gin.Context, status string, officerOnly bool) {
 	}
 	res, err := h.useCase.UpdateStatus(id, middlewares.GetUserID(c), requests.UpdateBookingStatusRequest{
 		Status:          status,
+		RentalType:      body.RentalType,
 		Reason:          reason,
 		RejectionReason: body.RejectionReason,
 		MeetingPoint:    body.MeetingPoint,

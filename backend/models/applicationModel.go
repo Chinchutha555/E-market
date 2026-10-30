@@ -3,6 +3,12 @@ package models
 import "time"
 
 type Application struct {
+	OfficerSignature      []byte     `gorm:"column:officer_signature" json:"-"`
+	OfficerSignatureType  string     `gorm:"size:50;column:officer_signature_type" json:"-"`
+	DocumentNumber        string     `gorm:"-" json:"document_number,omitempty"`
+	TenantSignature       string     `gorm:"size:255;column:tenant_signature" json:"tenant_signature,omitempty"`
+	TenantSignedAt        *time.Time `gorm:"column:tenant_signed_at" json:"tenant_signed_at,omitempty"`
+	BookingNumber         string     `gorm:"-" json:"booking_number,omitempty"`
 	ID                    int        `gorm:"primaryKey;autoIncrement" json:"id"`
 	ApplicationNo         string     `gorm:"size:50;unique;not null;column:application_no" json:"application_no"`
 	ApplicationType       string     `gorm:"size:50;default:'stall_lease';column:application_type" json:"application_type"`

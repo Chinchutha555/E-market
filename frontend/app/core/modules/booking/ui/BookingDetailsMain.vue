@@ -218,25 +218,25 @@
               </AppButton>
 
               <AppButton
-                v-else-if="['interested', 'pending_decision'].includes(booking.status)"
+                v-else-if="leaseApplications.length > 0 || booking.status === 'lease_applied' || booking.status === 'completed'"
+                :to="leaseApplications.length > 0 ? `/applications/${leaseApplications[0].id}` : '/applications'"
                 variant="primary"
                 size="md"
-                :disabled="actionLoading"
-                @click="openLeaseForSubBooking(booking)"
               >
-                <span>ยื่นคำร้องขอเช่าแผงนี้</span>
+                <span>ดูรายละเอียดคำร้อง</span>
                 <template #suffix>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </template>
               </AppButton>
 
               <AppButton
-                v-else-if="booking.status === 'lease_applied' || booking.status === 'completed'"
-                to="/applications"
-                variant="purple"
+                v-else-if="['interested', 'pending_decision', 'confirmed_rent'].includes(booking.status)"
+                variant="primary"
                 size="md"
+                :disabled="actionLoading"
+                @click="openLeaseForSubBooking(booking)"
               >
-                <span>ติดตามคำร้อง</span>
+                <span>ยื่นคำร้องขอเช่าแผงนี้</span>
                 <template #suffix>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </template>
@@ -361,6 +361,48 @@
                 <div v-if="booking.tenant_id_card"><dt>เลขบัตรประชาชน</dt><dd>{{ booking.tenant_id_card || '-' }}</dd></div>
               </dl>
             </article>
+
+              <article v-if="currentRole === 'tenant' && leaseApplications.length" class="summary-section lease-application-section">
+                <div class="section-heading">
+                  <span class="section-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                  </span>
+                  <div>
+                    <h3>คำร้องขอเช่าแผงค้า</h3>
+                    <p>ข้อมูลที่คุณยื่นไว้ · {{ leaseApplications.length }} คำร้อง</p>
+                  </div>
+                </div>
+
+                <div v-for="app in leaseApplications" :key="app.id" class="lease-app-item">
+                  <div class="lease-app-head">
+                    <div>
+                      <strong class="lease-app-number">#{{ app.application_number || app.application_no || app.id }}</strong>
+                      <span class="lease-app-stall">แผง {{ app.stall_number || app.stall_ident || '-' }}</span>
+                    </div>
+                    <span class="status-badge" :class="getLeaseAppTone(app.status)">{{ getLeaseAppStatusLabel(app.status) }}</span>
+                  </div>
+
+                  <dl class="detail-list">
+                    <div><dt>ชื่อร้านค้า</dt><dd>{{ app.shop_name || '-' }}</dd></div>
+                    <div><dt>ประเภทสินค้า</dt><dd>{{ app.product_type || app.product_category || '-' }}</dd></div>
+                    <div><dt>ระยะเวลาเช่า</dt><dd>{{ app.requested_period_months || app.lease_term_months || '-' }} เดือน</dd></div>
+                    <div><dt>วันที่ขอเริ่มสัญญา</dt><dd>{{ app.requested_start_date || '-' }}</dd></div>
+                    <div v-if="app.stall_monthly_rate || app.monthly_rate"><dt>ค่าเช่า/เดือน</dt><dd>฿{{ Number(app.stall_monthly_rate || app.monthly_rate).toLocaleString() }}</dd></div>
+                    <div><dt>วันที่ยื่นคำร้อง</dt><dd>{{ formatThaiDateTime(app.created_at || app.submitted_at) }}</dd></div>
+                    <div v-if="app.details" class="full"><dt>รายละเอียดเพิ่มเติม</dt><dd>{{ app.details }}</dd></div>
+                  </dl>
+
+                  <div v-if="app.status === 'revision_required'" class="lease-app-notice is-revision">
+                    <span>เจ้าหน้าที่ส่งคำร้องกลับให้แก้ไข{{ app.officer_comment || app.review_note ? ': ' + (app.officer_comment || app.review_note) : '' }}</span>
+                    <AppButton :to="`/applications?revise=${app.id}`" variant="primary" size="sm">แก้ไขคำร้อง</AppButton>
+                  </div>
+                  <div v-else class="lease-app-notice">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <span>ข้อมูลนี้แก้ไขไม่ได้ จนกว่าเจ้าหน้าที่จะส่งคำร้องกลับมาให้แก้ไข</span>
+                    <NuxtLink :to="`/applications/${app.id}?return=${encodeURIComponent(route.fullPath)}`" class="lease-app-link">ดูรายละเอียดคำร้อง</NuxtLink>
+                  </div>
+                </div>
+              </article>
 
             </div>
             <article class="summary-section booking-map-section">
@@ -548,6 +590,7 @@
       </div>
     </Transition>
   </div>
+  <ConfirmStallRentalModal :open="rentalConfirmOpen" :booking="rentalConfirmBooking" :loading="rentalConfirmLoading" @cancel="rentalConfirmOpen = false" @confirm="confirmRental" />
 </template>
 
 <script setup lang="ts">
@@ -662,8 +705,9 @@ const slotTimeOptions = computed(() => {
 
 watch(slotDate, () => {
   const opts = slotTimeOptions.value
-  if (opts.length > 0 && !opts.some(o => o.value === slotTime.value)) {
-    slotTime.value = opts[0].value
+  const firstOption = opts[0]
+  if (firstOption && !opts.some(o => o.value === slotTime.value)) {
+    slotTime.value = firstOption.value
   }
 })
 
@@ -808,7 +852,7 @@ const STALL_PREFIX_PROJECT_MAP: Record<string, string> = {
 }
 
 const getSubStallProjectName = (sub: any): string => {
-  const rawCode = String(sub?.stall_number || sub?.stall_ident || '').split(',')[0].trim().toUpperCase()
+  const rawCode = (String(sub?.stall_number || sub?.stall_ident || '').split(',')[0] ?? '').trim().toUpperCase()
   const parts = rawCode.split('-')
   if (parts.length >= 2) {
     const prefix = `${parts[0]}-${parts[1]}`
@@ -864,8 +908,8 @@ const steps = [
 
 const currentStep = computed(() => {
   const status = booking.value?.status
-  if (['lease_applied', 'completed', 'interested'].includes(status)) return 3
-  if (['approved', 'waiting_queue', 'pending_decision'].includes(status)) return 2
+  if (['lease_applied', 'completed', 'interested'].includes(status) || leaseApplications.value.length > 0) return 3
+  if (['approved', 'waiting_queue', 'pending_decision', 'confirmed_rent'].includes(status)) return 2
   return 1
 })
 
@@ -902,8 +946,8 @@ const activeHolderMaskedName = computed(() => {
   if (activeHolder.value?.tenant_name) {
     const clean = String(activeHolder.value.tenant_name).trim().replace(/^(นาย|นางสาว|นาง|น\.ส\.|คุณ)\s*/, '')
     const parts = clean.split(/\s+/).filter(Boolean)
-    if (parts.length > 1) return `คุณ${parts[0]} ${parts[1].charAt(0)}.***`
-    if (parts.length === 1) return `คุณ${parts[0].slice(0, 3)}***`
+    if (parts.length > 1) return `คุณ${parts[0]} ${(parts[1] ?? '').charAt(0)}.***`
+    if (parts.length === 1) return `คุณ${(parts[0] ?? '').slice(0, 3)}***`
   }
   const masked = stallWaitingQueueInfo.value?.masked_current_booker
   if (masked && masked !== '-') return masked
@@ -1019,7 +1063,19 @@ const nextAction = computed(() => {
       ? { tone: 'action', owner: 'เจ้าหน้าที่ต้องทำ', title: 'ยืนยันการเช่าหลังพาชมแผง', description: 'หลังทราบผลจากผู้เช่าแล้ว ให้ยืนยันว่าตกลงเช่าหรือไม่เช่า' }
       : { tone: 'action', owner: 'คุณต้องทำ', title: 'ไปตามวัน เวลา และจุดนัดหมาย', description: `${formatVisitDate(item)} · ${getVisitSlot(item)} · ${item?.meeting_point || 'จุดนัดพบตามที่เจ้าหน้าที่แจ้ง'}` }
   }
-  if (['interested', 'pending_decision'].includes(status)) {
+  if (leaseApplications.value.length > 0 || status === 'lease_applied') {
+    const app = leaseApplications.value[0]
+    const appNo = app ? (app.application_number || app.application_no || '') : ''
+    return {
+      tone: 'waiting',
+      owner: isOfficer ? 'ผู้เช่ายื่นแล้ว' : 'รอเจ้าหน้าที่',
+      title: 'รอเจ้าหน้าที่ตรวจสอบคำร้องขอเช่าแผง',
+      description: appNo
+        ? `ยื่นคำร้อง ${appNo} เรียบร้อยแล้ว อยู่ระหว่างเจ้าหน้าที่ตรวจสอบเอกสาร`
+        : 'ยื่นคำร้องขอเช่าแผงเรียบร้อยแล้ว อยู่ระหว่างเจ้าหน้าที่ตรวจสอบเอกสาร'
+    }
+  }
+  if (['interested', 'pending_decision', 'confirmed_rent'].includes(status)) {
     const days = Number(item?.application_deadline_days || 3)
     let deadlineNote = `ภายใน ${days} วัน`
     if (item?.expires_at) {
@@ -1043,7 +1099,7 @@ const loadBooking = async () => {
   loading.value = true
   try {
     const response: any = await get('/bookings', { _t: Date.now() })
-    const items = Array.isArray(response) ? response : (Array.isArray(response?.data) ? response.data : [])
+    const items: any[] = Array.isArray(response) ? response : (Array.isArray(response?.data) ? response.data : [])
     allBookings.value = items
     setCachedScheduleBookings(items)
     const key = String(route.params.id || '')
@@ -1162,34 +1218,23 @@ const confirmReject = async () => {
 }
 
 // 3. Officer Mark Visited (ยืนยันการเช่า)
-const handleMarkVisited = async () => {
-  if (!booking.value) return
-  const b = booking.value
-  const confirmed = await showConfirm(
-    `ยืนยันว่าคุณ ${b.tenant_name} เข้าชมแผง ${appointmentStallSummary.value} เรียบร้อยแล้วใช่หรือไม่?\n(ระบบจะเปลี่ยนสถานะเป็น "รอผู้เช่ายื่นคำร้อง" เพื่อให้ผู้เช่ายื่นคำร้องขอเช่าแผงที่คงเหลือในใบจองนี้ได้ทันที)`,
-    {
-      title: 'ยืนยันการเช่า',
-      type: 'info',
-      confirmText: 'ยืนยันการเช่า',
-      cancelText: 'ยกเลิก'
-    }
-  )
-  if (!confirmed) return
-  actionLoading.value = true
+const rentalConfirmOpen = ref(false)
+const rentalConfirmBooking = ref<any>(null)
+const rentalConfirmLoading = ref(false)
+const handleMarkVisited = () => { rentalConfirmBooking.value = booking.value; rentalConfirmOpen.value = true }
+const confirmRental = async (selection: { stallIdent: string; rentType: string }) => {
+  const b = rentalConfirmBooking.value
+  if (!b || rentalConfirmLoading.value) return
+  rentalConfirmLoading.value = true
   try {
-    await post(`/bookings/${b.id}/mark-visited`, {
-      officer_notes: 'เจ้าหน้าที่ยืนยันการเช่าเรียบร้อย รอผู้เช่ายื่นคำร้อง'
-    })
+    await post(`/bookings/${b.id}/mark-visited`, { stall_ident: selection.stallIdent, rental_type: selection.rentType, officer_notes: 'เจ้าหน้าที่ยืนยันการเช่า รอผู้เช่ายื่นคำร้อง' })
+    rentalConfirmOpen.value = false
     await loadBooking()
-    await showSuccess('ยืนยันการเช่าเรียบร้อยแล้ว สถานะเปลี่ยนเป็น "รอผู้เช่ายื่นคำร้อง"', 'สำเร็จ')
-  } catch (err: any) {
-    await showError(err?.data?.detail || 'เกิดข้อผิดพลาด', 'ข้อผิดพลาด')
-  } finally {
-    actionLoading.value = false
-  }
+    await showSuccess('ยืนยันการเช่าแผง ' + selection.stallIdent + ' เรียบร้อยแล้ว', 'สำเร็จ')
+  } catch (err: any) { await showError(err?.data?.detail || err?.data?.message || 'เกิดข้อผิดพลาด', 'ไม่สำเร็จ') }
+  finally { rentalConfirmLoading.value = false }
 }
 
-// 4. Officer Cancel (approved, interested, pending_slot, waiting_queue)
 const handleOfficerCancel = async () => {
   if (!booking.value) return
   const b = booking.value
@@ -1284,13 +1329,13 @@ const openSelectSlotModal = () => {
   const openDates = modalAvailableDates.value.filter(d => !d.isClosed && !d.isAllFull)
   if (existingIso && openDates.some(d => d.date === existingIso)) {
     slotDate.value = existingIso
-  } else if (openDates.length > 0) {
+  } else if (openDates[0]) {
     slotDate.value = openDates[0].date
   }
   const availableSlotsForDate = slotTimeOptions.value
   if (b?.visit_time_slot && availableSlotsForDate.some(o => o.value === b.visit_time_slot)) {
     slotTime.value = b.visit_time_slot
-  } else if (availableSlotsForDate.length > 0) {
+  } else if (availableSlotsForDate[0]) {
     slotTime.value = availableSlotsForDate[0].value
   }
   showSelectSlotModal.value = true
@@ -1339,6 +1384,48 @@ const formatVisitDate = (item: any) => {
 const getVisitSlot = (item: any) => item?.visit_time_slot || 'รอยืนยันเวลา'
 const actorRoleLabel = (role: string) => role === 'officer' ? 'เจ้าหน้าที่' : role === 'system' ? 'ระบบ' : 'ผู้เช่า'
 const roleClass = (role: string) => role === 'officer' ? 'officer' : role === 'system' ? 'system' : 'tenant'
+
+// คำร้องขอเช่าที่ผู้เช่ายื่นไว้ (อ่านอย่างเดียว แก้ไขได้เมื่อเจ้าหน้าที่ส่งกลับ)
+const leaseApplications = ref<any[]>([])
+const loadLeaseApplications = async () => {
+  const b = booking.value
+  if (!b || currentRole.value !== 'tenant') {
+    leaseApplications.value = []
+    return
+  }
+  const ids = new Set<string>([String(b.id)])
+  if (Array.isArray(b.sub_bookings)) b.sub_bookings.forEach((s: any) => ids.add(String(s.id)))
+  try {
+    const res: any = await get('/applications', { _t: Date.now() })
+    const items = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : [])
+    leaseApplications.value = items.filter((a: any) => a?.booking_id && ids.has(String(a.booking_id)))
+  } catch {
+    leaseApplications.value = []
+  }
+}
+const getLeaseAppStatusLabel = (status: string) => {
+  switch (status) {
+    case 'pending_officer': return 'รอเจ้าหน้าที่ตรวจเอกสาร'
+    case 'pending_debt_check': return 'รอตรวจสอบหนี้'
+    case 'debt_pending': return 'มีหนี้ค้างชำระ'
+    case 'pending_market_director': return 'รอ ผอ.ตลาดพิจารณา'
+    case 'pending_bureau_director': return 'รอ ผอ.สำนักตลาดพิจารณา'
+    case 'approved': return 'อนุมัติแล้ว'
+    case 'contract_pending': return 'รอตรวจสัญญา'
+    case 'completed': return 'ทำสัญญาแล้ว'
+    case 'revision_required': return 'ต้องแก้ไขเอกสาร'
+    case 'rejected': return 'ไม่อนุมัติ'
+    default: return status || 'รอดำเนินการ'
+  }
+}
+const getLeaseAppTone = (status: string) => {
+  if (status === 'approved' || status === 'completed') return 'tone-success'
+  if (status === 'rejected') return 'tone-danger'
+  if (status === 'pending_market_director' || status === 'contract_pending') return 'tone-blue'
+  if (status === 'pending_bureau_director') return 'tone-purple'
+  return 'tone-warning'
+}
+watch(() => booking.value?.id, loadLeaseApplications, { immediate: true })
 
 onMounted(loadBooking)
 watch(() => route.params.id, loadBooking)
@@ -1508,4 +1595,14 @@ watch(() => route.params.id, loadBooking)
 @media (max-width: 640px) { .booking-information .summary-section { padding: 16px; }.booking-information .tenant-list { grid-template-columns: minmax(0, 1fr); }.booked-stalls-table { min-width: 520px; }.progress-card { padding: 16px 12px; }.progress-step { min-width: 0; flex: 1; }.progress-copy strong { font-size: var(--font-size-xs); }.progress-line { min-width: 12px; margin-inline: 8px; }.detail-hero h1 { font-size: var(--font-size-xl); }.timeline-edge-trigger { font-size: var(--font-size-2xs); } }
 @media (prefers-reduced-motion: reduce) { .booking-map-skeleton { animation: none; } }
 
+.lease-application-section .lease-app-item { padding: 14px 0; border-top: 1px solid #f1f5f9; }
+.lease-application-section .lease-app-item:first-of-type { border-top: 0; padding-top: 0; }
+.lease-app-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.lease-app-number { font-size: 1rem; font-weight: 700; color: #0f172a; }
+.lease-app-stall { margin-left: 10px; padding: 2px 10px; border-radius: 6px; background: #f1f5f9; color: #475569; font-size: 0.8125rem; font-weight: 600; }
+.lease-app-notice { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 14px; padding: 10px 14px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 0.8125rem; line-height: 1.45; }
+.lease-app-notice.is-revision { justify-content: space-between; background: #fffbeb; border-color: #fde68a; color: #92400e; }
+.lease-app-link { margin-left: auto; color: #2563eb; font-weight: 600; text-decoration: none; }
+.lease-app-link:hover { text-decoration: underline; }
+.tone-danger { background: #fee2e2; color: #dc2626; }
 </style>
