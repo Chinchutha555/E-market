@@ -1288,94 +1288,76 @@
                     </div>
                   </section>
 
-                  <section class="ov-dash-section-card ov-project-status-card" aria-labelledby="project-status-heading">
-                    <div class="ov-dash-section-head">
-                      <div>
-                        <h4 id="project-status-heading" class="ov-dash-section-title">สัดส่วนสถานะแผงรายโครงการ</h4>
-                        <p class="ov-dash-section-note">เลือกโครงการเพื่อดูสัดส่วนสถานะแผง</p>
-                      </div>
-                    </div>
-                    <AppSelect
-                      :model-value="selectedDashboardProjectId"
-                      :options="dashboardProjectOptions"
-                      placeholder="เลือกโครงการ"
-                      @update:model-value="handleDashboardProjectChange"
-                    />
-                    <div v-if="selectedDashboardProjectStatus" class="ov-project-donut-focus">
-                      <div class="ov-project-donut-wrap">
-                        <div
-                          class="ov-project-donut-chart"
-                          :style="selectedDashboardProjectDonutStyle"
-                          role="img"
-                          :aria-label="`${selectedDashboardProjectStatus.name}: ว่าง ${selectedDashboardProjectStatus.available}, มีผู้เช่า ${selectedDashboardProjectStatus.occupied}, ติดจอง ${selectedDashboardProjectStatus.reserved}`"
-                        >
-                          <span>
-                            <strong>{{ selectedDashboardProjectStatus.total.toLocaleString('th-TH') }}</strong>
-                            <small>แผงทั้งหมด</small>
-                          </span>
-                        </div>
-                        <strong class="ov-project-donut-name">{{ selectedDashboardProjectStatus.name }}</strong>
-                      </div>
-                      <div class="ov-project-donut-stats">
-                        <div class="is-available">
-                          <span><i></i>ว่าง</span>
-                          <strong>{{ selectedDashboardProjectStatus.available.toLocaleString('th-TH') }}</strong>
-                          <small>{{ selectedDashboardProjectStatus.availablePct.toFixed(1) }}%</small>
-                        </div>
-                        <div class="is-occupied">
-                          <span><i></i>มีผู้เช่า</span>
-                          <strong>{{ selectedDashboardProjectStatus.occupied.toLocaleString('th-TH') }}</strong>
-                          <small>{{ selectedDashboardProjectStatus.occupiedPct.toFixed(1) }}%</small>
-                        </div>
-                        <div class="is-reserved">
-                          <span><i></i>ติดจอง</span>
-                          <strong>{{ selectedDashboardProjectStatus.reserved.toLocaleString('th-TH') }}</strong>
-                          <small>{{ selectedDashboardProjectStatus.reservedPct.toFixed(1) }}%</small>
-                        </div>
-                      </div>
-                    </div>
-                    <div v-else class="ov-project-donut-empty">
-                      ยังไม่มีข้อมูลโครงการ
-                    </div>
-                  </section>
-
                   <section class="ov-dash-section-card" aria-labelledby="all-project-donuts-heading">
                     <div class="ov-dash-section-head">
                       <div>
                         <h4 id="all-project-donuts-heading" class="ov-dash-section-title">ภาพรวมทุกโครงการ</h4>
-                        <p class="ov-dash-section-note">เปรียบเทียบสัดส่วนสถานะแผง</p>
                       </div>
                     </div>
-                    <div class="ov-project-mini-donut-grid">
-                      <article
-                        v-for="project in stallProjectStatusBreakdown"
-                        :key="`donut-${project.id}`"
-                        class="ov-project-mini-donut-card"
-                        :class="{ active: selectedDashboardProjectId === project.id }"
-                        tabindex="0"
-                        :aria-label="`${project.name}: ว่าง ${project.available}, มีผู้เช่า ${project.occupied}, ติดจอง ${project.reserved}`"
-                        @click="selectDashboardProject(project.id)"
-                        @keydown.enter.prevent="selectDashboardProject(project.id)"
-                        @keydown.space.prevent="selectDashboardProject(project.id)"
-                      >
+                    <div class="ov-project-column-legend" aria-label="สรุปสถานะแผงทุกโครงการ">
+                      <span class="is-available"><i></i>ว่าง <strong>{{ allProjectsChartSummary.available.toLocaleString('th-TH') }}</strong></span>
+                      <span class="is-reserved"><i></i>ติดจอง <strong>{{ allProjectsChartSummary.reserved.toLocaleString('th-TH') }}</strong></span>
+                      <span class="is-occupied"><i></i>มีผู้เช่า <strong>{{ allProjectsChartSummary.occupied.toLocaleString('th-TH') }}</strong></span>
+                    </div>
+                    <div class="ov-project-column-chart">
+                      <div class="ov-project-column-y-axis" aria-hidden="true">
                         <span
-                          v-if="project.badgeText"
-                          class="ov-project-mini-badge"
-                          :class="`is-${project.badgeTone}`"
-                        >{{ project.badgeText }}</span>
-                        <div class="ov-project-mini-donut" :style="projectDonutStyle(project)">
-                          <span>
-                            <strong>{{ project.total.toLocaleString('th-TH') }}</strong>
-                            <small>แผง</small>
-                          </span>
+                          v-for="tick in allProjectsChartTicks"
+                          :key="`project-chart-tick-${tick}`"
+                          :style="{ bottom: `${(tick / allProjectsChartMax) * 100}%` }"
+                        >{{ tick.toLocaleString('th-TH') }}</span>
+                      </div>
+                      <div class="ov-project-column-scroll" tabindex="0" aria-label="กราฟภาพรวมทุกโครงการ เลื่อนแนวนอนเพื่อดูโครงการเพิ่มเติม">
+                        <div
+                          class="ov-project-column-grid"
+                          :style="{
+                            '--project-count': stallProjectStatusBreakdown.length,
+                            '--grid-step': `${100 / Math.max(1, allProjectsChartTicks.length - 1)}%`
+                          }"
+                        >
+                          <button
+                            v-for="project in stallProjectStatusBreakdown"
+                            :key="`column-${project.id}`"
+                            type="button"
+                            class="ov-project-column-item"
+                            :class="{ active: selectedDashboardProjectId === project.id }"
+                            :style="{ '--bar-ratio': project.total / allProjectsChartMax }"
+                            :aria-label="`${project.name}: ว่าง ${project.available}, มีผู้เช่า ${project.occupied}, ติดจอง ${project.reserved}`"
+                            @click="selectDashboardProject(project.id)"
+                          >
+                            <span class="ov-project-column-total">{{ project.total.toLocaleString('th-TH') }}</span>
+                            <span class="ov-project-column-stack">
+                              <i
+                                v-if="project.available"
+                                class="is-available"
+                                :style="{ height: `${project.availablePct}%` }"
+                                :title="`ว่าง ${project.available.toLocaleString('th-TH')} แผง`"
+                              ></i>
+                              <i
+                                v-if="project.reserved"
+                                class="is-reserved"
+                                :style="{ height: `${project.reservedPct}%` }"
+                                :title="`ติดจอง ${project.reserved.toLocaleString('th-TH')} แผง`"
+                              ></i>
+                              <i
+                                v-if="project.occupied"
+                                class="is-occupied"
+                                :style="{ height: `${project.occupiedPct}%` }"
+                                :title="`มีผู้เช่า ${project.occupied.toLocaleString('th-TH')} แผง`"
+                              ></i>
+                            </span>
+                            <strong class="ov-project-column-label">{{ project.chartLabel }}</strong>
+                            <span class="ov-project-column-tooltip" role="tooltip">
+                              <strong>{{ project.name }}</strong>
+                              <span class="ov-project-column-tooltip-stats">
+                                <small class="is-available">ว่าง <b>{{ project.available.toLocaleString('th-TH') }}</b></small>
+                                <small class="is-reserved">ติดจอง <b>{{ project.reserved.toLocaleString('th-TH') }}</b></small>
+                                <small class="is-occupied">มีผู้เช่า <b>{{ project.occupied.toLocaleString('th-TH') }}</b></small>
+                              </span>
+                            </span>
+                          </button>
                         </div>
-                        <strong class="ov-project-mini-name">{{ project.name }}</strong>
-                        <div class="ov-project-mini-tooltip" role="tooltip">
-                          <span class="is-available">ว่าง <strong>{{ project.available }}</strong><small>{{ project.availablePct.toFixed(1) }}%</small></span>
-                          <span class="is-occupied">มีผู้เช่า <strong>{{ project.occupied }}</strong><small>{{ project.occupiedPct.toFixed(1) }}%</small></span>
-                          <span class="is-reserved">ติดจอง <strong>{{ project.reserved }}</strong><small>{{ project.reservedPct.toFixed(1) }}%</small></span>
-                        </div>
-                      </article>
+                      </div>
                     </div>
                   </section>
 
@@ -1403,7 +1385,7 @@
                     </div>
                   </section>
 
-                  <section class="ov-dash-section-card" aria-labelledby="return-status-heading">
+                  <section class="ov-dash-section-card ov-operational-status-card" aria-labelledby="return-status-heading">
                     <div class="ov-dash-section-head">
                       <h4 id="return-status-heading" class="ov-dash-section-title">การส่งคืนแผงค้า</h4>
                     </div>
@@ -1416,7 +1398,7 @@
                     </div>
                   </section>
 
-                  <section class="ov-dash-section-card" aria-labelledby="legal-status-heading">
+                  <section class="ov-dash-section-card ov-operational-status-card" aria-labelledby="legal-status-heading">
                     <div class="ov-dash-section-head">
                       <h4 id="legal-status-heading" class="ov-dash-section-title">การดำเนินคดี</h4>
                     </div>
@@ -1428,21 +1410,25 @@
                     </div>
                   </section>
 
-                  <section class="ov-dash-section-card" aria-labelledby="maintenance-status-heading">
+                  <section class="ov-dash-section-card ov-operational-status-card" aria-labelledby="maintenance-status-heading">
                     <div class="ov-dash-section-head">
                       <h4 id="maintenance-status-heading" class="ov-dash-section-title">งานซ่อมบำรุง</h4>
                     </div>
-                    <div class="ov-maintenance-stacked-bar" aria-hidden="true">
-                      <span class="is-pending" :style="{ flex: stallMaintenanceDashboardSummary.pending }"></span>
-                      <span class="is-repairing" :style="{ flex: stallMaintenanceDashboardSummary.repairing }"></span>
-                      <span class="is-completed" :style="{ flex: stallMaintenanceDashboardSummary.completed }"></span>
-                      <span class="is-overdue" :style="{ flex: stallMaintenanceDashboardSummary.overdue }"></span>
-                    </div>
-                    <div class="ov-maintenance-legend">
-                      <span><i class="is-pending"></i>รอดำเนินการ <strong>{{ stallMaintenanceDashboardSummary.pending }}</strong></span>
-                      <span><i class="is-repairing"></i>กำลังซ่อม <strong>{{ stallMaintenanceDashboardSummary.repairing }}</strong></span>
-                      <span><i class="is-completed"></i>ซ่อมเสร็จ <strong>{{ stallMaintenanceDashboardSummary.completed }}</strong></span>
-                      <span><i class="is-overdue"></i>เกินกำหนด <strong>{{ stallMaintenanceDashboardSummary.overdue }}</strong></span>
+                    <div class="ov-maintenance-donut-layout">
+                      <div
+                        class="ov-maintenance-donut"
+                        :style="stallMaintenanceDonutStyle"
+                        role="img"
+                        :aria-label="`งานซ่อมทั้งหมด ${stallMaintenanceTotal} รายการ: รอดำเนินการ ${stallMaintenanceDashboardSummary.pending}, กำลังซ่อม ${stallMaintenanceDashboardSummary.repairing}, ซ่อมเสร็จ ${stallMaintenanceDashboardSummary.completed}, เกินกำหนด ${stallMaintenanceDashboardSummary.overdue}`"
+                      >
+                        <span><strong>{{ stallMaintenanceTotal.toLocaleString('th-TH') }}</strong><small>งานทั้งหมด</small></span>
+                      </div>
+                      <div class="ov-maintenance-legend">
+                        <span><i class="is-pending"></i>รอดำเนินการ <strong>{{ stallMaintenanceDashboardSummary.pending }}</strong></span>
+                        <span><i class="is-repairing"></i>กำลังซ่อม <strong>{{ stallMaintenanceDashboardSummary.repairing }}</strong></span>
+                        <span><i class="is-completed"></i>ซ่อมเสร็จ <strong>{{ stallMaintenanceDashboardSummary.completed }}</strong></span>
+                        <span><i class="is-overdue"></i>เกินกำหนด <strong>{{ stallMaintenanceDashboardSummary.overdue }}</strong></span>
+                      </div>
                     </div>
                   </section>
 
@@ -2247,7 +2233,7 @@
                         </div>
                         <div class="issd-kpi-card">
                           <span>โซน</span>
-                          <strong>{{ stallEdit.zone_name || selectedProject?.name || 'โซนกลาง' }}</strong>
+                          <strong>{{ selectedProject?.name || stallEdit.project_name || stallEdit.zone_name || 'โซนกลาง' }}</strong>
                           <em>ผังโครงการ</em>
                         </div>
                         <div class="issd-kpi-card">
@@ -4337,7 +4323,7 @@ const savingStall = ref(false)
 const showStallEditor = ref(false)
 const showInspectStallOverlay = ref(false)
 const showInspectPhotoModal = ref(false)
-const emptyStall = () => ({ id: 0, ident: '', name: '', description: '', category: '', zone_id: 1, zone_name: 'โซน A', project_name: selectedProject.value?.name || '', floor: '1', width: 2, depth: 2, daily_rent: 150, monthly_rent: 1800, stall_status: 'available', coordinates_geojson: '', published: false })
+const emptyStall = () => ({ id: 0, ident: '', name: '', description: '', category: '', zone_id: 1, zone_name: selectedProject.value?.name || '', project_name: selectedProject.value?.name || '', floor: '1', width: 2, depth: 2, daily_rent: 150, monthly_rent: 1800, stall_status: 'available', coordinates_geojson: '', published: false })
 const stallEdit = ref(emptyStall())
 const selectedStallSurveyNumber = ref('')
 const stallDisplayNumber = computed(() => selectedStallSurveyNumber.value || String(stallEdit.value.ident || ''))
@@ -6903,6 +6889,11 @@ const stallProjectStatusBreakdown = computed(() => {
       id: project.id,
       name: cleanProjectName(project.name),
       order: Number(project.sectionNumber) || Number(String(project.name || '').match(/\d+/)?.[0]) || Number.MAX_SAFE_INTEGER,
+      chartLabel: Number.isFinite(Number(project.sectionNumber)) && Number(project.sectionNumber) > 0
+        ? String(Number(project.sectionNumber)).padStart(2, '0')
+        : (String(project.name || '').match(/\d+/)?.[0]
+            ? String(Number(String(project.name || '').match(/\d+/)?.[0])).padStart(2, '0')
+            : cleanProjectName(project.name)),
       total,
       available,
       reserved,
@@ -6920,14 +6911,47 @@ const stallProjectStatusBreakdown = computed(() => {
   return rows
 })
 
-const dashboardProjectOptions = computed(() => stallProjectStatusBreakdown.value.map(project => ({
-  value: project.id,
-  label: `${project.name} · ${project.total.toLocaleString('th-TH')} แผง`
-})))
+const allProjectsChartSummary = computed(() => stallProjectStatusBreakdown.value.reduce(
+  (summary, project) => {
+    summary.available += project.available
+    summary.reserved += project.reserved
+    summary.occupied += project.occupied
+    return summary
+  },
+  { available: 0, reserved: 0, occupied: 0 }
+))
+
+const niceChartMaximum = (value: number) => {
+  if (value <= 0) return 100
+  const roughStep = value / 3
+  const magnitude = 10 ** Math.floor(Math.log10(roughStep))
+  const normalized = roughStep / magnitude
+  const niceStep = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10
+  return Math.ceil(value / (niceStep * magnitude)) * niceStep * magnitude
+}
+
+const allProjectsChartMax = computed(() => niceChartMaximum(
+  Math.max(0, ...stallProjectStatusBreakdown.value.map(project => project.total))
+))
+
+const allProjectsChartTicks = computed(() => {
+  const maximum = allProjectsChartMax.value
+  return [0, maximum / 3, (maximum / 3) * 2, maximum]
+    .map(value => Math.round(value))
+    .filter((value, index, values) => index === 0 || value !== values[index - 1])
+})
+
 const selectDashboardProject = async (projectId: string) => {
   const id = String(projectId || '')
   const project = visibleProjects.value.find(item => item.id === id)
   if (!project) return
+  if (selectedDashboardProjectId.value === id) {
+    if (selectedProject.value?.id === id && typeof mapRef.value?.exitProject === 'function') {
+      mapRef.value.exitProject()
+    }
+    selectedDashboardProjectId.value = ''
+    return
+  }
   selectedDashboardProjectId.value = id
   if (selectedProject.value?.id === id) return
   await nextTick()
@@ -6937,24 +6961,9 @@ const selectDashboardProject = async (projectId: string) => {
     selectProject(project)
   }
 }
-const handleDashboardProjectChange = (value: string | number) => {
-  void selectDashboardProject(String(value))
-}
 const selectedDashboardProjectStatus = computed(() => stallProjectStatusBreakdown.value.find(
   project => project.id === selectedDashboardProjectId.value
-) || stallProjectStatusBreakdown.value[0] || null)
-const projectDonutStyle = (project: { total: number; availablePct: number; occupiedPct: number }) => {
-  if (!project || project.total === 0) return { background: '#e2e8f0' }
-  const availableEnd = project.availablePct
-  const occupiedEnd = availableEnd + project.occupiedPct
-  return {
-    background: `conic-gradient(#10b981 0 ${availableEnd}%, #64748b ${availableEnd}% ${occupiedEnd}%, #f59e0b ${occupiedEnd}% 100%)`
-  }
-}
-const selectedDashboardProjectDonutStyle = computed(() => {
-  const project = selectedDashboardProjectStatus.value
-  return project ? projectDonutStyle(project) : { background: '#e2e8f0' }
-})
+) || null)
 
 watch(
   [() => selectedProject.value?.id, stallProjectStatusBreakdown],
@@ -6963,8 +6972,8 @@ watch(
       selectedDashboardProjectId.value = mapProjectId
       return
     }
-    if (!projects.some(project => project.id === selectedDashboardProjectId.value)) {
-      selectedDashboardProjectId.value = projects[0]?.id || ''
+    if (selectedDashboardProjectId.value && !projects.some(project => project.id === selectedDashboardProjectId.value)) {
+      selectedDashboardProjectId.value = ''
     }
   },
   { immediate: true }
@@ -7043,6 +7052,23 @@ const stallMaintenanceDashboardSummary = computed(() => {
     })
     })
   return summary
+})
+
+const stallMaintenanceTotal = computed(() => {
+  const summary = stallMaintenanceDashboardSummary.value
+  return summary.pending + summary.repairing + summary.completed + summary.overdue
+})
+
+const stallMaintenanceDonutStyle = computed(() => {
+  const summary = stallMaintenanceDashboardSummary.value
+  const total = stallMaintenanceTotal.value
+  if (!total) return { background: '#e2e8f0' }
+  const pendingEnd = (summary.pending / total) * 100
+  const repairingEnd = pendingEnd + ((summary.repairing / total) * 100)
+  const completedEnd = repairingEnd + ((summary.completed / total) * 100)
+  return {
+    background: `conic-gradient(#f59e0b 0 ${pendingEnd}%, #2563eb ${pendingEnd}% ${repairingEnd}%, #16a34a ${repairingEnd}% ${completedEnd}%, #ef4444 ${completedEnd}% 100%)`
+  }
 })
 
 const marketMapRiskSummary = computed(() => {
@@ -7432,7 +7458,7 @@ const validateStallForm = () => {
   validateStallField('monthly_rent')
   return !stallErrors.ident && !stallErrors.width && !stallErrors.depth && !stallErrors.monthly_rent
 }
-const openDrawnStall = (project: ProjectZone, coordinates: [number, number][], floorId: string, dimensions?: { widthM: number; depthM: number }) => { const closed = [...coordinates.map(point => [...point] as [number, number]), [...coordinates[0]!]]; const floor = project.floors?.find(item => item.id === floorId) || project.floors?.[0] || { id: '1', name: 'ชั้น 1', level: 1 }; const count = (project.stalls || []).filter((stall: any) => String(stall.floor || '1') === String(floor.id)).length + 1; pendingStallLayout.value = { projectId: project.id, coordinates: closed, floorId: String(floor.id) }; stallEdit.value = { ...emptyStall(), ident: `${project.sectionNumber}-${floor.id}-${String(count).padStart(3, '0')}`, project_name: project.name, category: project.category || marketCategoryOptions.value[0]?.value || '', floor: String(floor.id), coordinates_geojson: JSON.stringify({ type: 'Polygon', coordinates: [closed] }), width: dimensions?.widthM || 2, depth: dimensions?.depthM || 2 }; resetStallErrors(); stallDrawerMode.value = 'edit'; showInspectStallOverlay.value = true; showStallEditor.value = false }
+const openDrawnStall = (project: ProjectZone, coordinates: [number, number][], floorId: string, dimensions?: { widthM: number; depthM: number }) => { const closed = [...coordinates.map(point => [...point] as [number, number]), [...coordinates[0]!]]; const floor = project.floors?.find(item => item.id === floorId) || project.floors?.[0] || { id: '1', name: 'ชั้น 1', level: 1 }; const count = (project.stalls || []).filter((stall: any) => String(stall.floor || '1') === String(floor.id)).length + 1; pendingStallLayout.value = { projectId: project.id, coordinates: closed, floorId: String(floor.id) }; stallEdit.value = { ...emptyStall(), ident: `${project.sectionNumber}-${floor.id}-${String(count).padStart(3, '0')}`, zone_name: project.name, project_name: project.name, category: project.category || marketCategoryOptions.value[0]?.value || '', floor: String(floor.id), coordinates_geojson: JSON.stringify({ type: 'Polygon', coordinates: [closed] }), width: dimensions?.widthM || 2, depth: dimensions?.depthM || 2 }; resetStallErrors(); stallDrawerMode.value = 'edit'; showInspectStallOverlay.value = true; showStallEditor.value = false }
 const deleteProject = async (project: ProjectZone, stats?: { total: number; available: number; reserved: number; occupied: number }) => {
   const gisStalls = Array.isArray(project.stalls) ? project.stalls : []
   const dbStallsInZone = stalls.value.filter(s => String(s.project_name || '').trim() === String(project.name || '').trim())
@@ -7542,6 +7568,8 @@ const cancelStallEdit = () => {
       stallEdit.value = {
         ...emptyStall(),
         ...stored,
+        zone_name: selectedProject.value?.name || stored.project_name || stored.zone_name || '',
+        project_name: selectedProject.value?.name || stored.project_name || '',
         stall_status: resolveRealStallStatus(code, selectedProject.value, stored)
       }
     }
@@ -7587,6 +7615,7 @@ const selectStall = async (mapStall: any) => {
       ident: code,
       name: mapStall.name || '',
       category: mapStall.areaType || selectedProject.value?.category || '',
+      zone_name: selectedProject.value?.name || mapStall.zone || '',
       project_name: selectedProject.value?.name || mapStall.zone || '',
       floor: String(mapStall.floor || '1'),
       width: mapStall.widthM || 2,
@@ -7611,6 +7640,8 @@ const selectStall = async (mapStall: any) => {
   stallEdit.value = {
     ...emptyStall(),
     ...stored,
+    zone_name: selectedProject.value?.name || stored.project_name || stored.zone_name || mapStall.zone || '',
+    project_name: selectedProject.value?.name || stored.project_name || mapStall.zone || '',
     coordinates_geojson: stored.coordinates_geojson || geometry,
     stall_status: resolveRealStallStatus(code, selectedProject.value, stored)
   }
@@ -11070,6 +11101,268 @@ button.ov-stall-priority-row.active {
   text-align: center;
 }
 
+.ov-project-column-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 14px 0 10px;
+  text-align: center;
+}
+
+.ov-project-column-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.ov-project-column-legend i {
+  width: 11px;
+  height: 11px;
+  flex: 0 0 11px;
+  border-radius: 3px;
+}
+
+.ov-project-column-legend strong {
+  margin-left: 2px;
+  color: #0f172a;
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.ov-project-column-legend .is-available i { background: #10b981; }
+.ov-project-column-legend .is-reserved i { background: #f59e0b; }
+.ov-project-column-legend .is-occupied i { background: #475569; }
+
+.ov-project-column-chart {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  min-height: 278px;
+}
+
+.ov-project-column-y-axis {
+  position: relative;
+  height: 238px;
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.ov-project-column-y-axis span {
+  position: absolute;
+  right: 8px;
+  line-height: 1;
+  transform: translateY(50%);
+}
+
+.ov-project-column-scroll {
+  min-width: 0;
+  padding-bottom: 9px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+  scrollbar-width: thin;
+}
+
+.ov-project-column-scroll:focus-visible {
+  border-radius: 8px;
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.ov-project-column-scroll::-webkit-scrollbar { height: 8px; }
+.ov-project-column-scroll::-webkit-scrollbar-track { border-radius: 999px; background: #f1f5f9; }
+.ov-project-column-scroll::-webkit-scrollbar-thumb { border-radius: 999px; background: #cbd5e1; }
+.ov-project-column-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.ov-project-column-grid {
+  position: relative;
+  min-width: max(100%, calc(var(--project-count) * 62px));
+  height: 268px;
+  padding: 8px 4px 0;
+  display: grid;
+  grid-template-columns: repeat(var(--project-count), minmax(48px, 1fr));
+  align-items: end;
+  gap: 10px;
+  background-image: repeating-linear-gradient(
+    to top,
+    #e2e8f0 0,
+    #e2e8f0 1px,
+    transparent 1px,
+    transparent var(--grid-step)
+  );
+  background-position: 0 8px;
+  background-size: 100% 238px;
+  background-repeat: no-repeat;
+}
+
+.ov-project-column-item {
+  position: relative;
+  height: 260px;
+  min-width: 0;
+  padding: 0 3px 31px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border: 0;
+  border-radius: 9px 9px 0 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ov-project-column-item::after {
+  position: absolute;
+  right: 0;
+  bottom: 27px;
+  left: 0;
+  height: 3px;
+  border-radius: 3px;
+  background: transparent;
+  content: '';
+}
+
+.ov-project-column-item:hover,
+.ov-project-column-item:focus-visible {
+  background: rgba(239, 246, 255, 0.72);
+  outline: none;
+}
+
+.ov-project-column-item.active {
+  box-shadow: inset 0 0 0 2px #2563eb;
+  background: rgba(239, 246, 255, 0.76);
+}
+
+.ov-project-column-item.active::after { background: #2563eb; }
+
+.ov-project-column-total {
+  position: absolute;
+  bottom: calc(34px + (var(--bar-ratio, 0) * 205px));
+  left: 50%;
+  z-index: 2;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.ov-project-column-stack {
+  width: min(38px, 82%);
+  height: calc(var(--bar-ratio, 0) * 205px);
+  min-height: 2px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  border-radius: 7px 7px 2px 2px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  transition: filter 0.16s ease, transform 0.16s ease;
+}
+
+.ov-project-column-item:hover .ov-project-column-stack,
+.ov-project-column-item:focus-visible .ov-project-column-stack { filter: saturate(1.08); transform: translateY(-2px); }
+
+.ov-project-column-stack i {
+  width: 100%;
+  min-height: 0;
+  display: block;
+}
+
+.ov-project-column-stack .is-available { background: #10b981; }
+.ov-project-column-stack .is-reserved { background: #f59e0b; }
+.ov-project-column-stack .is-occupied { background: #475569; }
+
+.ov-project-column-label {
+  position: absolute;
+  right: 1px;
+  bottom: 5px;
+  left: 1px;
+  overflow: hidden;
+  color: #475569;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ov-project-column-item.active .ov-project-column-label { color: #1d4ed8; font-weight: 800; }
+
+.ov-project-column-tooltip {
+  position: absolute;
+  right: 2px;
+  bottom: 40px;
+  left: 2px;
+  z-index: 5;
+  width: 158px;
+  padding: 8px 10px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  border-radius: 9px;
+  background: rgba(15, 23, 42, 0.96);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.24);
+  color: #ffffff;
+  text-align: left;
+  transform: translateX(-30%);
+}
+
+.ov-project-column-tooltip strong { font-size: 0.8125rem; font-weight: 700; }
+.ov-project-column-tooltip-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ov-project-column-tooltip small {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #cbd5e1;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ov-project-column-tooltip small::before {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 2px;
+  content: '';
+}
+.ov-project-column-tooltip small.is-available::before { background: #10b981; }
+.ov-project-column-tooltip small.is-reserved::before { background: #f59e0b; }
+.ov-project-column-tooltip small.is-occupied::before { background: #64748b; }
+.ov-project-column-tooltip small b {
+  margin-left: auto;
+  color: #ffffff;
+  font-weight: 700;
+}
+.ov-project-column-item:first-child .ov-project-column-tooltip {
+  right: auto;
+  left: 2px;
+  transform: none;
+}
+.ov-project-column-item:last-child .ov-project-column-tooltip {
+  right: 2px;
+  left: auto;
+  transform: none;
+}
+.ov-project-column-item:hover .ov-project-column-tooltip,
+.ov-project-column-item:focus-visible .ov-project-column-tooltip { display: flex; }
+
 .ov-project-mini-donut-grid {
   max-height: 382px;
   padding: 2px 4px 4px 2px;
@@ -11399,30 +11692,64 @@ button.ov-stall-priority-row.active {
 .ov-status-summary-grid .is-pending strong { color: #b45309; }
 .ov-status-summary-grid .is-danger strong { color: #dc2626; }
 
-.ov-maintenance-stacked-bar {
-  height: 10px;
-  margin-bottom: 11px;
-}
-
-.ov-maintenance-stacked-bar span {
-  min-width: 0;
-  height: 100%;
-  transition: flex 0.25s ease;
-}
-
-.ov-maintenance-stacked-bar .is-pending,
 .ov-maintenance-legend i.is-pending { background: #f59e0b; }
-.ov-maintenance-stacked-bar .is-repairing,
 .ov-maintenance-legend i.is-repairing { background: #2563eb; }
-.ov-maintenance-stacked-bar .is-completed,
 .ov-maintenance-legend i.is-completed { background: #16a34a; }
-.ov-maintenance-stacked-bar .is-overdue,
 .ov-maintenance-legend i.is-overdue { background: #ef4444; }
 
-.ov-maintenance-legend {
+.ov-maintenance-donut-layout {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px 12px;
+  grid-template-columns: 104px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+}
+
+.ov-maintenance-donut {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.ov-maintenance-donut::after {
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #f1f5f9;
+  content: '';
+}
+
+.ov-maintenance-donut > span {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.1;
+}
+
+.ov-maintenance-donut strong {
+  color: #0f172a;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.ov-maintenance-donut small {
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ov-maintenance-legend {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
   color: #64748b;
   font-size: 0.75rem;
   font-weight: 500;
@@ -11473,6 +11800,26 @@ button.ov-stall-priority-row.active {
 .ov-dash-container .ov-dash-meter-progress-head strong,
 .ov-dash-container .ov-dash-income-total strong {
   font-size: 1.0625rem;
+}
+
+.ov-dash-container .ov-operational-status-card .ov-status-summary-grid > div {
+  min-height: 58px;
+  padding: 9px 11px;
+}
+
+.ov-dash-container .ov-operational-status-card .ov-status-summary-grid span,
+.ov-dash-container .ov-operational-status-card .ov-maintenance-legend {
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.ov-dash-container .ov-operational-status-card .ov-status-summary-grid strong {
+  font-size: 1.125rem;
+}
+
+.ov-dash-container .ov-operational-status-card .ov-maintenance-legend strong {
+  font-size: 0.9375rem;
+  font-weight: 800;
 }
 
 /* 3. Section Cards */

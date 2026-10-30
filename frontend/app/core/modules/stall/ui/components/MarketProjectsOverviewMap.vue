@@ -3867,6 +3867,67 @@ const getFacilityMeta = (type: string) => FACILITY_META[type] || {
   svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-5.3 7-12a7 7 0 1 0-14 0c0 6.7 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg>'
 }
 
+const NAMED_FACILITY_META = {
+  sink: {
+    label: 'อ่างล้างมือ', color: '#0284c7', bg: '#e0f2fe',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14v2a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5v-2Z"/><path d="M8 12V8a4 4 0 0 1 8 0v1M14 9h4M7 19v2M17 19v2"/></svg>'
+  },
+  stairs: {
+    label: 'บันได', color: '#d97706', bg: '#fef3c7',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h5v-4h4v-4h4V7h5"/><path d="M3 22h18"/></svg>'
+  },
+  escalator: {
+    label: 'บันไดเลื่อน', color: '#d97706', bg: '#fef3c7',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h4l8-12h4M4 21h5l8-12h3"/><path d="m16 17 4 4m0-4v4h-4"/></svg>'
+  },
+  shrine: {
+    label: 'ศาล', color: '#dc2626', bg: '#fee2e2',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18L12 3 3 9Z"/><path d="M5 9v9M19 9v9M9 9v9M15 9v9M3 21h18M7 18h10"/></svg>'
+  },
+  clockTower: {
+    label: 'หอนาฬิกา', color: '#7c3aed', bg: '#ede9fe',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 22h10L16 9H8L7 22Z"/><circle cx="12" cy="6" r="4"/><path d="M12 4v2l1.5 1M5 22h14"/></svg>'
+  },
+  tent: {
+    label: 'เต็นท์', color: '#059669', bg: '#d1fae5',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20 12 4l9 16H3Z"/><path d="m9 20 3-6 3 6M12 4v10"/></svg>'
+  },
+  plaza: {
+    label: 'ลานส่วนกลาง', color: '#0f766e', bg: '#ccfbf1',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8v8H8zM3 12h5M16 12h5M12 3v5M12 16v5"/></svg>'
+  },
+  meeting: {
+    label: 'ห้องประชุม', color: '#7c3aed', bg: '#ede9fe',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2"/><circle cx="16" cy="8" r="2"/><path d="M4 19v-2a4 4 0 0 1 8 0v2M12 17a4 4 0 0 1 8 0v2"/></svg>'
+  },
+  training: {
+    label: 'ศูนย์ฝึกอาชีพ', color: '#2563eb', bg: '#dbeafe',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-5 9 5-9 5-9-5Z"/><path d="M7 12v5c3 2 7 2 10 0v-5M21 9v6"/></svg>'
+  },
+  office: {
+    label: 'สำนักงาน', color: '#64748b', bg: '#f1f5f9',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V4h8v3M3 12h18M10 12v2h4v-2"/></svg>'
+  }
+} as const
+
+const getFacilityMetaForFacility = (facility: MarketFacility) => {
+  const name = String(facility.name || '').trim().toLowerCase()
+  if (name.includes('ห้องน้ำ')) return FACILITY_META.toilet
+  if (name.includes('อ่างล้างมือ')) return NAMED_FACILITY_META.sink
+  if (name.includes('บันไดเลื่อน')) return NAMED_FACILITY_META.escalator
+  if (name.includes('บันได')) return NAMED_FACILITY_META.stairs
+  if (name.includes('ประตู')) return FACILITY_META.exit
+  if (name.includes('ศาลเจ้า') || name.includes('ศาลพระพรหม')) return NAMED_FACILITY_META.shrine
+  if (name.includes('หอนาฬิกา')) return NAMED_FACILITY_META.clockTower
+  if (name.includes('เต้น') || name.includes('เต็นท์')) return NAMED_FACILITY_META.tent
+  if (name.includes('ลาน')) return NAMED_FACILITY_META.plaza
+  if (name.includes('ห้องประชุม')) return NAMED_FACILITY_META.meeting
+  if (name.includes('ศูนย์ฝึก')) return NAMED_FACILITY_META.training
+  if (name.includes('ประชาสัมพันธ์') || name.includes('ประชาสัมพันธุ์')) return FACILITY_META.service
+  if (name.startsWith('งาน') || name.includes('ปฏิบัติการ') || name === 'บก.' || name === 'diy') return NAMED_FACILITY_META.office
+  return getFacilityMeta(facility.type)
+}
+
 const findHostZoneForFacility = (facility: MarketFacility): ProjectZone | null => {
   if (facility.projectId) {
     const byId = projects.value.find(p => p.id === facility.projectId)
@@ -3884,7 +3945,7 @@ const showPopupForFacility = (facility: MarketFacility) => {
     hoverPopup.remove()
     return
   }
-  const meta = getFacilityMeta(facility.type)
+  const meta = getFacilityMetaForFacility(facility)
   const hostZone = findHostZoneForFacility(facility)
   const canEditFacility = props.managementMode && !props.inspectOnly
   const deleteAction = canEditFacility
@@ -3939,19 +4000,17 @@ const renderFacilityMarkers = () => {
   if (map.getLayer('facilities-label')) map.setLayoutProperty('facilities-label', 'visibility', 'none')
   if (!showFacilities.value) return
 
-  // Facilities are part of a project's internal layout. Keep the overview
-  // uncluttered; reveal them only after a staff member enters that project.
-  const activeProjectID = activeProjectId.value
-  if (!activeProjectID) return
-
   managedFacilities.value
     .filter(facility => {
-      if (findHostZoneForFacility(facility)?.id !== activeProjectID) return false
-      return !facility.floorId || String(facility.floorId) === String(currentFloorId.value)
+      const visibleFloorId = activeProjectId.value ? currentFloorId.value : selectedMarketFloorId.value
+      return !visibleFloorId
+        || visibleFloorId === 'all'
+        || !facility.floorId
+        || String(facility.floorId) === String(visibleFloorId)
     })
     .forEach(facility => {
       if (!Array.isArray(facility.coordinates) || facility.coordinates.length < 2) return
-      const meta = getFacilityMeta(facility.type)
+      const meta = getFacilityMetaForFacility(facility)
       const el = document.createElement('button')
       el.type = 'button'
       el.className = 'facility-map-marker'
@@ -3972,7 +4031,7 @@ const renderFacilityMarkers = () => {
         boxShadow: '0 2px 6px rgba(15,23,42,0.16)',
         cursor: 'pointer',
         whiteSpace: 'nowrap',
-        zIndex: '22'
+        zIndex: '8'
       })
       el.innerHTML = `
         <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:${meta.bg};color:${meta.color}">${meta.svg}</span>
@@ -4956,7 +5015,9 @@ const ovSubtitle = computed(() => {
 const ovFilterBadge = computed(() => (props.filterContext === 'costs'
   ? props.filterBadge
   : advancedFilterCount.value - (availabilityFromCard.value && appliedAvailabilityFilter.value !== 'all' ? 1 : 0)))
-const mapLayerFilterCount = computed(() => legendCategories.value.length + (showFacilities.value ? 0 : 1))
+// Layer visibility is a display preference, not an active data filter.
+// Only selected project-colour categories contribute to the badge count.
+const mapLayerFilterCount = computed(() => legendCategories.value.length)
 const basemapOptions: { value: 'standard' | 'satellite' | 'dark'; label: string }[] = [
   { value: 'standard', label: 'แผนที่ปกติ' },
   { value: 'satellite', label: 'ดาวเทียม' }
@@ -8078,6 +8139,7 @@ onUnmounted(cleanupMapResources)
 
 /* Custom Popup Content (hover cards) */
 .mlp-popup {
+  z-index: 100 !important;
   pointer-events: none !important;
   filter: drop-shadow(0 0 1px rgba(15, 23, 42, 0.18))
           drop-shadow(0 14px 28px rgba(15, 23, 42, 0.22));
