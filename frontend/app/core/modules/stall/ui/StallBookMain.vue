@@ -118,7 +118,7 @@
                   position: absolute;
                   top: 62px;
                   right: 14px;
-                  width: 334px;
+                  width: 360px;
                   max-height: calc(100% - 76px);
                   display: flex;
                   flex-direction: column;
@@ -136,12 +136,12 @@
                 <!-- 1. Drawer Header (Pinned at Top) -->
                 <div style="padding: 14px 16px 10px; border-bottom: 1px solid #f1f5f9; background: #ffffff; flex-shrink: 0;">
                   <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <strong style="font-size: 0.95rem; color: #0f172a; font-weight: 700;">แผงค้าที่เลือก</strong>
+                    <strong style="font-size: 1.125rem; color: #0f172a; font-weight: 700;">แผงค้าที่เลือก</strong>
                     <button class="btn-icon-square" style="width: 26px; height: 26px;" @click="clearAllSelectedStalls" title="ยกเลิกการเลือก" aria-label="ล้าง">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                   </div>
-                  <div style="font-size: 0.78rem; color: #64748b; font-weight: 600; margin-top: 2px;">{{ selectedProjectsSummary }}</div>
+                  <div style="font-size: 0.9375rem; color: #64748b; font-weight: 600; margin-top: 2px;">{{ selectedProjectsSummary }}</div>
                 </div>
 
                 <div v-if="activeWaitlistOffer" class="waitlist-claim-notice is-map-drawer" role="status">
@@ -180,7 +180,7 @@
                       <div class="ssc-head">
                         <div class="ssc-title">
                           <div class="ssc-title-main">
-                            <strong>แผง {{ s.code }}</strong>
+                            <strong>แผง {{ stallDisplayNumber(s) }}</strong>
                             <span :class="s.status === 'available' ? 'badge badge-available' : 'badge badge-reserved'" class="ssc-status-badge">
                               {{ s.status === 'available' ? 'แผงว่าง' : 'ติดจอง' }}
                             </span>
@@ -204,7 +204,7 @@
                           alt="ภาพแผง"
                           style="width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.25s ease;"
                         />
-                        <div style="position: absolute; bottom: 6px; right: 6px; background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(4px); color: #ffffff; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                        <div style="position: absolute; bottom: 6px; right: 6px; background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(4px); color: #ffffff; padding: 2px 8px; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                           <span>{{ getStallPhotos(s).length > 1 ? `${getStallPhotos(s).length} รูป` : '3 รูป' }}</span>
                         </div>
@@ -213,16 +213,16 @@
                       <!-- 3-Box Metrics Grid (ขนาด | ค่าเช่า | แรกเข้า) -->
                       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 6px; text-align: center;">
                         <div>
-                          <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; margin-bottom: 2px;">ขนาด</div>
-                          <div style="font-size: 0.95rem; font-weight: 800; color: #0f172a;">{{ s.size }} <span style="font-size: 0.7rem; font-weight: normal; color: #64748b;">ตร.ม.</span></div>
+                          <div style="font-size: 0.8125rem; color: #64748b; font-weight: 600; margin-bottom: 2px;">ขนาด</div>
+                          <div style="font-size: 1.0625rem; font-weight: 800; color: #0f172a;">{{ s.size }} <span style="font-size: 0.8125rem; font-weight: normal; color: #64748b;">ตร.ม.</span></div>
                         </div>
                         <div style="border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">
-                          <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; margin-bottom: 2px;">ค่าเช่า</div>
-                          <div style="font-size: 0.95rem; font-weight: 800; color: #10b981;">฿{{ s.monthlyRent.toLocaleString() }}<div style="font-size: 0.65rem; font-weight: 500; color: #64748b;">/เดือน</div></div>
+                          <div style="font-size: 0.8125rem; color: #64748b; font-weight: 600; margin-bottom: 2px;">ค่าเช่า</div>
+                          <div style="font-size: 1.0625rem; font-weight: 800; color: #10b981;">฿{{ s.monthlyRent.toLocaleString() }}<div style="font-size: 0.75rem; font-weight: 500; color: #64748b;">/เดือน</div></div>
                         </div>
                         <div>
-                          <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; margin-bottom: 2px;">แรกเข้า</div>
-                          <div style="font-size: 0.95rem; font-weight: 800; color: #0f172a;">฿{{ s.entryFee.toLocaleString() }}</div>
+                          <div style="font-size: 0.8125rem; color: #64748b; font-weight: 600; margin-bottom: 2px;">แรกเข้า</div>
+                          <div style="font-size: 1.0625rem; font-weight: 800; color: #0f172a;">฿{{ s.entryFee.toLocaleString() }}</div>
                         </div>
                       </div>
                     </div>
@@ -232,20 +232,20 @@
                   <div v-if="currentSelectionStatus === 'reserved' && currentWaitingInfo">
                     <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 12px;">
                       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <span style="font-size: 0.78rem; font-weight: 800; color: #92400e;">
+                        <span style="font-size: 0.875rem; font-weight: 800; color: #92400e;">
                           {{ selectedWaitingEntry ? 'สถานะคิวของคุณ' : 'เมื่อลงทะเบียน คุณจะได้' }}
                         </span>
-                        <span class="badge" style="background: #d97706; color: #ffffff; font-weight: 800; font-size: 0.74rem; padding: 2px 8px;">
+                        <span class="badge" style="background: #d97706; color: #ffffff; font-weight: 800; font-size: 0.8125rem; padding: 2px 8px;">
                           คิวสำรองที่ {{ selectedWaitingEntry?.position || currentWaitingInfo.next_queue_number }}
                         </span>
                       </div>
-                      <div style="font-size: 0.75rem; color: #78350f; display: flex; justify-content: space-between; border-top: 1px dashed #fcd34d; padding-top: 6px; margin-top: 4px;">
+                      <div style="font-size: 0.8125rem; color: #78350f; display: flex; justify-content: space-between; border-top: 1px dashed #fcd34d; padding-top: 6px; margin-top: 4px;">
                         <span>ผู้ถือสิทธิ์ปัจจุบัน:</span>
                         <strong>{{ currentWaitingInfo.current_booker?.masked_name || 'ผู้จองหลัก' }}</strong>
                       </div>
                     </div>
                   </div>
-                  <div v-else-if="currentSelectionStatus === 'reserved'" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 12px; font-size: 0.75rem; color: #92400e;">
+                  <div v-else-if="currentSelectionStatus === 'reserved'" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 12px; font-size: 0.8125rem; color: #92400e;">
                     กำลังตรวจสอบลำดับคิวจริงของแผงนี้
                   </div>
                 </div>
@@ -263,12 +263,12 @@
                   <!-- Total Summary Header if > 1 stall -->
                   <div
                     v-if="selectedStalls.length > 1"
-                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.8rem;"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.875rem;"
                   >
                     <span style="color: #64748b; font-weight: 600;">รวม {{ selectedStalls.length }} แผง ({{ totalSize }} ตร.ม.)</span>
                     <span style="color: #0f172a; font-weight: 700;">
-                      <span style="color: #10b981; font-weight: 800; font-size: 0.95rem;">฿{{ totalMonthlyRent.toLocaleString() }}</span>
-                      <span style="font-size: 0.72rem; color: #64748b;">/ด.</span>
+                      <span style="color: #10b981; font-weight: 800; font-size: 1.0625rem;">฿{{ totalMonthlyRent.toLocaleString() }}</span>
+                      <span style="font-size: 0.75rem; color: #64748b;">/ด.</span>
                     </span>
                   </div>
 
@@ -280,7 +280,7 @@
                     style="
                       width: 100%;
                       padding: 11px 16px;
-                      font-size: 0.92rem;
+                      font-size: 0.9375rem;
                       border-radius: 10px;
                       font-weight: 700;
                       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
@@ -384,10 +384,10 @@
                   </h3>
                   <p style="font-size: 0.88rem; color: #475569; line-height: 1.55; margin-bottom: 0;">
                     <span v-if="pendingConflictingStall?.status === 'reserved'">
-                      คุณกำลังคลิกเลือก <strong>แผง {{ pendingConflictingStall?.code }} (สถานะ: ติดจอง<span v-if="stallWaitingQueueCache[pendingConflictingStall?.code]"> — คิวสำรองลำดับที่ {{ stallWaitingQueueCache[pendingConflictingStall?.code]?.next_queue_number }}</span>)</strong><span v-if="stallWaitingQueueCache[pendingConflictingStall?.code]?.current_booker"> ต่อจาก <strong>{{ stallWaitingQueueCache[pendingConflictingStall?.code]?.current_booker?.masked_name }}</strong></span> แต่รายการที่คุณเลือกไว้ก่อนหน้าเป็น <strong>กลุ่มแผงว่าง</strong>
+                      คุณกำลังคลิกเลือก <strong>แผง {{ stallDisplayNumber(pendingConflictingStall) }} (สถานะ: ติดจอง<span v-if="stallWaitingQueueCache[pendingConflictingStall?.code]"> — คิวสำรองลำดับที่ {{ stallWaitingQueueCache[pendingConflictingStall?.code]?.next_queue_number }}</span>)</strong><span v-if="stallWaitingQueueCache[pendingConflictingStall?.code]?.current_booker"> ต่อจาก <strong>{{ stallWaitingQueueCache[pendingConflictingStall?.code]?.current_booker?.masked_name }}</strong></span> แต่รายการที่คุณเลือกไว้ก่อนหน้าเป็น <strong>กลุ่มแผงว่าง</strong>
                     </span>
                     <span v-else>
-                      คุณกำลังคลิกเลือก <strong>แผง {{ pendingConflictingStall?.code }} (สถานะ: ว่าง)</strong> แต่รายการที่คุณเลือกไว้ก่อนหน้าเป็น <strong>กลุ่มแผงติดจอง (Waiting List)</strong>
+                      คุณกำลังคลิกเลือก <strong>แผง {{ stallDisplayNumber(pendingConflictingStall) }} (สถานะ: ว่าง)</strong> แต่รายการที่คุณเลือกไว้ก่อนหน้าเป็น <strong>กลุ่มแผงติดจอง (Waiting List)</strong>
                     </span>
                   </p>
                 </div>
@@ -418,7 +418,7 @@
                   style="background: #d97706; border-color: #d97706; color: #ffffff; font-weight: 700;"
                   @click="resolveConflictAndSelect"
                 >
-                  ล้างรายการเดิม แล้วเลือกแผง {{ pendingConflictingStall?.code }}
+                  ล้างรายการเดิม แล้วเลือกแผง {{ stallDisplayNumber(pendingConflictingStall) }}
                 </button>
               </div>
             </div>
@@ -876,7 +876,7 @@
             <!-- Sub-card Header -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 18px;">
               <span style="background: #2563eb; color: #ffffff; font-weight: 700; font-size: 0.85rem; padding: 4px 14px; border-radius: 6px;">
-                แผง {{ stallItem.code }}
+                แผง {{ stallDisplayNumber(stallItem) }}
               </span>
               <span
                 v-if="stallItem.status === 'available'"
@@ -901,7 +901,7 @@
               <div>
                 <div style="color: #64748b; font-size: 0.8rem; margin-bottom: 4px;">หมายเลขแผง</div>
                 <div style="color: #1e293b; font-size: 0.95rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-                  <span>{{ stallItem.code }}</span>
+                  <span>{{ stallDisplayNumber(stallItem) }}</span>
                   <span v-if="stallItem.floorName" style="font-size: 0.72rem; padding: 1px 7px; border-radius: 4px; background: #eff6ff; color: #2563eb; font-weight: 600; border: 1px solid #bfdbfe;">
                     {{ stallItem.floorName }}
                   </span>
@@ -947,7 +947,7 @@
                 >
                   <img
                     :src="photoUrl"
-                    :alt="`รูปแผง ${stallItem.code} ภาพที่ ${pIdx + 1}`"
+                    :alt="`รูปแผง ${stallDisplayNumber(stallItem)} ภาพที่ ${pIdx + 1}`"
                     style="width: 100%; height: 100%; object-fit: cover;"
                   />
                   <div class="photo-card-hover-overlay">
@@ -1207,7 +1207,7 @@
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: #64748b;">หมายเลขแผง:</span>
                   <strong style="color: #2563eb; font-size: 1rem;">
-                    แผง {{ passDisplayStalls.length > 0 ? passDisplayStalls.map(s => s.code).join(', ') : (selectedStall?.code || '20A') }}
+                    แผง {{ passDisplayStalls.length > 0 ? passDisplayStalls.map(stallDisplayNumber).join(', ') : stallDisplayNumber(selectedStall) }}
                     <span v-if="passDisplayStalls.length > 1" style="font-size: 0.8rem; font-weight: 600; color: #64748b;">({{ passDisplayStalls.length }} แผง)</span>
                   </strong>
                 </div>
@@ -1252,7 +1252,7 @@
         <div class="photo-preview" role="dialog" aria-label="ตัวอย่างภาพแผง">
           <div class="pp-header">
             <div>
-              <div class="pp-title">แผง {{ previewStall?.code }}</div>
+              <div class="pp-title">แผง {{ stallDisplayNumber(previewStall) }}</div>
               <div class="pp-sub">{{ previewStall?.zone }}</div>
             </div>
             <button type="button" class="pp-close" @click="closePhotoPreview" aria-label="ปิด">
@@ -1264,7 +1264,7 @@
             <button v-if="previewPhotos.length > 1" type="button" class="pp-nav pp-prev" @click="stepPreview(-1)" aria-label="รูปก่อนหน้า">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
             </button>
-            <img :key="previewPhotos[previewIndex]" :src="previewPhotos[previewIndex]" :alt="`ภาพแผง ${previewStall?.code} รูปที่ ${previewIndex + 1}`" class="pp-image" />
+            <img :key="previewPhotos[previewIndex]" :src="previewPhotos[previewIndex]" :alt="`ภาพแผง ${stallDisplayNumber(previewStall)} รูปที่ ${previewIndex + 1}`" class="pp-image" />
             <button v-if="previewPhotos.length > 1" type="button" class="pp-nav pp-next" @click="stepPreview(1)" aria-label="รูปถัดไป">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
@@ -2050,6 +2050,11 @@ const selectedProjectsSummary = computed(() => {
   return selectedProject.value?.name || ''
 })
 const stallSelectionKey = (stall: StallModel): string => stall.selectionId || stall.code
+const stallDisplayNumber = (stall?: any): string => {
+  if (!stall) return '-'
+  const sourceNumber = stall.sourceProperties?.number ?? stall.sourceProperties?.Number
+  return String(sourceNumber ?? stall.name ?? stall.code ?? '-').trim() || '-'
+}
 
 // Current Selection Status ('available' or 'reserved')
 const currentSelectionStatus = computed<'available' | 'reserved' | null>(() => {
@@ -3227,7 +3232,7 @@ onUnmounted(() => {
   right: 14px;
   z-index: 25;
   display: flex;
-  width: 334px;
+  width: 360px;
   min-height: 355px;
   max-height: calc(100% - 76px);
   flex-direction: column;
@@ -3241,15 +3246,15 @@ onUnmounted(() => {
   backdrop-filter: blur(14px);
 }
 .msed-header { padding: 15px 16px 13px; border-bottom: 1px solid #eef2f6; }
-.msed-header strong { display: block; color: #0f172a; font-size: .98rem; font-weight: 800; }
-.msed-header span { display: block; margin-top: 3px; overflow: hidden; color: #64748b; font-size: .8rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.msed-header strong { display: block; color: #0f172a; font-size: 1.125rem; font-weight: 800; }
+.msed-header span { display: block; margin-top: 3px; overflow: hidden; color: #64748b; font-size: .9375rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .msed-content { display: flex; flex: 1; flex-direction: column; align-items: center; padding: 30px 23px 22px; text-align: center; }
 .msed-icon { display: grid; width: 58px; height: 58px; place-items: center; border: 1px solid #bfdbfe; border-radius: 17px; background: #eff6ff; color: #2563eb; box-shadow: 0 7px 16px rgba(37, 99, 235, .12); }
-.msed-content h3 { margin: 15px 0 5px; color: #0f172a; font-size: 1.02rem; font-weight: 800; }
-.msed-content > p { max-width: 240px; margin: 0; color: #64748b; font-size: .8rem; line-height: 1.5; }
+.msed-content h3 { margin: 15px 0 5px; color: #0f172a; font-size: 1.25rem; font-weight: 800; }
+.msed-content > p { max-width: 290px; margin: 0; color: #64748b; font-size: .9375rem; line-height: 1.55; }
 .msed-icon.is-full { border-color: #fecaca; background: #fef2f2; color: #dc2626; box-shadow: 0 7px 16px rgba(220, 38, 38, .1); }
 .msed-status-list { width: 100%; margin-top: 21px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; text-align: left; }
-.msed-status-list > div { display: flex; align-items: center; gap: 8px; color: #475569; font-size: .72rem; line-height: 1.4; }
+.msed-status-list > div { display: flex; align-items: center; gap: 8px; color: #475569; font-size: .875rem; line-height: 1.5; }
 .msed-status-list > div + div { margin-top: 8px; }
 .msed-status-list i { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; }
 .msed-status-list i.is-available { background: #10b981; }
@@ -3387,9 +3392,9 @@ onUnmounted(() => {
 .ssc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
 .ssc-title { display: flex; flex: 1; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; }
 .ssc-title-main { display: flex; align-items: center; gap: 7px; min-width: 0; }
-.ssc-title strong { font-size: 0.9rem; color: #0f172a; white-space: nowrap; }
-.ssc-status-badge { flex-shrink: 0; padding: 3px 8px !important; font-size: 0.66rem !important; }
-.ssc-floor-name { display: block; max-width: 248px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #64748b; font-size: 0.7rem; font-weight: 600; line-height: 1.35; }
+.ssc-title strong { font-size: 1rem; color: #0f172a; white-space: nowrap; }
+.ssc-status-badge { flex-shrink: 0; padding: 3px 8px !important; font-size: 0.8125rem !important; }
+.ssc-floor-name { display: block; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #64748b; font-size: 0.8125rem; font-weight: 600; line-height: 1.4; }
 .ssc-remove { width: 24px; height: 24px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #64748b; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.15s ease; }
 .ssc-remove:hover { background: #fef2f2; border-color: #fca5a5; color: #ef4444; }
 .ssc-body { display: grid; grid-template-columns: 84px 1fr; gap: 10px; align-items: stretch; }
@@ -3397,13 +3402,13 @@ onUnmounted(() => {
 .ssc-photo:hover img { transform: scale(1.05); }
 .ssc-photo img { transition: transform 0.2s ease; }
 .ssc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.ssc-photo-tag { position: absolute; bottom: 4px; right: 4px; display: inline-flex; align-items: center; gap: 3px; background: rgba(15, 23, 42, 0.78); color: #ffffff; font-size: 0.62rem; font-weight: 600; padding: 2px 6px; border-radius: 5px; }
+.ssc-photo-tag { position: absolute; bottom: 4px; right: 4px; display: inline-flex; align-items: center; gap: 3px; background: rgba(15, 23, 42, 0.78); color: #ffffff; font-size: 0.75rem; font-weight: 600; padding: 2px 6px; border-radius: 5px; }
 .ssc-metrics { display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; }
-.ssc-metric { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 0.74rem; color: #64748b; }
-.ssc-metric b { font-size: 0.86rem; font-weight: 700; color: #0f172a; white-space: nowrap; }
-.ssc-metric b small { font-size: 0.66rem; font-weight: 500; color: #64748b; }
+.ssc-metric { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 0.8125rem; color: #64748b; }
+.ssc-metric b { font-size: 0.9375rem; font-weight: 700; color: #0f172a; white-space: nowrap; }
+.ssc-metric b small { font-size: 0.75rem; font-weight: 500; color: #64748b; }
 .ssc-metric b.is-money { color: #059669; }
-.sel-stall-total { display: flex; flex-direction: column; gap: 2px; margin: -2px 0 12px; padding: 8px 10px; border-radius: 10px; background: #f8fafc; font-size: 0.72rem; color: #64748b; }
+.sel-stall-total { display: flex; flex-direction: column; gap: 2px; margin: -2px 0 12px; padding: 8px 10px; border-radius: 10px; background: #f8fafc; font-size: 0.8125rem; color: #64748b; }
 .sel-stall-total span:first-child { font-weight: 700; color: #334155; }
 
 .map-selection-bar {

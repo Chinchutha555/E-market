@@ -29,7 +29,14 @@ export interface MarketFacility {
   name: string
   type: string
   coordinates: [number, number]
+  geometry?: {
+    type: 'Polygon'
+    coordinates: [number, number][][]
+  }
   description?: string
   projectId?: string
   floorId?: string
+  number?: string
+  sourceZone?: string
+  sourceProperties?: Record<string, unknown>
 }

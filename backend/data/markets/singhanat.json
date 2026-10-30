@@ -20,10 +20,10 @@
       "color": "#ea580c",
       "stallsAvailable": 91,
       "totalStalls": 91,
-      "realAreaSqm": 753,
+      "realAreaSqm": 753.29,
       "centroid": [
-        100.5967131,
-        13.7113668
+        100.59673798461539,
+        13.711338776923078
       ],
       "coordinates": [
         [
@@ -129,12 +129,18 @@
             ]
           ],
           "center": [
-            100.596965,
-            13.7110722
+            100.59699707499999,
+            13.7111417
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 0,
+            "name": "แผงร้านค้า",
+            "number": 73
+          }
         },
         {
           "code": "SIN-01-090",
@@ -178,7 +184,13 @@
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 2,
+            "name": "แผงร้านค้า",
+            "number": 90
+          }
         },
         {
           "code": "SIN-01-091",
@@ -217,12 +229,18 @@
             ]
           ],
           "center": [
-            100.5969124,
-            13.7110924
+            100.596912425,
+            13.711092375
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 3,
+            "name": "แผงร้านค้า",
+            "number": 91
+          }
         },
         {
           "code": "SIN-01-088",
@@ -261,12 +279,18 @@
             ]
           ],
           "center": [
-            100.5969178,
+            100.596917825,
             13.7111304
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 4,
+            "name": "แผงร้านค้า",
+            "number": 88
+          }
         },
         {
           "code": "SIN-01-089",
@@ -305,12 +329,18 @@
             ]
           ],
           "center": [
-            100.5968814,
-            13.7110682
+            100.59689745000001,
+            13.711103
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 5,
+            "name": "แผงร้านค้า",
+            "number": 89
+          }
         },
         {
           "code": "SIN-01-026",
@@ -357,12 +387,18 @@
             ]
           ],
           "center": [
-            100.5964635,
-            13.7115654
+            100.5964684,
+            13.7115755
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 12,
+            "name": "แผงร้านค้า",
+            "number": 26
+          }
         },
         {
           "code": "SIN-01-050",
@@ -401,12 +437,18 @@
             ]
           ],
           "center": [
-            100.5964165,
-            13.7114936
+            100.59643115,
+            13.711525400000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 13,
+            "name": "แผงร้านค้า",
+            "number": 50
+          }
         },
         {
           "code": "SIN-01-079",
@@ -445,12 +487,18 @@
             ]
           ],
           "center": [
-            100.5964091,
-            13.7115089
+            100.59638975000001,
+            13.711467025
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 15,
+            "name": "แผงร้านค้า",
+            "number": 79
+          }
         },
         {
           "code": "SIN-01-023",
@@ -489,12 +537,18 @@
             ]
           ],
           "center": [
-            100.5969998,
-            13.7112393
+            100.59700155,
+            13.71124305
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 16,
+            "name": "แผงร้านค้า",
+            "number": 23
+          }
         },
         {
           "code": "SIN-01-024",
@@ -533,12 +587,18 @@
             ]
           ],
           "center": [
-            100.5970226,
-            13.7112454
+            100.597016725,
+            13.711232725
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 17,
+            "name": "แผงร้านค้า",
+            "number": 24
+          }
         },
         {
           "code": "SIN-01-021",
@@ -577,12 +637,18 @@
             ]
           ],
           "center": [
-            100.5969496,
-            13.7112644
+            100.59695457500001,
+            13.71127515
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 18,
+            "name": "แผงร้านค้า",
+            "number": 21
+          }
         },
         {
           "code": "SIN-01-022",
@@ -621,12 +687,18 @@
             ]
           ],
           "center": [
-            100.5969593,
-            13.7112422
+            100.59696972500001,
+            13.711264775
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 19,
+            "name": "แผงร้านค้า",
+            "number": 22
+          }
         },
         {
           "code": "SIN-01-019",
@@ -665,12 +737,18 @@
             ]
           ],
           "center": [
-            100.5969135,
-            13.7113201
+            100.59690760000001,
+            13.711307275
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 20,
+            "name": "แผงร้านค้า",
+            "number": 19
+          }
         },
         {
           "code": "SIN-01-020",
@@ -709,12 +787,18 @@
             ]
           ],
           "center": [
-            100.596937,
-            13.7113276
+            100.59692275,
+            13.711296925
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 21,
+            "name": "แผงร้านค้า",
+            "number": 20
+          }
         },
         {
           "code": "SIN-01-017",
@@ -753,12 +837,18 @@
             ]
           ],
           "center": [
-            100.5968786,
-            13.7113783
+            100.5968606,
+            13.7113394
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 22,
+            "name": "แผงร้านค้า",
+            "number": 17
+          }
         },
         {
           "code": "SIN-01-018",
@@ -797,12 +887,18 @@
             ]
           ],
           "center": [
-            100.5968724,
-            13.7113217
+            100.596875775,
+            13.711329025
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 23,
+            "name": "แผงร้านค้า",
+            "number": 18
+          }
         },
         {
           "code": "SIN-01-015",
@@ -841,12 +937,18 @@
             ]
           ],
           "center": [
-            100.5968153,
-            13.7113752
+            100.596813525,
+            13.7113714
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 24,
+            "name": "แผงร้านค้า",
+            "number": 15
+          }
         },
         {
           "code": "SIN-01-016",
@@ -885,12 +987,18 @@
             ]
           ],
           "center": [
-            100.5968224,
-            13.7113473
+            100.596828725,
+            13.711361100000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 25,
+            "name": "แผงร้านค้า",
+            "number": 16
+          }
         },
         {
           "code": "SIN-01-013",
@@ -929,12 +1037,18 @@
             ]
           ],
           "center": [
-            100.5967632,
-            13.7113981
+            100.59676420000001,
+            13.71140035
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 26,
+            "name": "แผงร้านค้า",
+            "number": 13
+          }
         },
         {
           "code": "SIN-01-014",
@@ -973,12 +1087,18 @@
             ]
           ],
           "center": [
-            100.5967728,
-            13.7113758
+            100.59677935,
+            13.711389975
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 27,
+            "name": "แผงร้านค้า",
+            "number": 14
+          }
         },
         {
           "code": "SIN-01-011",
@@ -1013,7 +1133,7 @@
             ],
             [
               100.5966828,
-              13.7114292
+              13.7114293
             ],
             [
               100.5966679,
@@ -1029,12 +1149,18 @@
             ]
           ],
           "center": [
-            100.596676,
-            13.7114258
+            100.59668704285716,
+            13.711448271428571
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 28,
+            "name": "แผงร้านค้า",
+            "number": 11
+          }
         },
         {
           "code": "SIN-01-009",
@@ -1081,12 +1207,18 @@
             ]
           ],
           "center": [
-            100.5966425,
-            13.7114613
+            100.59664595,
+            13.7114719
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 29,
+            "name": "แผงร้านค้า",
+            "number": 9
+          }
         },
         {
           "code": "SIN-01-010",
@@ -1129,12 +1261,18 @@
             ]
           ],
           "center": [
-            100.5966663,
-            13.7114696
+            100.59666112,
+            13.711464659999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 30,
+            "name": "แผงร้านค้า",
+            "number": 10
+          }
         },
         {
           "code": "SIN-01-007",
@@ -1181,12 +1319,18 @@
             ]
           ],
           "center": [
-            100.5965971,
-            13.7114708
+            100.59660821666667,
+            13.711498050000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 31,
+            "name": "แผงร้านค้า",
+            "number": 7
+          }
         },
         {
           "code": "SIN-01-008",
@@ -1229,12 +1373,18 @@
             ]
           ],
           "center": [
-            100.5966364,
-            13.7115128
+            100.59662332,
+            13.711490700000002
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 32,
+            "name": "แผงร้านค้า",
+            "number": 8
+          }
         },
         {
           "code": "SIN-01-005",
@@ -1281,12 +1431,18 @@
             ]
           ],
           "center": [
-            100.596583,
-            13.7115481
+            100.59657048333334,
+            13.711524166666669
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 33,
+            "name": "แผงร้านค้า",
+            "number": 5
+          }
         },
         {
           "code": "SIN-01-006",
@@ -1329,12 +1485,18 @@
             ]
           ],
           "center": [
-            100.5965757,
-            13.7114894
+            100.59658554,
+            13.7115167
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 34,
+            "name": "แผงร้านค้า",
+            "number": 6
+          }
         },
         {
           "code": "SIN-01-003",
@@ -1373,12 +1535,18 @@
             ]
           ],
           "center": [
-            100.5965207,
-            13.7115213
+            100.59653615,
+            13.7115548
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 35,
+            "name": "แผงร้านค้า",
+            "number": 3
+          }
         },
         {
           "code": "SIN-01-004",
@@ -1417,12 +1585,18 @@
             ]
           ],
           "center": [
-            100.5965624,
-            13.7115683
+            100.5965513,
+            13.711544425
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 36,
+            "name": "แผงร้านค้า",
+            "number": 4
+          }
         },
         {
           "code": "SIN-01-002",
@@ -1461,12 +1635,18 @@
             ]
           ],
           "center": [
-            100.5965148,
-            13.711575
+            100.5965115,
+            13.711567800000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 37,
+            "name": "แผงร้านค้า",
+            "number": 2
+          }
         },
         {
           "code": "SIN-01-001",
@@ -1505,12 +1685,18 @@
             ]
           ],
           "center": [
-            100.5964827,
-            13.7115607
+            100.5964929,
+            13.71158275
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 38,
+            "name": "แผงร้านค้า",
+            "number": 1
+          }
         },
         {
           "code": "SIN-01-051",
@@ -1557,12 +1743,18 @@
             ]
           ],
           "center": [
-            100.596528,
-            13.7115701
+            100.59649655,
+            13.711496416666664
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 39,
+            "name": "แผงร้านค้า",
+            "number": 51
+          }
         },
         {
           "code": "SIN-01-052",
@@ -1609,12 +1801,18 @@
             ]
           ],
           "center": [
-            100.5964999,
-            13.7114664
+            100.59650651666668,
+            13.711489333333333
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 40,
+            "name": "แผงร้านค้า",
+            "number": 52
+          }
         },
         {
           "code": "SIN-01-027",
@@ -1661,12 +1859,18 @@
             ]
           ],
           "center": [
-            100.5964979,
-            13.7114883
+            100.5965192,
+            13.7115269
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 41,
+            "name": "แผงร้านค้า",
+            "number": 27
+          }
         },
         {
           "code": "SIN-01-028",
@@ -1713,12 +1917,18 @@
             ]
           ],
           "center": [
-            100.5965312,
-            13.7115174
+            100.59652916666668,
+            13.7115198
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 42,
+            "name": "แผงร้านค้า",
+            "number": 28
+          }
         },
         {
           "code": "SIN-01-074",
@@ -1757,12 +1967,18 @@
             ]
           ],
           "center": [
-            100.5964502,
-            13.7114081
+            100.59646935,
+            13.71144955
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 44,
+            "name": "แผงร้านค้า",
+            "number": 74
+          }
         },
         {
           "code": "SIN-01-083",
@@ -1801,12 +2017,18 @@
             ]
           ],
           "center": [
-            100.5964636,
-            13.7114033
+            100.596467525,
+            13.71141175
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 45,
+            "name": "แผงร้านค้า",
+            "number": 83
+          }
         },
         {
           "code": "SIN-01-082",
@@ -1845,12 +2067,18 @@
             ]
           ],
           "center": [
-            100.5964389,
-            13.7113993
+            100.59645032499999,
+            13.711423975
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 46,
+            "name": "แผงร้านค้า",
+            "number": 82
+          }
         },
         {
           "code": "SIN-01-075",
@@ -1889,12 +2117,18 @@
             ]
           ],
           "center": [
-            100.59649,
-            13.7114448
+            100.59648655,
+            13.71143735
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 47,
+            "name": "แผงร้านค้า",
+            "number": 75
+          }
         },
         {
           "code": "SIN-01-055",
@@ -1941,12 +2175,18 @@
             ]
           ],
           "center": [
-            100.5965867,
-            13.7114822
+            100.59657133333333,
+            13.711443283333333
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 48,
+            "name": "แผงร้านค้า",
+            "number": 55
+          }
         },
         {
           "code": "SIN-01-056",
@@ -1993,12 +2233,18 @@
             ]
           ],
           "center": [
-            100.5965856,
-            13.7114369
+            100.59658131666667,
+            13.7114362
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 49,
+            "name": "แผงร้านค้า",
+            "number": 56
+          }
         },
         {
           "code": "SIN-01-031",
@@ -2045,12 +2291,18 @@
             ]
           ],
           "center": [
-            100.5966094,
-            13.7115146
+            100.59659398333334,
+            13.711473733333333
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 50,
+            "name": "แผงร้านค้า",
+            "number": 31
+          }
         },
         {
           "code": "SIN-01-032",
@@ -2097,12 +2349,18 @@
             ]
           ],
           "center": [
-            100.5965877,
-            13.7114246
+            100.59660396666668,
+            13.711466666666666
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 51,
+            "name": "แผงร้านค้า",
+            "number": 32
+          }
         },
         {
           "code": "SIN-01-085",
@@ -2141,12 +2399,18 @@
             ]
           ],
           "center": [
-            100.5965579,
-            13.7113924
+            100.596542325,
+            13.7113586
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 53,
+            "name": "แผงร้านค้า",
+            "number": 85
+          }
         },
         {
           "code": "SIN-01-077",
@@ -2185,12 +2449,18 @@
             ]
           ],
           "center": [
-            100.5965475,
-            13.7113542
+            100.596561325,
+            13.711384200000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 55,
+            "name": "แผงร้านค้า",
+            "number": 77
+          }
         },
         {
           "code": "SIN-01-076",
@@ -2229,12 +2499,18 @@
             ]
           ],
           "center": [
-            100.5965131,
-            13.7113787
+            100.596526925,
+            13.71140865
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 56,
+            "name": "แผงร้านค้า",
+            "number": 76
+          }
         },
         {
           "code": "SIN-01-084",
@@ -2273,12 +2549,18 @@
             ]
           ],
           "center": [
-            100.596504,
-            13.7113746
+            100.596507925,
+            13.711383075
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 57,
+            "name": "แผงร้านค้า",
+            "number": 84
+          }
         },
         {
           "code": "SIN-01-059",
@@ -2325,12 +2607,18 @@
             ]
           ],
           "center": [
-            100.5966454,
-            13.7113943
+            100.59664613333332,
+            13.711390133333333
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 58,
+            "name": "แผงร้านค้า",
+            "number": 59
+          }
         },
         {
           "code": "SIN-01-060",
@@ -2377,12 +2665,18 @@
             ]
           ],
           "center": [
-            100.5966765,
-            13.7114185
+            100.59665611666667,
+            13.71138305
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 59,
+            "name": "แผงร้านค้า",
+            "number": 60
+          }
         },
         {
           "code": "SIN-01-035",
@@ -2421,7 +2715,7 @@
             ],
             [
               100.5966828,
-              13.7114292
+              13.7114293
             ],
             [
               100.596677,
@@ -2429,12 +2723,18 @@
             ]
           ],
           "center": [
-            100.5966658,
-            13.7114218
+            100.59666878333333,
+            13.711420633333335
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 60,
+            "name": "แผงร้านค้า",
+            "number": 35
+          }
         },
         {
           "code": "SIN-01-036",
@@ -2461,7 +2761,7 @@
             ],
             [
               100.5966828,
-              13.7114292
+              13.7114293
             ],
             [
               100.5966978,
@@ -2481,12 +2781,18 @@
             ]
           ],
           "center": [
-            100.5966808,
-            13.7114111
+            100.59667876666667,
+            13.711413533333335
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 63,
+            "name": "แผงร้านค้า",
+            "number": 36
+          }
         },
         {
           "code": "SIN-01-078",
@@ -2526,11 +2832,17 @@
           ],
           "center": [
             100.5966023,
-            13.7113563
+            13.711356299999998
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 66,
+            "name": "แผงร้านค้า",
+            "number": 78
+          }
         },
         {
           "code": "SIN-01-086",
@@ -2569,12 +2881,18 @@
             ]
           ],
           "center": [
-            100.5965649,
-            13.711291
+            100.596583275,
+            13.711330700000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 67,
+            "name": "แผงร้านค้า",
+            "number": 86
+          }
         },
         {
           "code": "SIN-01-061",
@@ -2633,12 +2951,18 @@
             ]
           ],
           "center": [
-            100.5966729,
-            13.7112403
+            100.5967212,
+            13.711337366666665
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 68,
+            "name": "แผงร้านค้า",
+            "number": 61
+          }
         },
         {
           "code": "SIN-01-062",
@@ -2693,12 +3017,18 @@
             ]
           ],
           "center": [
-            100.5967634,
-            13.7113933
+            100.59672883750001,
+            13.711329712500001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 69,
+            "name": "แผงร้านค้า",
+            "number": 62
+          }
         },
         {
           "code": "SIN-01-037",
@@ -2753,12 +3083,18 @@
             ]
           ],
           "center": [
-            100.5967246,
-            13.7113339
+            100.5967436125,
+            13.711368799999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 70,
+            "name": "แผงร้านค้า",
+            "number": 37
+          }
         },
         {
           "code": "SIN-01-038",
@@ -2809,12 +3145,18 @@
             ]
           ],
           "center": [
-            100.5967716,
-            13.7113928
+            100.59675242857143,
+            13.711360357142857
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 71,
+            "name": "แผงร้านค้า",
+            "number": 38
+          }
         },
         {
           "code": "SIN-01-087",
@@ -2853,12 +3195,18 @@
             ]
           ],
           "center": [
-            100.5966859,
-            13.7112805
+            100.5966849,
+            13.7112783
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 75,
+            "name": "แผงร้านค้า",
+            "number": 87
+          }
         },
         {
           "code": "SIN-01-065",
@@ -2909,12 +3257,18 @@
             ]
           ],
           "center": [
-            100.5968116,
-            13.7112735
+            100.59681254285714,
+            13.711268157142857
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 76,
+            "name": "แผงร้านค้า",
+            "number": 65
+          }
         },
         {
           "code": "SIN-01-066",
@@ -2965,12 +3319,18 @@
             ]
           ],
           "center": [
-            100.5968266,
-            13.7112629
+            100.5968210857143,
+            13.711262085714285
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 77,
+            "name": "แผงร้านค้า",
+            "number": 66
+          }
         },
         {
           "code": "SIN-01-041",
@@ -3021,12 +3381,18 @@
             ]
           ],
           "center": [
-            100.5968253,
-            13.7112833
+            100.59683801428571,
+            13.711302414285713
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 78,
+            "name": "แผงร้านค้า",
+            "number": 41
+          }
         },
         {
           "code": "SIN-01-042",
@@ -3077,12 +3443,18 @@
             ]
           ],
           "center": [
-            100.5968403,
-            13.7112727
+            100.59684657142857,
+            13.711296342857144
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 79,
+            "name": "แผงร้านค้า",
+            "number": 42
+          }
         },
         {
           "code": "SIN-01-069",
@@ -3133,12 +3505,18 @@
             ]
           ],
           "center": [
-            100.5969044,
-            13.7112076
+            100.5969052857143,
+            13.711202257142858
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 80,
+            "name": "แผงร้านค้า",
+            "number": 69
+          }
         },
         {
           "code": "SIN-01-070",
@@ -3189,12 +3567,18 @@
             ]
           ],
           "center": [
-            100.5969193,
-            13.711197
+            100.59691384285713,
+            13.711196185714286
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 81,
+            "name": "แผงร้านค้า",
+            "number": 70
+          }
         },
         {
           "code": "SIN-01-045",
@@ -3245,12 +3629,18 @@
             ]
           ],
           "center": [
-            100.5969312,
-            13.7112458
+            100.59693072857144,
+            13.71123652857143
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 82,
+            "name": "แผงร้านค้า",
+            "number": 45
+          }
         },
         {
           "code": "SIN-01-046",
@@ -3301,12 +3691,18 @@
             ]
           ],
           "center": [
-            100.5969592,
-            13.7112636
+            100.59693928571427,
+            13.711230457142856
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 83,
+            "name": "แผงร้านค้า",
+            "number": 46
+          }
         },
         {
           "code": "SIN-01-049",
@@ -3353,12 +3749,18 @@
             ]
           ],
           "center": [
-            100.5970344,
-            13.7112024
+            100.5970236,
+            13.711172233333334
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 84,
+            "name": "แผงร้านค้า",
+            "number": 49
+          }
         },
         {
           "code": "SIN-01-063",
@@ -3397,12 +3799,18 @@
             ]
           ],
           "center": [
-            100.5967492,
-            13.7112717
+            100.59676525,
+            13.711306425
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 88,
+            "name": "แผงร้านค้า",
+            "number": 63
+          }
         },
         {
           "code": "SIN-01-064",
@@ -3441,12 +3849,18 @@
             ]
           ],
           "center": [
-            100.5967802,
-            13.7112958
+            100.596780225,
+            13.711295800000002
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 89,
+            "name": "แผงร้านค้า",
+            "number": 64
+          }
         },
         {
           "code": "SIN-01-047",
@@ -3485,12 +3899,18 @@
             ]
           ],
           "center": [
-            100.5969644,
-            13.7111845
+            100.5969749,
+            13.7112072
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 90,
+            "name": "แผงร้านค้า",
+            "number": 47
+          }
         },
         {
           "code": "SIN-01-048",
@@ -3529,12 +3949,18 @@
             ]
           ],
           "center": [
-            100.5969925,
-            13.7112022
+            100.59698987499999,
+            13.711196574999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 91,
+            "name": "แผงร้านค้า",
+            "number": 48
+          }
         },
         {
           "code": "SIN-01-040",
@@ -3573,12 +3999,18 @@
             ]
           ],
           "center": [
-            100.596807,
-            13.711334
+            100.5968044,
+            13.711328325
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 94,
+            "name": "แผงร้านค้า",
+            "number": 40
+          }
         },
         {
           "code": "SIN-01-039",
@@ -3617,12 +4049,18 @@
             ]
           ],
           "center": [
-            100.5967921,
-            13.7113446
+            100.596789425,
+            13.711338975
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 95,
+            "name": "แผงร้านค้า",
+            "number": 39
+          }
         },
         {
           "code": "SIN-01-068",
@@ -3665,12 +4103,18 @@
             ]
           ],
           "center": [
-            100.5968729,
-            13.7112299
+            100.59687194,
+            13.71122618
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 96,
+            "name": "แผงร้านค้า",
+            "number": 68
+          }
         },
         {
           "code": "SIN-01-067",
@@ -3713,12 +4157,18 @@
             ]
           ],
           "center": [
-            100.596874,
-            13.7112753
+            100.59685696,
+            13.7112368
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 97,
+            "name": "แผงร้านค้า",
+            "number": 67
+          }
         },
         {
           "code": "SIN-01-044",
@@ -3757,12 +4207,18 @@
             ]
           ],
           "center": [
-            100.5968866,
-            13.7112398
+            100.596897125,
+            13.711262475
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 98,
+            "name": "แผงร้านค้า",
+            "number": 44
+          }
         },
         {
           "code": "SIN-01-043",
@@ -3801,12 +4257,18 @@
             ]
           ],
           "center": [
-            100.5968979,
-            13.7113071
+            100.59688217499999,
+            13.7112731
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 99,
+            "name": "แผงร้านค้า",
+            "number": 43
+          }
         },
         {
           "code": "SIN-01-072",
@@ -3845,12 +4307,18 @@
             ]
           ],
           "center": [
-            100.5969978,
-            13.7112335
+            100.596965675,
+            13.711164024999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 100,
+            "name": "แผงร้านค้า",
+            "number": 72
+          }
         },
         {
           "code": "SIN-01-071",
@@ -3889,12 +4357,18 @@
             ]
           ],
           "center": [
-            100.5969507,
-            13.7111747
+            100.596950725,
+            13.711174649999998
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 101,
+            "name": "แผงร้านค้า",
+            "number": 71
+          }
         },
         {
           "code": "SIN-01-025",
@@ -3933,12 +4407,18 @@
             ]
           ],
           "center": [
-            100.5970487,
-            13.7112112
+            100.59704872500001,
+            13.711211175
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 102,
+            "name": "แผงร้านค้า",
+            "number": 25
+          }
         },
         {
           "code": "SIN-01-034",
@@ -3981,12 +4461,18 @@
             ]
           ],
           "center": [
-            100.5966434,
-            13.7114377
+            100.59664264,
+            13.71143976
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 104,
+            "name": "แผงร้านค้า",
+            "number": 34
+          }
         },
         {
           "code": "SIN-01-033",
@@ -4029,12 +4515,18 @@
             ]
           ],
           "center": [
-            100.5966468,
-            13.7114881
+            100.59663066,
+            13.711448260000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 105,
+            "name": "แผงร้านค้า",
+            "number": 33
+          }
         },
         {
           "code": "SIN-01-058",
@@ -4073,12 +4565,18 @@
             ]
           ],
           "center": [
-            100.596623,
+            100.596623025,
             13.7114103
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 106,
+            "name": "แผงร้านค้า",
+            "number": 58
+          }
         },
         {
           "code": "SIN-01-057",
@@ -4117,12 +4615,18 @@
             ]
           ],
           "center": [
-            100.596592,
-            13.7113862
+            100.59660804999999,
+            13.711420925
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 107,
+            "name": "แผงร้านค้า",
+            "number": 57
+          }
         },
         {
           "code": "SIN-01-030",
@@ -4169,12 +4673,18 @@
             ]
           ],
           "center": [
-            100.5965686,
-            13.7114908
+            100.59656798333333,
+            13.71149515
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 108,
+            "name": "แผงร้านค้า",
+            "number": 30
+          }
         },
         {
           "code": "SIN-01-029",
@@ -4217,12 +4727,18 @@
             ]
           ],
           "center": [
-            100.5965536,
-            13.7115015
+            100.59655588000001,
+            13.711501420000001
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 109,
+            "name": "แผงร้านค้า",
+            "number": 29
+          }
         },
         {
           "code": "SIN-01-054",
@@ -4261,12 +4777,18 @@
             ]
           ],
           "center": [
-            100.5965643,
-            13.7114982
+            100.596548225,
+            13.711463425
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 111,
+            "name": "แผงร้านค้า",
+            "number": 54
+          }
         },
         {
           "code": "SIN-01-053",
@@ -4305,12 +4827,18 @@
             ]
           ],
           "center": [
-            100.5965172,
-            13.7114393
+            100.596533275,
+            13.71147405
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 112,
+            "name": "แผงร้านค้า",
+            "number": 53
+          }
         },
         {
           "code": "SIN-01-080",
@@ -4349,12 +4877,18 @@
             ]
           ],
           "center": [
-            100.5963816,
-            13.7114054
+            100.596405075,
+            13.711456125
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 114,
+            "name": "แผงร้านค้า",
+            "number": 80
+          }
         },
         {
           "code": "SIN-01-081",
@@ -4393,12 +4927,18 @@
             ]
           ],
           "center": [
-            100.5964397,
-            13.7114871
+            100.5964204,
+            13.711445224999999
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 115,
+            "name": "แผงร้านค้า",
+            "number": 81
+          }
         },
         {
           "code": "SIN-01-012",
@@ -4437,7 +4977,7 @@
             ],
             [
               100.5966828,
-              13.7114292
+              13.7114293
             ],
             [
               100.5966835,
@@ -4449,14 +4989,147 @@
             ]
           ],
           "center": [
-            100.5966982,
-            13.7114306
+            100.59670228571429,
+            13.711438014285715
           ],
           "floor": "1",
           "floorName": "ชั้น 1",
-          "floorLevel": 1
+          "floorLevel": 1,
+          "polygonHoles": [],
+          "sourceProperties": {
+            "FID": 28,
+            "name": "แผงร้านค้า",
+            "number": 12
+          }
         }
       ]
+    }
+  ],
+  "siteFeatures": [
+    {
+      "type": "Feature",
+      "properties": {
+        "FID": 8,
+        "name": "ห้องน้ำ",
+        "number": 1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.5964493,
+              13.7114695
+            ],
+            [
+              100.596449,
+              13.7114691
+            ],
+            [
+              100.5964447,
+              13.7114633
+            ],
+            [
+              100.5964444,
+              13.7114629
+            ],
+            [
+              100.596437,
+              13.7114529
+            ],
+            [
+              100.5963914,
+              13.7114853
+            ],
+            [
+              100.5963927,
+              13.7114871
+            ],
+            [
+              100.5964105,
+              13.711511
+            ],
+            [
+              100.5964561,
+              13.7114786
+            ],
+            [
+              100.5964493,
+              13.7114695
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "FID": 92,
+        "name": "ห้องเครื่อง",
+        "number": 1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.5971696,
+              13.7111758
+            ],
+            [
+              100.5971554,
+              13.7111568
+            ],
+            [
+              100.5971323,
+              13.7111732
+            ],
+            [
+              100.5971464,
+              13.7111923
+            ],
+            [
+              100.5971696,
+              13.7111758
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "FID": 113,
+        "name": "สำนักงานตลาด",
+        "number": 1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.596982,
+              13.7110897
+            ],
+            [
+              100.5969599,
+              13.71106
+            ],
+            [
+              100.5969441,
+              13.7110713
+            ],
+            [
+              100.5969661,
+              13.711101
+            ],
+            [
+              100.596982,
+              13.7110897
+            ]
+          ]
+        ]
+      }
     }
   ]
 }
