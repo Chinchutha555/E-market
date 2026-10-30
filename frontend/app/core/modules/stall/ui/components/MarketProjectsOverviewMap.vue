@@ -885,7 +885,7 @@
           </button>
           <button type="button" class="ov-rail-btn" :class="{ active: ovPanel === 'layers' }" title="ชั้นข้อมูล" aria-label="ชั้นข้อมูล" :aria-expanded="ovPanel === 'layers'" aria-controls="ov-slide-panel" @click="toggleOvPanel('layers')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-            <span v-if="legendCategories.length" class="ov-rail-badge">{{ legendCategories.length }}</span>
+            <span v-if="mapLayerFilterCount" class="ov-rail-badge">{{ mapLayerFilterCount }}</span>
           </button>
         </nav>
 
@@ -1037,6 +1037,35 @@
                         <svg v-if="currentStyle === b.value" class="ov-basemap-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                       </span>
                       <span>{{ b.label }}</span>
+                    </button>
+                  </div>
+                </section>
+                <section class="ov-section">
+                  <div class="ov-section-head">
+                    <h4>สิ่งอำนวยความสะดวก</h4>
+                  </div>
+                  <p class="ov-hint">เลือกเปิดหรือปิดข้อมูลประกอบที่แสดงทับบนผังตลาด</p>
+                  <div class="ov-layer-toggle-list" role="group" aria-label="สิ่งอำนวยความสะดวก">
+                    <button
+                      type="button"
+                      class="ov-layer-toggle"
+                      :class="{ active: showFacilities }"
+                      :aria-pressed="showFacilities"
+                      @click="toggleFacilitiesLayer"
+                    >
+                      <span class="ov-layer-icon" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 22s7-5.3 7-12a7 7 0 1 0-14 0c0 6.7 7 12 7 12Z"></path>
+                          <circle cx="12" cy="10" r="2.5"></circle>
+                        </svg>
+                      </span>
+                      <span class="ov-layer-text">
+                        <strong>สิ่งอำนวยความสะดวก</strong>
+                        <small>จุดอำนวยความสะดวก {{ managedFacilities.length.toLocaleString('th-TH') }} รายการ</small>
+                      </span>
+                      <span class="ov-layer-switch" aria-hidden="true">
+                        <span></span>
+                      </span>
                     </button>
                   </div>
                 </section>
@@ -1240,6 +1269,7 @@ const draftCategoryFilter = ref(props.categoryFilter || '')
 const appliedCategoryFilter = ref(props.categoryFilter || '')
 // กรองหลายหมวดจากสีโครงการ (ชั้นข้อมูล) แยกจากตัวกรองหมวดเดี่ยวในหน้าตัวกรอง
 const legendCategories = ref<string[]>([])
+const showFacilities = ref(false)
 // สถานะแผงที่ตั้งจากการ์ด KPI ด้านบน ไม่นับเป็นตัวกรองบนปุ่มตัวกรอง
 const availabilityFromCard = ref(false)
 const appliedSearchQuery = ref('')
@@ -1471,11 +1501,24 @@ const applyManagedFacilities = (nextFacilities: MarketFacility[]) => {
 
 const getFacilitiesGeoJson = () => ({
   type: 'FeatureCollection' as const,
-  features: managedFacilities.value.map(facility => ({
-    type: 'Feature' as const,
-    geometry: { type: 'Point' as const, coordinates: facility.coordinates },
-    properties: { id: facility.id, name: facility.name, type: facility.type }
-  }))
+  features: (showFacilities.value ? managedFacilities.value : [])
+    .filter(facility => {
+      const floorId = activeProjectId.value ? currentFloorId.value : selectedMarketFloorId.value
+      if (floorId && floorId !== 'all' && facility.floorId && String(facility.floorId) !== String(floorId)) return false
+      if (!activeProjectId.value) return true
+      return findHostZoneForFacility(facility)?.id === activeProjectId.value
+    })
+    .map(facility => ({
+      type: 'Feature' as const,
+      geometry: facility.geometry || { type: 'Point' as const, coordinates: facility.coordinates },
+      properties: {
+        id: facility.id,
+        name: facility.name,
+        type: facility.type,
+        floorId: facility.floorId || '',
+        projectId: facility.projectId || ''
+      }
+    }))
 })
 
 // Extract categories dynamically from the current market's projects
@@ -2505,12 +2548,17 @@ const filteredStalls = computed(() => {
   }
   if (stallSearchQuery.value.trim()) {
     const q = stallSearchQuery.value.trim().toLowerCase()
-    list = list.filter(s => s.code.toLowerCase().includes(q))
+    list = list.filter(s => s.code.toLowerCase().includes(q) || String(s.name || '').toLowerCase().includes(q))
   }
   return list
 })
 
 const getStallSelectionKey = (stall: MapStall): string => stall.selectionId || stall.code
+const getStallMapLabel = (stall: MapStall): string => {
+  const sourceNumber = stall.sourceProperties?.number ?? stall.sourceProperties?.Number
+  return String(sourceNumber ?? '').trim()
+}
+const getStallDisplayName = (stall: MapStall): string => getStallMapLabel(stall) || String(stall.name || '').trim()
 const isStallSelected = (stall: MapStall): boolean => {
   const selectedKeys = props.selectedStallKeys?.length ? props.selectedStallKeys : props.selectedStallCodes
   const normalizedSelectedKeys = new Set((selectedKeys || []).map(key => String(key).trim().toUpperCase()))
@@ -2908,12 +2956,13 @@ const getStallsGeoJson = () => {
       return {
         type: 'Feature',
         id: idx + 1,
-        geometry: { type: 'Polygon', coordinates: [s.coordinates] },
+        geometry: { type: 'Polygon', coordinates: [s.coordinates, ...(s.polygonHoles || [])] },
         properties: {
           // Survey exports can reuse a human-readable stall code. Keep the
           // layout index so map hit-testing always resolves the exact polygon.
           stallIndex: idx,
           code: s.code,
+          label: getStallMapLabel(s),
           status: s.status,
           isSelected,
           isHovered: hoveredStallKey.value === getStallSelectionKey(s),
@@ -2930,7 +2979,7 @@ const getStallsGeoJson = () => {
 const setupProjectLayers = () => {
   if (!map) return
 
-  ;['zone-drawing-points', 'zone-drawing-line', 'zone-drawing-fill', 'facilities-label', 'facilities-circle', 'projects-hover-outline', 'projects-hover-casing', 'projects-active-outline', 'stalls-selected-stroke', 'stalls-selected-casing', 'stalls-hover-stroke', 'stalls-hover-casing', 'stalls-line', 'stalls-casing', 'stalls-fill', 'projects-stroke', 'projects-casing', 'projects-fill'].forEach(id => {
+  ;['zone-drawing-points', 'zone-drawing-line', 'zone-drawing-fill', 'facilities-label', 'facilities-circle', 'facilities-polygon-line', 'facilities-polygon-fill', 'projects-hover-outline', 'projects-hover-casing', 'projects-active-outline', 'stalls-selected-stroke', 'stalls-selected-casing', 'stalls-hover-stroke', 'stalls-hover-casing', 'stalls-label', 'stalls-line', 'stalls-casing', 'stalls-fill', 'projects-stroke', 'projects-casing', 'projects-fill'].forEach(id => {
     if (map.getLayer(id)) map.removeLayer(id)
   })
   ;['projects-polygons', 'project-stalls', 'market-facilities', 'zone-drawing'].forEach(id => {
@@ -2959,8 +3008,31 @@ const setupProjectLayers = () => {
     }
   })
 
-  map.addLayer({ id: 'facilities-circle', type: 'circle', source: 'market-facilities', paint: { 'circle-radius': 8, 'circle-color': '#ffffff', 'circle-stroke-color': '#2563eb', 'circle-stroke-width': 3 } })
-  map.addLayer({ id: 'facilities-label', type: 'symbol', source: 'market-facilities', layout: { 'text-field': ['get', 'name'], 'text-size': 12, 'text-offset': [0, 1.5], 'text-anchor': 'top' }, paint: { 'text-color': '#1e3a8a', 'text-halo-color': '#ffffff', 'text-halo-width': 2 } })
+  const facilityColor = [
+    'match', ['get', 'type'],
+    'sanitation', '#0284c7',
+    'access', '#d97706',
+    'common-area', '#0f766e',
+    'building', '#64748b',
+    'service', '#7c3aed',
+    '#2563eb'
+  ] as any
+  map.addLayer({
+    id: 'facilities-polygon-fill',
+    type: 'fill',
+    source: 'market-facilities',
+    filter: ['==', ['geometry-type'], 'Polygon'],
+    paint: { 'fill-color': facilityColor, 'fill-opacity': 0.34 }
+  })
+  map.addLayer({
+    id: 'facilities-polygon-line',
+    type: 'line',
+    source: 'market-facilities',
+    filter: ['==', ['geometry-type'], 'Polygon'],
+    paint: { 'line-color': facilityColor, 'line-width': 2.2, 'line-opacity': 0.95 }
+  })
+  map.addLayer({ id: 'facilities-circle', type: 'circle', source: 'market-facilities', filter: ['==', ['geometry-type'], 'Point'], paint: { 'circle-radius': 8, 'circle-color': '#ffffff', 'circle-stroke-color': '#2563eb', 'circle-stroke-width': 3 } })
+  map.addLayer({ id: 'facilities-label', type: 'symbol', source: 'market-facilities', filter: ['==', ['geometry-type'], 'Point'], layout: { 'text-field': ['get', 'name'], 'text-size': 12, 'text-offset': [0, 1.5], 'text-anchor': 'top' }, paint: { 'text-color': '#1e3a8a', 'text-halo-color': '#ffffff', 'text-halo-width': 2 } })
   map.addLayer({ id: 'zone-drawing-fill', type: 'fill', source: 'zone-drawing', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'fill-color': '#2563eb', 'fill-opacity': .16 } })
   map.addLayer({ id: 'zone-drawing-line', type: 'line', source: 'zone-drawing', paint: { 'line-color': '#2563eb', 'line-width': 3, 'line-dasharray': [2, 1] } })
   map.addLayer({ id: 'zone-drawing-points', type: 'circle', source: 'zone-drawing', filter: ['==', ['geometry-type'], 'Point'], paint: { 'circle-radius': 5, 'circle-color': '#2563eb', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 } })
@@ -3042,6 +3114,48 @@ const setupProjectLayers = () => {
         'case',
         ['boolean', ['get', 'isDimmed'], false], 0.45,
         1
+      ]
+    }
+  })
+
+  // Show the survey stall number inside every polygon once the cells are
+  // large enough to read. Internal booking codes remain unchanged.
+  map.addLayer({
+    id: 'stalls-label',
+    type: 'symbol',
+    source: 'project-stalls',
+    minzoom: 18,
+    filter: ['!=', ['get', 'label'], ''],
+    layout: {
+      'text-field': ['get', 'label'],
+      'text-size': [
+        'interpolate', ['linear'], ['zoom'],
+        18, 8,
+        20, 11,
+        22, 13
+      ],
+      'text-anchor': 'center',
+      'text-allow-overlap': true,
+      'text-ignore-placement': true,
+      'text-rotation-alignment': 'viewport',
+      'text-pitch-alignment': 'viewport'
+    },
+    paint: {
+      'text-color': [
+        'case',
+        ['boolean', ['get', 'isSelected'], false], '#ffffff',
+        '#0f172a'
+      ],
+      'text-halo-color': [
+        'case',
+        ['boolean', ['get', 'isSelected'], false], '#1d4ed8',
+        '#ffffff'
+      ],
+      'text-halo-width': 1.25,
+      'text-opacity': [
+        'case',
+        ['boolean', ['get', 'isDimmed'], false], 0.55,
+        0.95
       ]
     }
   })
@@ -3690,6 +3804,30 @@ watch(() => props.inspectOnly, (inspect) => {
 })
 
 const FACILITY_META: Record<string, { label: string; color: string; bg: string; svg: string }> = {
+  sanitation: {
+    label: 'สุขาภิบาล',
+    color: '#0284c7',
+    bg: '#e0f2fe',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 7h14M7 7v13M17 7v13"/><path d="M9 11h6M9 15h6"/></svg>'
+  },
+  access: {
+    label: 'ทางสัญจร',
+    color: '#d97706',
+    bg: '#fef3c7',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+  },
+  'common-area': {
+    label: 'พื้นที่ส่วนกลาง',
+    color: '#0f766e',
+    bg: '#ccfbf1',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6"/></svg>'
+  },
+  building: {
+    label: 'อาคารและสิ่งปลูกสร้าง',
+    color: '#64748b',
+    bg: '#f1f5f9',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2M9 21v-5h6v5"/></svg>'
+  },
   toilet: {
     label: 'ห้องน้ำ',
     color: '#0284c7',
@@ -3734,6 +3872,9 @@ const findHostZoneForFacility = (facility: MarketFacility): ProjectZone | null =
     const byId = projects.value.find(p => p.id === facility.projectId)
     if (byId) return byId
   }
+  // Imported survey facilities without projectId are explicitly market-level.
+  // Spatial fallback is reserved for facilities added manually on the map.
+  if (facility.sourceProperties) return null
   return projects.value.find(p => pointInProject(facility.coordinates, p)) || null
 }
 
@@ -3796,6 +3937,7 @@ const renderFacilityMarkers = () => {
   if (!map || !maplibregl) return
   if (map.getLayer('facilities-circle')) map.setLayoutProperty('facilities-circle', 'visibility', 'none')
   if (map.getLayer('facilities-label')) map.setLayoutProperty('facilities-label', 'visibility', 'none')
+  if (!showFacilities.value) return
 
   // Facilities are part of a project's internal layout. Keep the overview
   // uncluttered; reveal them only after a staff member enters that project.
@@ -3803,7 +3945,10 @@ const renderFacilityMarkers = () => {
   if (!activeProjectID) return
 
   managedFacilities.value
-    .filter(facility => findHostZoneForFacility(facility)?.id === activeProjectID)
+    .filter(facility => {
+      if (findHostZoneForFacility(facility)?.id !== activeProjectID) return false
+      return !facility.floorId || String(facility.floorId) === String(currentFloorId.value)
+    })
     .forEach(facility => {
       if (!Array.isArray(facility.coordinates) || facility.coordinates.length < 2) return
       const meta = getFacilityMeta(facility.type)
@@ -3955,8 +4100,13 @@ const getStallDisplayPhoto = (s: MapStall): string => {
 
 const showPopupForStall = (s: MapStall) => {
   if (!map || !hoverPopup || !s?.center) return
+  const displayName = getStallDisplayName(s)
+  if (!displayName) {
+    hoverPopup.remove()
+    return
+  }
   hoverPopup.setLngLat(s.center).setHTML(`
-    <div class="mlp mlp-stall-tooltip"><strong>แผง ${s.code}</strong></div>
+    <div class="mlp mlp-stall-tooltip"><strong>แผง ${displayName}</strong></div>
   `).addTo(map)
 }
 
@@ -4311,6 +4461,12 @@ const getMostSpecificProjectHit = (hits: any[]): ProjectZone | null => {
   ))
 }
 
+const getFacilityFromFeature = (feature: any): MarketFacility | null => {
+  const facilityId = feature?.properties?.id
+  if (typeof facilityId !== 'string') return null
+  return managedFacilities.value.find(facility => facility.id === facilityId) || null
+}
+
 const bindMapEvents = () => {
   map.on('zoomend', () => {
     // Labels are adaptive: redraw only when the map settles after zooming.
@@ -4325,6 +4481,17 @@ const bindMapEvents = () => {
       drawingCursor.value = [e.lngLat.lng, e.lngLat.lat]
       refreshDrawingZone()
       map.getCanvas().style.cursor = 'crosshair'
+      return
+    }
+    const facilityHit = map.getLayer('facilities-polygon-fill')
+      ? map.queryRenderedFeatures(e.point, { layers: ['facilities-polygon-fill'] })
+      : []
+    if (facilityHit.length) {
+      setHoveredProject(null)
+      setHoveredStall(null)
+      const facility = getFacilityFromFeature(facilityHit[0])
+      map.getCanvas().style.cursor = facility ? 'pointer' : ''
+      if (facility) showPopupForFacility(facility)
       return
     }
     const stallHit = map.getLayer('stalls-fill')
@@ -4410,6 +4577,18 @@ const bindMapEvents = () => {
       return
     }
 
+    const facilityHit = map.getLayer('facilities-polygon-fill')
+      ? map.queryRenderedFeatures(e.point, { layers: ['facilities-polygon-fill'] })
+      : []
+    if (facilityHit.length) {
+      const facility = getFacilityFromFeature(facilityHit[0])
+      if (facility) {
+        pinnedFacilityPopup.value = props.managementMode
+        showPopupForFacility(facility)
+      }
+      return
+    }
+
     const stallHit = map.getLayer('stalls-fill')
       ? map.queryRenderedFeatures(e.point, { layers: ['stalls-fill'] })
       : []
@@ -4465,7 +4644,8 @@ const renderZoneLabels = () => {
   if (zoom < 15.5) return
 
   visibleProjects.forEach((p) => {
-    const showFloorContext = marketFloors.value.length > 1 && selectedMarketFloorId.value === 'all'
+    const hasProjectNumber = Boolean(String(p.sectionNumber || '').trim())
+    const showFloorContext = !hasProjectNumber || (marketFloors.value.length > 1 && selectedMarketFloorId.value === 'all')
     const projectFloorLabel = getProjectActualFloorIds(p)
       .map(floorId => {
         const fl = marketFloors.value.find(floor => floor.id === floorId)
@@ -4478,13 +4658,14 @@ const renderZoneLabels = () => {
     el.className = 'maplibre-zone-number-badge'
     if (isCompact) el.classList.add('is-compact')
     if (showFloorContext) el.classList.add('has-floor-context')
+    if (!hasProjectNumber) el.classList.add('is-floor-only')
     if (hoveredProject.value?.id === p.id) el.classList.add('is-project-hovered')
     el.title = p.name
     projectMarkerElements.set(p.id, el)
 
     el.innerHTML = `
       <div class="zone-badge-inner">
-        <span class="badge-num">${isCompact ? p.sectionNumber : `โครงการที่ ${p.sectionNumber}`}</span>
+        ${hasProjectNumber ? `<span class="badge-num">${isCompact ? p.sectionNumber : `โครงการที่ ${p.sectionNumber}`}</span>` : ''}
         ${showFloorContext ? `<span class="badge-floor">${projectFloorLabel}</span>` : ''}
       </div>
     `
@@ -4775,6 +4956,7 @@ const ovSubtitle = computed(() => {
 const ovFilterBadge = computed(() => (props.filterContext === 'costs'
   ? props.filterBadge
   : advancedFilterCount.value - (availabilityFromCard.value && appliedAvailabilityFilter.value !== 'all' ? 1 : 0)))
+const mapLayerFilterCount = computed(() => legendCategories.value.length + (showFacilities.value ? 0 : 1))
 const basemapOptions: { value: 'standard' | 'satellite' | 'dark'; label: string }[] = [
   { value: 'standard', label: 'แผนที่ปกติ' },
   { value: 'satellite', label: 'ดาวเทียม' }
@@ -4809,6 +4991,12 @@ const toggleLegendCategory = (name: string) => {
 }
 const clearLegendCategories = () => {
   legendCategories.value = []
+  refreshSources()
+}
+const toggleFacilitiesLayer = () => {
+  showFacilities.value = !showFacilities.value
+  pinnedFacilityPopup.value = false
+  hoverPopup?.remove()
   refreshSources()
 }
 const applyFiltersFromPanel = () => {
@@ -6035,7 +6223,7 @@ onUnmounted(cleanupMapResources)
   top: 14px;
   left: 14px;
   bottom: 14px;
-  width: 280px;
+  width: 320px;
   z-index: 12;
   display: flex;
   flex-direction: column;
@@ -6066,7 +6254,7 @@ onUnmounted(cleanupMapResources)
   background: #2563eb;
   color: #ffffff;
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22);
@@ -6095,14 +6283,14 @@ onUnmounted(cleanupMapResources)
 
 .smp-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #0f172a;
 }
 
 .smp-category {
   margin-top: -6px;
-  font-size: 0.76rem;
+  font-size: 0.9375rem;
   color: #64748b;
   line-height: 1.4;
 }
@@ -6128,13 +6316,13 @@ onUnmounted(cleanupMapResources)
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.76rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: #334155;
 }
 
 .smp-floor-count {
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: #2563eb;
   background: #eff6ff;
@@ -6184,7 +6372,7 @@ onUnmounted(cleanupMapResources)
   border-radius: 6px;
   background: #f1f5f9;
   color: #334155;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   flex-shrink: 0;
   transition: all 0.18s ease;
@@ -6203,7 +6391,7 @@ onUnmounted(cleanupMapResources)
 }
 
 .smp-seg-name {
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: #1e293b;
   white-space: nowrap;
@@ -6214,7 +6402,7 @@ onUnmounted(cleanupMapResources)
 }
 
 .smp-seg-avail {
-  font-size: 0.67rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #16a34a;
   white-space: nowrap;
@@ -6249,7 +6437,7 @@ onUnmounted(cleanupMapResources)
 }
 
 .has-many-floors .smp-seg-avail {
-  font-size: 0.62rem;
+  font-size: 0.75rem;
 }
 
 /* Large buildings keep floor selection usable without making the panel taller
@@ -6275,7 +6463,7 @@ onUnmounted(cleanupMapResources)
 }
 
 .has-five-or-more-floors .smp-seg-avail {
-  font-size: 0.67rem;
+  font-size: 0.75rem;
 }
 
 .smp-floor-segmented-btn.is-floor-full .smp-seg-avail.is-full {
@@ -6352,7 +6540,7 @@ onUnmounted(cleanupMapResources)
 
 .sffb-desc {
   margin: 0;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   color: #7f1d1d;
   line-height: 1.45;
 }
@@ -6410,7 +6598,7 @@ onUnmounted(cleanupMapResources)
 
 .sfqb-desc {
   margin: 0;
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   color: #92400e;
   line-height: 1.45;
 }
@@ -6458,13 +6646,13 @@ onUnmounted(cleanupMapResources)
   gap: 4px;
   min-width: 0;
   color: #64748b;
-  font-size: 0.67rem;
+  font-size: 0.75rem;
   white-space: nowrap;
 }
 
 .smp-sc-item strong {
   color: #1e293b;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
 }
 
 .smp-sc-dot {
@@ -7266,12 +7454,12 @@ onUnmounted(cleanupMapResources)
 }
 
 .smp-stat-label {
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   color: #64748b;
 }
 
 .smp-stat strong {
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #1e293b;
 }
@@ -7288,12 +7476,12 @@ onUnmounted(cleanupMapResources)
   background: #ffffff;
   border-radius: 11px;
   border: 1px solid #eef2f6;
-  font-size: 0.78rem;
+  font-size: 0.875rem;
   color: #334155;
 }
 
 .smp-legend-title {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #64748b;
 }
@@ -7372,16 +7560,16 @@ onUnmounted(cleanupMapResources)
   gap: 1px;
 }
 .smp-occ-title {
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: #334155;
 }
 .smp-occ-sub {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #64748b;
 }
 .smp-occ-pct {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #0f172a;
 }
@@ -7407,7 +7595,7 @@ onUnmounted(cleanupMapResources)
   display: flex;
   flex-wrap: wrap;
   gap: 8px 12px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #475569;
   font-weight: 500;
 }
@@ -7449,19 +7637,19 @@ onUnmounted(cleanupMapResources)
   flex-direction: column;
 }
 .smp-info-text small {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #64748b;
   font-weight: 500;
   line-height: 1.2;
 }
 .smp-info-text strong {
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #0f172a;
   line-height: 1.3;
 }
 .smp-info-text strong em {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   font-style: normal;
   color: #64748b;
@@ -7484,7 +7672,7 @@ onUnmounted(cleanupMapResources)
   display: flex;
   gap: 8px;
   align-items: flex-start;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: #64748b;
   line-height: 1.45;
   padding: 9px 12px;
@@ -7778,7 +7966,7 @@ onUnmounted(cleanupMapResources)
   border-radius: 999px;
   padding: 3px 8px;
   font-family: 'Bai Jamjuree', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   /* ห้าม transition: all หรือ transform เพราะจะทำให้ Marker ดีเลย์/ลอยตามตอนลากแผนที่ */
@@ -7803,7 +7991,7 @@ onUnmounted(cleanupMapResources)
   padding-left: 5px;
   border-left: 1px solid rgba(255, 255, 255, 0.42);
   color: #bfdbfe;
-  font-size: 0.82em;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -7860,7 +8048,7 @@ onUnmounted(cleanupMapResources)
   height: 22px;
   padding: 0 4px;
   border-radius: 50%;
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .maplibre-zone-number-badge.is-compact.has-floor-context {
@@ -7868,6 +8056,19 @@ onUnmounted(cleanupMapResources)
   min-width: 38px;
   padding: 0 6px;
   border-radius: 999px;
+}
+
+.maplibre-zone-number-badge.is-floor-only {
+  width: auto;
+  min-width: 38px;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.maplibre-zone-number-badge.is-floor-only .badge-floor {
+  padding-left: 0;
+  border-left: 0;
+  color: #ffffff;
 }
 
 .maplibre-zone-number-badge.is-project-hovered .badge-floor,
@@ -8872,6 +9073,20 @@ onUnmounted(cleanupMapResources)
 
 .ov-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
 .ov-section-head h4 { margin: 0; }
+.ov-layer-toggle-list { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; }
+.ov-layer-toggle { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 0; background: #fff; color: #64748b; font-family: inherit; text-align: left; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
+.ov-layer-toggle:hover { background: #f8fafc; }
+.ov-layer-toggle:focus-visible { outline: 2px solid #93c5fd; outline-offset: -2px; }
+.ov-layer-toggle.active { color: #2563eb; background: #f8fbff; }
+.ov-layer-icon { flex: 0 0 auto; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: #f1f5f9; color: #64748b; }
+.ov-layer-toggle.active .ov-layer-icon { background: #eff6ff; color: #2563eb; }
+.ov-layer-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ov-layer-text strong { color: #1e293b; font-size: 0.9375rem; font-weight: 600; }
+.ov-layer-text small { color: #64748b; font-size: 0.8125rem; font-weight: 500; }
+.ov-layer-switch { position: relative; flex: 0 0 auto; width: 38px; height: 22px; border-radius: 9999px; background: #cbd5e1; transition: background 0.18s ease; }
+.ov-layer-switch span { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2); transition: transform 0.18s ease; }
+.ov-layer-toggle.active .ov-layer-switch { background: #2563eb; }
+.ov-layer-toggle.active .ov-layer-switch span { transform: translateX(16px); }
 .ov-chip-clear { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 12px; border: 1px solid #fca5a5; border-radius: 9999px; background: #fff; color: #dc2626; font-family: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease; }
 .ov-chip-clear:hover { background: #fef2f2; }
 .ov-chip-clear:focus-visible { outline: 2px solid #fca5a5; outline-offset: 2px; }

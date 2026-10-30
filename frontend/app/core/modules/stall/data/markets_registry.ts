@@ -7,7 +7,7 @@
 // via `GET /api/v1/markets/:slug/gis-config`).
 // ============================================================================
 
-import type { ProjectZone } from './market_gis_types'
+import type { MarketFacility, ProjectZone } from './market_gis_types'
 
 export interface MarketGisConfig {
   id: number
@@ -20,6 +20,7 @@ export interface MarketGisConfig {
   pitch?: number
   description: string
   projects: ProjectZone[]
+  facilities?: MarketFacility[]
 }
 
 // ============================================================================

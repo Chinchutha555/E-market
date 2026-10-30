@@ -11,6 +11,9 @@ export type StallStatus = 'available' | 'reserved' | 'occupied'
 
 export interface MapStall {
   selectionId?: string
+  /** Human-readable stall name from the survey (for example `number`). */
+  name?: string
+  sourceProperties?: Record<string, unknown>
   code: string
   projectId: string
   zone: string
@@ -25,6 +28,7 @@ export interface MapStall {
   depositFee: number
   photo: string
   coordinates: [number, number][]
+  polygonHoles?: [number, number][][]
   center: [number, number]
   floor: string
   floorName: string
@@ -106,6 +110,10 @@ const projectFootprintArea = (project: ProjectZone): number => {
 
 export const isOverviewBoundaryProject = (candidate: ProjectZone, source: ProjectZone[]): boolean => {
   if (candidate.id.startsWith('zone-') || candidate.layoutMode === 'manual') return false
+  // A large surveyed stall group can span several buildings, so its convex
+  // hull may contain smaller projects even though it is a real selectable
+  // project. Min Buri floor 1 is one such group (hundreds of actual stalls).
+  if ((candidate.stalls?.length || 0) >= 500) return false
   const candidateArea = projectFootprintArea(candidate)
   const containedProjects = source.filter(project => (
     project.id !== candidate.id &&

@@ -384,7 +384,7 @@ func SeedAll(db *gorm.DB) error {
 	gisTotals := map[string]int{
 		"chatuchak":             9522,
 		"pracha-niwet-1":        528,
-		"min-buri":              2029,
+		"min-buri":              2734,
 		"singhanat":             91,
 		"thewarat":              475,
 		"rat-burana":            140,
@@ -439,10 +439,16 @@ func SeedAll(db *gorm.DB) error {
 			}
 			if projsRaw, ok := doc["projects"]; ok {
 				if projsBytes, mErr := json.Marshal(projsRaw); mErr == nil && len(projsBytes) > 2 {
+					facilitiesJSON := "[]"
+					if facilitiesRaw, facilitiesOK := doc["facilities"]; facilitiesOK {
+						if facilitiesBytes, facilitiesErr := json.Marshal(facilitiesRaw); facilitiesErr == nil {
+							facilitiesJSON = string(facilitiesBytes)
+						}
+					}
 					cfg := models.MarketGISConfig{
 						MarketID:       market.ID,
 						ProjectsJSON:   string(projsBytes),
-						FacilitiesJSON: "[]",
+						FacilitiesJSON: facilitiesJSON,
 						Published:      true,
 					}
 					_ = db.Where(models.MarketGISConfig{MarketID: market.ID}).
