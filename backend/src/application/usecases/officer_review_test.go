@@ -39,7 +39,7 @@ func TestOfficerReviewActions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.action+tt.note, func(t *testing.T) {
 			repo := &officerTestRepo{app: models.Application{ID: 1, StallIdent: "A-1", ApplicationState: "pending_officer"}}
-			_, err := NewUseCase(repo).Action(1, 1, requests.ApplicationActionRequest{Action: tt.action, Comment: tt.note})
+			_, err := NewUseCase(repo).Action(1, 1, requests.ApplicationActionRequest{Action: tt.action, Comment: tt.note, SignatureBase64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="})
 			if (err != nil) != tt.wantError {
 				t.Fatalf("error = %v", err)
 			}
@@ -50,5 +50,27 @@ func TestOfficerReviewActions(t *testing.T) {
 				t.Fatalf("officer comment = %q", repo.app.OfficerComment)
 			}
 		})
+	}
+}
+
+func TestOfficerApprovalRequiresSignature(t *testing.T) {
+	repo := &officerTestRepo{app: models.Application{ID: 1, ApplicationType: "stall_lease", StallIdent: "A-1", ApplicationState: "pending_officer"}}
+	uc := NewUseCase(repo)
+	if _, err := uc.Action(1, 1, requests.ApplicationActionRequest{Action: "approve"}); err == nil {
+		t.Fatal("approval without signature succeeded")
+	}
+	if repo.app.ApplicationState != "pending_officer" {
+		t.Fatal("missing signature changed status")
+	}
+	if _, err := uc.Action(1, 1, requests.ApplicationActionRequest{Action: "approve", SignatureBase64: "dGVzdA=="}); err == nil {
+		t.Fatal("approval with invalid image succeeded")
+	}
+
+	signature := "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+	if _, err := uc.Action(1, 1, requests.ApplicationActionRequest{Action: "approve", SignatureBase64: signature}); err != nil {
+		t.Fatal(err)
+	}
+	if repo.app.ApplicationState != "pending_market_director" || len(repo.app.OfficerSignature) == 0 || repo.app.OfficerSignatureType != "image/png" {
+		t.Fatal("signature or approval was not saved")
 	}
 }

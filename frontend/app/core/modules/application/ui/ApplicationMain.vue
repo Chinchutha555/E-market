@@ -528,6 +528,7 @@
                       </div>
 
                       <div class="top-row-right">
+                        <AppButton v-if="isStallLease(app)" variant="outline" size="sm" title="ดูตัวอย่างเอกสารคำร้อง" @click.stop="documentPreviewApplication = app"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>ตัวอย่างเอกสาร</AppButton>
                         <!-- Aggregate Status Badge Pill -->
                         <span class="status-pill-badge" :class="getStatusPillClass(app.status)">
                           {{ getStatusBadgeLabel(app.status) }}
@@ -591,7 +592,9 @@
                     </div>
 
                     <div class="collapsed-actions-group">
-                      <AppButton v-if="app.has_id_card_copy" variant="outline" size="sm" @click.stop="downloadIDCardCopy(app)">สำเนาบัตรประชาชน</AppButton>
+                      <AppButton v-if="canReview(app)" class="app-action-revision" variant="outline" size="sm" @click.stop="openRejectModal(app, 'return_revision')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>ส่งกลับแก้ไข</AppButton>
+                      <AppButton v-if="canReview(app)" class="app-action-reject" variant="danger-outline" size="sm" @click.stop="openRejectModal(app, 'reject')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></template>ไม่อนุมัติ</AppButton>
+                      <ApplicationActionsMenu size="sm" :show-document="false" :show-id-copy="app.has_id_card_copy" :can-review="false" :show-reject="false" @document="documentPreviewApplication = app" @id-copy="downloadIDCardCopy(app)" @revision="openRejectModal(app, 'return_revision')" @reject="openRejectModal(app, 'reject')" />
                       <AppButton
                         v-if="canTenantEdit(app)"
                         variant="primary"
@@ -610,7 +613,8 @@
                       <AppButton
                         variant="secondary"
                         size="sm"
-                        @click.stop="openDetails(app)"
+                        class="app-action-detail"
+                          @click.stop="openDetails(app)"
                         title="ดูรายละเอียดคำร้อง"
                       >
                         <template #prefix>
@@ -624,12 +628,12 @@
                           variant="primary"
                           size="sm"
                           @click.stop="processApproval(app, 'เจ้าหน้าที่ตรวจสอบเอกสารครบถ้วน ส่งต่อ ผอ.ตลาด')"
-                          title="อนุมัติส่งต่อ"
+                          title="อนุมัติ"
                         >
                           <template #prefix>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                           </template>
-                          <span>อนุมัติส่งต่อ</span>
+                          <span>อนุมัติ</span>
                         </AppButton>
                       </template>
                       <template v-else-if="canReview(app) && app.status === 'pending_market_director'">
@@ -770,10 +774,11 @@
                           <span>{{ isStallLease(app) ? 'ประเภทคำร้อง' : 'เรื่องที่ขอ' }}</span>
                         </div>
                         <div class="info-value-row">
-                          <span class="info-value-text">{{ isStallLease(app) ? 'ขอเช่าแผงค้า' : (app.subject || app.shop_name || 'คำร้องทั่วไป') }}</span>
+                          <span class="info-value-text">{{ isStallLease(app) ? 'ขอเช่าแผง' : (app.subject || app.shop_name || 'คำร้องทั่วไป') }}</span>
                         </div>
+                        <div v-if="isStallLease(app) && getRentalTypeLabel(app.proposed_rent_type)" class="cell-sub-meeting-point">{{ getRentalTypeLabel(app.proposed_rent_type) }}<template v-if="app.proposed_rent_type === 'contract' && (app.requested_period_months || app.lease_term_months)"> ({{ formatLeaseDuration(app.requested_period_months || app.lease_term_months) }})</template></div>
                         <div v-if="isStallLease(app) && app.stall_monthly_rate" class="cell-sub-meeting-point">
-                          <span>฿{{ Number(app.stall_monthly_rate).toLocaleString() }}/ด. ({{ app.requested_period_months || 12 }} เดือน)</span>
+                          <span>{{ Number(app.stall_monthly_rate).toLocaleString('th-TH') }} บาท/เดือน</span>
                         </div>
                         <div v-else-if="app.review_note" class="cell-sub-meeting-point">
                           <span>{{ app.review_note.slice(0, 35) }}{{ app.review_note.length > 35 ? '...' : '' }}</span>
@@ -795,6 +800,7 @@
                           <span class="shop-prefix">ชื่อร้าน:</span>
                           <strong class="shop-name-highlight">{{ app.shop_name }}</strong>
                         </div>
+                        <div v-if="isStallLease(app) && (app.product_type || app.product_category)" class="shop-product">ประเภทสินค้า: {{ app.product_type || app.product_category }}</div>
                         <div v-else-if="!isStallLease(app)" class="stall-shop-row text-muted">
                           <span>คำร้องทั่วไป</span>
                         </div>
@@ -811,10 +817,7 @@
                           <span v-if="app.applicant_age" class="applicant-age-pill">
                             {{ app.applicant_age }} ปี
                           </span>
-                          <a v-if="app.applicant_phone" :href="'tel:' + app.applicant_phone" class="phone-call-btn" title="คลิกเพื่อโทรออกทันที">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                            <span>{{ app.applicant_phone }}</span>
-                          </a>
+
                         </div>
                         <!-- เลขบัตรประชาชน พร้อมปุ่มเปิดดูสำเนาบัตรประชาชน -->
                         <div class="applicant-id-doc-row">
@@ -836,19 +839,15 @@
                             <span>สำเนาบัตร</span>
                           </button>
                         </div>
+                        <div v-if="app.applicant_phone" class="applicant-phone-row"><a v-if="app.applicant_phone" :href="'tel:' + app.applicant_phone" class="phone-call-btn" title="คลิกเพื่อโทรออกทันที">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            <span>{{ app.applicant_phone }}</span>
+                          </a></div>
                       </div>
                     </div>
 
                     <!-- ข้อมูลเพิ่มเติมและรายละเอียดคำร้อง (แสดงแบบโปร่งสบาย ไม่ใช้กล่องข้อความ) -->
-                    <div v-if="app.details || app.description || (!isStallLease(app) && app.subject) || (isStallLease(app) && app.product_type)" class="application-inline-meta-bar">
-                      <div v-if="isStallLease(app) && app.product_type" class="meta-inline-items">
-                        <!-- สินค้าที่จำหน่าย (ถ้ามี) -->
-                        <div class="inline-item-chip">
-                          <span class="meta-label">สินค้าที่จำหน่าย:</span>
-                          <span class="meta-val">{{ app.product_type }}</span>
-                        </div>
-                      </div>
-
+                    <div v-if="app.details || app.description || (!isStallLease(app) && app.subject)" class="application-inline-meta-bar">
                       <!-- รายละเอียดที่ผู้เช่ายื่นระบุ (แสดงเป็นข้อความโปร่งสะอาด ไม่มีกรอบกล่อง) -->
                       <div v-if="app.details || app.description || (!isStallLease(app) && app.subject)" class="inline-details-row">
                         <span class="details-lead-label">หมายเหตุ/รายละเอียด:</span>
@@ -866,7 +865,9 @@
                       </div>
 
                       <div class="footer-right-actions">
-                        <AppButton v-if="app.has_id_card_copy" variant="outline" size="md" @click.stop="downloadIDCardCopy(app)">สำเนาบัตรประชาชน</AppButton>
+                        <AppButton v-if="canReview(app)" class="app-action-revision" variant="outline" size="md" @click.stop="openRejectModal(app, 'return_revision')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>ส่งกลับแก้ไข</AppButton>
+                        <AppButton v-if="canReview(app)" class="app-action-reject" variant="danger-outline" size="md" @click.stop="openRejectModal(app, 'reject')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></template>ไม่อนุมัติ</AppButton>
+                        <ApplicationActionsMenu size="md" :show-document="false" :show-id-copy="false" :can-review="false" :show-reject="false" @document="documentPreviewApplication = app" @id-copy="downloadIDCardCopy(app)" @revision="openRejectModal(app, 'return_revision')" @reject="openRejectModal(app, 'reject')" />
                         <AppButton
                           v-if="canTenantEdit(app)"
                           variant="primary"
@@ -886,6 +887,7 @@
                         <AppButton
                           variant="secondary"
                           size="md"
+                          class="app-action-detail"
                           @click.stop="openDetails(app)"
                           title="ดูรายละเอียดคำร้อง"
                         >
@@ -901,26 +903,12 @@
                             variant="primary"
                             size="md"
                             @click.stop="processApproval(app, 'เจ้าหน้าที่ตรวจสอบเอกสารครบถ้วน ส่งต่อ ผอ.ตลาด')"
-                            title="เจ้าหน้าที่ตรวจสอบและอนุมัติส่งต่อ"
+                            title="เจ้าหน้าที่ตรวจสอบและอนุมัติ"
                           >
                             <template #prefix>
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                             </template>
-                            <span>อนุมัติส่งต่อ</span>
-                          </AppButton>
-                          <AppButton
-                            variant="outline"
-                            size="md"
-                            @click.stop="openRejectModal(app, 'return_revision')"
-                          >
-                            <span>ส่งกลับแก้ไข</span>
-                          </AppButton>
-                          <AppButton
-                            variant="danger-outline"
-                            size="md"
-                            @click.stop="openRejectModal(app, 'reject')"
-                          >
-                            <span>ไม่อนุมัติ</span>
+                            <span>อนุมัติ</span>
                           </AppButton>
                         </template>
 
@@ -937,20 +925,6 @@
                             </template>
                             <span>ผอ. อนุมัติ</span>
                           </AppButton>
-                          <AppButton
-                            variant="outline"
-                            size="md"
-                            @click.stop="openRejectModal(app, 'return_revision')"
-                          >
-                            <span>ส่งกลับแก้ไข</span>
-                          </AppButton>
-                          <AppButton
-                            variant="danger-outline"
-                            size="md"
-                            @click.stop="openRejectModal(app, 'reject')"
-                          >
-                            <span>ไม่อนุมัติ</span>
-                          </AppButton>
                         </template>
 
                         <!-- Step 3: Bureau Director Review -->
@@ -965,20 +939,6 @@
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                             </template>
                             <span>ผอ.สำนัก อนุมัติ</span>
-                          </AppButton>
-                          <AppButton
-                            variant="outline"
-                            size="md"
-                            @click.stop="openRejectModal(app, 'return_revision')"
-                          >
-                            <span>ส่งกลับแก้ไข</span>
-                          </AppButton>
-                          <AppButton
-                            variant="danger-outline"
-                            size="md"
-                            @click.stop="openRejectModal(app, 'reject')"
-                          >
-                            <span>ไม่อนุมัติ</span>
                           </AppButton>
                         </template>
 
@@ -1069,6 +1029,7 @@
                 <td>
                   <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                     <strong class="table-code-blue">{{ app.application_number }}</strong>
+                    <AppButton v-if="isStallLease(app)" variant="outline" size="sm" title="ดูตัวอย่างเอกสารคำร้อง" @click.stop="documentPreviewApplication = app"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>ตัวอย่างเอกสาร</AppButton>
                     <span v-if="isStallLease(app)" class="badge-type badge-type-stall">ขอเช่าแผง</span>
                     <span v-else class="badge-type badge-type-general">คำร้องทั่วไป</span>
                   </div>
@@ -1153,6 +1114,8 @@
                 </td>
                 <td style="text-align: right;">
                   <div class="table-actions-cell">
+                    <AppButton v-if="canReview(app)" class="app-action-revision" variant="outline" size="sm" @click.stop="openRejectModal(app, 'return_revision')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>ส่งกลับแก้ไข</AppButton>
+                    <AppButton v-if="canReview(app)" class="app-action-reject" variant="danger-outline" size="sm" @click.stop="openRejectModal(app, 'reject')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></template>ไม่อนุมัติ</AppButton>
                     <!-- Step 1: Officer Review -->
                     <button
                       v-if="canReview(app) && app.status === 'pending_officer'"
@@ -1237,26 +1200,14 @@
                       </template>
                       <span>แก้ไขคำร้อง</span>
                     </AppButton>
-                    <AppButton v-if="app.has_id_card_copy" variant="outline" size="sm" @click="downloadIDCardCopy(app)">สำเนาบัตรประชาชน</AppButton>
-                    <template v-if="canReview(app) && app.status === 'pending_officer'">
-                      <button class="btn-table-action btn-table-primary" @click="processApproval(app, 'เจ้าหน้าที่ตรวจสอบเอกสารครบถ้วน ส่งต่อ ผอ.ตลาด')">อนุมัติส่งต่อ</button>
-                      <button class="btn-table-action btn-table-outline" @click="openRejectModal(app, 'return_revision')">ส่งกลับแก้ไข</button>
-                      <button class="btn-table-action btn-table-cancel" @click="openRejectModal(app, 'reject')">ไม่อนุมัติ</button>
-                    </template>
-                    <template v-else-if="canReview(app) && (app.status === 'pending_market_director' || app.status === 'pending_bureau_director')">
-                      <button class="btn-table-action btn-table-primary" @click="processApproval(app, 'พิจารณาอนุมัติคำร้อง')">อนุมัติ</button>
-                      <button class="btn-table-action btn-table-outline" @click="openRejectModal(app, 'return_revision')">ส่งกลับแก้ไข</button>
-                      <button class="btn-table-action btn-table-cancel" @click="openRejectModal(app, 'reject')">ไม่อนุมัติ</button>
-                    </template>
+
+
+                    <ApplicationActionsMenu size="sm" :show-document="false" :show-id-copy="app.has_id_card_copy" :can-review="false" :show-reject="false" @document="documentPreviewApplication = app" @id-copy="downloadIDCardCopy(app)" @revision="openRejectModal(app, 'return_revision')" @reject="openRejectModal(app, 'reject')" />
 
                     <!-- Detail Button -->
-                    <button
-                      class="btn-table-icon-edit"
-                      title="ดูรายละเอียด/จัดการคำร้อง"
-                      @click="openDetails(app)"
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path></svg>
-                    </button>
+                    <AppButton class="app-action-detail" variant="secondary" size="sm" title="ดูรายละเอียดคำร้อง" @click="openDetails(app)">
+                      <template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/></svg></template>รายละเอียด
+                    </AppButton>
                   </div>
                 </td>
               </tr>
@@ -1951,9 +1902,32 @@
       @close="showHistoryPanel = false"
     />
   </div>
+  <LeaseApplicationModal v-if="notificationBooking" :show="showNotificationLeaseModal" :booking="notificationBooking" :stall="null" @close="closeNotificationLeaseModal" @success="onNotificationLeaseSubmitted" />
+  <Teleport to="body">
+    <div v-if="idCopyPreviewUrl" class="id-copy-overlay" @click.self="closeIDCopyPreview">
+      <section class="id-copy-modal" role="dialog" aria-modal="true" aria-labelledby="id-copy-title">
+        <header class="id-copy-header">
+          <h2 id="id-copy-title">สำเนาบัตรประชาชน</h2>
+          <button type="button" class="id-copy-close" aria-label="ปิดหน้าต่าง" @click="closeIDCopyPreview"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </header>
+        <div class="id-copy-content">
+          <img v-if="idCopyPreviewType.startsWith('image/')" :src="idCopyPreviewUrl" alt="สำเนาบัตรประชาชน" />
+          <iframe v-else-if="idCopyPreviewType === 'application/pdf'" :src="idCopyPreviewUrl" title="สำเนาบัตรประชาชน"></iframe>
+          <p v-else>ไม่สามารถแสดงตัวอย่างไฟล์ประเภทนี้ได้</p>
+        </div>
+        <footer class="id-copy-footer"><AppButton variant="secondary" @click="closeIDCopyPreview">ปิด</AppButton></footer>
+      </section>
+    </div>
+  </Teleport>
+  <ApplicationDocumentPreview :application="documentPreviewApplication" @close="documentPreviewApplication = null" @signed="Object.assign(documentPreviewApplication, $event)" />
+  <OfficerSignatureModal :open="!!signatureTarget" @cancel="signatureTarget = null" @confirm="submitOfficerApproval" />
 </template>
 
 <script setup lang="ts">
+import ApplicationActionsMenu from '~/components/ApplicationActionsMenu.vue'
+import OfficerSignatureModal from '~/components/OfficerSignatureModal.vue'
+import ApplicationDocumentPreview from '~/components/ApplicationDocumentPreview.vue'
+const documentPreviewApplication = ref<any | null>(null)
 import { useAuthStore } from '~/core/modules/auth/store/AuthStore'
 import { useNotifications } from '~/composables/useNotifications'
 
@@ -1972,6 +1946,36 @@ const canReview = (app: any) => {
 const { showConfirm, showSuccess, showError } = useAppAlert()
 const { fetchNotifications } = useNotifications()
 const { resetTestData } = useResetTestData()
+
+const notificationBooking = ref<any>(null)
+const showNotificationLeaseModal = ref(false)
+const openNotificationBooking = async (bookingId: unknown) => {
+  if (!bookingId) return
+  try {
+    const result: any = await get(`/bookings/${encodeURIComponent(String(bookingId))}`)
+    const booking = result?.data || result
+    const sub = Array.isArray(booking?.sub_bookings) ? booking.sub_bookings.find((item: any) => String(item.id) === String(bookingId)) : null
+    const target = sub || booking
+    if (!target || !['interested', 'pending_decision'].includes(String(target.status))) {
+      await showError('รายการนี้ไม่พร้อมยื่นคำร้อง หรือได้ยื่นคำร้องไปแล้ว', 'ไม่สามารถยื่นคำร้อง')
+      return
+    }
+    notificationBooking.value = target
+    showNotificationLeaseModal.value = true
+  } catch (err: any) {
+    await showError(err?.data?.detail || err?.data?.message || 'ไม่สามารถโหลดข้อมูลการจองได้', 'ไม่สามารถยื่นคำร้อง')
+  }
+}
+const closeNotificationLeaseModal = () => {
+  showNotificationLeaseModal.value = false
+  notificationBooking.value = null
+  const query = { ...route.query }; delete query.booking
+  router.replace({ query })
+}
+const onNotificationLeaseSubmitted = async () => {
+  closeNotificationLeaseModal()
+  await loadApplications()
+}
 
 const revisionTarget = ref<any>(null)
 const revisionSaving = ref(false)
@@ -2287,6 +2291,16 @@ const isCardExpanded = (id: number | string): boolean => {
 const toggleCardExpanded = (id: number | string) => {
   const current = isCardExpanded(id)
   openAppCards.value[id] = !current
+}
+
+const formatLeaseDuration = (value: number | string) => {
+  const months = Number(value)
+  return months > 0 && months % 12 === 0 ? `${months / 12} ปี` : `${months} เดือน`
+}
+
+const getRentalTypeLabel = (value: unknown) => {
+  const labels: Record<string, string> = { trial: 'ทดลองขาย', temporary: 'ทำการค้าแบบชั่วคราว', contract: 'ทำการค้าแบบมีสัญญา' }
+  return labels[String(value || '').toLowerCase()] || ''
 }
 
 // แยกแยะประเภทคำร้อง: คำร้องขอเช่าแผง vs คำร้องทั่วไป
@@ -2893,7 +2907,15 @@ const getAllCommentsList = (app: any) => {
 }
 
 // Approval and Actions
-const processApproval = async (app: any, defaultComment: string) => {
+const signatureTarget = ref<{ app: any; comment: string } | null>(null)
+const submitOfficerApproval = async (signature: string) => {
+  const target = signatureTarget.value
+  if (!target) return
+  signatureTarget.value = null
+  await processApproval(target.app, target.comment, signature)
+}
+const processApproval = async (app: any, defaultComment: string, signature = '') => {
+  if (isStallLease(app) && app.status === 'pending_officer' && !signature) { signatureTarget.value = { app, comment: defaultComment }; return }
   const confirmed = await showConfirm(
     `ยืนยันการอนุมัติคำร้องเลขที่ ${app.application_number} หรือไม่?`,
     { title: 'ยืนยันการอนุมัติ', type: 'info', confirmText: 'อนุมัติคำร้อง', cancelText: 'ยกเลิก' }
@@ -2903,7 +2925,8 @@ const processApproval = async (app: any, defaultComment: string) => {
   try {
     await post(`/applications/${app.id}/action`, {
       action: 'approve',
-      comment: defaultComment
+      comment: defaultComment,
+      signature_base64: signature
     })
     await loadApplications()
     await showSuccess('บันทึกการอนุมัติเรียบร้อยแล้ว', 'อนุมัติสำเร็จ')
@@ -2913,19 +2936,22 @@ const processApproval = async (app: any, defaultComment: string) => {
 }
 
 // Detail View
+const idCopyPreviewUrl = ref('')
+const idCopyPreviewType = ref('')
+const closeIDCopyPreview = () => {
+  if (idCopyPreviewUrl.value) URL.revokeObjectURL(idCopyPreviewUrl.value)
+  idCopyPreviewUrl.value = ''
+  idCopyPreviewType.value = ''
+}
+onBeforeUnmount(closeIDCopyPreview)
 const downloadIDCardCopy = async (app: any) => {
   try {
     const file = await apiFetch<Blob>(`/applications/${app.id}/id-card-copy`, { responseType: 'blob' })
-    const url = URL.createObjectURL(file)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'id-card-copy'
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
+    closeIDCopyPreview()
+    idCopyPreviewType.value = file.type.toLowerCase().split(';')[0] || ''
+    idCopyPreviewUrl.value = URL.createObjectURL(file)
   } catch {
-    await showError('ไม่สามารถเปิดสำเนาบัตรประชาชนได้ กรุณาตรวจสอบสิทธิ์', 'เกิดข้อผิดพลาด')
+    await showError('ไม่สามารถเปิดดูสำเนาบัตรประชาชนได้ กรุณาลองใหม่อีกครั้ง', 'เกิดข้อผิดพลาด')
   }
 }
 const openDetails = (app: any) => {
@@ -3189,11 +3215,34 @@ onMounted(async () => {
       .find((a: any) => String(a.id) === String(route.query.revise))
     if (target && canTenantEdit(target)) openRevision(target)
   }
+  if (route.query.booking) await openNotificationBooking(route.query.booking)
+})
+watch(() => route.query.booking, (value, previous) => {
+  if (value && value !== previous) openNotificationBooking(value)
 })
 </script>
 
 
 <style scoped>
+.top-row-right { flex-wrap: wrap; }
+.collapsed-actions-group :deep(.app-action-revision), .footer-right-actions :deep(.app-action-revision), .table-actions-cell :deep(.app-action-revision) { order: 1; }
+.collapsed-actions-group :deep(.app-action-reject), .footer-right-actions :deep(.app-action-reject), .table-actions-cell :deep(.app-action-reject) { order: 2; }
+.collapsed-actions-group :deep(.app-action-detail), .footer-right-actions :deep(.app-action-detail), .table-actions-cell :deep(.app-action-detail) { order: 3; }
+.collapsed-actions-group :deep(.more-root), .footer-right-actions :deep(.more-root), .table-actions-cell :deep(.more-root) { order: 4; }
+.id-copy-overlay { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 16px; background: rgba(15, 23, 42, .55); }
+.id-copy-modal { width: min(760px, 100%); max-height: 90vh; display: flex; flex-direction: column; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 35px rgba(15,23,42,.2); }
+.id-copy-header, .id-copy-footer { display: flex; align-items: center; padding: 16px 20px; }
+.id-copy-header { justify-content: space-between; border-bottom: 1px solid #e2e8f0; }
+.id-copy-header h2 { margin: 0; font-size: 1.125rem; color: #1e293b; }
+.id-copy-close { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 8px; background: #f1f5f9; color: #475569; cursor: pointer; }
+.id-copy-content { display: grid; place-items: center; overflow: auto; min-height: 240px; padding: 16px; background: #f8fafc; }
+.id-copy-content img { max-width: 100%; max-height: 65vh; object-fit: contain; }
+.id-copy-content iframe { width: 100%; height: 65vh; border: 0; background: white; }
+.id-copy-content p { font-size: .875rem; color: #64748b; }
+.id-copy-footer { justify-content: flex-end; border-top: 1px solid #e2e8f0; }
+
+.shop-product { color: #64748b; font-size: .875rem; overflow-wrap: anywhere; }
+.applicant-phone-row { margin-top: 6px; }
 
 /* -------------------------------------------------------------
  * Booking-Style Cards & KPI Ribbon Styles (Copied from BookingMain)

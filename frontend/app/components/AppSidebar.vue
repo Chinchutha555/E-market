@@ -264,7 +264,8 @@
 
 <script setup lang="ts">
 const route = useRoute()
-const { user } = useAuth()
+const { user, role } = useAuth()
+const { get } = useApi()
 const { isExpanded, expand, collapse } = useSidebar()
 const { notifications, activeRole } = useNotifications()
 
@@ -328,7 +329,7 @@ const loadSidebarAttentionState = () => {
 
 const notificationMenu = (notification: any) => {
   const status = String(notification?.status_code || notification?.type || '').toLowerCase()
-  if (status === 'lease_applied' || status === 'completed') return 'applications'
+  if (status === 'lease_applied' || status === 'completed' || (status === 'interested' && notification?.recipient_role === 'tenant')) return 'applications'
   const target = String(notification?.target_url || '')
   if (target.startsWith('/applications')) return 'applications'
   return target.startsWith('/bookings') ? 'bookings' : ''
@@ -356,7 +357,30 @@ const acknowledgeMenu = (menu: 'bookings' | 'applications') => {
 }
 
 const bookingActionCount = menuActionCount('bookings')
-const applicationActionCount = menuActionCount('applications')
+const applicationNotificationCount = menuActionCount('applications')
+const pendingApplicationCount = ref(0)
+let applicationCountTimer: ReturnType<typeof setInterval> | undefined
+const refreshApplicationCount = async () => {
+  const currentRole = String(role.value || user.value?.role || '').toLowerCase()
+  const stateByRole: Record<string, string> = {
+    admin: 'pending_officer', staff: 'pending_officer',
+    market_director: 'pending_market_director', bureau_director: 'pending_bureau_director'
+  }
+  const expectedStatus = stateByRole[currentRole]
+  if (!expectedStatus) { pendingApplicationCount.value = 0; return }
+  const owner = String(user.value?.id || '')
+  try {
+    const response: any = await get('/applications')
+    if (owner !== String(user.value?.id || '')) return
+    const items = Array.isArray(response) ? response : response?.data
+    pendingApplicationCount.value = Array.isArray(items) ? items.filter((item: any) => String(item.status || item.application_state || '') === expectedStatus).length : 0
+  } catch {
+    pendingApplicationCount.value = 0
+  }
+}
+const applicationActionCount = computed(() => activeRole.value === 'officer'
+  ? pendingApplicationCount.value
+  : applicationNotificationCount.value)
 const sidebarBadgePreviewCount = computed(() => {
   if (!import.meta.dev) return 0
   const count = Number(route.query.sidebarBadge)
@@ -365,11 +389,18 @@ const sidebarBadgePreviewCount = computed(() => {
 const displayBookingActionCount = computed(() => sidebarBadgePreviewCount.value || bookingActionCount.value)
 const formatBadgeCount = (count: number) => count >= 10 ? '9+' : String(count)
 
-onMounted(loadSidebarAttentionState)
+onMounted(() => {
+  loadSidebarAttentionState()
+  refreshApplicationCount()
+  applicationCountTimer = setInterval(refreshApplicationCount, 30000)
+})
+onBeforeUnmount(() => { if (applicationCountTimer) clearInterval(applicationCountTimer) })
+watch(() => [user.value?.id, role.value], refreshApplicationCount)
 
 watch(sidebarAttentionStorageKey, loadSidebarAttentionState)
 
 watch(() => route.fullPath, () => {
+  refreshApplicationCount()
   if (isMarketManagementRoute.value) {
     isMarketManagementExpanded.value = true
   }

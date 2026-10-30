@@ -36,6 +36,7 @@
           </div>
 
           <div class="hero-actions">
+            <AppButton v-if="isStall" variant="outline" size="sm" @click="showApplicationDocument = true"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>ตัวอย่างคำร้อง</AppButton>
             <span class="status-badge" :class="statusClass">{{ statusLabel }}</span>
           </div>
         </section>
@@ -63,7 +64,7 @@
                 size="md"
                 :loading="actionSubmitting"
                 :disabled="actionSubmitting"
-                @click="processApproval"
+                @click="processApproval()"
               >
                 <template #prefix>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -167,24 +168,24 @@
                   </span>
                   <h3>ข้อมูลการยื่นคำร้อง</h3>
                 </div>
-                <dl class="detail-list">
+                <dl class="detail-list application-detail-list">
+                  <div><dt>ชื่อ–นามสกุล</dt><dd>{{ application.applicant_name || '-' }}</dd></div>
+                  <div><dt>เบอร์โทรศัพท์</dt><dd>{{ application.applicant_phone || '-' }}</dd></div>
+                  <div v-if="application.applicant_id_card"><dt>เลขประจำตัวประชาชน</dt><dd>{{ application.applicant_id_card }}</dd></div>
+                  <div v-if="application.applicant_email"><dt>อีเมล</dt><dd>{{ application.applicant_email }}</dd></div>
+                  <div v-if="application.applicant_address && application.applicant_address !== '-'" class="full"><dt>ที่อยู่</dt><dd>{{ application.applicant_address }}</dd></div>
+                  <div v-if="isStall"><dt>ชื่อร้านค้า</dt><dd>{{ application.shop_name || '-' }}</dd></div>
+                  <div v-if="isStall"><dt>ประเภทสินค้า</dt><dd>{{ application.product_type || application.product_category || '-' }}</dd></div>
                   <div><dt>วันที่ยื่นคำร้อง</dt><dd>{{ createdAtLabel || '-' }}</dd></div>
                   <div><dt>เลขที่คำร้อง</dt><dd>{{ applicationNumber || '-' }}</dd></div>
                   <template v-if="isStall">
                     <div><dt>ระยะเวลาเช่า</dt><dd>{{ application.requested_period_months || application.lease_term_months ? `${application.requested_period_months || application.lease_term_months} เดือน` : '-' }}</dd></div>
                     <div><dt>วันที่ขอเริ่มสัญญา</dt><dd>{{ application.requested_start_date || '-' }}</dd></div>
                     <div v-if="application.stall_monthly_rate || application.monthly_rate"><dt>ค่าเช่า/เดือน</dt><dd>฿{{ Number(application.stall_monthly_rate || application.monthly_rate).toLocaleString() }}</dd></div>
-                    <div v-if="application.proposed_rent_type"><dt>ประเภทการเช่า</dt><dd>{{ application.proposed_rent_type }}</dd></div>
+                    <div v-if="application.proposed_rent_type"><dt>ประเภทการเช่า</dt><dd>{{ ({ trial: 'ทดลองขาย', temporary: 'ทำการค้าแบบชั่วคราว', contract: 'ทำการค้าแบบมีสัญญา', monthly: 'รายเดือน', daily: 'รายวัน', yearly: 'รายปี', annual: 'รายปี' } as Record<string, string>)[String(application.proposed_rent_type).toLowerCase()] || application.proposed_rent_type }}</dd></div>
                   </template>
                   <div><dt>สำเนาบัตรประชาชน</dt><dd>{{ application.has_id_card_copy ? 'แนบแล้ว' : 'ไม่ได้แนบ' }}</dd></div>
 
-                  <div><dt>ชื่อ–นามสกุล</dt><dd>{{ application.applicant_name || '-' }}</dd></div>
-                  <div v-if="isStall"><dt>ชื่อร้านค้า</dt><dd>{{ application.shop_name || '-' }}</dd></div>
-                  <div v-if="isStall"><dt>ประเภทสินค้า</dt><dd>{{ application.product_type || application.product_category || '-' }}</dd></div>
-                  <div><dt>เบอร์โทรศัพท์</dt><dd>{{ application.applicant_phone || '-' }}</dd></div>
-                  <div v-if="application.applicant_id_card"><dt>เลขประจำตัวประชาชน</dt><dd>{{ application.applicant_id_card }}</dd></div>
-                  <div v-if="application.applicant_email"><dt>อีเมล</dt><dd>{{ application.applicant_email }}</dd></div>
-                  <div v-if="application.applicant_address && application.applicant_address !== '-'" class="full"><dt>ที่อยู่</dt><dd>{{ application.applicant_address }}</dd></div>
 
                 </dl>
 
@@ -192,10 +193,7 @@
                   <span>เจ้าหน้าที่ส่งคำร้องกลับให้แก้ไข ตอนนี้คุณสามารถแก้ไขข้อมูลที่ยื่นได้</span>
                   <AppButton :to="`/applications?revise=${application.id}`" variant="primary" size="sm">แก้ไขคำร้อง</AppButton>
                 </div>
-                <div v-else-if="isTenant" class="submitted-notice">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                  <span>ข้อมูลที่ยื่นแก้ไขไม่ได้ จนกว่าเจ้าหน้าที่จะส่งคำร้องกลับมาให้แก้ไข</span>
-                </div>
+
               </article>
 
             </div>
@@ -292,9 +290,14 @@
 
 
   </div>
+  <ApplicationDocumentPreview :application="showApplicationDocument ? application : null" @close="showApplicationDocument = false" @signed="Object.assign(application, $event)" />
+  <OfficerSignatureModal :open="showOfficerSignature" @cancel="showOfficerSignature = false" @confirm="submitOfficerApproval" />
 </template>
 
 <script setup lang="ts">
+import OfficerSignatureModal from '~/components/OfficerSignatureModal.vue'
+import ApplicationDocumentPreview from '~/components/ApplicationDocumentPreview.vue'
+const showApplicationDocument = ref(false)
 import { loadMarketGisJson, mergeMarketProjects } from '../../stall/data/market_loader'
 import { getAllFloorLayoutsForProject } from '../../stall/data/market_stall_layout'
 
@@ -611,7 +614,10 @@ const defaultApproveComment = computed(() => {
   return 'อนุมัติเรียบร้อย'
 })
 
-const processApproval = async () => {
+const showOfficerSignature = ref(false)
+const submitOfficerApproval = async (signature: string) => { showOfficerSignature.value = false; await processApproval(signature) }
+const processApproval = async (signature = '') => {
+  if (isStall.value && status.value === 'pending_officer' && !signature) { showOfficerSignature.value = true; return }
   if (!application.value || actionSubmitting.value) return
   const app = application.value
   const appNo = applicationNumber.value
@@ -629,7 +635,8 @@ const processApproval = async () => {
   try {
     await post(`/applications/${app.id}/action`, {
       action: 'approve',
-      comment: defaultApproveComment.value
+      comment: defaultApproveComment.value,
+      signature_base64: signature
     })
     await showSuccess(`อนุมัติคำร้อง ${appNo} เรียบร้อยแล้ว`)
     await fetchDetail()
@@ -802,6 +809,8 @@ onMounted(fetchDetail)
 .section-icon { width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center; border-radius: 10px; background: #eff6ff; color: #2563eb; }
 .detail-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; margin: 0; }
 .detail-list .full { grid-column: 1 / -1; }
+.application-detail-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 24px; }
+.application-detail-list dd { overflow-wrap: anywhere; }
 .detail-list dt { font-size: 0.8125rem; line-height: 1.4; color: #64748b; font-weight: 500; }
 .detail-list dd { margin: 3px 0 0; font-size: 0.875rem; font-weight: 700; line-height: 1.45; color: #0f172a; word-break: break-word; }
 
@@ -810,7 +819,7 @@ onMounted(fetchDetail)
 .timeline-eyebrow { font-size: 0.75rem; color: #64748b; font-weight: 600; }
 .timeline-section-heading h3 { margin: 0; font-size: 1.15rem; font-weight: 800; color: #0f172a; }
 
-.timeline-list { display: flex; flex-direction: column; list-style: none; margin: 0; padding: 0; }
+.timeline-list { display: flex; flex-direction: column; list-style: none; margin: 0; padding: 4px 8px 0 0; max-height: 600px; overflow-y: auto; overscroll-behavior: contain; }
 .timeline-item { position: relative; display: flex; gap: 14px; padding-bottom: 22px; }
 .timeline-item:last-child { padding-bottom: 0; }
 .timeline-item:not(:last-child)::before { content: ''; position: absolute; left: 5px; top: 14px; bottom: 0; width: 1px; background: #e2e8f0; }
@@ -848,9 +857,13 @@ onMounted(fetchDetail)
 
 @media (max-width: 900px) {
   .application-information-grid, .detail-list { grid-template-columns: 1fr; }
+
   .detail-hero { flex-direction: column; align-items: flex-start; }
   .next-action-buttons { margin-left: 0; width: 100%; }
 }
+
+@media (max-width: 1200px) and (min-width: 901px), (max-width: 700px) { .application-detail-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 540px) { .application-detail-list { grid-template-columns: 1fr; } }
 
 /* Action Modal Styles */
 .detail-modal-overlay {

@@ -189,8 +189,10 @@ func SetupRouter() *gin.Engine {
 		{
 			appGroup.GET("", appHandler.GetApplications)
 			appGroup.GET("/:id", middlewares.RequireResourceAccess(db, "application"), appHandler.GetApplicationByID)
+			appGroup.GET("/:id/officer-signature", middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.OfficerSignature(db))
 			appGroup.GET("/:id/id-card-copy", middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.IDCardCopy(db))
 			appGroup.POST("", middlewares.RequireRoles("tenant", "admin", "staff", "market_director"), appHandler.CreateApplication)
+			appGroup.POST("/:id/sign", middlewares.RequireRoles("tenant"), middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.SignApplication(db))
 			appGroup.POST("/:id/resubmit", middlewares.RequireRoles("tenant"), middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.Resubmit(db))
 			appGroup.POST("/:id/action", middlewares.RequireApplicationReviewer(db), appHandler.Action)
 			appGroup.POST("/clear", middlewares.RequireRoles("admin", "staff"), func(c *gin.Context) {

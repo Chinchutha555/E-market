@@ -20,6 +20,65 @@ func NewRepository(db *gorm.DB) domains.Repository {
 	return &repository{conn: db}
 }
 
+// fillDocumentNumbers assigns a yearly sequence based on application creation order.
+func (r *repository) fillDocumentNumbers(apps []models.Application) error {
+	if len(apps) == 0 {
+		return nil
+	}
+	var all []models.Application
+	if err := r.conn.Select("id", "created_at").Order("id ASC").Find(&all).Error; err != nil {
+		return err
+	}
+	zone := time.FixedZone("Asia/Bangkok", 7*60*60)
+	counts := make(map[int]int)
+	numbers := make(map[int]string, len(all))
+	for _, app := range all {
+		year := app.CreatedAt.In(zone).Year()
+		counts[year]++
+		numbers[app.ID] = fmt.Sprintf("%d/%02d", counts[year], (year+543)%100)
+	}
+	for i := range apps {
+		apps[i].DocumentNumber = numbers[apps[i].ID]
+	}
+	return nil
+}
+
+// fillRentalTypes resolves the officer's selection for legacy monthly applications.
+func (r *repository) fillRentalTypes(apps []models.Application) error {
+	ids := make([]int, 0, len(apps))
+	for _, app := range apps {
+		if app.BookingID != nil {
+			ids = append(ids, *app.BookingID)
+		}
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	var bookings []models.Booking
+	if err := r.conn.Select("id", "rental_type", "booking_no").Where("id IN ?", ids).Find(&bookings).Error; err != nil {
+		return err
+	}
+	numbers := make(map[int]string, len(bookings))
+	types := make(map[int]string, len(bookings))
+	for _, booking := range bookings {
+		numbers[booking.ID] = booking.BookingNo
+		if booking.RentalType == "trial" || booking.RentalType == "temporary" || booking.RentalType == "contract" {
+			types[booking.ID] = booking.RentalType
+		}
+	}
+	for i := range apps {
+		if apps[i].BookingID != nil {
+			apps[i].BookingNumber = numbers[*apps[i].BookingID]
+		}
+		if apps[i].BookingID != nil && (apps[i].ProposedRentType == "" || apps[i].ProposedRentType == "monthly") {
+			if value := types[*apps[i].BookingID]; value != "" {
+				apps[i].ProposedRentType = value
+			}
+		}
+	}
+	return nil
+}
+
 func (r *repository) FindAll(filter requests.ApplicationFilter) ([]models.Application, error) {
 	var apps []models.Application
 	query := r.conn.Model(&models.Application{}).Where("(status = 'A' OR status IS NULL OR status = '')")
@@ -62,6 +121,12 @@ func (r *repository) FindAll(filter requests.ApplicationFilter) ([]models.Applic
 			}
 		}
 	}
+	if err == nil {
+		err = r.fillRentalTypes(apps)
+	}
+	if err == nil {
+		err = r.fillDocumentNumbers(apps)
+	}
 	return apps, err
 }
 
@@ -77,6 +142,16 @@ func (r *repository) FindByID(id int) (*models.Application, error) {
 			app.MarketName = mkt.Name
 		}
 	}
+	items := []models.Application{app}
+	if err := r.fillRentalTypes(items); err != nil {
+		return nil, err
+	}
+	if err := r.fillDocumentNumbers(items); err != nil {
+		return nil, err
+	}
+	app.DocumentNumber = items[0].DocumentNumber
+	app.ProposedRentType = items[0].ProposedRentType
+	app.BookingNumber = items[0].BookingNumber
 	return &app, nil
 }
 
@@ -113,6 +188,16 @@ func (r *repository) Create(app *models.Application) error {
 	}
 
 	return r.conn.Transaction(func(tx *gorm.DB) error {
+		if app.BookingID != nil && (app.ProposedRentType == "" || app.ProposedRentType == "monthly") {
+			var booking models.Booking
+			if err := tx.Select("id", "rental_type").Where("id = ?", *app.BookingID).First(&booking).Error; err == nil {
+				if booking.RentalType == "trial" || booking.RentalType == "temporary" || booking.RentalType == "contract" {
+					app.ProposedRentType = booking.RentalType
+				}
+			} else if err != gorm.ErrRecordNotFound {
+				return err
+			}
+		}
 		if err := tx.Create(app).Error; err != nil {
 			return err
 		}

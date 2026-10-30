@@ -21,6 +21,7 @@ type Booking struct {
 	VisitTime          string     `gorm:"size:20;not null;column:visit_time" json:"visit_time"`
 	MeetingPoint       string     `gorm:"size:255;column:meeting_point" json:"meeting_point"`
 	EscortOfficer      string     `gorm:"size:255;column:escort_officer" json:"escort_officer"`
+	RentalType         string     `gorm:"size:30;column:rental_type" json:"rental_type"`
 	OfficerNotes       string     `gorm:"type:text;column:officer_notes" json:"officer_notes"`
 	RejectionReason    string     `gorm:"type:text;column:rejection_reason" json:"rejection_reason"`
 	Note               string     `gorm:"type:text;column:note" json:"note"`
