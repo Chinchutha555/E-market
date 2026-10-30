@@ -132,8 +132,25 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                   </span>
                   <h3>{{ isStall ? 'ข้อมูลแผงที่ขอเช่า' : 'ข้อมูลคำร้อง' }}</h3>
+                  <div v-if="isStall" class="stall-heading"><span v-for="stall in requestedStalls" :key="stall.code">แผง {{ stall.code }}</span></div>
                 </div>
-                <dl class="detail-list">
+                <template v-if="isStall">
+                  <div v-for="stall in requestedStalls" :key="stall.code" class="requested-stall">
+                    <dl class="stall-grid">
+                      <div><dt>โซน</dt><dd>{{ stall.zone || '-' }}</dd></div>
+                      <div><dt>หมายเลขแผง</dt><dd>{{ stall.code }} <span v-if="stall.floor" class="stall-floor">{{ stall.floor }}</span></dd></div>
+                      <div><dt>ประเภทพื้นที่</dt><dd>{{ stall.category || '-' }}</dd></div>
+                      <div><dt>ขนาดพื้นที่ (ตร.ม.)</dt><dd>{{ stall.size || '-' }}</dd></div>
+                      <div><dt>ค่าธรรมเนียมสิทธิแรกเข้า (บาท)</dt><dd>{{ formatAmount(stall.entryFee) }}</dd></div>
+                      <div><dt>ค่าเช่าต่อเดือน (บาท)</dt><dd>{{ formatAmount(stall.monthlyRent) }}</dd></div>
+                      <div><dt>ค่าส่วนกลาง (บาท)</dt><dd>{{ formatAmount(stall.commonFee) }}</dd></div>
+                      <div><dt>ค่าประกันล่วงหน้า (บาท)</dt><dd>{{ formatAmount(stall.depositFee) }}</dd></div>
+                    </dl>
+                    <div class="stall-photos"><div>รูปภาพ</div><div class="stall-photo-list"><img v-for="photo in stall.photos" :key="photo" :src="photo" :alt="'รูปแผง ' + stall.code"></div></div>
+                  </div>
+                  <dl v-if="application.details" class="detail-list stall-extra"><div class="full"><dt>รายละเอียด</dt><dd>{{ application.details }}</dd></div></dl>
+                </template>
+                <dl v-else class="detail-list">
                   <div v-if="application.market_name"><dt>ตลาด</dt><dd>{{ application.market_name }}</dd></div>
                   <div v-if="isStall"><dt>แผงค้า</dt><dd>{{ application.stall_number || application.stall_ident || '-' }}</dd></div>
                   <div v-if="isStall"><dt>ชื่อร้านค้า</dt><dd>{{ application.shop_name || '-' }}</dd></div>
@@ -148,7 +165,7 @@
                   <span class="section-icon" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="15" x2="15" y2="15"></line><line x1="9" y1="11" x2="12" y2="11"></line></svg>
                   </span>
-                  <h3>ข้อมูลที่ยื่นคำร้อง</h3>
+                  <h3>ข้อมูลการยื่นคำร้อง</h3>
                 </div>
                 <dl class="detail-list">
                   <div><dt>วันที่ยื่นคำร้อง</dt><dd>{{ createdAtLabel || '-' }}</dd></div>
@@ -160,6 +177,15 @@
                     <div v-if="application.proposed_rent_type"><dt>ประเภทการเช่า</dt><dd>{{ application.proposed_rent_type }}</dd></div>
                   </template>
                   <div><dt>สำเนาบัตรประชาชน</dt><dd>{{ application.has_id_card_copy ? 'แนบแล้ว' : 'ไม่ได้แนบ' }}</dd></div>
+
+                  <div><dt>ชื่อ–นามสกุล</dt><dd>{{ application.applicant_name || '-' }}</dd></div>
+                  <div v-if="isStall"><dt>ชื่อร้านค้า</dt><dd>{{ application.shop_name || '-' }}</dd></div>
+                  <div v-if="isStall"><dt>ประเภทสินค้า</dt><dd>{{ application.product_type || application.product_category || '-' }}</dd></div>
+                  <div><dt>เบอร์โทรศัพท์</dt><dd>{{ application.applicant_phone || '-' }}</dd></div>
+                  <div v-if="application.applicant_id_card"><dt>เลขประจำตัวประชาชน</dt><dd>{{ application.applicant_id_card }}</dd></div>
+                  <div v-if="application.applicant_email"><dt>อีเมล</dt><dd>{{ application.applicant_email }}</dd></div>
+                  <div v-if="application.applicant_address && application.applicant_address !== '-'" class="full"><dt>ที่อยู่</dt><dd>{{ application.applicant_address }}</dd></div>
+
                 </dl>
 
                 <div v-if="canRevise" class="submitted-notice is-revision">
@@ -171,28 +197,14 @@
                   <span>ข้อมูลที่ยื่นแก้ไขไม่ได้ จนกว่าเจ้าหน้าที่จะส่งคำร้องกลับมาให้แก้ไข</span>
                 </div>
               </article>
-              <article class="summary-section">
-                <div class="section-heading">
-                  <span class="section-icon" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                  </span>
-                  <h3>ข้อมูลผู้ยื่นคำร้อง</h3>
-                </div>
-                <dl class="detail-list">
-                  <div><dt>ชื่อ–นามสกุล</dt><dd>{{ application.applicant_name || '-' }}</dd></div>
-                  <div><dt>เบอร์โทรศัพท์</dt><dd>{{ application.applicant_phone || '-' }}</dd></div>
-                  <div v-if="application.applicant_id_card"><dt>เลขประจำตัวประชาชน</dt><dd>{{ application.applicant_id_card }}</dd></div>
-                  <div v-if="application.applicant_email"><dt>อีเมล</dt><dd>{{ application.applicant_email }}</dd></div>
-                  <div v-if="application.applicant_address && application.applicant_address !== '-'" class="full"><dt>ที่อยู่</dt><dd>{{ application.applicant_address }}</dd></div>
-                </dl>
-              </article>
+
             </div>
 
             <article class="summary-section comments-section">
               <div class="section-heading timeline-section-heading">
                 <div class="timeline-heading-text">
                   <span class="timeline-eyebrow">รายการกิจกรรมทั้งหมด</span>
-                  <h3>ประวัติการดำเนินการ</h3>
+                  <h3>ติดตามการดำเนินการยื่นคำร้อง</h3>
                 </div>
               </div>
 
@@ -283,6 +295,9 @@
 </template>
 
 <script setup lang="ts">
+import { loadMarketGisJson, mergeMarketProjects } from '../../stall/data/market_loader'
+import { getAllFloorLayoutsForProject } from '../../stall/data/market_stall_layout'
+
 const route = useRoute()
 const { get, post } = useApi()
 const { showConfirm, showSuccess, showError } = useAppAlert()
@@ -290,6 +305,38 @@ const { returnUrl, backTo, crumbItems } = useReturnTo({ label: 'รายกา�
 
 const loading = ref(true)
 const application = ref<any | null>(null)
+const requestedStalls = ref<any[]>([])
+const formatAmount = (value: number | null | undefined) => value == null ? '-' : Number(value).toLocaleString('th-TH')
+const defaultStallPhotos = ['/images/stall_3d_perspective.jpg', '/images/market_stall_sample.jpg', '/images/market_hall_front.jpg']
+const loadRequestedStalls = async () => {
+  const app = application.value
+  if (!app || !isStall.value) { requestedStalls.value = []; return }
+  const codes = String(app.stall_ident || app.stall_number || '').split(',').map((v: string) => v.trim()).filter(Boolean)
+  const market = String(app.market_id || '1')
+  const [stallsResult, base, configResult] = await Promise.all([
+    get('/stalls').catch(() => []),
+    loadMarketGisJson(market).catch(() => ({ projects: [] })),
+    get(`/markets/${encodeURIComponent(market)}/gis-config/draft`).catch(() => null)
+  ])
+  const records = Array.isArray(stallsResult) ? stallsResult : (stallsResult?.data || [])
+  const config = configResult?.data || configResult || {}
+  const projects = mergeMarketProjects(base.projects || [], Array.isArray(config.projects) ? config.projects : [])
+  requestedStalls.value = codes.map((code: string) => {
+    const record = Array.isArray(records) ? records.find((v: any) => String(v.ident || '').toUpperCase() === code.toUpperCase()) : null
+    let item: any = null
+    let project: any = null
+    for (const candidate of projects) {
+      const direct = (candidate.stalls || []).find((v: any) => String(v.code || v.ident || '').toUpperCase() === code.toUpperCase())
+      const generated = Array.from(getAllFloorLayoutsForProject(candidate).values()).flatMap((layout: any) => layout.stalls).find((v: any) => String(v.code || v.ident || '').toUpperCase() === code.toUpperCase())
+      if (direct || generated) { item = direct || generated; project = candidate; break }
+    }
+    const rent = item?.monthlyRent || record?.monthly_rent || app.stall_monthly_rate || 1800
+    const photos = Array.isArray(item?.photos) && item.photos.length ? item.photos : defaultStallPhotos
+    const floor = item?.floorName || item?.floor || record?.floor
+    return { code, zone: item?.zone || project?.name || record?.project_name || record?.zone_name, floor: floor ? (String(floor).startsWith('ชั้น') ? String(floor) : 'ชั้น ' + floor) : '', category: item?.areaType || project?.category || record?.category, size: item?.size || (Number(item?.widthM || record?.width) * Number(item?.depthM || record?.depth)) || record?.area_sqm, entryFee: item?.entryFee || 75000, monthlyRent: rent, commonFee: item?.commonFee || 500, depositFee: item?.depositFee || rent, photos }
+  })
+}
+
 
 const applicationNumber = computed(() => application.value?.application_number || application.value?.application_no || '')
 
@@ -660,6 +707,7 @@ const fetchDetail = async () => {
   try {
     const res: any = await get(`/applications/${route.params.id}`)
     application.value = res?.id ? res : (res?.data || null)
+    await loadRequestedStalls()
   } catch {
     application.value = null
   } finally {
@@ -733,6 +781,19 @@ onMounted(fetchDetail)
 .stepper-connector { flex: 1; height: 3px; background: #e2e8f0; margin: -18px 8px 0 8px; z-index: 1; transition: background 0.25s ease; }
 .stepper-connector.filled { background: #10b981; }
 /* Information */
+.requested-stall { margin-bottom: 16px; }
+.stall-heading { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-left: auto; }
+.stall-heading span { display: inline-block; padding: 6px 14px; border-radius: 6px; background: #2563eb; color: white; font-size: .875rem; font-weight: 700; }
+.stall-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px 16px; margin: 18px 0; }
+.stall-grid dt, .stall-photos > div:first-child { color: #64748b; font-size: .8125rem; }
+.stall-grid dd { margin: 5px 0 0; color: #1e293b; font-size: .9375rem; font-weight: 700; overflow-wrap: anywhere; }
+.stall-floor { display: inline-block; padding: 2px 6px; border: 1px solid #bfdbfe; border-radius: 4px; background: #eff6ff; color: #2563eb; font-size: .75rem; }
+.stall-photos { padding-top: 16px; border-top: 1px solid #f1f5f9; }
+.stall-photo-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.stall-photo-list img { width: 110px; height: 78px; border-radius: 8px; object-fit: cover; }
+.stall-extra { margin-top: 16px; }
+@media (max-width: 1200px) { .stall-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
 .application-information-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
 .application-information-main { display: grid; gap: 16px; min-width: 0; align-content: start; }
 .summary-section { padding: 24px; }

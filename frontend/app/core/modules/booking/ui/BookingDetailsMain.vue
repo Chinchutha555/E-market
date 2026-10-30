@@ -704,8 +704,9 @@ const slotTimeOptions = computed(() => {
 
 watch(slotDate, () => {
   const opts = slotTimeOptions.value
-  if (opts.length > 0 && !opts.some(o => o.value === slotTime.value)) {
-    slotTime.value = opts[0].value
+  const firstOption = opts[0]
+  if (firstOption && !opts.some(o => o.value === slotTime.value)) {
+    slotTime.value = firstOption.value
   }
 })
 
@@ -850,7 +851,7 @@ const STALL_PREFIX_PROJECT_MAP: Record<string, string> = {
 }
 
 const getSubStallProjectName = (sub: any): string => {
-  const rawCode = String(sub?.stall_number || sub?.stall_ident || '').split(',')[0].trim().toUpperCase()
+  const rawCode = (String(sub?.stall_number || sub?.stall_ident || '').split(',')[0] ?? '').trim().toUpperCase()
   const parts = rawCode.split('-')
   if (parts.length >= 2) {
     const prefix = `${parts[0]}-${parts[1]}`
@@ -944,8 +945,8 @@ const activeHolderMaskedName = computed(() => {
   if (activeHolder.value?.tenant_name) {
     const clean = String(activeHolder.value.tenant_name).trim().replace(/^(นาย|นางสาว|นาง|น\.ส\.|คุณ)\s*/, '')
     const parts = clean.split(/\s+/).filter(Boolean)
-    if (parts.length > 1) return `คุณ${parts[0]} ${parts[1].charAt(0)}.***`
-    if (parts.length === 1) return `คุณ${parts[0].slice(0, 3)}***`
+    if (parts.length > 1) return `คุณ${parts[0]} ${(parts[1] ?? '').charAt(0)}.***`
+    if (parts.length === 1) return `คุณ${(parts[0] ?? '').slice(0, 3)}***`
   }
   const masked = stallWaitingQueueInfo.value?.masked_current_booker
   if (masked && masked !== '-') return masked
@@ -1097,7 +1098,7 @@ const loadBooking = async () => {
   loading.value = true
   try {
     const response: any = await get('/bookings', { _t: Date.now() })
-    const items = Array.isArray(response) ? response : (Array.isArray(response?.data) ? response.data : [])
+    const items: any[] = Array.isArray(response) ? response : (Array.isArray(response?.data) ? response.data : [])
     allBookings.value = items
     setCachedScheduleBookings(items)
     const key = String(route.params.id || '')
@@ -1338,13 +1339,13 @@ const openSelectSlotModal = () => {
   const openDates = modalAvailableDates.value.filter(d => !d.isClosed && !d.isAllFull)
   if (existingIso && openDates.some(d => d.date === existingIso)) {
     slotDate.value = existingIso
-  } else if (openDates.length > 0) {
+  } else if (openDates[0]) {
     slotDate.value = openDates[0].date
   }
   const availableSlotsForDate = slotTimeOptions.value
   if (b?.visit_time_slot && availableSlotsForDate.some(o => o.value === b.visit_time_slot)) {
     slotTime.value = b.visit_time_slot
-  } else if (availableSlotsForDate.length > 0) {
+  } else if (availableSlotsForDate[0]) {
     slotTime.value = availableSlotsForDate[0].value
   }
   showSelectSlotModal.value = true
