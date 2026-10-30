@@ -121,9 +121,15 @@ func (r *repository) Create(app *models.Application) error {
 		if (app.ApplicationType == "stall_lease" || app.ApplicationType == "") && app.StallIdent != "" && app.StallIdent != "-" {
 			// 1. Mark the primary holder booking for this stall as lease_applied and append timeline
 			var activeBookings []models.Booking
-			tx.Model(&models.Booking{}).
-				Where("stall_ident = ? AND status = 'A' AND queue_number = 0 AND booking_status IN ('interested', 'approved', 'pending_decision', 'pending_approval')", app.StallIdent).
-				Find(&activeBookings)
+			if app.BookingID != nil && *app.BookingID > 0 {
+				tx.Model(&models.Booking{}).
+					Where("id = ? OR (stall_ident = ? AND status = 'A' AND queue_number = 0 AND booking_status IN ('confirmed_rent', 'interested', 'approved', 'pending_decision', 'pending_approval'))", *app.BookingID, app.StallIdent).
+					Find(&activeBookings)
+			} else {
+				tx.Model(&models.Booking{}).
+					Where("stall_ident = ? AND status = 'A' AND queue_number = 0 AND booking_status IN ('confirmed_rent', 'interested', 'approved', 'pending_decision', 'pending_approval')", app.StallIdent).
+					Find(&activeBookings)
+			}
 
 			for _, bk := range activeBookings {
 				var tl []responses.TimelineItem
