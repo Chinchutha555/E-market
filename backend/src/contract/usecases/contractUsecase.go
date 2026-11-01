@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -25,6 +26,8 @@ func NewUseCase(repo domains.Repository) domains.UseCase {
 
 func toContractResponse(c *models.Contract) responses.ContractResponse {
 	return responses.ContractResponse{
+		TenantEmail: c.TenantEmail, TenantAddress: c.TenantAddress, BusinessType: c.BusinessType, BillingCycle: c.BillingCycle, TermsAndConditions: c.TermsAndConditions, AdvancePayment: c.AdvancePayment,
+		HasTenantSignature: len(c.TenantSignature) > 0, HasOfficerSignature: len(c.OfficerSignature) > 0, HasMarketSignature: len(c.MarketDirectorSignature) > 0, HasBureauSignature: len(c.BureauDirectorSignature) > 0, HasDocument: len(c.SupportingDocument) > 0, ReviewReason: c.ReviewReason,
 		ID:              c.ID,
 		ContractNumber:  c.ContractNumber,
 		ApplicationID:   c.ApplicationID,
@@ -76,6 +79,17 @@ func (u *useCase) GetContractByID(id int) (*responses.ContractResponse, error) {
 }
 
 func (u *useCase) CreateContract(userID int, userRole string, req requests.CreateContractRequest) (*responses.ContractResponse, error) {
+	if userRole != "tenant" {
+		return nil, responses.NewAppErr(http.StatusForbidden, "ผู้เช่าเป็นผู้ยื่นสัญญา")
+	}
+	signature, signatureType, err := decodeContractFile(req.SignatureBase64, true)
+	if err != nil {
+		return nil, err
+	}
+	document, documentType, err := decodeContractFile(req.DocumentBase64, false)
+	if err != nil {
+		return nil, err
+	}
 	stallIdent := strings.TrimSpace(req.StallIdent)
 	if stallIdent == "" {
 		stallIdent = strings.TrimSpace(req.StallNumber)
@@ -115,6 +129,14 @@ func (u *useCase) CreateContract(userID int, userRole string, req requests.Creat
 		endDate = time.Now().AddDate(1, 0, 0).Format("2006-01-02")
 	}
 
+	start, startErr := time.Parse("2006-01-02", startDate)
+	end, endErr := time.Parse("2006-01-02", endDate)
+	if startErr != nil || endErr != nil || !end.After(start) {
+		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "วันที่สิ้นสุดต้องอยู่หลังวันเริ่มสัญญา")
+	}
+	if strings.TrimSpace(req.TenantIDCard) == "" || strings.TrimSpace(req.TenantPhone) == "" || strings.TrimSpace(req.ShopName) == "" {
+		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณากรอกข้อมูลผู้เช่าและร้านค้า")
+	}
 	monthlyRental := req.MonthlyRental
 	if monthlyRental <= 0 {
 		monthlyRental = req.RentalFee
@@ -124,8 +146,8 @@ func (u *useCase) CreateContract(userID int, userRole string, req requests.Creat
 	}
 
 	securityDeposit := req.SecurityDeposit
-	if securityDeposit <= 0 {
-		securityDeposit = monthlyRental * 2
+	if securityDeposit < 0 || req.AdvancePayment < 0 {
+		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "ยอดเงินไม่ถูกต้อง")
 	}
 
 	contractNo := fmt.Sprintf("CTR-%s-%06d", time.Now().Format("20060102"), time.Now().UnixMicro()%1000000)
@@ -140,7 +162,7 @@ func (u *useCase) CreateContract(userID int, userRole string, req requests.Creat
 		stallIDPtr = &req.StallID
 	}
 
-	contractState := "active"
+	contractState := "pending"
 	if userRole == "tenant" {
 		contractState = "pending"
 	} else if req.Status != "" {
@@ -148,6 +170,8 @@ func (u *useCase) CreateContract(userID int, userRole string, req requests.Creat
 	}
 
 	contract := models.Contract{
+		TenantEmail: req.TenantEmail, TenantAddress: req.TenantAddress, BusinessType: req.BusinessType, BillingCycle: req.BillingCycle, TermsAndConditions: req.TermsAndConditions, AdvancePayment: req.AdvancePayment,
+		TenantSignature: signature, TenantSignatureType: signatureType, SupportingDocument: document, SupportingDocumentType: documentType,
 		ContractNumber:  contractNo,
 		ApplicationID:   appID,
 		StallID:         stallIDPtr,
@@ -208,6 +232,9 @@ func (u *useCase) RejectContract(id int, userID int, reason string) error {
 
 func (u *useCase) TerminateContract(id int, userID int) error {
 	if err := u.repo.Terminate(id); err != nil {
+		if errors.Is(err, domains.ErrInvalidContractState) {
+			return responses.NewAppErr(http.StatusConflict, "สิ้นสุดได้เฉพาะสัญญาที่ใช้งานอยู่")
+		}
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return responses.NewAppErr(http.StatusNotFound, "ไม่พบข้อมูลสัญญา")
 		}
@@ -259,4 +286,19 @@ func (u *useCase) UpdateContractWorkflow(id int, userID int, req requests.Update
 	}
 	res := toContractResponse(contract)
 	return &res, nil
+}
+
+func decodeContractFile(encoded string, signature bool) ([]byte, string, error) {
+	if len(encoded) == 0 || len(encoded) > 4*1024*1024 {
+		return nil, "", responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาแนบเอกสารและลงลายเซ็น ขนาดไม่เกิน 3 MB")
+	}
+	data, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil || len(data) == 0 || len(data) > 3*1024*1024 {
+		return nil, "", responses.NewAppErr(http.StatusUnprocessableEntity, "ไฟล์ไม่ถูกต้อง")
+	}
+	kind := http.DetectContentType(data)
+	if kind != "image/png" && kind != "image/jpeg" && (signature || kind != "application/pdf") {
+		return nil, "", responses.NewAppErr(http.StatusUnprocessableEntity, "รูปแบบไฟล์ไม่รองรับ")
+	}
+	return data, kind, nil
 }

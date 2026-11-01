@@ -5,11 +5,11 @@
       v-if="!inline"
       type="button"
       class="app-select-trigger"
-      :class="{ 'has-value': !!selectedLabel, 'is-focused': isOpen, 'is-error': Boolean(error) }"
+      :class="{ 'has-value': !!selectedLabel, 'is-focused': isOpen, 'is-error': !!resolvedError }"
       :disabled="disabled"
       @click="toggleDropdown"
       :aria-expanded="isOpen"
-      :aria-invalid="Boolean(error)"
+      :aria-invalid="!!resolvedError"
     >
       <span class="app-select-label">
         {{ selectedLabel || placeholder }}
@@ -46,12 +46,12 @@
         </div>
       </div>
     </transition>
-    <span v-if="typeof error === 'string' && error" class="app-select-error">{{ error }}</span>
+    <span v-if="resolvedError && resolvedError.trim()" class="app-select-error">{{ resolvedError }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, unref, onMounted, onBeforeUnmount } from 'vue'
 
 export interface SelectOption {
   value: string | number
@@ -85,6 +85,14 @@ const emit = defineEmits<{
   (e: 'update:modelValue', val: string | number | (string | number)[]): void
   (e: 'change', val: string | number | (string | number)[]): void
 }>()
+
+const resolvedError = computed(() => {
+  const err = unref(props.error)
+  if (!err) return ''
+  if (typeof err === 'string') return err.trim()
+  if (typeof err === 'boolean') return err ? ' ' : ''
+  return ''
+})
 
 const rootRef = ref<HTMLElement | null>(null)
 const isOpen = ref(false)

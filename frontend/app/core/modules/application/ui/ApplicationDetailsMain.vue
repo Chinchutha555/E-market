@@ -38,7 +38,9 @@
           </div>
 
           <div class="hero-actions">
-            <AppButton v-if="isStall" variant="outline" size="sm" @click="showApplicationDocument = true"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>ตัวอย่างคำร้อง</AppButton>
+            <AppButton variant="outline" size="sm" @click="showApplicationDocument = true"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>ตัวอย่างคำร้อง</AppButton>
+            <AppButton v-if="canUploadSignedDocument" variant="primary" size="sm" @click="showSignedDocumentUpload = true">นำเข้าเอกสารลงนาม</AppButton>
+            <AppButton v-if="application.has_signed_document" variant="outline" size="sm" @click="downloadSignedDocument">ดาวน์โหลดเอกสารลงนาม</AppButton>
             <span class="status-badge" :class="statusClass">{{ statusLabel }}</span>
           </div>
         </section>
@@ -59,6 +61,7 @@
             <p>{{ nextAction.description }}</p>
           </div>
           <div class="next-action-buttons">
+            <AppButton v-if="status === 'completed' && isStall && isTenant" :to="'/contracts?new_for_stall=' + encodeURIComponent(application.stall_number || application.stall_id || '') + '&app_id=' + application.id" variant="primary" size="md">ทำสัญญา</AppButton>
             <!-- 3 Officer Review Actions (เมื่อมีสิทธิ์พิจารณาคำร้องนี้) -->
             <template v-if="canReview">
               <AppButton
@@ -288,17 +291,23 @@
   </div>
   <ApplicationDocumentPreview :application="showApplicationDocument ? application : null" @close="showApplicationDocument = false" @signed="Object.assign(application, $event)" />
   <OfficerSignatureModal :open="showOfficerSignature" @cancel="showOfficerSignature = false" @confirm="submitOfficerApproval" />
+  <ApplicationMockOtpModal :open="showApprovalOtp" @cancel="cancelApprovalOtp" @confirm="submitApprovalOtp" />
+  <AppModal v-model="showSignedDocumentUpload" title="นำเข้าเอกสารลงนาม" description="แนบคำร้องที่ผู้เช่าลงนามแล้ว">
+    <AppFileUpload v-model="signedDocument" label="เอกสารลงนาม" required-text="จำเป็น" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" :max-size-mb="10" hint="PDF, JPG หรือ PNG ขนาดไม่เกิน 10MB" :error="signedDocumentError" @error="signedDocumentError = $event" />
+    <template #footer><AppButton variant="secondary" size="md" @click="showSignedDocumentUpload = false">ยกเลิก</AppButton><AppButton variant="primary" size="md" :loading="uploadingSignedDocument" :disabled="uploadingSignedDocument" @click="uploadSignedDocument">บันทึกเอกสาร</AppButton></template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
 import OfficerSignatureModal from '~/components/OfficerSignatureModal.vue'
+import AppFileUpload from '~/components/AppFileUpload.vue'
 import ApplicationDocumentPreview from '~/components/ApplicationDocumentPreview.vue'
 const showApplicationDocument = ref(false)
 import { loadMarketGisJson, mergeMarketProjects } from '../../stall/data/market_loader'
 import { getAllFloorLayoutsForProject } from '../../stall/data/market_stall_layout'
 
 const route = useRoute()
-const { get, post } = useApi()
+const { get, post, apiFetch } = useApi()
 const { showConfirm, showSuccess, showError } = useAppAlert()
 const { returnUrl, backTo, crumbItems } = useReturnTo({ label: 'รายการคำร้อง', to: '/applications' })
 
@@ -359,7 +368,7 @@ const statusLabel = computed(() => {
     case 'pending_bureau_director': return 'รอ ผอ.สำนักตลาดพิจารณา'
     case 'approved': return 'อนุมัติแล้ว'
     case 'contract_pending': return 'รอตรวจสัญญา'
-    case 'completed': return 'ทำสัญญาแล้ว'
+    case 'completed': return 'คำร้องเสร็จสมบูรณ์'
     case 'revision_required': return 'ส่งกลับแก้ไข'
     case 'rejected': return 'ไม่อนุมัติ'
     default: return status.value || 'รอดำเนินการ'
@@ -397,8 +406,8 @@ const isMyTurn = computed(() => {
   switch (status.value) {
     case 'pending_officer':
     case 'pending_debt_check':
-    case 'contract_pending': return ['staff', 'admin'].includes(r)
-    case 'approved': return isStall.value && ['staff', 'admin'].includes(r)
+    case 'contract_pending': return r === 'staff'
+    case 'approved': return isStall.value && r === 'staff'
     case 'pending_market_director': return r === 'market_director'
     case 'pending_bureau_director': return r === 'bureau_director'
     case 'revision_required': return r === 'tenant'
@@ -456,13 +465,11 @@ const nextAction = computed(() => {
     case 'pending_bureau_director':
       return { tone: 'waiting', owner: 'ผอ.สำนักตลาด', title: 'รอ ผอ.สำนักตลาดอนุมัติขั้นสุดท้าย', description: 'คำร้องผ่านความเห็นชอบจาก ผอ.ตลาดแล้ว กำลังรอ ผอ.สำนักตลาดอนุมัติขั้นสุดท้าย' }
     case 'approved':
-      return isStall.value
-        ? { tone: 'action', owner: 'เจ้าหน้าที่ตลาด', title: 'รอจัดทำสัญญาเช่า', description: 'คำร้องได้รับอนุมัติแล้ว เจ้าหน้าที่จะจัดทำสัญญาเช่าแผงค้าในขั้นตอนถัดไป' }
-        : { tone: 'complete', owner: 'ผอ.สำนักตลาด', title: 'คำร้องได้รับอนุมัติแล้ว', description: 'คำร้องทั่วไปนี้ผ่านการพิจารณาครบทุกขั้นตอนแล้ว' }
+      return { tone: 'action', owner: 'เจ้าหน้าที่', title: 'รอเอกสารลงนาม', description: 'ดาวน์โหลดคำร้องให้ผู้เช่าลงนาม แล้วนำเข้าเอกสาร' }
     case 'contract_pending':
       return { tone: 'waiting', owner: 'เจ้าหน้าที่ตลาด', title: 'รอตรวจสอบสัญญาเช่า', description: 'สัญญาเช่าถูกจัดทำแล้ว กำลังรอเจ้าหน้าที่ตรวจสอบและอนุมัติสัญญา' }
     case 'completed':
-      return { tone: 'complete', owner: '-', title: 'ดำเนินการครบถ้วนแล้ว', description: 'คำร้องนี้ได้ทำสัญญาเช่าเรียบร้อยแล้ว' }
+      return { tone: 'complete', owner: '-', title: 'คำร้องเสร็จสมบูรณ์', description: isStall.value ? 'ดำเนินการทำสัญญาเป็นขั้นตอนถัดไป' : 'บันทึกเอกสารลงนามแล้ว' }
     case 'revision_required':
       return { tone: 'action', owner: 'ผู้ยื่นคำร้อง', title: 'ผู้ยื่นต้องแก้ไขเอกสาร', description: 'คำร้องถูกส่งกลับให้แก้ไข ผู้ยื่นต้องแก้ไขข้อมูลหรือเอกสารตามหมายเหตุแล้วส่งตรวจสอบอีกครั้ง' }
     case 'rejected':
@@ -562,10 +569,10 @@ const timeline = computed(() => {
   // 5. ทำสัญญาแล้ว
   if (status.value === 'completed') {
     list.push({
-      title: `จัดทำสัญญาเช่าเรียบร้อยแล้ว${stallSuffix}`,
+      title: 'คำร้องเสร็จสมบูรณ์',
       time: formatThaiDateTime(app.updated_at || app.created_at),
       actor: 'เจ้าหน้าที่ · เจ้าหน้าที่ตลาด',
-      note: 'จัดทำสัญญาเช่าและลงนามในระบบเรียบร้อยแล้ว',
+      note: 'บันทึกเอกสารลงนามแล้ว',
       tone: 'officer'
     })
   }
@@ -589,7 +596,7 @@ const canReview = computed(() => {
   const app = application.value
   if (!app) return false
   const r = String(role.value || '')
-  return (app.status === 'pending_officer' && ['staff', 'admin'].includes(r)) ||
+  return (app.status === 'pending_officer' && r === 'staff') ||
     (app.status === 'pending_market_director' && r === 'market_director') ||
     (app.status === 'pending_bureau_director' && r === 'bureau_director')
 })
@@ -610,14 +617,59 @@ const defaultApproveComment = computed(() => {
   return 'อนุมัติเรียบร้อย'
 })
 
+const showSignedDocumentUpload = ref(false)
+const signedDocument = ref<File | null>(null)
+const signedDocumentError = ref('')
+const uploadingSignedDocument = ref(false)
+const canUploadSignedDocument = computed(() => status.value === 'approved' && String(role.value) === 'staff')
+watch(showSignedDocumentUpload, open => { if (open) { signedDocument.value = null; signedDocumentError.value = '' } })
+const uploadSignedDocument = async () => {
+  if (!signedDocument.value) { signedDocumentError.value = 'กรุณาแนบเอกสารลงนาม'; return }
+  if (signedDocumentError.value || uploadingSignedDocument.value || !application.value) return
+  uploadingSignedDocument.value = true
+  try {
+    const file = signedDocument.value
+    const encoded = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result).split(',')[1] || '')
+      reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'))
+      reader.readAsDataURL(file)
+    })
+    await post('/applications/' + application.value.id + '/signed-document', { file: encoded })
+    showSignedDocumentUpload.value = false
+    await fetchDetail()
+    await showSuccess('บันทึกเอกสารและปิดคำร้องแล้ว')
+  } catch (err: any) { await showError(err?.data?.detail || err?.data?.message || err?.message || 'บันทึกเอกสารไม่สำเร็จ') }
+  finally { uploadingSignedDocument.value = false }
+}
+const downloadSignedDocument = async () => {
+  try {
+    const file = await apiFetch<Blob>('/applications/' + application.value.id + '/signed-document', { responseType: 'blob' })
+    const url = URL.createObjectURL(file)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'signed-application-' + application.value.id + '.' + (file.type === 'application/pdf' ? 'pdf' : file.type === 'image/png' ? 'png' : 'jpg')
+    link.click()
+    URL.revokeObjectURL(url)
+  } catch { await showError('ดาวน์โหลดเอกสารไม่สำเร็จ') }
+}
 const showOfficerSignature = ref(false)
+const showApprovalOtp = ref(false)
+const pendingApprovalSignature = ref('')
+const cancelApprovalOtp = () => { showApprovalOtp.value = false; pendingApprovalSignature.value = '' }
+const submitApprovalOtp = async (otp: string) => {
+  const signature = pendingApprovalSignature.value
+  cancelApprovalOtp()
+  await processApproval(signature, otp)
+}
 const submitOfficerApproval = async (signature: string) => { showOfficerSignature.value = false; await processApproval(signature) }
-const processApproval = async (signature = '') => {
-  if (isStall.value && status.value === 'pending_officer' && !signature) { showOfficerSignature.value = true; return }
+const processApproval = async (signature = '', otp = '') => {
+  if (!signature) { showOfficerSignature.value = true; return }
+  if (status.value === 'pending_bureau_director' && !otp) { pendingApprovalSignature.value = signature; showApprovalOtp.value = true; return }
   if (!application.value || actionSubmitting.value) return
   const app = application.value
   const appNo = applicationNumber.value
-  const confirmed = await showConfirm(
+  const confirmed = otp ? true : await showConfirm(
     `คุณต้องการพิจารณาอนุมัติคำร้อง ${appNo} หรือไม่?`,
     {
       title: 'ยืนยันการอนุมัติคำร้อง',
@@ -632,7 +684,8 @@ const processApproval = async (signature = '') => {
     await post(`/applications/${app.id}/action`, {
       action: 'approve',
       comment: defaultApproveComment.value,
-      signature_base64: signature
+      signature_base64: signature,
+      otp
     })
     await showSuccess(`อนุมัติคำร้อง ${appNo} เรียบร้อยแล้ว`)
     await fetchDetail()

@@ -40,6 +40,12 @@ func TestApplicationIDCopyAccess(t *testing.T) {
 		router.ServeHTTP(rec, req)
 		return rec
 	}
+	for _, appType := range []string{"general", "stall_lease"} {
+		missing, _ := json.Marshal(map[string]interface{}{"application_type": appType, "applicant_name": "Test", "applicant_phone": "1", "stall_number": "A-1"})
+		if rec := call(users[0], "POST", "/api/v1/applications", missing); rec.Code != 422 {
+			t.Fatalf("%s without ID copy: %d %s", appType, rec.Code, rec.Body.String())
+		}
+	}
 	file := []byte("%PDF-1.4\nexample")
 	payload, _ := json.Marshal(map[string]interface{}{"application_type": "general", "applicant_name": "Test", "applicant_phone": "1", "shop_name": "Shop", "applicant_age": 30, "id_card_copy_base64": base64.StdEncoding.EncodeToString(file)})
 	rec := call(users[0], "POST", "/api/v1/applications", payload)

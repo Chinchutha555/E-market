@@ -1,0 +1,2 @@
+ALTER TABLE "notification" ADD COLUMN IF NOT EXISTS source_notification_id BIGINT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_notification_source_recipient ON "notification" (source_notification_id, recipient_user_id);

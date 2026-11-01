@@ -1,0 +1,17 @@
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS tenant_signature BYTEA;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS tenant_signature_type TEXT;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS officer_signature BYTEA;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS officer_signature_type TEXT;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS market_director_signature BYTEA;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS market_director_signature_type TEXT;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS bureau_director_signature BYTEA;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS bureau_director_signature_type TEXT;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS supporting_document BYTEA;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS supporting_document_type TEXT;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS review_reason TEXT;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS tenant_email TEXT;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS tenant_address TEXT;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS business_type TEXT;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS billing_cycle TEXT;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS terms_and_conditions TEXT;
+ALTER TABLE "contract" ADD COLUMN IF NOT EXISTS advance_payment DOUBLE PRECISION;

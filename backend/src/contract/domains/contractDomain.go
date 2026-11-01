@@ -17,6 +17,7 @@ type UseCase interface {
 	UpdateContractWorkflow(id int, userID int, req requests.UpdateContractWorkflowRequest) (*responses.ContractResponse, error)
 }
 
+var ErrInvalidContractState = errors.New("invalid contract state")
 var ErrApplicationNotApproved = errors.New("application is not approved for this stall")
 
 type Repository interface {

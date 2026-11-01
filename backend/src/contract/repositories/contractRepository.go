@@ -85,13 +85,24 @@ func (r *repository) Create(contract *models.Contract) error {
 		}
 	}
 	return r.conn.Transaction(func(tx *gorm.DB) error {
+		var activeCount int64
+		if err := tx.Model(&models.Contract{}).Where("stall_ident = ? AND contract_state = ? AND status = ?", contract.StallIdent, "active", "A").Count(&activeCount).Error; err != nil {
+			return err
+		}
+		if activeCount > 0 {
+			return domains.ErrApplicationNotApproved
+		}
 		if contract.ApplicationID != nil {
-			targetAppState := "completed"
-			if contract.ContractState == "pending" {
-				targetAppState = "contract_pending"
+			var existing int64
+			if err := tx.Model(&models.Contract{}).Where("application_id = ? AND status = ?", *contract.ApplicationID, "A").Count(&existing).Error; err != nil {
+				return err
 			}
+			if existing > 0 {
+				return domains.ErrApplicationNotApproved
+			}
+			targetAppState := "completed"
 			result := tx.Model(&models.Application{}).
-				Where("id = ? AND application_state IN ('approved', 'contract_pending') AND stall_ident = ? AND status = ?", *contract.ApplicationID, contract.StallIdent, "A").
+				Where("id = ? AND application_state IN ('completed', 'contract_pending') AND stall_ident = ? AND status = ?", *contract.ApplicationID, contract.StallIdent, "A").
 				Update("application_state", targetAppState)
 			if result.Error != nil {
 				return result.Error
@@ -125,8 +136,13 @@ func (r *repository) Create(contract *models.Contract) error {
 
 		if contract.ContractState == "pending" {
 			// Notify staff about new pending contract review
+			var notificationMarket models.Market
+			if contract.MarketID != nil {
+				tx.Select("name").First(&notificationMarket, *contract.MarketID)
+			}
 			notif := models.Notification{
 				RecipientRole: "staff",
+				MarketName:    notificationMarket.Name,
 				Type:          "contract_submitted",
 				StatusCode:    "pending",
 				StatusLabel:   "รอตรวจสัญญา",
@@ -220,6 +236,9 @@ func (r *repository) Terminate(contractID int) error {
 	if err := r.conn.Where("id = ? AND status = 'A'", contractID).First(&contract).Error; err != nil {
 		return err
 	}
+	if contract.ContractState != "active" {
+		return domains.ErrInvalidContractState
+	}
 	now := time.Now()
 	contract.ContractState = "terminated"
 	contract.UpdatedAt = now
@@ -287,6 +306,13 @@ func (r *repository) Approve(contractID int, userID int) (*models.Contract, erro
 		}
 		// If linked to an application, complete the application
 		if contract.ApplicationID != nil {
+			var existing int64
+			if err := tx.Model(&models.Contract{}).Where("application_id = ? AND status = ?", *contract.ApplicationID, "A").Count(&existing).Error; err != nil {
+				return err
+			}
+			if existing > 0 {
+				return domains.ErrApplicationNotApproved
+			}
 			_ = tx.Model(&models.Application{}).
 				Where("id = ?", *contract.ApplicationID).
 				Update("application_state", "completed").Error
@@ -373,9 +399,16 @@ func (r *repository) Reject(contractID int, userID int, reason string) error {
 			return err
 		}
 		if contract.ApplicationID != nil {
+			var existing int64
+			if err := tx.Model(&models.Contract{}).Where("application_id = ? AND status = ?", *contract.ApplicationID, "A").Count(&existing).Error; err != nil {
+				return err
+			}
+			if existing > 0 {
+				return domains.ErrApplicationNotApproved
+			}
 			_ = tx.Model(&models.Application{}).
 				Where("id = ?", *contract.ApplicationID).
-				Update("application_state", "approved").Error
+				Update("application_state", "completed").Error
 		}
 		_ = tx.Model(&models.Stall{}).
 			Where("ident = ?", contract.StallIdent).

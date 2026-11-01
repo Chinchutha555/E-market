@@ -26,11 +26,11 @@ func RequireApplicationReviewer(db *gorm.DB) gin.HandlerFunc {
 		allowed := false
 		switch app.ApplicationState {
 		case "pending_officer":
-			allowed = role == "admin" || (role == "staff" && (app.MarketID == nil || CanManageMarket(db, GetUserID(c), role, *app.MarketID)))
+			allowed = role == "staff" && (app.MarketID == nil || CanManageMarket(db, GetUserID(c), role, *app.MarketID))
 		case "pending_market_director":
-			allowed = role == "admin" || (role == "market_director" && (app.MarketID == nil || CanManageMarket(db, GetUserID(c), role, *app.MarketID)))
+			allowed = role == "market_director" && (app.MarketID == nil || CanManageMarket(db, GetUserID(c), role, *app.MarketID))
 		case "pending_bureau_director":
-			allowed = role == "admin" || role == "bureau_director"
+			allowed = role == "bureau_director"
 		}
 		if !allowed {
 			c.AbortWithStatusJSON(http.StatusForbidden, responses.FailRespone(responses.NewAppErr(http.StatusForbidden, "สิทธิ์ของคุณไม่เพียงพอสำหรับการดำเนินการนี้")))
