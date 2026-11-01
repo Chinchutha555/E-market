@@ -11,24 +11,29 @@ type ContractFilter struct {
 }
 
 type CreateContractRequest struct {
-	ApplicationID   int     `json:"application_id"`
-	StallIdent      string  `json:"stall_ident"`
-	StallNumber     string  `json:"stall_number"`
-	StallID         int     `json:"stall_id"`
-	TenantName      string  `json:"tenant_name"`
-	TenantPhone     string  `json:"tenant_phone"`
-	TenantIDCard    string  `json:"tenant_id_card"`
-	TenantAddress   string  `json:"tenant_address"`
-	ShopName        string  `json:"shop_name"`
-	BusinessName    string  `json:"business_name"`
-	BusinessType    string  `json:"business_type"`
-	StartDate       string  `json:"start_date"`
-	EndDate         string  `json:"end_date"`
-	MonthlyRental   float64 `json:"monthly_rental"`
-	RentalFee       float64 `json:"rental_fee"`
-	SecurityDeposit float64 `json:"security_deposit"`
-	AdvancePayment  float64 `json:"advance_payment"`
-	Status          string  `json:"status"`
+	TenantEmail        string  `json:"tenant_email"`
+	BillingCycle       string  `json:"billing_cycle"`
+	TermsAndConditions string  `json:"terms_and_conditions"`
+	SignatureBase64    string  `json:"signature_base64"`
+	DocumentBase64     string  `json:"document_base64"`
+	ApplicationID      int     `json:"application_id"`
+	StallIdent         string  `json:"stall_ident"`
+	StallNumber        string  `json:"stall_number"`
+	StallID            int     `json:"stall_id"`
+	TenantName         string  `json:"tenant_name"`
+	TenantPhone        string  `json:"tenant_phone"`
+	TenantIDCard       string  `json:"tenant_id_card"`
+	TenantAddress      string  `json:"tenant_address"`
+	ShopName           string  `json:"shop_name"`
+	BusinessName       string  `json:"business_name"`
+	BusinessType       string  `json:"business_type"`
+	StartDate          string  `json:"start_date"`
+	EndDate            string  `json:"end_date"`
+	MonthlyRental      float64 `json:"monthly_rental"`
+	RentalFee          float64 `json:"rental_fee"`
+	SecurityDeposit    float64 `json:"security_deposit"`
+	AdvancePayment     float64 `json:"advance_payment"`
+	Status             string  `json:"status"`
 }
 
 type ReviewContractRequest struct {

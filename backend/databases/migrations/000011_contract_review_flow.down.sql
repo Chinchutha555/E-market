@@ -1,0 +1,17 @@
+ALTER TABLE "contract" DROP COLUMN IF EXISTS tenant_signature;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS tenant_signature_type;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS officer_signature;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS officer_signature_type;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS market_director_signature;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS market_director_signature_type;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS bureau_director_signature;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS bureau_director_signature_type;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS supporting_document;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS supporting_document_type;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS review_reason;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS tenant_email;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS tenant_address;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS business_type;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS billing_cycle;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS terms_and_conditions;
+ALTER TABLE "contract" DROP COLUMN IF EXISTS advance_payment;

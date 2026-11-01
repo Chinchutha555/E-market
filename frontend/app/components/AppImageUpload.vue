@@ -55,7 +55,7 @@
           </template>
           {{ singleImage ? changeText : selectText }}
         </AppButton>
-        <AppButton v-if="singleImage" size="md" variant="danger-outline" @click="removeImage()">ลบรูป</AppButton>
+        <AppButton v-if="singleImage && showRemove" size="md" variant="danger-outline" @click="removeImage()">ลบรูป</AppButton>
         <span class="app-image-upload-hint">{{ resolvedHint }}</span>
         <span v-if="resolvedError" class="app-image-upload-error">{{ resolvedError }}</span>
       </div>
@@ -84,7 +84,7 @@
         <span class="app-image-upload-prompt">{{ singleImage ? changeText : selectText }}</span>
         <span class="app-image-upload-hint">{{ resolvedHint }}</span>
         <span v-if="resolvedError" class="app-image-upload-error">{{ resolvedError }}</span>
-        <AppButton v-if="singleImage" size="sm" variant="danger-outline" @click.stop="removeImage()">ลบรูป</AppButton>
+        <AppButton v-if="singleImage && showRemove" size="sm" variant="danger-outline" @click.stop="removeImage()">ลบรูป</AppButton>
       </div>
     </div>
     <input ref="fileInput" type="file" :accept="accept" :multiple="multiple" class="app-image-upload-input" @change="handleFileChange" />
@@ -111,6 +111,7 @@ const props = withDefaults(defineProps<{
   changeText?: string
   previewAlt?: string
   variant?: 'panel' | 'button'
+  showRemove?: boolean
 }>(), {
   modelValue: '',
   label: '',
@@ -124,7 +125,8 @@ const props = withDefaults(defineProps<{
   selectText: 'เลือกรูปถ่าย',
   changeText: 'เปลี่ยนรูปภาพ',
   previewAlt: 'ภาพตัวอย่าง',
-  variant: 'panel'
+  variant: 'panel',
+  showRemove: true
 })
 
 const emit = defineEmits<{

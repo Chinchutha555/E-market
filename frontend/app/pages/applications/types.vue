@@ -338,7 +338,7 @@ definePageMeta({
     if (!auth.isLoggedIn) {
       return navigateTo('/auth/login', { replace: true })
     }
-    if (auth.role !== 'admin' && auth.role !== 'staff') {
+    if (auth.role !== 'admin') {
       return navigateTo('/applications', { replace: true })
     }
   }

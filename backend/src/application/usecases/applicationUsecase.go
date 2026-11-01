@@ -54,48 +54,51 @@ func toApplicationResponse(a *models.Application) responses.ApplicationResponse 
 	}
 
 	return responses.ApplicationResponse{
-		ID:                    a.ID,
-		ApplicationNo:         a.ApplicationNo,
-		ApplicationNumber:     a.ApplicationNo,
-		ApplicationType:       appType,
-		Subject:               subject,
-		BookingID:             a.BookingID,
-		BookingNumber:         a.BookingNumber,
-		DocumentNumber:        a.DocumentNumber,
-		TenantSignature:       a.TenantSignature,
-		HasOfficerSignature:   len(a.OfficerSignature) > 0,
-		TenantSignedAt:        a.TenantSignedAt,
-		StallID:               a.StallID,
-		MarketID:              a.MarketID,
-		MarketName:            a.MarketName,
-		StallIdent:            a.StallIdent,
-		StallNumber:           a.StallIdent,
-		ApplicantName:         a.ApplicantName,
-		TenantName:            a.ApplicantName,
-		ApplicantPhone:        a.ApplicantPhone,
-		TenantPhone:           a.ApplicantPhone,
-		ApplicantIDCard:       a.ApplicantIDCard,
-		ApplicantAge:          a.ApplicantAge,
-		HasIDCardCopy:         len(a.IDCardCopy) > 0,
-		ApplicantEmail:        a.ApplicantEmail,
-		ApplicantAddress:      a.ApplicantAddress,
-		Details:               a.Details,
-		ShopName:              a.ShopName,
-		ProductCategory:       a.ProductCategory,
-		ProductType:           a.ProductCategory,
-		ProposedRentType:      a.ProposedRentType,
-		RequestedStartDate:    startDate,
-		LeaseTermMonths:       periodMonths,
-		RequestedPeriodMonths: periodMonths,
-		MonthlyRate:           monthlyRate,
-		StallMonthlyRate:      monthlyRate,
-		Status:                a.ApplicationState,
-		OfficerComment:        a.OfficerComment,
-		MarketDirectorComment: a.MarketDirectorComment,
-		BureauDirectorComment: a.BureauDirectorComment,
-		ReviewedAt:            a.ReviewedAt,
-		ReviewNote:            a.ReviewNote,
-		CreatedAt:             a.CreatedAt,
+		ID:                         a.ID,
+		ApplicationNo:              a.ApplicationNo,
+		ApplicationNumber:          a.ApplicationNo,
+		ApplicationType:            appType,
+		Subject:                    subject,
+		BookingID:                  a.BookingID,
+		BookingNumber:              a.BookingNumber,
+		DocumentNumber:             a.DocumentNumber,
+		TenantSignature:            a.TenantSignature,
+		HasOfficerSignature:        len(a.OfficerSignature) > 0,
+		HasMarketDirectorSignature: len(a.MarketDirectorSignature) > 0,
+		HasBureauDirectorSignature: len(a.BureauDirectorSignature) > 0,
+		HasSignedDocument:          len(a.SignedDocument) > 0,
+		TenantSignedAt:             a.TenantSignedAt,
+		StallID:                    a.StallID,
+		MarketID:                   a.MarketID,
+		MarketName:                 a.MarketName,
+		StallIdent:                 a.StallIdent,
+		StallNumber:                a.StallIdent,
+		ApplicantName:              a.ApplicantName,
+		TenantName:                 a.ApplicantName,
+		ApplicantPhone:             a.ApplicantPhone,
+		TenantPhone:                a.ApplicantPhone,
+		ApplicantIDCard:            a.ApplicantIDCard,
+		ApplicantAge:               a.ApplicantAge,
+		HasIDCardCopy:              len(a.IDCardCopy) > 0,
+		ApplicantEmail:             a.ApplicantEmail,
+		ApplicantAddress:           a.ApplicantAddress,
+		Details:                    a.Details,
+		ShopName:                   a.ShopName,
+		ProductCategory:            a.ProductCategory,
+		ProductType:                a.ProductCategory,
+		ProposedRentType:           a.ProposedRentType,
+		RequestedStartDate:         startDate,
+		LeaseTermMonths:            periodMonths,
+		RequestedPeriodMonths:      periodMonths,
+		MonthlyRate:                monthlyRate,
+		StallMonthlyRate:           monthlyRate,
+		Status:                     a.ApplicationState,
+		OfficerComment:             a.OfficerComment,
+		MarketDirectorComment:      a.MarketDirectorComment,
+		BureauDirectorComment:      a.BureauDirectorComment,
+		ReviewedAt:                 a.ReviewedAt,
+		ReviewNote:                 a.ReviewNote,
+		CreatedAt:                  a.CreatedAt,
 	}
 }
 
@@ -129,6 +132,9 @@ func (u *useCase) GetApplicationByID(id int) (*responses.ApplicationResponse, er
 func (u *useCase) CreateApplication(userID int, req requests.CreateApplicationRequest) (*responses.ApplicationResponse, error) {
 	if req.ApplicantAge != nil && (*req.ApplicantAge < 1 || *req.ApplicantAge > 120) {
 		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาระบุอายุระหว่าง 1 ถึง 120 ปี")
+	}
+	if strings.TrimSpace(req.IDCardCopyBase64) == "" {
+		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาแนบสำเนาบัตรประชาชน")
 	}
 	var idCardCopy []byte
 	var idCardCopyType string
@@ -353,6 +359,14 @@ func (u *useCase) UpdateStatus(id int, userID int, req requests.UpdateApplicatio
 		app.OfficerSignature = req.OfficerSignature
 		app.OfficerSignatureType = req.OfficerSignatureType
 	}
+	if len(req.MarketDirectorSignature) > 0 {
+		app.MarketDirectorSignature = req.MarketDirectorSignature
+		app.MarketDirectorSignatureType = req.MarketDirectorSignatureType
+	}
+	if len(req.BureauDirectorSignature) > 0 {
+		app.BureauDirectorSignature = req.BureauDirectorSignature
+		app.BureauDirectorSignatureType = req.BureauDirectorSignatureType
+	}
 	if req.Reason != "" {
 		app.ReviewNote = req.Reason
 	}
@@ -420,18 +434,11 @@ func (u *useCase) Action(id int, userID int, req requests.ApplicationActionReque
 		}
 		var signature []byte
 		var signatureType string
-		if action == "approve" && (app.ApplicationType == "stall_lease" || (app.ApplicationType == "" && !strings.HasPrefix(app.ApplicationNo, "GEN-") && (app.BookingID != nil || (app.StallIdent != "" && app.StallIdent != "-")))) {
-			if len(req.SignatureBase64) == 0 || len(req.SignatureBase64) > 4*1024*1024 {
-				return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาแนบลายเซ็นเจ้าหน้าที่ขนาดไม่เกิน 3 MB")
-			}
-			var decodeErr error
-			signature, decodeErr = base64.StdEncoding.DecodeString(req.SignatureBase64)
-			if decodeErr != nil || len(signature) == 0 || len(signature) > 3*1024*1024 {
-				return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "ไฟล์ลายเซ็นไม่ถูกต้อง")
-			}
-			signatureType = http.DetectContentType(signature)
-			if signatureType != "image/png" && signatureType != "image/jpeg" {
-				return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "รองรับลายเซ็น PNG หรือ JPEG เท่านั้น")
+		if action == "approve" {
+			var signatureErr error
+			signature, signatureType, signatureErr = decodeApprovalSignature(req.SignatureBase64)
+			if signatureErr != nil {
+				return nil, signatureErr
 			}
 		}
 		return u.UpdateStatus(id, userID, requests.UpdateApplicationStatusRequest{Status: status, Reason: comment, OfficerComment: comment, OfficerSignature: signature, OfficerSignatureType: signatureType})
@@ -444,6 +451,21 @@ func (u *useCase) Action(id int, userID int, req requests.ApplicationActionReque
 		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาระบุหมายเหตุ")
 	}
 	updateReq := requests.UpdateApplicationStatusRequest{Reason: comment}
+	if action == "approve" {
+		signature, signatureType, signatureErr := decodeApprovalSignature(req.SignatureBase64)
+		if signatureErr != nil {
+			return nil, signatureErr
+		}
+		if app.ApplicationState == "pending_bureau_director" {
+			// Temporary mock for the approval prototype; replace with email verification.
+			if req.OTP != "123456" {
+				return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "รหัส OTP ทดสอบไม่ถูกต้อง")
+			}
+			updateReq.BureauDirectorSignature, updateReq.BureauDirectorSignatureType = signature, signatureType
+		} else {
+			updateReq.MarketDirectorSignature, updateReq.MarketDirectorSignatureType = signature, signatureType
+		}
+	}
 	switch action {
 	case "return_revision":
 		updateReq.Status = "revision_required"
@@ -464,4 +486,19 @@ func (u *useCase) Action(id int, userID int, req requests.ApplicationActionReque
 		updateReq.BureauDirectorComment = comment
 	}
 	return u.UpdateStatus(id, userID, updateReq)
+}
+
+func decodeApprovalSignature(encoded string) ([]byte, string, error) {
+	if len(encoded) == 0 || len(encoded) > 4*1024*1024 {
+		return nil, "", responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาแนบลายเซ็นขนาดไม่เกิน 3 MB")
+	}
+	signature, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil || len(signature) == 0 || len(signature) > 3*1024*1024 {
+		return nil, "", responses.NewAppErr(http.StatusUnprocessableEntity, "ไฟล์ลายเซ็นไม่ถูกต้อง")
+	}
+	kind := http.DetectContentType(signature)
+	if kind != "image/png" && kind != "image/jpeg" {
+		return nil, "", responses.NewAppErr(http.StatusUnprocessableEntity, "รองรับลายเซ็น PNG หรือ JPEG เท่านั้น")
+	}
+	return signature, kind, nil
 }

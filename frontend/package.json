@@ -11,6 +11,7 @@
   "dependencies": {
     "@pinia/nuxt": "0.5.5",
     "@types/leaflet": "^1.9.22",
+    "html2pdf.js": "^0.14.0",
     "leaflet": "^1.9.4",
     "maplibre-gl": "^6.15.0",
     "nuxi": "3.11.1",

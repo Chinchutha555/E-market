@@ -29,14 +29,14 @@ func TestCreateContractRequiresApprovedMatchingApplication(t *testing.T) {
 	if err := repo.Create(contract("A-1")); !errors.Is(err, domains.ErrApplicationNotApproved) {
 		t.Fatalf("pending application: got %v", err)
 	}
-	if err := db.Model(&app).Update("application_state", "approved").Error; err != nil {
+	if err := db.Model(&app).Update("application_state", "completed").Error; err != nil {
 		t.Fatal(err)
 	}
 	if err := repo.Create(contract("B-2")); !errors.Is(err, domains.ErrApplicationNotApproved) {
 		t.Fatalf("different stall: got %v", err)
 	}
 	if err := repo.Create(contract("A-1")); err != nil {
-		t.Fatalf("approved application: %v", err)
+		t.Fatalf("completed application: %v", err)
 	}
 	if err := db.First(&app, app.ID).Error; err != nil {
 		t.Fatal(err)

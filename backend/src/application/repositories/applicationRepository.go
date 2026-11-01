@@ -361,6 +361,16 @@ func (r *repository) Update(app *models.Application) error {
 		if err := tx.Save(app).Error; err != nil {
 			return err
 		}
+		if app.ApplicationState == "approved" {
+			var market models.Market
+			if app.MarketID != nil {
+				tx.Select("name").First(&market, *app.MarketID)
+			}
+			n := models.Notification{RecipientRole: "officer", Type: "application_signed", StatusCode: "approved", StatusLabel: "รอเอกสารลงนาม", Title: "คำร้องผ่านการลงนามแล้ว", Message: "ผอ.สำนักตลาดลงนามแล้ว กรุณาดาวน์โหลดคำร้องให้ผู้เช่าลงนามและนำเข้าเอกสาร", MarketName: market.Name, TargetURL: fmt.Sprintf("/applications/%d", app.ID)}
+			if err := tx.Create(&n).Error; err != nil {
+				return err
+			}
+		}
 		if app.StallIdent != "" && app.ApplicationState == "rejected" {
 			var linkedBookings []models.Booking
 			tx.Model(&models.Booking{}).

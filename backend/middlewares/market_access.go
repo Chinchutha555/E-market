@@ -135,7 +135,7 @@ func RequireResourceAccess(db *gorm.DB, kind string) gin.HandlerFunc {
 			forbidMarket(c)
 			return
 		}
-		if GetUserRole(c) == "bureau_director" && kind == "application" {
+		if GetUserRole(c) == "bureau_director" && (kind == "application" || kind == "contract") {
 			c.Next()
 			return
 		}
@@ -196,7 +196,7 @@ func RequireStallPayloadAccess(db *gorm.DB) gin.HandlerFunc {
 				forbidMarket(c)
 				return
 			}
-			if app.ApplicationState != "approved" && app.ApplicationState != "contract_pending" {
+			if app.ApplicationState != "completed" {
 				forbidMarket(c)
 				return
 			}
