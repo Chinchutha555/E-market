@@ -82,10 +82,6 @@
         [
           100.5486762,
           13.7993587
-        ],
-        [
-          100.5486299,
-          13.7993578
         ]
       ],
       "floors": [
@@ -25787,10 +25783,6 @@
         [
           100.5506987,
           13.7982799
-        ],
-        [
-          100.5496831,
-          13.7981617
         ]
       ],
       "floors": [
@@ -42337,8 +42329,8 @@
     {
       "category": "เสื้อผ้าแฟชั่นและเครื่องประดับวัยรุ่น",
       "centroid": [
-        100.55108926666668,
-        13.79868182
+        100.55111095625,
+        13.798719812500002
       ],
       "color": "#4eb5b7",
       "coordinates": [
@@ -42387,8 +42379,12 @@
           13.7986929
         ],
         [
-          100.5515221,
-          13.7993674
+          100.5514688,
+          13.7992723
+        ],
+        [
+          100.5514896,
+          13.7993848
         ],
         [
           100.5514969,
@@ -42401,10 +42397,6 @@
         [
           100.5514564,
           13.7995417
-        ],
-        [
-          100.5507113,
-          13.7982892
         ]
       ],
       "floors": [
@@ -42417,7 +42409,7 @@
       ],
       "id": "proj-04",
       "name": "โครงการที่ 4",
-      "realAreaSqm": 1760,
+      "realAreaSqm": 1740,
       "sectionNumber": "4",
       "stalls": [
         {
@@ -42520,210 +42512,6 @@
             "name": "แผงร้านค้า",
             "zone": "โครงการที่ 4",
             "Number": "344"
-          }
-        },
-        {
-          "areaType": "ATM",
-          "center": [
-            100.55149860000002,
-            13.799349025
-          ],
-          "code": "JJ-4-3-8446",
-          "commonFee": 500,
-          "coordinates": [
-            [
-              100.5514929,
-              13.7993624
-            ],
-            [
-              100.5515132,
-              13.7993515
-            ],
-            [
-              100.5515043,
-              13.7993357
-            ],
-            [
-              100.551484,
-              13.7993465
-            ],
-            [
-              100.5514929,
-              13.7993624
-            ]
-          ],
-          "depositFee": 2000,
-          "depthM": 2.9,
-          "entryFee": 40000,
-          "floor": "1",
-          "floorLevel": 1,
-          "floorName": "ชั้น 1",
-          "monthlyRent": 2000,
-          "photo": "/images/market_stall_sample.jpg",
-          "projectId": "proj-04",
-          "size": 5,
-          "status": "available",
-          "widthM": 3.1,
-          "zone": "โครงการที่ 4 (ชั้น 1)",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 8830,
-            "name": "ATM",
-            "zone": "โครงการที่ 4",
-            "Number": "3"
-          }
-        },
-        {
-          "areaType": "ATM",
-          "center": [
-            100.5515075,
-            13.799364875
-          ],
-          "code": "JJ-4-4-8447",
-          "commonFee": 500,
-          "coordinates": [
-            [
-              100.5515132,
-              13.7993515
-            ],
-            [
-              100.5514929,
-              13.7993624
-            ],
-            [
-              100.5515018,
-              13.7993782
-            ],
-            [
-              100.5515221,
-              13.7993674
-            ],
-            [
-              100.5515132,
-              13.7993515
-            ]
-          ],
-          "depositFee": 2000,
-          "depthM": 2.9,
-          "entryFee": 40000,
-          "floor": "1",
-          "floorLevel": 1,
-          "floorName": "ชั้น 1",
-          "monthlyRent": 2000,
-          "photo": "/images/market_stall_sample.jpg",
-          "projectId": "proj-04",
-          "size": 5,
-          "status": "available",
-          "widthM": 3.1,
-          "zone": "โครงการที่ 4 (ชั้น 1)",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 8831,
-            "name": "ATM",
-            "zone": "โครงการที่ 4",
-            "Number": "4"
-          }
-        },
-        {
-          "areaType": "ATM",
-          "center": [
-            100.55148972500001,
-            13.799333175
-          ],
-          "code": "JJ-4-2-8448",
-          "commonFee": 500,
-          "coordinates": [
-            [
-              100.551484,
-              13.7993465
-            ],
-            [
-              100.5515043,
-              13.7993357
-            ],
-            [
-              100.5514954,
-              13.7993198
-            ],
-            [
-              100.5514752,
-              13.7993307
-            ],
-            [
-              100.551484,
-              13.7993465
-            ]
-          ],
-          "depositFee": 2000,
-          "depthM": 2.9,
-          "entryFee": 40000,
-          "floor": "1",
-          "floorLevel": 1,
-          "floorName": "ชั้น 1",
-          "monthlyRent": 2000,
-          "photo": "/images/market_stall_sample.jpg",
-          "projectId": "proj-04",
-          "size": 5,
-          "status": "available",
-          "widthM": 3.1,
-          "zone": "โครงการที่ 4 (ชั้น 1)",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 8832,
-            "name": "ATM",
-            "zone": "โครงการที่ 4",
-            "Number": "2"
-          }
-        },
-        {
-          "areaType": "ATM",
-          "center": [
-            100.55148085,
-            13.799317324999999
-          ],
-          "code": "JJ-4-1-8449",
-          "commonFee": 500,
-          "coordinates": [
-            [
-              100.5514752,
-              13.7993307
-            ],
-            [
-              100.5514954,
-              13.7993198
-            ],
-            [
-              100.5514865,
-              13.799304
-            ],
-            [
-              100.5514663,
-              13.7993148
-            ],
-            [
-              100.5514752,
-              13.7993307
-            ]
-          ],
-          "depositFee": 2000,
-          "depthM": 2.9,
-          "entryFee": 40000,
-          "floor": "1",
-          "floorLevel": 1,
-          "floorName": "ชั้น 1",
-          "monthlyRent": 2000,
-          "photo": "/images/market_stall_sample.jpg",
-          "projectId": "proj-04",
-          "size": 5,
-          "status": "available",
-          "widthM": 3.1,
-          "zone": "โครงการที่ 4 (ชั้น 1)",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 8833,
-            "name": "ATM",
-            "zone": "โครงการที่ 4",
-            "Number": "1"
           }
         },
         {
@@ -60373,8 +60161,8 @@
           }
         }
       ],
-      "stallsAvailable": 352,
-      "totalStalls": 352
+      "stallsAvailable": 348,
+      "totalStalls": 348
     },
     {
       "category": "เสื้อผ้าแฟชั่นและเครื่องประดับวัยรุ่น",
@@ -60451,10 +60239,6 @@
         [
           100.5519012,
           13.8010852
-        ],
-        [
-          100.551586,
-          13.7997534
         ]
       ],
       "floors": [
@@ -83269,10 +83053,6 @@
         [
           100.5518598,
           13.802094
-        ],
-        [
-          100.5518,
-          13.8020882
         ]
       ],
       "floors": [
@@ -101915,10 +101695,6 @@
         [
           100.5512813,
           13.8021855
-        ],
-        [
-          100.5512723,
-          13.8021697
         ]
       ],
       "floors": [
@@ -117549,10 +117325,6 @@
         [
           100.5514106,
           13.8021375
-        ],
-        [
-          100.5511224,
-          13.801568
         ]
       ],
       "floors": [
@@ -146608,10 +146380,6 @@
         [
           100.5509639,
           13.8012922
-        ],
-        [
-          100.5509458,
-          13.8012606
         ]
       ],
       "floors": [
@@ -171358,10 +171126,6 @@
         [
           100.5515491,
           13.8011113
-        ],
-        [
-          100.5514893,
-          13.8011055
         ]
       ],
       "floors": [
@@ -184500,10 +184264,6 @@
         [
           100.5507731,
           13.8009997
-        ],
-        [
-          100.5507641,
-          13.8009839
         ]
       ],
       "floors": [
@@ -210837,10 +210597,6 @@
         [
           100.5512697,
           13.8004119
-        ],
-        [
-          100.5512607,
-          13.8003961
         ]
       ],
       "floors": [
@@ -224372,10 +224128,6 @@
         [
           100.550678,
           13.8008342
-        ],
-        [
-          100.5506509,
-          13.8007869
         ]
       ],
       "floors": [
@@ -234462,10 +234214,6 @@
         [
           100.5511112,
           13.8001361
-        ],
-        [
-          100.5510841,
-          13.8000888
         ]
       ],
       "floors": [
@@ -248609,10 +248357,6 @@
         [
           100.5504833,
           13.8004953
-        ],
-        [
-          100.5504743,
-          13.8004795
         ]
       ],
       "floors": [
@@ -262760,10 +262504,6 @@
         [
           100.550801,
           13.7995962
-        ],
-        [
-          100.550792,
-          13.7995804
         ]
       ],
       "floors": [
@@ -286272,10 +286012,6 @@
         [
           100.5501912,
           13.7999869
-        ],
-        [
-          100.5501822,
-          13.7999711
         ]
       ],
       "floors": [
@@ -309776,10 +309512,6 @@
         [
           100.5506176,
           13.799277
-        ],
-        [
-          100.5505542,
-          13.7991666
         ]
       ],
       "floors": [
@@ -328395,10 +328127,6 @@
         [
           100.5499716,
           13.7996047
-        ],
-        [
-          100.5499445,
-          13.7995574
         ]
       ],
       "floors": [
@@ -347006,10 +346734,6 @@
         [
           100.549915,
           13.7995061
-        ],
-        [
-          100.5498969,
-          13.7994746
         ]
       ],
       "floors": [
@@ -354397,10 +354121,6 @@
         [
           100.550441,
           13.7989696
-        ],
-        [
-          100.550432,
-          13.7989538
         ]
       ],
       "floors": [
@@ -363821,10 +363541,6 @@
         [
           100.5503278,
           13.7987726
-        ],
-        [
-          100.5503123,
-          13.7987005
         ]
       ],
       "floors": [
@@ -379580,10 +379296,6 @@
         [
           100.5498756,
           13.7994384
-        ],
-        [
-          100.5498016,
-          13.7994372
         ]
       ],
       "floors": [
@@ -397112,10 +396824,6 @@
         [
           100.5498194,
           13.7987512
-        ],
-        [
-          100.5495836,
-          13.798748
         ]
       ],
       "floors": [
@@ -415739,10 +415447,6 @@
         [
           100.5493335,
           13.7989201
-        ],
-        [
-          100.5491022,
-          13.7986214
         ]
       ],
       "floors": [
@@ -435327,10 +435031,6 @@
         [
           100.5495194,
           13.7993957
-        ],
-        [
-          100.5493159,
-          13.7993918
         ]
       ],
       "floors": [
@@ -453073,10 +452773,6 @@
         [
           100.5490504,
           13.799385
-        ],
-        [
-          100.5490432,
-          13.7987793
         ]
       ],
       "floors": [
@@ -470431,10 +470127,6 @@
         [
           100.548821,
           13.8000189
-        ],
-        [
-          100.5488209,
-          13.7999464
         ]
       ],
       "floors": [
@@ -480301,10 +479993,6 @@
         [
           100.5503535,
           13.8006042
-        ],
-        [
-          100.5501787,
-          13.8002952
         ]
       ],
       "floors": [
@@ -485220,10 +484908,6 @@
         [
           100.548638,
           13.8000168
-        ],
-        [
-          100.548564,
-          13.8000159
         ]
       ],
       "floors": [
@@ -487750,10 +487434,6 @@
         [
           100.5488114,
           13.79826
-        ],
-        [
-          100.5486072,
-          13.7982278
         ]
       ],
       "floors": [
@@ -494348,10 +494028,6 @@
         [
           100.5512991,
           13.8010013
-        ],
-        [
-          100.5485621,
-          13.7998587
         ]
       ],
       "floors": [
@@ -514628,15 +514304,200 @@
     }
   ],
   "slug": "chatuchak",
-  "siteFeatures": [
+  "siteFeatures": [],
+  "facilities": [
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 656,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "6"
+      "id": "chatuchak-facility-001",
+      "name": "ATM",
+      "type": "service",
+      "coordinates": [
+        100.55149860000002,
+        13.799349025
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.5514929,
+              13.7993624
+            ],
+            [
+              100.5515132,
+              13.7993515
+            ],
+            [
+              100.5515043,
+              13.7993357
+            ],
+            [
+              100.551484,
+              13.7993465
+            ],
+            [
+              100.5514929,
+              13.7993624
+            ]
+          ]
+        ]
       },
+      "floorId": "1",
+      "sourceZone": "โครงการที่ 4",
+      "number": null,
+      "sourceProperties": {
+        "FID": 8830,
+        "name": "ATM",
+        "zone": "โครงการที่ 4",
+        "Number": "3"
+      },
+      "projectId": "proj-04"
+    },
+    {
+      "id": "chatuchak-facility-002",
+      "name": "ATM",
+      "type": "service",
+      "coordinates": [
+        100.5515075,
+        13.799364875
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.5515132,
+              13.7993515
+            ],
+            [
+              100.5514929,
+              13.7993624
+            ],
+            [
+              100.5515018,
+              13.7993782
+            ],
+            [
+              100.5515221,
+              13.7993674
+            ],
+            [
+              100.5515132,
+              13.7993515
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "โครงการที่ 4",
+      "number": null,
+      "sourceProperties": {
+        "FID": 8831,
+        "name": "ATM",
+        "zone": "โครงการที่ 4",
+        "Number": "4"
+      },
+      "projectId": "proj-04"
+    },
+    {
+      "id": "chatuchak-facility-003",
+      "name": "ATM",
+      "type": "service",
+      "coordinates": [
+        100.55148972500001,
+        13.799333175
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.551484,
+              13.7993465
+            ],
+            [
+              100.5515043,
+              13.7993357
+            ],
+            [
+              100.5514954,
+              13.7993198
+            ],
+            [
+              100.5514752,
+              13.7993307
+            ],
+            [
+              100.551484,
+              13.7993465
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "โครงการที่ 4",
+      "number": null,
+      "sourceProperties": {
+        "FID": 8832,
+        "name": "ATM",
+        "zone": "โครงการที่ 4",
+        "Number": "2"
+      },
+      "projectId": "proj-04"
+    },
+    {
+      "id": "chatuchak-facility-004",
+      "name": "ATM",
+      "type": "service",
+      "coordinates": [
+        100.55148085,
+        13.799317324999999
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.5514752,
+              13.7993307
+            ],
+            [
+              100.5514954,
+              13.7993198
+            ],
+            [
+              100.5514865,
+              13.799304
+            ],
+            [
+              100.5514663,
+              13.7993148
+            ],
+            [
+              100.5514752,
+              13.7993307
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "โครงการที่ 4",
+      "number": null,
+      "sourceProperties": {
+        "FID": 8833,
+        "name": "ATM",
+        "zone": "โครงการที่ 4",
+        "Number": "1"
+      },
+      "projectId": "proj-04"
+    },
+    {
+      "id": "chatuchak-facility-005",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.54926614000001,
+        13.79955154
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -514667,16 +514528,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "6",
+      "sourceProperties": {
+        "FID": 656,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "6"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 657,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "17"
-      },
+      "id": "chatuchak-facility-006",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.5495176,
+        13.799559160000001
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -514707,16 +514577,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "17",
+      "sourceProperties": {
+        "FID": 657,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "17"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 658,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "18"
-      },
+      "id": "chatuchak-facility-007",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.5494852,
+        13.799539475
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -514743,16 +514622,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "18",
+      "sourceProperties": {
+        "FID": 658,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "18"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 659,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "16"
-      },
+      "id": "chatuchak-facility-008",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.54948399999999,
+        13.799576850000001
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -514779,16 +514667,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "16",
+      "sourceProperties": {
+        "FID": 659,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "16"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 660,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "19"
-      },
+      "id": "chatuchak-facility-009",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.54944382500001,
+        13.799538225000001
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -514815,16 +514712,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "19",
+      "sourceProperties": {
+        "FID": 660,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "19"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 661,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "20"
-      },
+      "id": "chatuchak-facility-010",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.549402475,
+        13.799536975
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -514851,16 +514757,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "20",
+      "sourceProperties": {
+        "FID": 661,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "20"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 662,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "14"
-      },
+      "id": "chatuchak-facility-011",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.5494013,
+        13.79957435
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -514887,16 +514802,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "14",
+      "sourceProperties": {
+        "FID": 662,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "14"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 663,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "21"
-      },
+      "id": "chatuchak-facility-012",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.5493611,
+        13.799535725
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -514923,16 +514847,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "21",
+      "sourceProperties": {
+        "FID": 663,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "21"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 664,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "15"
-      },
+      "id": "chatuchak-facility-013",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.54944264999999,
+        13.7995756
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -514959,16 +514892,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "15",
+      "sourceProperties": {
+        "FID": 664,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "15"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 665,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "13"
-      },
+      "id": "chatuchak-facility-014",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.549359925,
+        13.7995731
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -514995,16 +514937,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "13",
+      "sourceProperties": {
+        "FID": 665,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "13"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 666,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "22"
-      },
+      "id": "chatuchak-facility-015",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.54931975000001,
+        13.79953445
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515031,16 +514982,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "22",
+      "sourceProperties": {
+        "FID": 666,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "22"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 667,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "12"
-      },
+      "id": "chatuchak-facility-016",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.549318575,
+        13.799571850000001
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515067,16 +515027,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "12",
+      "sourceProperties": {
+        "FID": 667,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "12"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 668,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "7"
-      },
+      "id": "chatuchak-facility-017",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.54923375,
+        13.79953185
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515103,16 +515072,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "7",
+      "sourceProperties": {
+        "FID": 668,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "7"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 669,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "5"
-      },
+      "id": "chatuchak-facility-018",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.54923257499999,
+        13.799569224999999
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515139,16 +515117,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "5",
+      "sourceProperties": {
+        "FID": 669,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "5"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 670,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "8"
-      },
+      "id": "chatuchak-facility-019",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.54919240000001,
+        13.7995306
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515175,16 +515162,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "8",
+      "sourceProperties": {
+        "FID": 670,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "8"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 671,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "9"
-      },
+      "id": "chatuchak-facility-020",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.54915102499999,
+        13.79952935
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515211,16 +515207,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "9",
+      "sourceProperties": {
+        "FID": 671,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "9"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 672,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "3"
-      },
+      "id": "chatuchak-facility-021",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.54914984999999,
+        13.799566725
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515247,16 +515252,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "3",
+      "sourceProperties": {
+        "FID": 672,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "3"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 673,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "10"
-      },
+      "id": "chatuchak-facility-022",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.549109675,
+        13.7995281
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515283,16 +515297,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "10",
+      "sourceProperties": {
+        "FID": 673,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "10"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 674,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "4"
-      },
+      "id": "chatuchak-facility-023",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.5491912,
+        13.799567975
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515319,16 +515342,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "4",
+      "sourceProperties": {
+        "FID": 674,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "4"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 675,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "2"
-      },
+      "id": "chatuchak-facility-024",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.54910850000002,
+        13.799565475
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515355,16 +515387,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "2",
+      "sourceProperties": {
+        "FID": 675,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "2"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 676,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "11"
-      },
+      "id": "chatuchak-facility-025",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.54906830000002,
+        13.79952685
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515391,16 +515432,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "11",
+      "sourceProperties": {
+        "FID": 676,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "11"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 677,
-        "name": "แผนกหนังสือ",
-        "zone": "-",
-        "Number": "1"
-      },
+      "id": "chatuchak-facility-026",
+      "name": "แผนกหนังสือ",
+      "type": "service",
+      "coordinates": [
+        100.549067125,
+        13.799564225000001
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515427,16 +515477,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": 677,
+        "name": "แผนกหนังสือ",
+        "zone": "-",
+        "Number": "1"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 678,
-        "name": "ฝ่ายปฏิบัติการ",
-        "zone": "-",
-        "Number": "2"
-      },
+      "id": "chatuchak-facility-027",
+      "name": "ฝ่ายปฏิบัติการ",
+      "type": "service",
+      "coordinates": [
+        100.54965305,
+        13.799818049999999
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515463,16 +515522,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "2",
+      "sourceProperties": {
+        "FID": 678,
+        "name": "ฝ่ายปฏิบัติการ",
+        "zone": "-",
+        "Number": "2"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 679,
-        "name": "ฝ่ายปฏิบัติการ",
-        "zone": "-",
-        "Number": "1"
-      },
+      "id": "chatuchak-facility-028",
+      "name": "ฝ่ายปฏิบัติการ",
+      "type": "service",
+      "coordinates": [
+        100.54942840000001,
+        13.799815175
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515499,16 +515567,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": 679,
+        "name": "ฝ่ายปฏิบัติการ",
+        "zone": "-",
+        "Number": "1"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 3564,
-        "name": "ป้อมตำรวจ",
-        "zone": "-",
-        "Number": "1"
-      },
+      "id": "chatuchak-facility-029",
+      "name": "ป้อมตำรวจ",
+      "type": "service",
+      "coordinates": [
+        100.55236385,
+        13.8008815
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515535,16 +515612,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": 3564,
+        "name": "ป้อมตำรวจ",
+        "zone": "-",
+        "Number": "1"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "JJ Mall",
-        "zone": "-",
-        "Number": "1"
-      },
+      "id": "chatuchak-facility-030",
+      "name": "JJ Mall",
+      "type": "building",
+      "coordinates": [
+        100.54914880000001,
+        13.801916549999998
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515571,16 +515657,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": null,
+        "name": "JJ Mall",
+        "zone": "-",
+        "Number": "1"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "จตุจักรพลาซ่า",
-        "zone": "-",
-        "Number": "1"
-      },
+      "id": "chatuchak-facility-031",
+      "name": "จตุจักรพลาซ่า",
+      "type": "building",
+      "coordinates": [
+        100.54940736,
+        13.80078556
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515611,16 +515706,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": null,
+        "name": "จตุจักรพลาซ่า",
+        "zone": "-",
+        "Number": "1"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "สุขา",
-        "zone": "-",
-        "Number": "2"
-      },
+      "id": "chatuchak-facility-032",
+      "name": "สุขา",
+      "type": "sanitation",
+      "coordinates": [
+        100.55203850000001,
+        13.8005478
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515647,16 +515751,25 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "2",
+      "sourceProperties": {
         "FID": null,
         "name": "สุขา",
         "zone": "-",
-        "Number": "3"
-      },
+        "Number": "2"
+      }
+    },
+    {
+      "id": "chatuchak-facility-033",
+      "name": "สุขา",
+      "type": "sanitation",
+      "coordinates": [
+        100.55153747500002,
+        13.7994324
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515683,16 +515796,25 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "3",
+      "sourceProperties": {
         "FID": null,
         "name": "สุขา",
         "zone": "-",
-        "Number": "4"
-      },
+        "Number": "3"
+      }
+    },
+    {
+      "id": "chatuchak-facility-034",
+      "name": "สุขา",
+      "type": "sanitation",
+      "coordinates": [
+        100.551105275,
+        13.798787025
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515719,16 +515841,25 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "4",
+      "sourceProperties": {
         "FID": null,
         "name": "สุขา",
         "zone": "-",
-        "Number": "5"
-      },
+        "Number": "4"
+      }
+    },
+    {
+      "id": "chatuchak-facility-035",
+      "name": "สุขา",
+      "type": "sanitation",
+      "coordinates": [
+        100.54896550000001,
+        13.79801425
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515755,16 +515886,25 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "5",
+      "sourceProperties": {
         "FID": null,
         "name": "สุขา",
         "zone": "-",
-        "Number": "6"
-      },
+        "Number": "5"
+      }
+    },
+    {
+      "id": "chatuchak-facility-036",
+      "name": "สุขา",
+      "type": "sanitation",
+      "coordinates": [
+        100.548731025,
+        13.7989549
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -515791,16 +515931,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "6",
+      "sourceProperties": {
+        "FID": null,
+        "name": "สุขา",
+        "zone": "-",
+        "Number": "6"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "หอนาฬิกา",
-        "zone": "-",
-        "Number": "1"
-      },
+      "id": "chatuchak-facility-037",
+      "name": "หอนาฬิกา",
+      "type": "common-area",
+      "coordinates": [
+        100.55084893666671,
+        13.799942211111109
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -517251,16 +517400,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": null,
+        "name": "หอนาฬิกา",
+        "zone": "-",
+        "Number": "1"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "สุขา",
-        "zone": "-",
-        "Number": "1"
-      },
+      "id": "chatuchak-facility-038",
+      "name": "สุขา",
+      "type": "sanitation",
+      "coordinates": [
+        100.55171084999999,
+        13.80274975
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -517287,6 +517445,15 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": null,
+        "name": "สุขา",
+        "zone": "-",
+        "Number": "1"
       }
     }
   ]

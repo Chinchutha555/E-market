@@ -10,6 +10,7 @@ import type { ProjectZone } from './market_gis_types'
 
 export function cloneProjects<T>(items: T): T {
   if (!items) return items
+  if (typeof structuredClone === 'function') return structuredClone(items)
   return JSON.parse(JSON.stringify(items))
 }
 
@@ -25,12 +26,13 @@ function normalizeProjectNames(list: ProjectZone[] = []): ProjectZone[] {
   }))
 }
 
-export function mergeMarketProjects(baseProjects: ProjectZone[] = [], savedProjects: ProjectZone[] = []): ProjectZone[] {
+export function mergeMarketProjects(baseProjects: ProjectZone[] = [], savedProjects: ProjectZone[] = [], clonePayload = true): ProjectZone[] {
+  const copy = (projects: ProjectZone[]) => clonePayload ? cloneProjects(projects) : projects.slice()
   if (!Array.isArray(savedProjects) || savedProjects.length === 0) {
-    return normalizeProjectNames(cloneProjects(baseProjects))
+    return normalizeProjectNames(copy(baseProjects))
   }
   if (!Array.isArray(baseProjects) || baseProjects.length === 0) {
-    return normalizeProjectNames(cloneProjects(savedProjects))
+    return normalizeProjectNames(copy(savedProjects))
   }
 
   const coreBaseProjects = baseProjects.filter(p => !String(p.id).startsWith('zone-'))
@@ -40,10 +42,10 @@ export function mergeMarketProjects(baseProjects: ProjectZone[] = [], savedProje
   // If savedProjects only contains newly drawn custom zones (none of the base projects),
   // combine all coreBaseProjects with the custom zones so original market zones never disappear.
   if (!savedHasAnyBaseProject && coreBaseProjects.length > 0) {
-    return normalizeProjectNames([...cloneProjects(coreBaseProjects), ...cloneProjects(savedProjects)])
+    return normalizeProjectNames([...copy(coreBaseProjects), ...copy(savedProjects)])
   }
 
-  return normalizeProjectNames(cloneProjects(savedProjects))
+  return normalizeProjectNames(copy(savedProjects))
 }
 
 export const MARKET_SLUG_MAP: Record<string, string> = {
@@ -74,13 +76,36 @@ export const MARKET_SLUG_MAP: Record<string, string> = {
 }
 
 const marketCache = new Map<string, MarketGisConfig>()
+// คำขอที่กำลังโหลดอยู่ ใช้ร่วมกันเมื่อหลายคอมโพเนนต์ขอตลาดเดียวกันพร้อมกัน
+const marketInflight = new Map<string, Promise<MarketGisConfig>>()
+// facilities ที่มากับ gis-config เดียวกัน (กันต้องโหลดก้อน ~7MB ซ้ำอีกรอบ)
+const marketFacilities = new Map<string, any[]>()
+export const getLoadedMarketFacilities = (marketIdOrSlug: string | number): any[] | undefined =>
+  marketFacilities.get(getMarketSlug(marketIdOrSlug))
+
+// ใช้ผลของคำขอเดียวกันร่วมกันภายในช่วงสั้นๆ (หน้าและแผนที่ขอ gis-config/draft ก้อนใหญ่พร้อมกัน)
+const sharedRequests = new Map<string, { at: number; promise: Promise<any> }>()
+export function sharedRequest<T>(key: string, factory: () => Promise<T>, ttlMs = 4000): Promise<T> {
+  const hit = sharedRequests.get(key)
+  if (hit && Date.now() - hit.at < ttlMs) return hit.promise
+  const promise = factory()
+  sharedRequests.set(key, { at: Date.now(), promise })
+  promise.catch(() => { if (sharedRequests.get(key)?.promise === promise) sharedRequests.delete(key) })
+  return promise
+}
 
 export function clearMarketGisCache(marketIdOrSlug?: string | number | null): void {
   if (!marketIdOrSlug) {
     marketCache.clear()
+    marketInflight.clear()
+    marketFacilities.clear()
+    sharedRequests.clear()
     return
   }
-  marketCache.delete(getMarketSlug(marketIdOrSlug))
+  const slug = getMarketSlug(marketIdOrSlug)
+  marketCache.delete(slug)
+  marketInflight.delete(slug)
+  marketFacilities.delete(slug)
 }
 
 /**
@@ -109,34 +134,55 @@ function resolveBackendApiBase(): string {
  * Fetch and load a single market GIS layout on-demand from the Backend API
  * (`GET /api/v1/markets/<slug>/gis-config`) with immediate cache and fallback to static registry.
  */
-export async function loadMarketGisJson(marketIdOrSlug?: string | number | null, forceReload = false): Promise<MarketGisConfig> {
+export function loadMarketGisJson(marketIdOrSlug?: string | number | null, forceReload = false, signal?: AbortSignal): Promise<MarketGisConfig> {
   const slug = getMarketSlug(marketIdOrSlug || '1')
 
   if (!forceReload && marketCache.has(slug)) {
-    return marketCache.get(slug)!
+    return Promise.resolve(marketCache.get(slug)!)
+  }
+  // A page-scoped request must be independently abortable. Do not attach it to
+  // the shared in-flight promise because aborting one hidden page would reject
+  // every other consumer waiting for the same market.
+  if (signal) return fetchMarketGisJson(slug, signal)
+  if (!forceReload && marketInflight.has(slug)) {
+    return marketInflight.get(slug)!
   }
 
+  const pending = fetchMarketGisJson(slug).finally(() => {
+    if (marketInflight.get(slug) === pending) marketInflight.delete(slug)
+  })
+  marketInflight.set(slug, pending)
+  return pending
+}
+
+async function fetchMarketGisJson(slug: string, signal?: AbortSignal): Promise<MarketGisConfig> {
   const baseConfig = getMarketGisConfig(slug)
 
   // Fetch authoritative GIS projects & facilities from Backend API
   if (typeof window !== 'undefined' && typeof fetch === 'function') {
     try {
       const apiBase = resolveBackendApiBase()
-      const res = await fetch(`${apiBase}/markets/${encodeURIComponent(slug)}/gis-config`, { cache: 'no-store' })
+      const res = await fetch(`${apiBase}/markets/${encodeURIComponent(slug)}/gis-config`, { cache: 'default', signal })
       if (res.ok) {
         const payload = await res.json()
         const gisData = payload?.data ?? payload
+        marketFacilities.set(slug, Array.isArray(gisData?.facilities) ? gisData.facilities : [])
         const apiProjects = Array.isArray(gisData?.projects) ? gisData.projects : []
         if (apiProjects.length > 0) {
           const mergedConfig: MarketGisConfig = {
             ...baseConfig,
-            projects: mergeMarketProjects(baseConfig.projects, apiProjects)
+            // API payload is cached and treated as read-only by map/booking views.
+            // Keep nested geometry by reference here; cloning a 10k-stall market
+            // blocks the main thread for seconds. The GIS editor creates its own
+            // mutable copy when it loads this cached config.
+            projects: mergeMarketProjects(baseConfig.projects, apiProjects, false)
           }
           marketCache.set(slug, mergedConfig)
           return mergedConfig
         }
       }
     } catch (e) {
+      if (signal?.aborted) throw e
       console.warn(`[market_loader] Failed to fetch GIS config from backend for ${slug}, using static fallback`, e)
     }
   }

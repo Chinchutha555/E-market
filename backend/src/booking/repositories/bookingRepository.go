@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"emarket-api/models"
@@ -19,6 +20,25 @@ type repository struct {
 
 func NewRepository(db *gorm.DB) domains.Repository {
 	return &repository{conn: db}
+}
+
+// ProcessWaitlistLifecycle runs a write transaction with correlated sub-queries.
+// List reads only need it to catch time-based expiry, so they run it at most once
+// per interval; every write path still calls it directly.
+const waitlistLifecycleReadInterval = 15 * time.Second
+
+var lastWaitlistLifecycleRun atomic.Int64
+
+func (r *repository) processWaitlistLifecycleThrottled() {
+	now := time.Now().UnixNano()
+	last := lastWaitlistLifecycleRun.Load()
+	if now-last < int64(waitlistLifecycleReadInterval) {
+		return
+	}
+	if !lastWaitlistLifecycleRun.CompareAndSwap(last, now) {
+		return
+	}
+	_ = r.ProcessWaitlistLifecycle()
 }
 
 // promoteOrReleaseStallOnTx checks if a stall has an active primary holder or active waitlist offer;
@@ -453,7 +473,7 @@ func (r *repository) UpdatePolicySettings(marketID int, marketName string, lease
 }
 
 func (r *repository) FindAll(filter requests.BookingFilter, ownerID *int) ([]models.Booking, error) {
-	_ = r.ProcessWaitlistLifecycle()
+	r.processWaitlistLifecycleThrottled()
 	var bookings []models.Booking
 	query := r.conn.Model(&models.Booking{}).Where("status = 'A'")
 	if filter.MarketID != 0 {
@@ -517,11 +537,39 @@ func (r *repository) FindActiveDuplicate(stallIdent string, userID int, applican
 }
 
 func (r *repository) HasActiveHolder(stallIdent string) (bool, error) {
+	cleanIdent := strings.TrimSpace(stallIdent)
+	if cleanIdent == "" {
+		return false, nil
+	}
+
 	var count int64
 	err := r.conn.Model(&models.Booking{}).
-		Where("stall_ident = ? AND status = 'A' AND queue_number = 0 AND booking_status NOT IN ('waiting_queue', 'rejected', 'cancelled', 'not_interested', 'no_show', 'terminated')", stallIdent).
+		Where("stall_ident = ? AND status = 'A' AND queue_number = 0 AND booking_status NOT IN ('waiting_queue', 'rejected', 'cancelled', 'not_interested', 'no_show', 'terminated')", cleanIdent).
 		Count(&count).Error
-	return count > 0, err
+	if err != nil || count > 0 {
+		return count > 0, err
+	}
+
+	// Contracts are also a source of truth for occupancy. Legacy contracts may
+	// contain more than one comma-separated stall code, so compare each token
+	// instead of relying on an exact database match. This keeps direct booking
+	// requests from bypassing the occupied state shown on the booking map.
+	var activeContracts []models.Contract
+	if err := r.conn.Model(&models.Contract{}).
+		Select("stall_ident").
+		Where("status = 'A' AND contract_state = 'active'").
+		Find(&activeContracts).Error; err != nil {
+		return false, err
+	}
+	for _, contract := range activeContracts {
+		for _, rawIdent := range strings.Split(contract.StallIdent, ",") {
+			if strings.EqualFold(strings.TrimSpace(rawIdent), cleanIdent) {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }
 
 func (r *repository) LookupUserByID(userID int) (*models.User, error) {

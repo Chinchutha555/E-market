@@ -1,23 +1,12 @@
 <template>
   <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
     <div class="modal-content" style="max-width: 600px;">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
-          <div>
-            <h3 style="font-size: 1.15rem; font-weight: 700;">
-              {{ isQueueMode ? 'ต่อคิวแผงติดจอง (Queue Waiting List)' : 'จองนัดหมายดูแผงเช่า (Book Stall Visit)' }}
-            </h3>
-            <div style="font-size: 0.8rem; color: var(--primary);">แผงเลขที่: {{ stall?.stall_number }} (โซน {{ stall?.zone_code || stall?.zone?.code || 'ทั่วไป' }})</div>
-          </div>
-        </div>
-        <button class="btn-logout" @click="$emit('close')" aria-label="ปิด">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
+      <AppModalHeader
+        :title="isQueueMode ? 'ต่อคิวแผงติดจอง' : 'จองนัดหมายดูแผงเช่า'"
+        :subtitle="`แผง ${stall?.stall_number || '-'} · โซน ${stall?.zone_code || stall?.zone?.code || 'ทั่วไป'}`"
+        icon="pin"
+        @close="$emit('close')"
+      />
 
       <!-- Success State -->
       <div v-if="isSuccess" class="modal-body" style="text-align: center; padding: 40px 20px;">
@@ -28,13 +17,13 @@
             </svg>
           </div>
         </div>
-        <h4 style="font-size: 1.25rem; font-weight: 700; color: #059669; margin-bottom: 8px;">
+        <h4 style="font-size: 1.25rem; font-weight: 700; color: var(--tx-059669); margin-bottom: 8px;">
           {{ isQueueMode ? 'คุณเข้าสู่ลำดับคิวเรียบร้อยแล้ว!' : 'ส่งคำขอจองดูแผงเรียบร้อยแล้ว!' }}
         </h4>
         <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; max-width: 440px; margin: 0 auto 24px;">
-          เลขที่คำขอจอง: <strong style="color: #0f172a;">{{ successBookingNumber }}</strong><br/>
+          เลขที่คำขอจอง: <strong style="color: var(--tx-0f172a);">{{ successBookingNumber }}</strong><br/>
           <template v-if="isQueueMode">
-            สถานะของคุณ: <strong style="color: #d97706;">รอคิว (Waiting List)</strong><br/>
+            สถานะของคุณ: <strong style="color: var(--tx-d97706);">รอคิว (Waiting List)</strong><br/>
             เมื่อผู้ถือแผงคนก่อนหน้าสละสิทธิ์หรือหมดเวลา ระบบจะเลื่อนคิวของคุณขึ้นมาถือแผงและส่งการแจ้งเตือนให้เลือกวันนัดชมทันที
           </template>
           <template v-else>
@@ -42,10 +31,8 @@
           </template>
         </div>
         <div style="display: flex; justify-content: center; gap: 12px;">
-          <NuxtLink to="/bookings" class="btn btn-primary" @click="$emit('close')">
-            ดูรายการการจองของฉัน
-          </NuxtLink>
-          <button class="btn btn-secondary" @click="$emit('close')">ปิดหน้าต่าง</button>
+          <AppButton to="/bookings" variant="primary" size="md" @click="$emit('close')">ดูรายการการจองของฉัน</AppButton>
+          <AppButton variant="secondary" size="md" @click="$emit('close')">ปิดหน้าต่าง</AppButton>
         </div>
       </div>
 
@@ -53,26 +40,26 @@
       <form v-else novalidate @submit.prevent="handleSubmit">
         <div class="modal-body">
           <!-- Queue Mode Notice -->
-          <div v-if="isQueueMode" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
-            <div style="color: #d97706; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <div v-if="isQueueMode" style="background: var(--bg-fffbeb); border: 1px solid var(--bd-fde68a); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+            <div style="color: var(--tx-d97706); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"></path><path d="M5 2h14"></path><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path></svg>
             </div>
-            <div style="font-size: 0.85rem; color: #92400e;">
+            <div style="font-size: 0.85rem; color: var(--tx-92400e);">
               <strong>แผงนี้มีผู้จองถือสิทธิ์อยู่:</strong> ท่านกำลังทำรายการ <strong>"ต่อคิว"</strong> (จะได้คิวถัดไปอัตโนมัติ โดยไม่ต้องเลือกวันนัดหมายในขั้นตอนนี้)
             </div>
           </div>
 
           <!-- Stall Summary Info Banner -->
-          <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid #a7f3d0; padding: 14px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid var(--bd-a7f3d0); padding: 14px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div>
-              <div style="font-weight: 700; font-size: 1rem; color: #0f172a;">แผง {{ stall?.stall_number }} - {{ stall?.category || stall?.category_name || 'ทั่วไป' }}</div>
+              <div style="font-weight: 700; font-size: 1rem; color: var(--tx-0f172a);">แผง {{ stall?.stall_number }} - {{ stall?.category || stall?.category_name || 'ทั่วไป' }}</div>
               <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
                 ขนาด: {{ stall?.size_width || 2 }} × {{ stall?.size_length || 2 }} ม. ({{ stall?.area_sqm || 4 }} ตร.ม.)
               </div>
             </div>
             <div style="text-align: right;">
-              <div style="font-size: 1.15rem; font-weight: 800; color: #059669;">฿{{ Number(stall?.monthly_rate || 2500).toLocaleString() }}</div>
-              <div style="font-size: 0.72rem; color: var(--text-dim);">บาท / เดือน (รายวัน: ฿{{ stall?.daily_rate || 100 }})</div>
+              <div style="font-size: 1.15rem; font-weight: 800; color: var(--tx-059669);">฿{{ Number(stall?.monthly_rate || 2500).toLocaleString() }}</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">บาท / เดือน (รายวัน: ฿{{ stall?.daily_rate || 100 }})</div>
             </div>
           </div>
 
@@ -128,12 +115,10 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="$emit('close')">ยกเลิก</button>
-          <button type="submit" class="btn" :class="isQueueMode ? 'btn-primary' : 'btn-success'" :disabled="submitting">
-            <span v-if="submitting">กำลังส่งคำขอ...</span>
-            <span v-else-if="isQueueMode">ยืนยันการต่อคิวแผงนี้</span>
-            <span v-else>ยืนยันการจองดูแผง</span>
-          </button>
+          <AppButton type="button" variant="secondary" size="md" @click="$emit('close')">ยกเลิก</AppButton>
+          <AppButton type="submit" :variant="isQueueMode ? 'primary' : 'success'" size="md" :loading="submitting">
+            {{ isQueueMode ? 'ยืนยันการต่อคิวแผงนี้' : 'ยืนยันการจองดูแผง' }}
+          </AppButton>
         </div>
       </form>
     </div>

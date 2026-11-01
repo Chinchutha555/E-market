@@ -135,21 +135,21 @@ const handleBack = async () => {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
+  border: 1.5px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #334155;
+  color: var(--tx-334155);
   transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   flex-shrink: 0;
 }
 
 .body-breadcrumb-back-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--bg-f8fafc);
+  border-color: var(--bd-cbd5e1);
   color: var(--primary);
   transform: translateX(-1px);
 }
@@ -168,7 +168,7 @@ const handleBack = async () => {
 }
 
 .body-breadcrumb-link {
-  color: #64748b;
+  color: var(--tx-64748b);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.15s ease;
@@ -180,14 +180,14 @@ const handleBack = async () => {
 }
 
 .body-breadcrumb-sep {
-  color: #cbd5e1;
+  color: var(--tx-cbd5e1);
   font-size: 1rem;
   font-weight: 300;
   user-select: none;
 }
 
 .body-breadcrumb-current {
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-weight: 700;
   letter-spacing: -0.01em;
 }

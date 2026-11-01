@@ -77,10 +77,6 @@
         [
           100.5963908,
           13.7114846
-        ],
-        [
-          100.596373,
-          13.7114606
         ]
       ],
       "floors": [
@@ -5005,14 +5001,16 @@
       ]
     }
   ],
-  "siteFeatures": [
+  "siteFeatures": [],
+  "facilities": [
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 8,
-        "name": "ห้องน้ำ",
-        "number": 1
-      },
+      "id": "singhanat-facility-001",
+      "name": "ห้องน้ำ",
+      "type": "sanitation",
+      "coordinates": [
+        100.59643056666667,
+        13.711475522222221
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -5059,15 +5057,24 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 8,
+        "name": "ห้องน้ำ",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 92,
-        "name": "ห้องเครื่อง",
-        "number": 1
-      },
+      "id": "singhanat-facility-002",
+      "name": "ห้องเครื่อง",
+      "type": "service",
+      "coordinates": [
+        100.597150925,
+        13.711174524999999
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -5094,15 +5101,24 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 92,
+        "name": "ห้องเครื่อง",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 113,
-        "name": "สำนักงานตลาด",
-        "number": 1
-      },
+      "id": "singhanat-facility-003",
+      "name": "สำนักงานตลาด",
+      "type": "service",
+      "coordinates": [
+        100.59696302500001,
+        13.7110805
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -5129,6 +5145,14 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 113,
+        "name": "สำนักงานตลาด",
+        "number": 1
       }
     }
   ]

@@ -132,6 +132,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 import { useAppAlert } from '~/composables/useAppAlert'
+import { useBodyScrollLock } from '~/composables/useBodyScrollLock'
 
 const {
   isOpen,
@@ -145,6 +146,8 @@ const {
   handleConfirm,
   handleCancel
 } = useAppAlert()
+
+useBodyScrollLock(isOpen)
 
 const handleKeydown = (e: KeyboardEvent) => {
   if (!isOpen.value) return
@@ -188,7 +191,7 @@ onUnmounted(() => {
 }
 
 .app-alert-card {
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border-radius: 18px;
   width: 100%;
   max-width: 420px;
@@ -211,44 +214,44 @@ onUnmounted(() => {
 }
 
 .app-alert-icon-wrapper.icon-warning {
-  background: #fef3c7;
-  color: #d97706;
-  border: 1px solid #fde68a;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
+  border: 1px solid var(--bd-fde68a);
   box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
 }
 
 .app-alert-icon-wrapper.icon-error {
-  background: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
+  border: 1px solid var(--bd-fecaca);
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
 }
 
 .app-alert-icon-wrapper.icon-success {
-  background: #ecfdf5;
-  color: #10b981;
-  border: 1px solid #a7f3d0;
+  background: var(--bg-ecfdf5);
+  color: var(--tx-10b981);
+  border: 1px solid var(--bd-a7f3d0);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
 }
 
 .app-alert-icon-wrapper.icon-info {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-bfdbfe);
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 }
 
 .app-alert-title {
   font-size: 1.15rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   margin: 0 0 8px 0;
   line-height: 1.35;
 }
 
 .app-alert-message {
   font-size: 0.92rem;
-  color: #475569;
+  color: var(--tx-475569);
   line-height: 1.55;
   margin: 0 0 24px 0;
   word-break: break-word;
@@ -267,16 +270,16 @@ onUnmounted(() => {
   border-radius: 10px;
   font-size: 0.9rem;
   font-weight: 600;
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-475569);
+  border: 1px solid var(--bd-cbd5e1);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-alert-cancel:hover {
-  background: #e2e8f0;
-  color: #1e293b;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-1e293b);
 }
 
 .btn-alert-confirm {

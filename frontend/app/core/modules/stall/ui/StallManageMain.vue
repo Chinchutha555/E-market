@@ -7,7 +7,7 @@
       :style="isMapOverviewMode ? { ...(leftPanelWidth ? { '--lp-w': leftPanelWidth } : {}), ...(rightSidePanelWidth ? { '--side-w': `${rightSidePanelWidth}px` } : {}) } : undefined"
     >
       <!-- สวิตช์มุมมองแผนที่ (ข้อมูลแผง / การชำระเงิน / การจดมิเตอร์) แบบ Capsule Pill ลอยมุมซ้ายบน -->
-      <div v-if="isMapOverviewMode" ref="viewDropdownWrapRef" class="map-mode-dropdown-wrap" :class="{ 'is-compact': !!rightSidePanelWidth }">
+      <div v-if="isMapOverviewMode && !meterCardCode" ref="viewDropdownWrapRef" class="map-mode-dropdown-wrap" :class="{ 'is-compact': !!rightSidePanelWidth }">
         <button
           type="button"
           class="map-mode-trigger-btn"
@@ -123,15 +123,25 @@
           v-if="!costTool && pageMode === 'meters'"
           type="button"
           class="map-meter-float-btn"
-          title="เปิดตารางจดมิเตอร์น้ำ-ไฟ"
-          @click="costTool = 'utility'"
+          title="ดูข้อมูลมิเตอร์ในแผนที่"
+          aria-label="ดูข้อมูลมิเตอร์ในแผนที่"
+          @click="meterSummaryOpen = true"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m12 14 4-4"></path>
-            <path d="M3.34 19a10 10 0 1 1 17.32 0"></path>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+            <path d="M3 9h18"></path>
+            <path d="M3 15h18"></path>
+            <path d="M12 3v18"></path>
           </svg>
-          <span>ตารางจดมิเตอร์น้ำ-ไฟ</span>
         </button>
+
+        <div v-if="meterSummaryOpen" class="map-cost-float meter-summary-float">
+          <StallMeterSummaryPanel
+            :projects="meterSummaryProjects"
+            @close="meterSummaryOpen = false"
+            @open-project="openMeterProject"
+          />
+        </div>
 
         <button
           v-if="!costTool && pageMode === 'payments'"
@@ -146,6 +156,21 @@
           </svg>
           <span>รายการบิลแผงค้า</span>
         </button>
+
+        <StallMeterRecordCard
+          v-if="pageMode === 'meters' && meterCardCode"
+          :key="meterCardCode"
+          :code="meterCardCode"
+          :label="meterCardLabel"
+          :project-name="selectedProject ? cleanProjectName(selectedProject.name) : ''"
+          :pending-left="meterPendingLeft"
+          :has-next="meterHasNext"
+          :average-electric="meterAverages.electric"
+          :average-water="meterAverages.water"
+          @back="closeMeterCard"
+          @saved="handleMeterRecorded"
+          @skipped="handleMeterRecorded"
+        />
 
         <div v-if="costTool" class="map-cost-float" role="dialog" :aria-label="costTool === 'utility' ? 'รายการค่าน้ำ ค่าไฟ' : 'รายการบิลแผงเช่าชั่วคราว'">
           <StallUtilityBillingPanel
@@ -430,7 +455,7 @@
                   </td>
                 </tr>
                 <tr v-if="filteredZoneRows.length === 0">
-                  <td colspan="9" class="dash-empty-row">ไม่พบข้อมูลโซน</td>
+                  <td colspan="9" class="dash-empty-row"><AppEmptyState variant="compact" icon="search" title="ไม่พบข้อมูลโซน" description="ลองเปลี่ยนตัวกรองเพื่อดูข้อมูลอื่น" /></td>
                 </tr>
               </tbody>
             </table>
@@ -453,56 +478,56 @@
         <!-- 1. Four Financial Metric Cards -->
         <div class="dash-kpi-ribbon" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
           <div class="map-summary-card summary-total">
-            <span class="map-summary-icon" style="background: #eff6ff; color: #2563eb;">
+            <span class="map-summary-icon" style="background: var(--bg-eff6ff); color: var(--tx-2563eb);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
             </span>
             <span class="map-summary-content">
               <small class="map-summary-title">ยอดเรียกเก็บประจำเดือน</small>
               <span class="map-summary-value-row">
                 <strong class="map-summary-count" style="font-size: 1.25rem;">฿284,500</strong>
-                <em class="map-summary-unit-pill" style="background: #eff6ff; color: #2563eb;">42 บิล</em>
+                <em class="map-summary-unit-pill" style="background: var(--bg-eff6ff); color: var(--tx-2563eb);">42 บิล</em>
               </span>
               <span class="map-summary-meta">อัตราเฉลี่ย ฿6,773 / แผง</span>
             </span>
           </div>
 
           <div class="map-summary-card summary-available">
-            <span class="map-summary-icon" style="background: #ecfdf5; color: #059669;">
+            <span class="map-summary-icon" style="background: var(--bg-ecfdf5); color: var(--tx-059669);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
             </span>
             <span class="map-summary-content">
               <small class="map-summary-title">จัดเก็บสำเร็จแล้ว</small>
               <span class="map-summary-value-row">
-                <strong class="map-summary-count" style="font-size: 1.25rem; color: #059669;">฿192,000</strong>
-                <em class="map-summary-unit-pill" style="background: #ecfdf5; color: #059669;">67.5%</em>
+                <strong class="map-summary-count" style="font-size: 1.25rem; color: var(--tx-059669);">฿192,000</strong>
+                <em class="map-summary-unit-pill" style="background: var(--bg-ecfdf5); color: var(--tx-059669);">67.5%</em>
               </span>
               <span class="map-summary-meta">ชำระแล้ว 28 จาก 42 รายการ</span>
             </span>
           </div>
 
           <div class="map-summary-card summary-reserved">
-            <span class="map-summary-icon" style="background: #fffbeb; color: #d97706;">
+            <span class="map-summary-icon" style="background: var(--bg-fffbeb); color: var(--tx-d97706);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             </span>
             <span class="map-summary-content">
               <small class="map-summary-title">รอชำระในกำหนด</small>
               <span class="map-summary-value-row">
-                <strong class="map-summary-count" style="font-size: 1.25rem; color: #d97706;">฿58,500</strong>
-                <em class="map-summary-unit-pill" style="background: #fffbeb; color: #d97706;">9 บิล</em>
+                <strong class="map-summary-count" style="font-size: 1.25rem; color: var(--tx-d97706);">฿58,500</strong>
+                <em class="map-summary-unit-pill" style="background: var(--bg-fffbeb); color: var(--tx-d97706);">9 บิล</em>
               </span>
               <span class="map-summary-meta">ครบกำหนดสิ้นเดือนนี้</span>
             </span>
           </div>
 
           <div class="map-summary-card summary-action-required">
-            <span class="map-summary-icon" style="background: #fef2f2; color: #dc2626;">
+            <span class="map-summary-icon" style="background: var(--bg-fef2f2); color: var(--tx-dc2626);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
             </span>
             <span class="map-summary-content">
               <small class="map-summary-title">ค้างชำระเกินกำหนด</small>
               <span class="map-summary-value-row">
-                <strong class="map-summary-count" style="font-size: 1.25rem; color: #dc2626;">฿34,000</strong>
-                <em class="map-summary-unit-pill" style="background: #fee2e2; color: #dc2626;">5 บิล</em>
+                <strong class="map-summary-count" style="font-size: 1.25rem; color: var(--tx-dc2626);">฿34,000</strong>
+                <em class="map-summary-unit-pill" style="background: var(--bg-fee2e2); color: var(--tx-dc2626);">5 บิล</em>
               </span>
               <span class="map-summary-meta">ต้องออกหนังสือติดตามหนี้</span>
             </span>
@@ -593,7 +618,7 @@
                     <div class="table-tenant-name">{{ st.tenant }}</div>
                     <small class="table-tenant-sub">{{ st.zone }}</small>
                   </td>
-                  <td style="text-align: right; font-weight: 700; color: #dc2626;">
+                  <td style="text-align: right; font-weight: 700; color: var(--tx-dc2626);">
                     {{ st.amountText }}
                   </td>
                   <td style="text-align: center;">
@@ -611,58 +636,58 @@
         <!-- 1. Four Meter Progress Cards -->
         <div class="dash-kpi-ribbon" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
           <div class="map-summary-card summary-total">
-            <span class="map-summary-icon" style="background: #eff6ff; color: #2563eb;">
+            <span class="map-summary-icon" style="background: var(--bg-eff6ff); color: var(--tx-2563eb);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 14 4-4"></path><path d="M3.34 19a10 10 0 1 1 17.32 0"></path></svg>
             </span>
             <span class="map-summary-content">
               <small class="map-summary-title">ความคืบหน้าการจด</small>
               <span class="map-summary-value-row">
-                <strong class="map-summary-count" style="font-size: 1.25rem; color: #2563eb;">83.3%</strong>
-                <em class="map-summary-unit-pill" style="background: #eff6ff; color: #2563eb;">35/42 จุด</em>
+                <strong class="map-summary-count" style="font-size: 1.25rem; color: var(--tx-2563eb);">{{ meterSummary.completionRate }}%</strong>
+                <em class="map-summary-unit-pill" style="background: var(--bg-eff6ff); color: var(--tx-2563eb);">{{ meterSummary.recordedCount }}/{{ meterSummary.totalCount }} จุด</em>
               </span>
-              <span class="map-summary-meta">เหลือ 7 จุดที่ต้องจด</span>
+              <span class="map-summary-meta">เหลือ {{ meterSummary.pendingCount }} จุดที่ต้องจด</span>
             </span>
           </div>
 
           <div class="map-summary-card summary-available">
-            <span class="map-summary-icon" style="background: #ecfdf5; color: #059669;">
+            <span class="map-summary-icon" style="background: var(--bg-ecfdf5); color: var(--tx-059669);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
             </span>
             <span class="map-summary-content">
               <small class="map-summary-title">ปริมาณการใช้น้ำรวม</small>
               <span class="map-summary-value-row">
-                <strong class="map-summary-count" style="font-size: 1.25rem; color: #059669;">1,428</strong>
-                <em class="map-summary-unit-pill" style="background: #ecfdf5; color: #059669;">ลบ.ม.</em>
+                <strong class="map-summary-count" style="font-size: 1.25rem; color: var(--tx-059669);">{{ meterUsageSummary.waterTotal.toLocaleString('th-TH') }}</strong>
+                <em class="map-summary-unit-pill" style="background: var(--bg-ecfdf5); color: var(--tx-059669);">ลบ.ม.</em>
               </span>
-              <span class="map-summary-meta">เฉลี่ย 34 ลบ.ม. / แผง</span>
+              <span class="map-summary-meta">เฉลี่ย {{ meterUsageSummary.waterAverage.toLocaleString('th-TH') }} ลบ.ม. / แผงที่จดแล้ว</span>
             </span>
           </div>
 
           <div class="map-summary-card summary-reserved">
-            <span class="map-summary-icon" style="background: #fffbeb; color: #d97706;">
+            <span class="map-summary-icon" style="background: var(--bg-fffbeb); color: var(--tx-d97706);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
             </span>
             <span class="map-summary-content">
               <small class="map-summary-title">ปริมาณการใช้ไฟฟ้ารวม</small>
               <span class="map-summary-value-row">
-                <strong class="map-summary-count" style="font-size: 1.25rem; color: #d97706;">12,850</strong>
-                <em class="map-summary-unit-pill" style="background: #fffbeb; color: #d97706;">หน่วย (kWh)</em>
+                <strong class="map-summary-count" style="font-size: 1.25rem; color: var(--tx-d97706);">{{ meterUsageSummary.electricTotal.toLocaleString('th-TH') }}</strong>
+                <em class="map-summary-unit-pill" style="background: var(--bg-fffbeb); color: var(--tx-d97706);">หน่วย (kWh)</em>
               </span>
-              <span class="map-summary-meta">เฉลี่ย 306 หน่วย / แผง</span>
+              <span class="map-summary-meta">เฉลี่ย {{ meterUsageSummary.electricAverage.toLocaleString('th-TH') }} หน่วย / แผงที่จดแล้ว</span>
             </span>
           </div>
 
           <div class="map-summary-card summary-action-required">
-            <span class="map-summary-icon" style="background: #f5f3ff; color: #7c3aed;">
+            <span class="map-summary-icon" style="background: var(--bg-f5f3ff); color: var(--tx-7c3aed);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             </span>
             <span class="map-summary-content">
               <small class="map-summary-title">ตรวจพบค่าผิดปกติ</small>
               <span class="map-summary-value-row">
-                <strong class="map-summary-count" style="font-size: 1.25rem; color: #7c3aed;">2</strong>
-                <em class="map-summary-unit-pill" style="background: #f5f3ff; color: #7c3aed;">จุด</em>
+                <strong class="map-summary-count" style="font-size: 1.25rem; color: var(--tx-7c3aed);">{{ meterSummary.anomalyCount }}</strong>
+                <em class="map-summary-unit-pill" style="background: var(--bg-f5f3ff); color: var(--tx-7c3aed);">จุด</em>
               </span>
-              <span class="map-summary-meta">น้ำพุ่งสูง 1 • ไฟไม่เดิน 1</span>
+              <span class="map-summary-meta">{{ meterSummary.anomalyCount ? 'สูงเกินค่าเฉลี่ยของโครงการ' : 'ไม่พบค่าที่ต้องตรวจสอบ' }}</span>
             </span>
           </div>
         </div>
@@ -671,7 +696,7 @@
         <div class="dash-card">
           <h3 class="dash-card-title">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            จุดที่ตรวจพบความผิดปกติ / ต้องตรวจสอบหน้างาน (2 จุด)
+            จุดที่ตรวจพบความผิดปกติ / ต้องตรวจสอบหน้างาน ({{ meterSummary.anomalyCount }} จุด)
           </h3>
           <div class="dash-table-wrap">
             <table class="dash-mini-table">
@@ -684,17 +709,14 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><span class="table-stall-pill">A-04</span></td>
-                  <td><span class="table-type-badge badge-water">มิเตอร์น้ำ</span></td>
-                  <td><strong>85 ลบ.ม.</strong> <small style="color: #dc2626;">(+240%)</small></td>
-                  <td><span class="table-status-pill pill-anomaly">สงสัยท่อแตก/รั่ว</span></td>
+                <tr v-for="row in meterAnomalyRows" :key="row.code">
+                  <td><span class="table-stall-pill">{{ row.label }}</span></td>
+                  <td><span class="table-type-badge badge-electric">น้ำ / ไฟ</span></td>
+                  <td><strong>{{ (row.electricUsed || 0).toLocaleString('th-TH') }} kWh</strong> · {{ (row.waterUsed || 0).toLocaleString('th-TH') }} ลบ.ม.</td>
+                  <td><span class="table-status-pill pill-anomaly">สูงเกินค่าเฉลี่ยโครงการ</span></td>
                 </tr>
-                <tr>
-                  <td><span class="table-stall-pill">B-12</span></td>
-                  <td><span class="table-type-badge badge-electric">มิเตอร์ไฟ</span></td>
-                  <td><strong>0 kWh</strong> <small style="color: #64748b;">(คงที่)</small></td>
-                  <td><span class="table-status-pill pill-anomaly">สงสัยมิเตอร์หยุดเดิน</span></td>
+                <tr v-if="meterAnomalyRows.length === 0">
+                  <td colspan="4" class="dash-empty-row">ไม่พบค่ามิเตอร์ผิดปกติในรอบนี้</td>
                 </tr>
               </tbody>
             </table>
@@ -708,23 +730,14 @@
             ความคืบหน้าการจดมิเตอร์แยกตามโซน
           </h3>
           <div class="dash-breakdown-list">
-            <div class="dash-breakdown-row">
-              <span>โซน A (แผงอาหารสด)</span>
-              <strong>100% <small>(15/15 จุด - ครบแล้ว)</small></strong>
-            </div>
-            <div class="dash-progress-bar"><div class="dash-progress-fill" style="width: 100%; background: #059669;"></div></div>
-
-            <div class="dash-breakdown-row">
-              <span>โซน B (สินค้าแฟชั่น/ทั่วไป)</span>
-              <strong>92.8% <small>(13/14 จุด - เหลือ 1 จุด)</small></strong>
-            </div>
-            <div class="dash-progress-bar"><div class="dash-progress-fill" style="width: 92.8%; background: #2563eb;"></div></div>
-
-            <div class="dash-breakdown-row">
-              <span>โซน C (อาหารปรุงสำเร็จ)</span>
-              <strong>53.8% <small>(7/13 จุด - เหลือ 6 จุด)</small></strong>
-            </div>
-            <div class="dash-progress-bar"><div class="dash-progress-fill" style="width: 53.8%; background: #d97706;"></div></div>
+            <template v-for="project in meterLiveProjects" :key="project.id">
+              <div class="dash-breakdown-row">
+                <span>{{ project.name }}</span>
+                <strong>{{ project.total ? Math.round((project.recorded / project.total) * 100) : 0 }}% <small>({{ project.recorded }}/{{ project.total }} จุด{{ project.recorded === project.total ? ' · ครบแล้ว' : ` · เหลือ ${project.total - project.recorded} จุด` }})</small></strong>
+              </div>
+              <div class="dash-progress-bar"><div class="dash-progress-fill" :style="{ width: `${project.total ? (project.recorded / project.total) * 100 : 0}%`, background: project.recorded === project.total ? '#059669' : '#2563eb' }"></div></div>
+            </template>
+            <div v-if="meterLiveProjects.length === 0" class="dash-empty-row">ยังไม่มีแผงที่ต้องจดมิเตอร์ในรอบนี้</div>
           </div>
         </div>
       </template>
@@ -748,7 +761,7 @@
 
           <!-- ภาพรวมตลาด: KPI ลอยเหนือผัง ตามมุมมองที่เลือก (การชำระเงิน / การจดมิเตอร์ / ข้อมูลแผง) -->
           <div
-            v-if="isMapOverviewMode && pageMode === 'payments'"
+            v-if="isMapOverviewMode && pageMode === 'payments' && !meterCardCode"
             class="market-map-kpi-strip"
             :class="{ 'has-side-panel': !!rightSidePanelWidth }"
             :style="rightSidePanelWidth ? { '--side-w': `${rightSidePanelWidth}px` } : undefined"
@@ -854,7 +867,7 @@
           </div>
 
           <div
-            v-else-if="isMapOverviewMode && pageMode === 'meters'"
+            v-else-if="isMapOverviewMode && pageMode === 'meters' && !meterCardCode"
             class="market-map-kpi-strip"
             :class="{ 'has-side-panel': !!rightSidePanelWidth }"
             :style="rightSidePanelWidth ? { '--side-w': `${rightSidePanelWidth}px` } : undefined"
@@ -957,7 +970,7 @@
           </div>
 
           <div
-            v-else-if="isMapOverviewMode"
+            v-else-if="isMapOverviewMode && !meterCardCode"
             class="market-map-kpi-strip"
             :class="{ 'has-side-panel': !!rightSidePanelWidth }"
             :style="rightSidePanelWidth ? { '--side-w': `${rightSidePanelWidth}px` } : undefined"
@@ -1055,8 +1068,8 @@
             <button
               type="button"
               class="market-map-kpi is-action-required"
-              :class="{ active: dashboardStatusFilter === 'action_required', 'is-loading': isManageDataLoading }"
-              :disabled="isManageDataLoading"
+              :class="{ active: dashboardStatusFilter === 'action_required', 'is-loading': isActionDataLoading }"
+              :disabled="isActionDataLoading"
               @click="setDashboardStatusFilter('action_required')"
             >
               <span class="market-map-kpi-icon">
@@ -1068,7 +1081,7 @@
               </span>
               <span class="market-map-kpi-copy">
                 <small>ต้องดำเนินการ</small>
-                <div v-if="isManageDataLoading" class="market-map-kpi-skeleton" aria-hidden="true">
+                <div v-if="isActionDataLoading" class="market-map-kpi-skeleton" aria-hidden="true">
                   <span class="kpi-skeleton-num"></span>
                   <span class="kpi-skeleton-pill"></span>
                 </div>
@@ -1082,19 +1095,23 @@
             :marketId="marketId"
             :managedProjects="projects"
             :managedFacilities="facilities"
+            :managedDataVersion="mapVersion"
             :selectedProjectId="selectedProject?.id"
             :selectedStallCodes="activeHighlightedStallCodes"
             :stallStatusOverrides="stallStatusOverrides"
             :stallStatusFilter="dashboardStatusFilter === 'legal_case' ? 'all' : dashboardStatusFilter"
+            :statusFilterContext="dashboardStatusFilter"
             :actionRequiredStallCodes="actionRequiredStallCodes"
             :operationalFilterMeta="stallOperationalFilterMeta"
             :activeFilterCodes="mapActiveFilterCodes"
+            @market-data-loaded="handleMapDataLoaded"
             :isDashboardOpen="dashboardPanelOpen"
             :dashboardTitle="dashboardViewTitle"
             :dashboardSubtitle="dashboardViewSubtitle"
             @update:isDashboardOpen="dashboardPanelOpen = $event"
             @toggleDashboard="dashboardPanelOpen = !dashboardPanelOpen"
             @update:activePanel="activeMapSidePanel = $event"
+            @clear-status-filter="dashboardStatusFilter = 'all'"
             :onlyAvailable="false"
             :categoryFilter="null"
             :demandViewMode="demandViewMode"
@@ -1105,13 +1122,13 @@
             managementMode
             :inspectOnly="isInspectMode"
             :isOverviewPage="isMapOverviewMode"
-            :filterContext="pageMode === 'costs' ? 'costs' : 'data'"
+            :filterContext="isCostMode ? 'costs' : 'data'"
             :filterBadge="costFilterBadge"
             :hideRail="costDrawerOpen"
-            :hideProjectPanel="isMapOverviewMode && showInspectStallOverlay"
-            :expandProjectPanel="isMapOverviewMode && isProjectPanelMorphing"
+            :hideProjectPanel="isMapOverviewMode && (showInspectStallOverlay || !!meterCardCode) && !isStallDrawerClosing"
             :returnProjectPanel="isMapOverviewMode && isProjectPanelReturning"
             @clearStallSelection="handleClearStallSelection"
+            @operational-filter-change="onOperationalFilterChange"
             @reset-cost-filters="resetCostFilters"
             @selectProject="selectProject"
             @requestExitProject="handleRequestExitProject"
@@ -1264,8 +1281,8 @@
                       <button
                         type="button"
                         class="ov-dash-status-pill is-action-required"
-                        :class="{ active: dashboardStatusFilter === 'action_required', 'is-loading': isManageDataLoading }"
-                        :disabled="isManageDataLoading"
+                        :class="{ active: dashboardStatusFilter === 'action_required', 'is-loading': isActionDataLoading }"
+                        :disabled="isActionDataLoading"
                         @click="setDashboardStatusFilter('action_required')"
                       >
                         <span class="ov-dash-status-pill-icon" aria-hidden="true">
@@ -1277,7 +1294,7 @@
                         </span>
                         <div class="ov-dash-status-pill-info">
                           <span class="ov-dash-status-pill-label">ต้องดำเนินการ</span>
-                          <div v-if="isManageDataLoading" class="market-map-kpi-skeleton" aria-hidden="true">
+                          <div v-if="isActionDataLoading" class="market-map-kpi-skeleton" aria-hidden="true">
                             <span class="kpi-skeleton-num"></span>
                           </div>
                           <strong v-else class="ov-dash-status-pill-val">
@@ -1294,71 +1311,68 @@
                         <h4 id="all-project-donuts-heading" class="ov-dash-section-title">ภาพรวมทุกโครงการ</h4>
                       </div>
                     </div>
-                    <div class="ov-project-column-legend" aria-label="สรุปสถานะแผงทุกโครงการ">
-                      <span class="is-available"><i></i>ว่าง <strong>{{ allProjectsChartSummary.available.toLocaleString('th-TH') }}</strong></span>
-                      <span class="is-reserved"><i></i>ติดจอง <strong>{{ allProjectsChartSummary.reserved.toLocaleString('th-TH') }}</strong></span>
-                      <span class="is-occupied"><i></i>มีผู้เช่า <strong>{{ allProjectsChartSummary.occupied.toLocaleString('th-TH') }}</strong></span>
-                    </div>
-                    <div class="ov-project-column-chart">
-                      <div class="ov-project-column-y-axis" aria-hidden="true">
-                        <span
-                          v-for="tick in allProjectsChartTicks"
-                          :key="`project-chart-tick-${tick}`"
-                          :style="{ bottom: `${(tick / allProjectsChartMax) * 100}%` }"
-                        >{{ tick.toLocaleString('th-TH') }}</span>
-                      </div>
-                      <div class="ov-project-column-scroll" tabindex="0" aria-label="กราฟภาพรวมทุกโครงการ เลื่อนแนวนอนเพื่อดูโครงการเพิ่มเติม">
-                        <div
-                          class="ov-project-column-grid"
-                          :style="{
-                            '--project-count': stallProjectStatusBreakdown.length,
-                            '--grid-step': `${100 / Math.max(1, allProjectsChartTicks.length - 1)}%`
-                          }"
+                    <ol class="ov-hbar-list" aria-label="จำนวนแผงแยกตามสถานะของแต่ละโครงการ">
+                      <li v-for="project in sortedProjectBars" :key="`hbar-${project.id}`">
+                        <button
+                          type="button"
+                          class="ov-hbar-row"
+                          :class="{ active: selectedDashboardProjectId === project.id }"
+                          :aria-pressed="selectedDashboardProjectId === project.id"
+                          :aria-label="`${project.name}: ว่าง ${project.available}, ติดจอง ${project.reserved}, มีผู้เช่า ${project.occupied}`"
+                          :title="`${project.name} · ว่าง ${project.available.toLocaleString('th-TH')} · ติดจอง ${project.reserved.toLocaleString('th-TH')} · มีผู้เช่า ${project.occupied.toLocaleString('th-TH')}`"
+                          @click="selectDashboardProject(project.id)"
                         >
-                          <button
-                            v-for="project in stallProjectStatusBreakdown"
-                            :key="`column-${project.id}`"
-                            type="button"
-                            class="ov-project-column-item"
-                            :class="{ active: selectedDashboardProjectId === project.id }"
-                            :style="{ '--bar-ratio': project.total / allProjectsChartMax }"
-                            :aria-label="`${project.name}: ว่าง ${project.available}, มีผู้เช่า ${project.occupied}, ติดจอง ${project.reserved}`"
-                            @click="selectDashboardProject(project.id)"
-                          >
-                            <span class="ov-project-column-total">{{ project.total.toLocaleString('th-TH') }}</span>
-                            <span class="ov-project-column-stack">
-                              <i
-                                v-if="project.available"
-                                class="is-available"
-                                :style="{ height: `${project.availablePct}%` }"
-                                :title="`ว่าง ${project.available.toLocaleString('th-TH')} แผง`"
-                              ></i>
-                              <i
-                                v-if="project.reserved"
-                                class="is-reserved"
-                                :style="{ height: `${project.reservedPct}%` }"
-                                :title="`ติดจอง ${project.reserved.toLocaleString('th-TH')} แผง`"
-                              ></i>
-                              <i
-                                v-if="project.occupied"
-                                class="is-occupied"
-                                :style="{ height: `${project.occupiedPct}%` }"
-                                :title="`มีผู้เช่า ${project.occupied.toLocaleString('th-TH')} แผง`"
-                              ></i>
-                            </span>
-                            <strong class="ov-project-column-label">{{ project.chartLabel }}</strong>
-                            <span class="ov-project-column-tooltip" role="tooltip">
-                              <strong>{{ project.name }}</strong>
-                              <span class="ov-project-column-tooltip-stats">
-                                <small class="is-available">ว่าง <b>{{ project.available.toLocaleString('th-TH') }}</b></small>
-                                <small class="is-reserved">ติดจอง <b>{{ project.reserved.toLocaleString('th-TH') }}</b></small>
-                                <small class="is-occupied">มีผู้เช่า <b>{{ project.occupied.toLocaleString('th-TH') }}</b></small>
-                              </span>
-                            </span>
-                          </button>
-                        </div>
-                      </div>
+                          <span class="ov-hbar-name">{{ project.name }}</span>
+                          <span class="ov-hbar-track" aria-hidden="true">
+                            <i v-if="project.occupied" class="is-occupied" :style="{ width: `${(project.occupied / projectBarMax) * 100}%` }"></i>
+                            <i v-if="project.reserved" class="is-reserved" :style="{ width: `${(project.reserved / projectBarMax) * 100}%` }"></i>
+                            <i v-if="project.available" class="is-available" :style="{ width: `${(project.available / projectBarMax) * 100}%` }"></i>
+                          </span>
+                          <span class="ov-hbar-total">{{ project.total.toLocaleString('th-TH') }}</span>
+                        </button>
+                      </li>
+                    </ol>
+                    <div class="ov-project-column-legend is-footer" aria-label="สรุปสถานะแผงทุกโครงการ">
+                      <span class="is-available"><i></i>ว่าง</span>
+                      <span class="is-reserved"><i></i>ติดจอง</span>
+                      <span class="is-occupied"><i></i>มีผู้เช่า</span>
                     </div>
+                  </section>
+
+                  <section class="ov-dash-section-card ov-popular-card" aria-labelledby="popular-stalls-heading">
+                    <div class="ov-dash-section-head">
+                      <h4 id="popular-stalls-heading" class="ov-dash-section-title">{{ popularMode === 'stall' ? 'แผงยอดนิยม' : 'โครงการยอดนิยม' }}</h4>
+                      <AppSegmentedControl v-model="popularMode" :options="popularModeOptions" aria-label="มุมมองอันดับยอดนิยม" />
+                    </div>
+                    <div class="ov-popular-toolbar" role="group" aria-label="ช่วงเวลา">
+                      <button v-for="days in popularDayOptions" :key="days" type="button" class="ov-popular-range" :class="{ 'is-active': popularDays === days }" :aria-pressed="popularDays === days" @click="popularDays = days">{{ days }} วันล่าสุด</button>
+                    </div>
+                    <template v-if="popularMode === 'stall'">
+                      <ol v-if="popularStallRanking.length" class="ov-popular-list">
+                        <li v-for="(item, index) in popularStallRanking" :key="item.code">
+                          <button type="button" class="ov-popular-row" :class="[item.hasMedal ? `is-rank-${item.rank}` : '', { 'is-selected': isPopularStallActive(item.code) }]" :aria-pressed="isPopularStallActive(item.code)" :title="`${item.code} · ${item.projectName || ''}`" :aria-label="`อันดับ ${item.rank} แผง ${item.number} ${item.projectName} จองแล้ว ${item.count} ครั้ง`" @click="filterStallFromDashboard(item.code)">
+                            <span class="ov-popular-rank">{{ item.rank }}</span>
+                            <span class="ov-popular-main"><strong>แผง {{ item.number }}</strong><small>{{ item.projectName || '-' }}</small></span>
+                            <span class="ov-popular-count"><b>{{ item.count }}</b> ครั้ง</span>
+                          </button>
+                        </li>
+                      </ol>
+                      <p v-if="popularStallAllTied" class="ov-popular-note">ยังไม่มีแผงที่ถูกจองซ้ำ จัดเรียงตามการจองล่าสุด</p>
+                      <AppEmptyState v-else-if="!popularStallRanking.length" variant="compact" icon="heart" :title="`ยังไม่มีการจองใน ${popularDays} วันล่าสุด`" description="เมื่อมีผู้จองแผง อันดับจะแสดงที่นี่" />
+                    </template>
+                    <template v-else>
+                      <ol v-if="popularProjectRanking.length" class="ov-popular-list">
+                        <li v-for="(item, index) in popularProjectRanking" :key="item.id">
+                          <button type="button" class="ov-popular-row" :class="[item.hasMedal ? `is-rank-${item.rank}` : '', { 'is-selected': isPopularProjectActive(item.id) }]" :aria-pressed="isPopularProjectActive(item.id)" :aria-label="`อันดับ ${item.rank} ${item.name} จองแล้ว ${item.count} ครั้ง จาก ${item.stallCount} แผง คิดเป็น ${item.percent.toFixed(1)} เปอร์เซ็นต์ของแผงทั้งโครงการ`" @click="openPopularProject(item.id)">
+                            <span class="ov-popular-rank">{{ item.rank }}</span>
+                            <span class="ov-popular-main"><strong>{{ item.name }}</strong><small>{{ item.stallCount }} แผง · {{ item.percent >= 10 ? item.percent.toFixed(0) : item.percent.toFixed(1) }}% ของโครงการ</small></span>
+                            <span class="ov-popular-count"><b>{{ item.count }}</b> ครั้ง</span>
+                          </button>
+                        </li>
+                      </ol>
+                      <p v-if="popularProjectAllTied" class="ov-popular-note">ทุกโครงการถูกจองเท่ากัน ยังไม่มีโครงการที่นำอย่างชัดเจน</p>
+                      <AppEmptyState v-else-if="!popularProjectRanking.length" variant="compact" icon="heart" :title="`ยังไม่มีการจองใน ${popularDays} วันล่าสุด`" description="เมื่อมีผู้จองแผง อันดับจะแสดงที่นี่" />
+                    </template>
                   </section>
 
                   <section class="ov-dash-section-card" aria-labelledby="contract-health-heading">
@@ -1373,40 +1387,49 @@
                         <span><strong>{{ contractHealthSummary.activeCount }}</strong><small>สัญญา</small></span>
                       </div>
                       <div class="ov-contract-health-legend">
-                        <span><i class="is-active"></i>อยู่ในสัญญา <strong>{{ contractHealthSummary.normalCount }}</strong></span>
-                        <span><i class="is-expiring"></i>ใกล้หมดอายุ <strong>{{ contractHealthSummary.expiringCount }}</strong></span>
-                        <span><i class="is-expired"></i>หมดอายุ <strong>{{ contractHealthSummary.expiredCount }}</strong></span>
+                        <span role="button" tabindex="0" :aria-pressed="isDashFilterActive('contractStatus', 'active')" :class="{ 'is-filterable': true, 'is-selected': isDashFilterActive('contractStatus', 'active') }" @click="toggleDashboardFilter('contractStatus', 'active')" @keydown.enter.prevent="toggleDashboardFilter('contractStatus', 'active')"><i class="is-active"></i>อยู่ในสัญญา <strong>{{ contractHealthSummary.normalCount }}</strong></span>
+                        <span role="button" tabindex="0" :aria-pressed="isDashFilterActive('contractStatus', 'expiring')" :class="{ 'is-filterable': true, 'is-selected': isDashFilterActive('contractStatus', 'expiring') }" @click="toggleDashboardFilter('contractStatus', 'expiring')" @keydown.enter.prevent="toggleDashboardFilter('contractStatus', 'expiring')"><i class="is-expiring"></i>ใกล้หมดอายุ <strong>{{ contractHealthSummary.expiringCount }}</strong></span>
+                        <span role="button" tabindex="0" :aria-pressed="isDashFilterActive('contractStatus', 'expired')" :class="{ 'is-filterable': true, 'is-selected': isDashFilterActive('contractStatus', 'expired') }" @click="toggleDashboardFilter('contractStatus', 'expired')" @keydown.enter.prevent="toggleDashboardFilter('contractStatus', 'expired')"><i class="is-expired"></i>หมดอายุ <strong>{{ contractHealthSummary.expiredCount }}</strong></span>
                       </div>
                     </div>
+                    <div v-if="renewalBarTotal" class="ov-renewal-bar" aria-hidden="true">
+                      <i class="is-renewed" :style="{ width: `${(stallContractRenewalSummary.submitted / renewalBarTotal) * 100}%` }"></i>
+                      <i class="is-awaiting" :style="{ width: `${(stallContractRenewalSummary.pending / renewalBarTotal) * 100}%` }"></i>
+                      <i class="is-declined" :style="{ width: `${(stallContractRenewalSummary.declined / renewalBarTotal) * 100}%` }"></i>
+                    </div>
                     <div class="ov-contract-renewal-row">
-                      <span>ต่อสัญญาแล้ว <strong>{{ stallContractRenewalSummary.submitted }}</strong></span>
-                      <span>รอตอบรับ <strong>{{ stallContractRenewalSummary.pending }}</strong></span>
-                      <span>ไม่ต่อ <strong>{{ stallContractRenewalSummary.declined }}</strong></span>
+                      <span role="button" tabindex="0" :aria-pressed="isDashFilterActive('renewalStatus', 'approved')" :class="{ 'is-filterable': true, 'is-selected': isDashFilterActive('renewalStatus', 'approved') }" @click="toggleDashboardFilter('renewalStatus', 'approved')" @keydown.enter.prevent="toggleDashboardFilter('renewalStatus', 'approved')">ต่อสัญญาแล้ว <strong>{{ stallContractRenewalSummary.submitted }}</strong></span>
+                      <span role="button" tabindex="0" :aria-pressed="isDashFilterActive('renewalStatus', 'awaiting')" :class="{ 'is-filterable': true, 'is-selected': isDashFilterActive('renewalStatus', 'awaiting') }" @click="toggleDashboardFilter('renewalStatus', 'awaiting')" @keydown.enter.prevent="toggleDashboardFilter('renewalStatus', 'awaiting')">รอตอบรับ <strong>{{ stallContractRenewalSummary.pending }}</strong></span>
+                      <span role="button" tabindex="0" :aria-pressed="isDashFilterActive('renewalStatus', 'declined')" :class="{ 'is-filterable': true, 'is-selected': isDashFilterActive('renewalStatus', 'declined') }" @click="toggleDashboardFilter('renewalStatus', 'declined')" @keydown.enter.prevent="toggleDashboardFilter('renewalStatus', 'declined')">ไม่ต่อ <strong>{{ stallContractRenewalSummary.declined }}</strong></span>
                     </div>
                   </section>
 
                   <section class="ov-dash-section-card ov-operational-status-card" aria-labelledby="return-status-heading">
                     <div class="ov-dash-section-head">
                       <h4 id="return-status-heading" class="ov-dash-section-title">การส่งคืนแผงค้า</h4>
+                      <small class="ov-dash-section-meta">{{ stallReturnTotal }} รายการ</small>
                     </div>
-                    <div class="ov-status-summary-grid is-five">
-                      <div><span>แจ้งไม่ต่อ</span><strong>{{ stallReturnStatusSummary.notified }}</strong></div>
-                      <div><span>รอส่งคืน</span><strong>{{ stallReturnStatusSummary.waiting }}</strong></div>
-                      <div><span>รอตรวจรับ</span><strong>{{ stallReturnStatusSummary.inspection }}</strong></div>
-                      <div class="is-success"><span>รับคืนแล้ว</span><strong>{{ stallReturnStatusSummary.returned }}</strong></div>
-                      <div class="is-danger"><span>เกินกำหนด</span><strong>{{ stallReturnStatusSummary.overdue }}</strong></div>
+                    <div class="ov-stage-flow is-four">
+                      <div role="button" tabindex="0" :aria-pressed="isDashFilterActive('returnStatus', 'notified')" :class="{ 'is-filterable': true, 'is-zero': stallReturnStatusSummary.notified === 0, 'is-selected': isDashFilterActive('returnStatus', 'notified') }" @click="toggleDashboardFilter('returnStatus', 'notified')" @keydown.enter.prevent="toggleDashboardFilter('returnStatus', 'notified')"><span>แจ้งไม่ต่อ</span><strong>{{ stallReturnStatusSummary.notified }}</strong></div>
+                      <div role="button" tabindex="0" :aria-pressed="isDashFilterActive('returnStatus', 'pending')" :class="{ 'is-filterable': true, 'is-zero': stallReturnStatusSummary.waiting === 0, 'is-selected': isDashFilterActive('returnStatus', 'pending') }" @click="toggleDashboardFilter('returnStatus', 'pending')" @keydown.enter.prevent="toggleDashboardFilter('returnStatus', 'pending')"><span>รอส่งคืน</span><strong>{{ stallReturnStatusSummary.waiting }}</strong></div>
+                      <div role="button" tabindex="0" :aria-pressed="isDashFilterActive('returnStatus', 'inspection')" :class="{ 'is-filterable': true, 'is-zero': stallReturnStatusSummary.inspection === 0, 'is-selected': isDashFilterActive('returnStatus', 'inspection') }" @click="toggleDashboardFilter('returnStatus', 'inspection')" @keydown.enter.prevent="toggleDashboardFilter('returnStatus', 'inspection')"><span>รอตรวจรับ</span><strong>{{ stallReturnStatusSummary.inspection }}</strong></div>
+                      <div class="is-success" role="button" tabindex="0" :aria-pressed="isDashFilterActive('returnStatus', 'returned')" :class="{ 'is-filterable': true, 'is-zero': stallReturnStatusSummary.returned === 0, 'is-selected': isDashFilterActive('returnStatus', 'returned') }" @click="toggleDashboardFilter('returnStatus', 'returned')" @keydown.enter.prevent="toggleDashboardFilter('returnStatus', 'returned')"><span>รับคืนแล้ว</span><strong>{{ stallReturnStatusSummary.returned }}</strong></div>
+                    </div>
+                    <div class="ov-stage-alert" role="button" tabindex="0" :aria-pressed="isDashFilterActive('returnStatus', 'overdue')" :class="{ 'is-filterable': true, 'is-zero': stallReturnStatusSummary.overdue === 0, 'is-selected': isDashFilterActive('returnStatus', 'overdue') }" @click="toggleDashboardFilter('returnStatus', 'overdue')" @keydown.enter.prevent="toggleDashboardFilter('returnStatus', 'overdue')">
+                      <span>เกินกำหนดส่งคืน</span><strong>{{ stallReturnStatusSummary.overdue }}</strong>
                     </div>
                   </section>
 
                   <section class="ov-dash-section-card ov-operational-status-card" aria-labelledby="legal-status-heading">
                     <div class="ov-dash-section-head">
                       <h4 id="legal-status-heading" class="ov-dash-section-title">การดำเนินคดี</h4>
+                      <small class="ov-dash-section-meta">{{ stallLegalTotal }} คดี</small>
                     </div>
-                    <div class="ov-status-summary-grid">
-                      <div><span>รอฝ่ายกฎหมาย</span><strong>{{ stallLegalStatusSummary.awaiting }}</strong></div>
-                      <div class="is-pending"><span>กำลังดำเนินคดี</span><strong>{{ stallLegalStatusSummary.proceeding }}</strong></div>
-                      <div class="is-danger"><span>บังคับคดี</span><strong>{{ stallLegalStatusSummary.enforcement }}</strong></div>
-                      <div class="is-success"><span>สิ้นสุดคดี</span><strong>{{ stallLegalStatusSummary.closed }}</strong></div>
+                    <div class="ov-stage-flow is-four">
+                      <div role="button" tabindex="0" :aria-pressed="isDashFilterActive('legalStatus', 'legal_review')" :class="{ 'is-filterable': true, 'is-zero': stallLegalStatusSummary.awaiting === 0, 'is-selected': isDashFilterActive('legalStatus', 'legal_review') }" @click="toggleDashboardFilter('legalStatus', 'legal_review')" @keydown.enter.prevent="toggleDashboardFilter('legalStatus', 'legal_review')"><span>รอฝ่ายกฎหมาย</span><strong>{{ stallLegalStatusSummary.awaiting }}</strong></div>
+                      <div class="is-pending" role="button" tabindex="0" :aria-pressed="isDashFilterActive('legalStatus', 'proceeding')" :class="{ 'is-filterable': true, 'is-zero': stallLegalStatusSummary.proceeding === 0, 'is-selected': isDashFilterActive('legalStatus', 'proceeding') }" @click="toggleDashboardFilter('legalStatus', 'proceeding')" @keydown.enter.prevent="toggleDashboardFilter('legalStatus', 'proceeding')"><span>กำลังดำเนินคดี</span><strong>{{ stallLegalStatusSummary.proceeding }}</strong></div>
+                      <div class="is-danger" role="button" tabindex="0" :aria-pressed="isDashFilterActive('legalStatus', 'enforcement')" :class="{ 'is-filterable': true, 'is-zero': stallLegalStatusSummary.enforcement === 0, 'is-selected': isDashFilterActive('legalStatus', 'enforcement') }" @click="toggleDashboardFilter('legalStatus', 'enforcement')" @keydown.enter.prevent="toggleDashboardFilter('legalStatus', 'enforcement')"><span>บังคับคดี</span><strong>{{ stallLegalStatusSummary.enforcement }}</strong></div>
+                      <div class="is-success" role="button" tabindex="0" :aria-pressed="isDashFilterActive('legalStatus', 'closed')" :class="{ 'is-filterable': true, 'is-zero': stallLegalStatusSummary.closed === 0, 'is-selected': isDashFilterActive('legalStatus', 'closed') }" @click="toggleDashboardFilter('legalStatus', 'closed')" @keydown.enter.prevent="toggleDashboardFilter('legalStatus', 'closed')"><span>สิ้นสุดคดี</span><strong>{{ stallLegalStatusSummary.closed }}</strong></div>
                     </div>
                   </section>
 
@@ -1424,10 +1447,10 @@
                         <span><strong>{{ stallMaintenanceTotal.toLocaleString('th-TH') }}</strong><small>งานทั้งหมด</small></span>
                       </div>
                       <div class="ov-maintenance-legend">
-                        <span><i class="is-pending"></i>รอดำเนินการ <strong>{{ stallMaintenanceDashboardSummary.pending }}</strong></span>
-                        <span><i class="is-repairing"></i>กำลังซ่อม <strong>{{ stallMaintenanceDashboardSummary.repairing }}</strong></span>
-                        <span><i class="is-completed"></i>ซ่อมเสร็จ <strong>{{ stallMaintenanceDashboardSummary.completed }}</strong></span>
-                        <span><i class="is-overdue"></i>เกินกำหนด <strong>{{ stallMaintenanceDashboardSummary.overdue }}</strong></span>
+                        <span role="button" tabindex="0" :aria-pressed="isDashFilterActive('maintenanceStatus', 'pending')" :class="{ 'is-filterable': true, 'is-selected': isDashFilterActive('maintenanceStatus', 'pending') }" @click="toggleDashboardFilter('maintenanceStatus', 'pending')" @keydown.enter.prevent="toggleDashboardFilter('maintenanceStatus', 'pending')"><i class="is-pending"></i>รอดำเนินการ <strong>{{ stallMaintenanceDashboardSummary.pending }}</strong></span>
+                        <span role="button" tabindex="0" :aria-pressed="isDashFilterActive('maintenanceStatus', 'repairing')" :class="{ 'is-filterable': true, 'is-selected': isDashFilterActive('maintenanceStatus', 'repairing') }" @click="toggleDashboardFilter('maintenanceStatus', 'repairing')" @keydown.enter.prevent="toggleDashboardFilter('maintenanceStatus', 'repairing')"><i class="is-repairing"></i>กำลังซ่อม <strong>{{ stallMaintenanceDashboardSummary.repairing }}</strong></span>
+                        <span role="button" tabindex="0" :aria-pressed="isDashFilterActive('maintenanceStatus', 'completed')" :class="{ 'is-filterable': true, 'is-selected': isDashFilterActive('maintenanceStatus', 'completed') }" @click="toggleDashboardFilter('maintenanceStatus', 'completed')" @keydown.enter.prevent="toggleDashboardFilter('maintenanceStatus', 'completed')"><i class="is-completed"></i>ซ่อมเสร็จ <strong>{{ stallMaintenanceDashboardSummary.completed }}</strong></span>
+                        <span role="button" tabindex="0" :aria-pressed="isDashFilterActive('maintenanceStatus', 'overdue')" :class="{ 'is-filterable': true, 'is-selected': isDashFilterActive('maintenanceStatus', 'overdue') }" @click="toggleDashboardFilter('maintenanceStatus', 'overdue')" @keydown.enter.prevent="toggleDashboardFilter('maintenanceStatus', 'overdue')"><i class="is-overdue"></i>เกินกำหนด <strong>{{ stallMaintenanceDashboardSummary.overdue }}</strong></span>
                       </div>
                     </div>
                   </section>
@@ -1600,6 +1623,10 @@
                 <p class="cf-result">แสดง <strong>{{ costFilterCodes.length ? costFilterCodes.length.toLocaleString('th-TH') : 'ทั้งหมด' }}</strong>{{ costFilterCodes.length ? ' แผงที่ไฮไลต์บนแผนที่' : '' }}</p>
               </div>
             </template>
+            <template v-if="pageMode === 'meters'" #project-body>
+              <StallMeterProjectCard :rows="meterProjectStalls" @open-stall="openMeterCard" @next="openNextMeterStall" />
+            </template>
+
             <template #overlay>
               <div
                 v-if="showInspectStallOverlay && stallEdit.ident"
@@ -1746,7 +1773,7 @@
                             </svg>
                           </span>
                           <strong>สิ่งที่ต้องดำเนินการ</strong>
-                          <span class="issd-aac-count-badge">{{ stallActionRichItems.length }} รายการ</span>
+                          <span class="issd-aac-count-badge">{{ stallActionTotalCount }} รายการ</span>
                         </div>
                         <span class="issd-aac-toggle-btn" aria-hidden="true">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" :class="{ 'is-flipped': isMiniActionAlertExpanded }">
@@ -2094,77 +2121,25 @@
                         v-if="stallActionRichItems.length > 0 && !fullDetailSettling"
                         class="issd-action-alert-card"
                       >
-                        <div
-                          class="issd-aac-header"
-                          @click="isActionAlertCollapsed = !isActionAlertCollapsed"
-                          role="button"
-                          tabindex="0"
-                          @keydown.enter="isActionAlertCollapsed = !isActionAlertCollapsed"
-                        >
-                          <div class="issd-aac-title-group">
-                            <div class="issd-aac-icon-wrap">
-                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                                <path d="m9 14 2 2 4-4"></path>
-                              </svg>
-                            </div>
-                            <div class="issd-aac-title-text">
-                              <div class="issd-aac-title-row">
-                                <strong>สิ่งที่ต้องดำเนินการ</strong>
-                                <span class="issd-aac-count-badge">{{ stallActionRichItems.length }} รายการ</span>
-                              </div>
-                              
-                            </div>
-                          </div>
+                        <div class="issd-action-card-rail" role="group" aria-label="รายการสิ่งที่ต้องดำเนินการ">
                           <button
-                            type="button"
-                            class="issd-aac-toggle-btn"
-                            :aria-label="isActionAlertCollapsed ? 'ขยายรายการงาน' : 'ย่อรายการงาน'"
-                            :title="isActionAlertCollapsed ? 'คลิกเพื่อขยาย' : 'คลิกเพื่อย่อ'"
-                          >
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2.2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              :class="{ 'is-flipped': isActionAlertCollapsed }"
-                            >
-                              <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                          </button>
-                        </div>
-
-                        <div v-show="!isActionAlertCollapsed" class="issd-aac-list">
-                          <div
                             v-for="act in stallActionRichItems"
                             :key="act.key"
-                            class="issd-aac-row"
+                            type="button"
+                            class="issd-action-summary-card"
                             :class="`is-${act.severity}`"
                             @click="jumpToActionTab(act.targetTab)"
-                            role="button"
-                            tabindex="0"
                             :title="`คลิกเพื่อไปยังแท็บ: ${act.actionLabel}`"
-                            @keydown.enter="jumpToActionTab(act.targetTab)"
                           >
-                            <div class="issd-aac-row-left">
-                              <span class="issd-aac-bar" :class="`is-${act.severity}`" aria-hidden="true"></span>
-                              <div class="issd-aac-row-text">
-                                <strong>{{ act.category }}<b v-if="act.count" class="issd-aac-count" :class="`is-${act.severity}`">{{ act.count }}</b></strong>
-                                <small>{{ act.title }}</small>
-                              </div>
+                            <div class="issd-action-summary-copy">
+                              <span class="issd-action-summary-title">
+                                <strong>{{ act.category }}</strong>
+                                <b v-if="act.count" class="issd-aac-count" :class="`is-${act.severity}`">{{ act.count }}</b>
+                              </span>
+                              <small>{{ act.title }}</small>
                             </div>
-                            <div class="issd-aac-row-right">
-                              <span class="issd-aac-action-text">{{ act.actionLabel }}</span>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="9 18 15 12 9 6"></polyline>
-                              </svg>
-                            </div>
-                          </div>
+                            <svg class="issd-action-summary-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                          </button>
                         </div>
                       </div>
 
@@ -2196,12 +2171,12 @@
                         <img :src="inspectStallPhotos[0]" :alt="`ภาพแผง ${stallDisplayNumber}`" />
                         <div class="issd-photo-count-badge">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                          <span>{{ inspectStallPhotos.length }} รูป (คลิกดูภาพขยาย)</span>
+                          <span>{{ inspectStallPhotos.length }} รูป</span>
                         </div>
                       </div>
 
                       <!-- KPI Strip 3 ช่อง (ข้อมูลหลักเท่านั้น) -->
-                      <div class="issd-kpi-grid is-three">
+                      <div class="issd-kpi-grid is-three is-primary-stats">
                         <div class="issd-kpi-card">
                           <span>ขนาดพื้นที่</span>
                           <strong>{{ inspectStallSizeSqm }} ตร.ม.</strong>
@@ -2219,95 +2194,82 @@
                         </div>
                       </div>
 
-                      <!-- Detailed Specifications (กล่องรายละเอียดสไตล์ KPI Strip — ไม่มีหัวข้อ) -->
-                      <div class="issd-kpi-grid is-three">
-                        <div v-if="stallEdit.name && !String(stallEdit.name).startsWith('แผง')" class="issd-kpi-card">
-                          <span>ชื่อแผง</span>
-                          <strong>{{ stallEdit.name }}</strong>
-                          <em>ป้ายร้านค้า</em>
+                      <!-- รายละเอียดพื้นที่: ใช้การ์ดเดียวและรายการข้อมูลกะทัดรัด เพื่อลดการ์ดซ้อนและรองรับข้อความยาว -->
+                      <section class="issd-stall-detail-card" aria-labelledby="stall-space-detail-heading">
+                        <div class="issd-stall-detail-head">
+                          <span class="issd-stall-detail-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h6M3 15h6M15 8h2M15 12h2M15 16h2"/></svg>
+                          </span>
+                          <strong id="stall-space-detail-heading">รายละเอียดพื้นที่</strong>
                         </div>
-                        <div class="issd-kpi-card">
-                          <span>ชั้น</span>
-                          <strong>{{ formatFloorDisplay(stallEdit.floor) }}</strong>
-                          <em>{{ stallEdit.building ? `อาคาร ${stallEdit.building}` : 'ระดับพื้นที่' }}</em>
-                        </div>
-                        <div class="issd-kpi-card">
-                          <span>โซน</span>
-                          <strong>{{ selectedProject?.name || stallEdit.project_name || stallEdit.zone_name || 'โซนกลาง' }}</strong>
-                          <em>ผังโครงการ</em>
-                        </div>
-                        <div class="issd-kpi-card">
-                          <span>หมวดสินค้า</span>
-                          <strong>{{ stallEdit.category || selectedProject?.category || 'แผงค้ามาตรฐาน' }}</strong>
-                          <em>ประเภทสินค้า</em>
-                        </div>
-                        <div v-if="stallEdit.description" class="issd-kpi-card is-full-span">
-                          <span>รายละเอียดเพิ่มเติม</span>
-                          <strong class="is-desc">{{ stallEdit.description }}</strong>
-                        </div>
-                      </div>
+                        <dl class="issd-stall-facts-grid">
+                          <div v-if="stallEdit.name && !String(stallEdit.name).startsWith('แผง')" class="issd-stall-fact">
+                            <dt>ชื่อแผง</dt>
+                            <dd>{{ stallEdit.name }}</dd>
+                          </div>
+                          <div class="issd-stall-fact" :class="{ 'is-wide': !stallEdit.name || String(stallEdit.name).startsWith('แผง') }">
+                            <dt>ชั้น</dt>
+                            <dd>{{ formatFloorDisplay(stallEdit.floor) }}<small>{{ stallEdit.building ? `อาคาร ${stallEdit.building}` : 'ระดับพื้นที่' }}</small></dd>
+                          </div>
+                          <div class="issd-stall-fact is-wide">
+                            <dt>โซน</dt>
+                            <dd>{{ selectedProject?.name || stallEdit.project_name || stallEdit.zone_name || 'โซนกลาง' }}<small>ผังโครงการ</small></dd>
+                          </div>
+                          <div class="issd-stall-fact is-wide">
+                            <dt>หมวดสินค้า</dt>
+                            <dd>{{ stallEdit.category || selectedProject?.category || 'แผงค้ามาตรฐาน' }}<small>ประเภทสินค้า</small></dd>
+                          </div>
+                          <div v-if="stallEdit.description" class="issd-stall-fact is-wide">
+                            <dt>รายละเอียดเพิ่มเติม</dt>
+                            <dd>{{ stallEdit.description }}</dd>
+                          </div>
+                        </dl>
+                      </section>
 
-                      <!-- กล่องข้อมูลผู้เช่า / ผู้จอง / สถานะอื่นๆ (ย้ายมาอยู่ข้างล่างสุด) -->
-                      <!-- 2. กรณีติดจอง (reserved หรือมีรายการจอง/คำร้อง) -->
+                      <!-- กล่องข้อมูลผู้เช่า / คำร้องขอเช่า / สถานะอื่นๆ (ไม่แสดงผู้ขอเข้าชมในแท็บข้อมูลแผง) -->
+                      <!-- 2. กรณีมีคำร้องขอเช่า -->
                       <div
-                        v-if="stallEdit.stall_status === 'reserved' || (stallEdit.stall_status !== 'occupied' && stallEdit.stall_status !== 'available' && (currentStallBooking || currentStallApplication))"
+                        v-if="stallEdit.stall_status !== 'occupied' && !currentStallContract && currentStallApplication"
                         class="issd-card-section issd-occupant-card is-reserved"
                       >
-                        <!-- ส่วนผู้จอง / ผู้ยื่นคำร้อง -->
+                        <!-- ส่วนผู้ยื่นคำร้อง -->
                         <div class="issd-person-row">
                           <div class="issd-person-avatar is-reserved">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                           </div>
                           <div class="issd-person-info">
-                            <span class="issd-person-role">{{ currentStallApplication ? 'ผู้ยื่นคำร้องขอเช่า' : 'ผู้จองเข้าชมพื้นที่' }}</span>
-                            <strong class="issd-person-name">{{ currentStallBooking?.tenant_name || currentStallBooking?.applicant_name || currentStallApplication?.applicant_name || 'ผู้ขอจองเข้าชมพื้นที่' }}</strong>
+                            <span class="issd-person-role">ผู้ยื่นคำร้องขอเช่า</span>
+                            <strong class="issd-person-name">{{ currentStallApplication.applicant_name || 'ผู้ยื่นคำร้องขอเช่า' }}</strong>
                           </div>
                           <a
-                            v-if="currentStallBooking?.tenant_phone || currentStallBooking?.applicant_phone || currentStallApplication?.applicant_phone"
-                            :href="`tel:${currentStallBooking?.tenant_phone || currentStallBooking?.applicant_phone || currentStallApplication?.applicant_phone}`"
+                            v-if="currentStallApplication.applicant_phone"
+                            :href="`tel:${currentStallApplication.applicant_phone}`"
                             class="issd-phone-link"
                             title="คลิกเพื่อโทรออก"
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                            <span>{{ currentStallBooking?.tenant_phone || currentStallBooking?.applicant_phone || currentStallApplication?.applicant_phone }}</span>
+                            <span>{{ currentStallApplication.applicant_phone }}</span>
                           </a>
                         </div>
 
-                        <!-- ส่วนข้อมูลการจอง / คำร้อง -->
+                        <!-- ส่วนข้อมูลคำร้อง -->
                         <div class="issd-subdoc-box is-reserved">
                           <div class="issd-subdoc-row">
-                            <span class="subdoc-k">{{ currentStallApplication ? 'เลขที่คำร้อง' : 'เลขที่การจอง' }}</span>
-                            <strong class="subdoc-v is-code">{{ currentStallApplication?.application_number || currentStallBooking?.booking_number || '-' }}</strong>
+                            <span class="subdoc-k">เลขที่คำร้อง</span>
+                            <strong class="subdoc-v is-code">{{ currentStallApplication.application_number || '-' }}</strong>
                           </div>
                           <div class="issd-subdoc-row">
-                            <span class="subdoc-k">{{ currentStallBooking?.visit_date ? 'วันนัดชมแผง' : 'สถานะรายการ' }}</span>
-                            <span class="subdoc-v">
-                              <template v-if="currentStallBooking?.visit_date">
-                                {{ formatThaiDateOnly(currentStallBooking.visit_date) }} {{ currentStallBooking.visit_time || currentStallBooking.visit_time_slot || '' }}
-                              </template>
-                              <template v-else>
-                                {{ currentStallBooking ? getBookingStatusBadgeLabel(currentStallBooking.booking_status || currentStallBooking.status) : 'รอพิจารณาอนุมัติ' }}
-                              </template>
-                            </span>
+                            <span class="subdoc-k">สถานะรายการ</span>
+                            <span class="subdoc-v">รอพิจารณาอนุมัติ</span>
                           </div>
                         </div>
-                        <div v-if="currentStallApplication" class="issd-occupant-action-strip">
+                        <div class="issd-occupant-action-strip">
                           <NuxtLink
                             :to="withStallReturn(currentStallApplication.id ? `/applications/${currentStallApplication.id}` : `/applications?search=${encodeURIComponent(currentStallApplication.application_number || stallEdit.ident)}`)"
                             class="issd-occupant-action-btn is-app"
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                             <span>ดูคำร้องขอเช่าแผง</span>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                          </NuxtLink>
-                        </div>
-                        <div v-else-if="currentStallBooking" class="issd-occupant-action-strip">
-                          <NuxtLink
-                            :to="withStallReturn(currentStallBooking.id ? `/bookings/${currentStallBooking.id}` : `/bookings?search=${encodeURIComponent(currentStallBooking.booking_number || stallEdit.ident)}`)"
-                            class="issd-occupant-action-btn is-booking"
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            <span>ดูการจองนัดหมาย</span>
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                           </NuxtLink>
                         </div>
@@ -2351,7 +2313,7 @@
                         </div>
                       </div>
 
-                      <div v-else-if="stallEdit.stall_status && stallEdit.stall_status !== 'available'" class="issd-occupancy-box" :class="`is-${stallEdit.stall_status}`">
+                      <div v-else-if="stallEdit.stall_status && stallEdit.stall_status !== 'available' && !currentStallBooking" class="issd-occupancy-box" :class="`is-${stallEdit.stall_status}`">
                         <div class="issd-occupancy-head">
                           <span>{{ inspectStallOccupancy.heading }}</span>
                           <small v-if="inspectStallOccupancy.refCode">{{ inspectStallOccupancy.refCode }}</small>
@@ -2384,12 +2346,7 @@
                           </div>
                         </div>
                       </div>
-                      <div v-else class="issd-empty-box">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>
-                        </svg>
-                        <p>ไม่มีประวัติ</p>
-                      </div>
+                      <AppEmptyState v-else class="issd-tab-empty-state" variant="compact" icon="history" title="ยังไม่มีประวัติ" description="กิจกรรมของแผงจะถูกบันทึกไว้ที่นี่" />
                     </template>
 
                     <!-- Tab: การจองและคำร้อง (bookings) -->
@@ -2400,12 +2357,12 @@
                         </div>
                       </div>
 
-                      <AppSegmentedControl
+                      <AppSecondaryTabs
                         v-model="bookingTypeFilter"
                         :options="[
-                          { value: 'all', label: `ทั้งหมด (${stallBookingsAndApps.length})` },
-                          { value: 'booking', label: `การจอง (${stallBookingsAndApps.filter(i => i.typeKey === 'booking').length})` },
-                          { value: 'application', label: `คำร้อง (${stallBookingsAndApps.filter(i => i.typeKey === 'application').length})` }
+                          { value: 'all', label: 'ทั้งหมด', count: stallBookingsAndApps.length },
+                          { value: 'booking', label: 'การจอง', count: stallBookingsAndApps.filter(i => i.typeKey === 'booking').length },
+                          { value: 'application', label: 'คำร้อง', count: stallBookingsAndApps.filter(i => i.typeKey === 'application').length }
                         ]"
                         aria-label="กรองตามประเภทรายการ"
                       />
@@ -2417,25 +2374,38 @@
                           class="issd-booking-card"
                         >
                           <div class="issd-booking-card-header">
-                            <div class="issd-booking-type-group">
-                              <span class="issd-card-type-tag" :class="`is-${item.typeKey || 'booking'}`">
-                                <svg v-if="item.typeKey === 'application'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                <span>{{ item.typeLabel }}</span>
+                            <div class="issd-booking-kind" :class="`is-${item.typeKey}`">
+                              <span class="issd-booking-kind-icon" aria-hidden="true">
+                                <svg v-if="item.typeKey === 'application'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg>
+                                <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                               </span>
-                              <span class="issd-booking-ref-code">{{ item.refNumber }}</span>
+                              <span class="issd-booking-kind-copy">
+                                <strong>{{ item.typeLabel }}</strong>
+                                <small>{{ item.refNumber }}</small>
+                              </span>
                             </div>
-                            <span class="issd-status-pill" :class="item.badgeClass">{{ item.statusText }}</span>
+                            <span class="issd-status-pill issd-booking-status" :class="item.badgeClass">
+                              <span class="issd-booking-status-dot" aria-hidden="true"></span>
+                              {{ item.statusText }}
+                            </span>
                           </div>
 
-                          <div class="issd-booking-applicant-row">
+                          <div class="issd-booking-schedule">
+                            <div class="issd-booking-date-line">
+                              <strong>{{ item.typeKey === 'application' ? `ยื่นเมื่อ ${formatThaiDateOnly(item.rawDate)}` : item.dateText }}</strong>
+                              <span v-if="item.typeKey === 'booking' && getBookingCountdownText(item.rawDate)" class="issd-booking-countdown">{{ getBookingCountdownText(item.rawDate) }}</span>
+                              <span v-else-if="item.typeKey === 'application' && getApplicationWaitingText(item.rawDate)" class="issd-booking-countdown is-application">{{ getApplicationWaitingText(item.rawDate) }}</span>
+                            </div>
+                          </div>
+
+                          <div class="issd-booking-person-row">
                             <div class="issd-booking-applicant-left">
-                              <div class="issd-booking-avatar">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                              <div class="issd-booking-avatar" aria-hidden="true">
+                                {{ item.applicantName.trim().charAt(0) || 'ผ' }}
                               </div>
                               <div class="issd-booking-applicant-info">
-                                <span class="issd-booking-role-label">{{ item.typeKey === 'application' ? 'ผู้ยื่นคำร้อง' : 'ผู้จอง' }}</span>
                                 <strong class="issd-card-title">{{ item.applicantName }}</strong>
+                                <a v-if="item.phone" :href="`tel:${item.phone}`" class="issd-booking-phone">{{ item.phone }}</a>
                               </div>
                             </div>
                             <a
@@ -2447,35 +2417,39 @@
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                               <span>{{ item.phone }}</span>
                             </a>
-                          </div>
-
-                          <!-- Footer Bar: วันนัดชม/วันที่ทำรายการ (ซ้าย) + ปุ่มดูรายละเอียด (ขวา) -->
-                          <div class="issd-booking-footer-bar">
                             <div class="issd-booking-info-item">
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                               <span><strong>{{ item.dateText }}</strong></span>
                             </div>
-                            <NuxtLink
+                            <AppButton
                               :to="withStallReturn(item.targetUrl)"
-                              class="issd-booking-direct-btn"
-                              :class="`is-${item.typeKey}`"
+                              size="sm"
+                              variant="primary"
+                              class="issd-booking-detail-btn"
                             >
-                              <svg v-if="item.typeKey === 'application'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                              <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                              <span>ดูรายละเอียด</span>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                            </NuxtLink>
+                              <template #prefix>
+                                <svg v-if="item.typeKey === 'application'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                              </template>
+                              {{ item.typeKey === 'application' ? 'ตรวจสอบคำร้อง' : 'ตรวจสอบการจอง' }}
+                              <template #suffix>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                              </template>
+                            </AppButton>
+                          </div>
+                          <div v-if="item.typeKey === 'application' && item.sourceRef" class="issd-application-source">
+                            มาจากนัดเข้าชม {{ item.sourceRef }}
                           </div>
                         </div>
                       </div>
-                      <div v-else class="issd-empty-box">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <line x1="12" y1="8" x2="12" y2="12"></line>
-                          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                        </svg>
-                        <p>{{ bookingTypeFilter === 'application' ? 'ไม่มีคำร้อง' : (bookingTypeFilter === 'booking' ? 'ไม่มีรายการจอง' : 'ไม่มีรายการจองหรือคำร้อง') }}</p>
-                      </div>
+                      <AppEmptyState
+                        v-else
+                        class="issd-tab-empty-state"
+                        variant="compact"
+                        :icon="bookingTypeFilter === 'booking' ? 'calendar' : 'document'"
+                        :title="bookingTypeFilter === 'application' ? 'ยังไม่มีคำร้อง' : (bookingTypeFilter === 'booking' ? 'ยังไม่มีรายการจอง' : 'ยังไม่มีรายการจองหรือคำร้อง')"
+                        description="รายการที่เกี่ยวข้องกับแผงนี้จะแสดงที่นี่"
+                      />
                     </template>
 
                     <!-- Tab: สัญญา (contracts) -->
@@ -2486,9 +2460,9 @@
                         </div>
                       </div>
 
-                      <AppSegmentedControl
+                      <AppSecondaryTabs
                         v-model="contractSubTab"
-                        :options="[{ value: 'active', label: `ปัจจุบัน (${activeStallContracts.length})` }, { value: 'history', label: `ประวัติ (${historyStallContracts.length})` }]"
+                        :options="[{ value: 'active', label: 'ปัจจุบัน', count: activeStallContracts.length }, { value: 'history', label: 'ประวัติ', count: historyStallContracts.length }]"
                         aria-label="เลือกประเภทสัญญา"
                       />
 
@@ -2500,54 +2474,67 @@
                           :class="{ 'is-current': contract.status === 'active' }"
                         >
                           <div class="issd-card-top-row">
-                            <div class="issd-contract-top-left">
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="issd-contract-icon">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                              </svg>
-                              <strong class="issd-contract-num">{{ contract.contract_number || `#${contract.id}` }}</strong>
-                            </div>
                             <span
-                              class="issd-status-pill"
+                              class="issd-status-pill issd-contract-status"
                               :class="contract.status === 'active' ? 'is-available' : ((contract.status === 'cancelled' || contract.status === 'terminated') ? 'is-cancelled' : 'is-reserved')"
                             >
+                              <span class="issd-contract-status-dot" aria-hidden="true"></span>
                               {{ contract.status === 'active' ? 'ใช้งานอยู่' : (contract.status === 'expired' ? 'สิ้นสุดสัญญา' : ((contract.status === 'cancelled' || contract.status === 'terminated') ? 'ยกเลิกแล้ว' : (contract.status || 'ร่างสัญญา'))) }}
                             </span>
+                            <strong class="issd-contract-num">{{ contract.contract_number || `#${contract.id}` }}</strong>
                           </div>
 
-                          <div class="issd-contract-details-grid">
-                            <div class="issd-contract-detail-item">
-                              <span class="detail-label">ผู้เช่า</span>
-                              <strong class="detail-value">{{ contract.tenant_name || contract.name || '-' }}</strong>
+                          <div class="issd-compact-card-body">
+                            <div class="issd-contract-overview">
+                              <div class="issd-contract-identity">
+                                <strong>{{ contract.tenant_name || contract.name || '-' }}</strong>
+                              </div>
+                              <div class="issd-contract-period-row">
+                                <span>{{ formatThaiDateOnly(contract.start_date) }} – {{ formatThaiDateOnly(contract.end_date) }} · {{ getShortContractDurationText(contract.start_date, contract.end_date) }}</span>
+                                <strong v-if="getContractRemainingDays(contract.end_date) !== null">เหลือ {{ getContractRemainingDays(contract.end_date) }} วัน</strong>
+                              </div>
+                              <div class="issd-contract-progress" aria-hidden="true">
+                                <span :style="{ width: `${getContractProgressPercent(contract.start_date, contract.end_date)}%` }"></span>
+                              </div>
+                              <div class="issd-contract-money-summary">
+                                <div>
+                                  <span>ค่าเช่า</span>
+                                  <strong>฿{{ Number(contract.monthly_rental || contract.monthly_rent || 0).toLocaleString('th-TH') }} <small>/ เดือน</small></strong>
+                                </div>
+                                <div>
+                                  <span>เงินประกัน</span>
+                                  <strong>฿{{ Number(contract.security_deposit || contract.deposit_amount || 0).toLocaleString('th-TH') }} <small class="is-paid">· รับแล้ว</small></strong>
+                                </div>
+                              </div>
                             </div>
-                            <div class="issd-contract-detail-item">
-                              <span class="detail-label">ค่าเช่า</span>
-                              <strong class="detail-value is-rent">฿{{ Number(contract.monthly_rental || contract.monthly_rent || 0).toLocaleString('th-TH') }}/ด.</strong>
-                            </div>
-                            <div v-if="contract.security_deposit || contract.deposit_amount" class="issd-contract-detail-item">
-                              <span class="detail-label">เงินประกัน</span>
-                              <strong class="detail-value">฿{{ Number(contract.security_deposit || contract.deposit_amount).toLocaleString('th-TH') }}</strong>
-                            </div>
-                            <div class="issd-contract-detail-item is-wide">
-                              <span class="detail-label">ระยะสัญญา</span>
-                              <strong class="detail-value">{{ formatThaiDateOnly(contract.start_date) }} – {{ formatThaiDateOnly(contract.end_date) }} <em class="detail-sub">({{ getShortContractDurationText(contract.start_date, contract.end_date) }})</em></strong>
-                            </div>
-                          </div>
 
-                          <div class="issd-card-actions-row">
-                            <AppButton size="sm" variant="outline" @click="openEditContractModal(contract)">แก้ไขสัญญา</AppButton>
-                            <AppButton v-if="contract.status === 'active'"
-                              size="sm" variant="danger-outline" @click="terminateContract(contract)">ยกเลิกสัญญา</AppButton>
+                            <div v-if="isInspectMode && ['active', 'expired'].includes(contract.status)" class="issd-workflow">
+                              <strong class="issd-workflow-title">ติดตามสัญญา</strong>
+                              <div class="issd-workflow-grid">
+                                <label v-for="field in contractWorkflowFields" :key="field.key" class="issd-workflow-field">
+                                  <span>{{ field.label }}</span>
+                                  <AppSelect :model-value="workflowValue(contract, field.key)" :options="field.options" @update:model-value="setWorkflowValue(contract, field.key, $event)" />
+                                </label>
+                              </div>
+                              <AppButton v-if="isWorkflowDirty(contract)" size="sm" variant="primary" :loading="contractWorkflowSaving === String(contract.id)" @click="saveContractWorkflow(contract)">บันทึกสถานะ</AppButton>
+                            </div>
+
+                            <div class="issd-card-actions-row">
+                              <AppButton size="sm" variant="outline" @click="openEditContractModal(contract)">ดูสัญญา</AppButton>
+                              <AppButton v-if="contract.status === 'active'"
+                                size="sm" variant="danger-outline" @click="terminateContract(contract)">ยกเลิกสัญญา</AppButton>
+                            </div>
                           </div>
                         </div>
                       </div>
-                      <div v-else class="issd-empty-box">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                          <polyline points="14 2 14 8 20 8"></polyline>
-                        </svg>
-                        <p>{{ contractSubTab === 'active' ? 'ไม่มีสัญญาปัจจุบัน' : 'ไม่มีประวัติสัญญา' }}</p>
-                      </div>
+                      <AppEmptyState
+                        v-else
+                        class="issd-tab-empty-state"
+                        variant="compact"
+                        icon="document"
+                        :title="contractSubTab === 'active' ? 'ยังไม่มีสัญญาปัจจุบัน' : 'ยังไม่มีประวัติสัญญา'"
+                        description="ข้อมูลสัญญาของแผงนี้จะแสดงที่นี่"
+                      />
                     </template>
 
                     <!-- Tab: ผู้เช่าช่วง (subtenants) -->
@@ -2602,12 +2589,7 @@
                           </div>
                         </div>
                       </div>
-                      <div v-else class="issd-empty-box">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                        </svg>
-                        <p>ไม่มีผู้เช่าช่วง</p>
-                      </div>
+                      <AppEmptyState v-else class="issd-tab-empty-state" variant="compact" icon="users" title="ยังไม่มีผู้เช่าช่วง" description="เพิ่มผู้เช่าช่วงเพื่อเริ่มจัดการข้อมูล" />
                     </template>
 
                     <!-- Tab: ประวัติชำระเงิน (payments) -->
@@ -2617,7 +2599,6 @@
                           <strong class="issd-tab-title">ชำระเงิน</strong>
                         </div>
                         <div v-if="stallContractsList.length" class="issd-contract-inline-filter">
-                          <span class="issd-inline-filter-label">สัญญา</span>
                           <div class="issd-inline-filter-select">
                             <AppSelect v-model="selectedPaymentContract" :options="paymentContractOptions" />
                           </div>
@@ -2654,12 +2635,7 @@
                           </div>
                         </div>
                       </div>
-                      <div v-else class="issd-empty-box">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
-                        </svg>
-                        <p>ไม่มีประวัติการชำระเงิน</p>
-                      </div>
+                      <AppEmptyState v-else class="issd-tab-empty-state" variant="compact" icon="document" title="ยังไม่มีประวัติการชำระเงิน" description="รายการชำระเงินของแผงนี้จะแสดงที่นี่" />
                     </template>
 
                     <!-- Tab: ประวัติการซ่อม / ขออนุญาต (maintenance) -->
@@ -2670,9 +2646,13 @@
                         </div>
                       </div>
 
-                      <AppSegmentedControl
+                      <AppSecondaryTabs
                         v-model="maintenanceSourceFilter"
-                        :options="[{ value: 'all', label: 'ทั้งหมด' }, { value: 'tenant', label: 'ผู้เช่า' }, { value: 'staff', label: 'เจ้าหน้าที่' }]"
+                        :options="[
+                          { value: 'all', label: 'ทั้งหมด', count: stallMaintenance.length },
+                          { value: 'tenant', label: 'ผู้เช่า', count: stallMaintenance.filter(item => getMaintenanceSource(item) === 'tenant').length },
+                          { value: 'staff', label: 'เจ้าหน้าที่', count: stallMaintenance.filter(item => getMaintenanceSource(item) === 'staff').length }
+                        ]"
                         aria-label="กรองรายการตามผู้แจ้ง"
                       />
 
@@ -2681,34 +2661,95 @@
                           v-for="m in filteredStallMaintenance"
                           :key="m.id"
                           class="issd-maintenance-card"
+                          :class="`is-${m.status}`"
                         >
                           <div class="issd-card-top-row">
-                            <div class="issd-maintenance-tags">
-                              <span class="issd-maintenance-type-pill" :class="`type-${m.type}`">{{ formatMaintenanceType(m.type) }}</span>
-                            </div>
-                            <span class="issd-status-pill" :class="m.status === 'completed' ? 'is-available' : (m.status === 'rejected' ? 'is-occupied' : 'is-reserved')">
+                            <span class="issd-status-pill issd-maintenance-status" :class="m.status === 'completed' ? 'is-available' : (m.status === 'rejected' ? 'is-occupied' : 'is-reserved')">
+                              <span class="issd-maintenance-status-dot" aria-hidden="true"></span>
                               {{ formatMaintenanceStatus(m.status) }}
                             </span>
+                            <div class="issd-maintenance-type-label">
+                              <span aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z" />
+                                </svg>
+                              </span>
+                              {{ formatMaintenanceType(m.type) }}
+                            </div>
                           </div>
-                          <strong class="issd-card-title">{{ m.title }}</strong>
-                          <div class="issd-maintenance-meta-grid">
-                            <div><span>ผู้แจ้ง</span> <strong>{{ m.requesterName }}</strong></div>
-                            <div><span>วันที่</span> <strong>{{ m.requestDate }}</strong></div>
-                            <div v-if="m.estimatedCost"><span>ค่าใช้จ่าย</span> <strong class="is-rent">฿{{ Number(m.estimatedCost).toLocaleString('th-TH') }}</strong></div>
+                          <div class="issd-maintenance-identity">
+                            <strong>{{ m.title }}</strong>
                           </div>
-                          <div class="issd-card-actions-row">
-                            <AppButton v-if="m.status !== 'completed'"
-                              size="sm" variant="success" @click="updateMaintenanceStatus(m.id, 'completed')">เสร็จสิ้น</AppButton>
-                            <AppButton size="sm" variant="danger-outline" @click="deleteMaintenance(m.id)">ลบ</AppButton>
+                          <div class="issd-compact-card-body">
+                            <div v-if="m.status === 'pending'" class="issd-maintenance-meta-grid">
+                              <div class="issd-maintenance-meta-item"><span>ผู้แจ้ง</span><strong>{{ m.requesterName }}</strong></div>
+                              <div class="issd-maintenance-meta-item"><span>วันที่แจ้ง</span><strong>{{ formatMaintenanceDate(m.requestDate) }}</strong></div>
+                              <div class="issd-maintenance-meta-item"><span>รอรับเรื่อง</span><strong class="is-waiting">{{ maintenanceWaitingDays(m) }} วัน</strong></div>
+                            </div>
+
+                            <div v-else-if="m.status === 'in_progress'" class="issd-maintenance-meta-grid">
+                              <div class="issd-maintenance-meta-item"><span>ผู้รับผิดชอบ</span><strong>{{ m.assigneeName || m.technicianName || formatMaintenanceAssignee(m.assigneeType) }}</strong></div>
+                              <div class="issd-maintenance-meta-item"><span>รับเรื่องเมื่อ</span><strong>{{ formatMaintenanceDate(m.acceptedAt || m.requestDate) }}</strong></div>
+                              <div class="issd-maintenance-meta-item"><span>กำหนดเสร็จ</span><strong>{{ formatMaintenanceDate(m.scheduledDate) }}</strong></div>
+                            </div>
+
+                            <div v-else-if="m.status === 'completed'" class="issd-maintenance-meta-grid">
+                              <div class="issd-maintenance-meta-item"><span>แก้ไขโดย</span><strong>{{ m.executorName || m.technicianName || 'ทีมซ่อมบำรุงตลาด' }}</strong></div>
+                              <div class="issd-maintenance-meta-item"><span>เสร็จเมื่อ</span><strong class="is-success">{{ formatMaintenanceDate(m.completionDate || m.completedAt || m.scheduledDate) }}</strong></div>
+                              <div class="issd-maintenance-meta-item"><span>ใช้เวลา</span><strong>{{ maintenanceDurationDays(m) }} วัน</strong></div>
+                            </div>
+
+                            <div v-else class="issd-maintenance-meta-grid">
+                              <div class="issd-maintenance-meta-item"><span>ผู้แจ้ง</span><strong>{{ m.requesterName }}</strong></div>
+                              <div class="issd-maintenance-meta-item"><span>วันที่แจ้ง</span><strong>{{ formatMaintenanceDate(m.requestDate) }}</strong></div>
+                              <div class="issd-maintenance-meta-item"><span>ปิดเรื่องโดย</span><strong>{{ m.rejectedBy || 'เจ้าหน้าที่ตลาด' }}</strong></div>
+                            </div>
+
+                            <div v-if="m.status === 'in_progress' && (m.expensePayer || m.priority || m.tenantMessage)" class="issd-maintenance-assignment-note">
+                              <span v-if="m.expensePayer">ผู้รับผิดชอบค่าใช้จ่าย: <strong>{{ formatMaintenancePayer(m.expensePayer) }}</strong></span>
+                              <span v-if="m.priority">ความเร่งด่วน: <strong>{{ formatMaintenancePriority(m.priority) }}</strong></span>
+                              <p v-if="m.tenantMessage">ข้อความถึงผู้เช่า: {{ m.tenantMessage }}</p>
+                            </div>
+
+                            <div v-if="m.status === 'completed'" class="issd-maintenance-result">
+                              <div class="issd-maintenance-photo-compare">
+                                <figure>
+                                  <div class="issd-maintenance-photo-frame is-before">
+                                    <img v-if="m.beforePhotos?.[0]?.dataUrl" :src="m.beforePhotos[0].dataUrl" alt="รูปก่อนแก้" />
+                                    <span v-else>ไม่มีรูปก่อนแก้</span>
+                                  </div>
+                                  <figcaption>ก่อนแก้ไข</figcaption>
+                                </figure>
+                                <figure>
+                                  <div class="issd-maintenance-photo-frame is-after">
+                                    <img v-if="m.afterPhotos?.[0]?.dataUrl" :src="m.afterPhotos[0].dataUrl" alt="รูปหลังแก้" />
+                                    <span v-else>{{ m.afterPhotos?.length ? `รูปหลังแก้ ${m.afterPhotos.length} รูป` : 'ไม่มีรูปหลังแก้' }}</span>
+                                  </div>
+                                  <figcaption>หลังแก้ไข</figcaption>
+                                </figure>
+                              </div>
+                              <p v-if="m.repairSummary"><strong>สิ่งที่แก้:</strong> {{ m.repairSummary }}</p>
+                              <p v-if="m.actualCost !== undefined"><strong>ค่าใช้จ่ายจริง:</strong> ฿{{ Number(m.actualCost).toLocaleString('th-TH') }}</p>
+                            </div>
+
+                            <div v-if="m.status === 'rejected'" class="issd-maintenance-rejection-summary">
+                              <strong>เหตุผลที่ไม่รับเรื่อง:</strong>
+                              <span>{{ formatMaintenanceRejectReason(m.rejectionReason) }}<template v-if="m.rejectionDetail"> · {{ m.rejectionDetail }}</template></span>
+                            </div>
+
+                            <div class="issd-maintenance-footer-row">
+                              <div v-if="m.status === 'pending'" class="issd-card-actions-row">
+                                <AppButton size="sm" variant="secondary" @click="openMaintenanceAction(m, 'reject')">ไม่รับเรื่อง</AppButton>
+                                <AppButton size="sm" variant="primary" @click="openMaintenanceAction(m, 'accept')">รับเรื่อง</AppButton>
+                              </div>
+                              <div v-else-if="m.status === 'in_progress'" class="issd-card-actions-row">
+                                <AppButton size="sm" variant="primary" @click="openMaintenanceAction(m, 'complete')">บันทึกว่าเสร็จสิ้น</AppButton>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                      <div v-else class="issd-empty-box">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-                        </svg>
-                        <p>ไม่มีงานซ่อม</p>
-                      </div>
+                      <AppEmptyState v-else class="issd-tab-empty-state" variant="compact" icon="inbox" title="ยังไม่มีงานซ่อม" description="รายการแจ้งซ่อมและขออนุญาตจะแสดงที่นี่" />
                     </template>
                   </div>
 
@@ -2855,25 +2896,15 @@
                   <!-- View: Edit in Map -->
                   <div v-else-if="stallDrawerMode === 'edit'" class="issd-body issd-body-edit">
                     <form class="issd-form-grid" novalidate @submit.prevent="saveStall">
-                      <div class="full issd-photo-editor">
-                        <div class="issd-photo-editor-head">
-                          <span>รูปภาพแผง</span>
-                          <small>{{ editablePhotos.length }}/{{ MAX_STALL_PHOTOS }} รูป</small>
-                        </div>
-                        <div class="issd-photo-editor-grid">
-                          <div v-for="(src, idx) in editablePhotos" :key="`${idx}-${src.slice(-16)}`" class="issd-photo-thumb">
-                            <img :src="src" :alt="`ภาพแผง ${idx + 1}`" />
-                            <button type="button" class="issd-photo-remove" aria-label="ลบรูปนี้" title="ลบรูปนี้" @click="removeStallPhoto(idx)">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            </button>
-                          </div>
-                          <label v-if="editablePhotos.length < MAX_STALL_PHOTOS" class="issd-photo-add">
-                            <input type="file" accept="image/*" multiple hidden @change="handleStallPhotoUpload" />
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            <span>เพิ่มรูป</span>
-                          </label>
-                        </div>
-                      </div>
+                      <AppImageUpload
+                        v-model="editablePhotoFiles"
+                        class="full"
+                        label="รูปภาพแผง"
+                        :hint="`${editablePhotos.length}/${MAX_STALL_PHOTOS} รูป · JPG, PNG, WebP ไม่เกิน 2MB ต่อรูป`"
+                        multiple
+                        :max-files="MAX_STALL_PHOTOS"
+                        preview-alt="ภาพแผง"
+                      />
                       <label>
                         <span>รหัสแผง <b v-if="isCreatingNewStall" class="req-star">*</b></span>
                         <AppInput v-model="stallEdit.ident" placeholder="เช่น A-001" :disabled="!isCreatingNewStall" :error="stallErrors.ident" @blur="validateStallField('ident')" />
@@ -2977,9 +3008,19 @@
       </section>
     </main>
 
+    <MaintenanceActionModal
+      :model-value="Boolean(activeMaintenanceAction)"
+      :mode="activeMaintenanceAction?.mode || 'accept'"
+      :item="activeMaintenanceItem"
+      :item-title="activeMaintenanceItem?.title"
+      @update:model-value="handleMaintenanceModalVisibility"
+      @submit="submitMaintenanceAction"
+    />
+
     <Teleport to="body">
       <AppModal
         v-model="showZoneEditor"
+        icon="map"
         title="เพิ่มโซนบนผัง"
         :description="`พื้นที่ ${drawnZoneCoordinates.length} จุดที่วาดบนแผนที่จะถูกใช้เป็นขอบเขตโซน`"
       >
@@ -3008,12 +3049,12 @@
           </label>
         </form>
         <template #footer>
-          <AppButton variant="secondary" @click="dismissZoneEditor">ยกเลิก</AppButton>
-          <AppButton @click="createZone">บันทึกโซน</AppButton>
+          <AppButton variant="secondary" size="md" @click="dismissZoneEditor">ยกเลิก</AppButton>
+          <AppButton size="md" @click="createZone">บันทึกโซน</AppButton>
         </template>
       </AppModal>
 
-      <AppModal v-model="showFacilityEditor" title="เพิ่มจุดอำนวยความสะดวก" description="ตำแหน่งถูกกำหนดจากจุดที่เลือกบนผังแล้ว">
+      <AppModal v-model="showFacilityEditor" icon="pin" title="เพิ่มจุดอำนวยความสะดวก" description="ตำแหน่งถูกกำหนดจากจุดที่เลือกบนผังแล้ว">
         <form class="facility-form" novalidate @submit.prevent="createFacility">
           <label>
             <span>ชื่อจุดบริการ <b class="req-star">*</b></span>
@@ -3025,71 +3066,25 @@
           </label>
         </form>
         <template #footer>
-          <AppButton variant="secondary" @click="closeFacilityEditor">ยกเลิก</AppButton>
-          <AppButton @click="createFacility">เพิ่มจุดบริการ</AppButton>
+          <AppButton variant="secondary" size="md" @click="closeFacilityEditor">ยกเลิก</AppButton>
+          <AppButton size="md" @click="createFacility">เพิ่มจุดบริการ</AppButton>
         </template>
       </AppModal>
 
       <!-- Modal: เพิ่มผู้เช่าช่วง -->
       <AppModal
         v-model="showAddSubtenantModal"
+        icon="users"
         title="เพิ่มผู้เช่าช่วง"
         :description="`บันทึกข้อมูลผู้เช่าช่วงสำหรับแผงค้า ${stallDisplayNumber || '-'}`"
       >
         <form class="issd-modal-form" novalidate @submit.prevent="saveSubtenant">
-          <div class="issd-photo-upload-wrap full">
-            <span class="issd-upload-label">รูปถ่ายผู้เช่าช่วง / หน้าร้าน</span>
-            <div class="issd-photo-upload-box">
-              <div v-if="subtenantForm.photoUrl" class="issd-preview-thumb">
-                <img :src="subtenantForm.photoUrl" alt="ภาพตัวอย่าง" />
-                <button
-                  type="button"
-                  class="issd-remove-photo-btn"
-                  title="ลบรูป"
-                  aria-label="ลบรูป"
-                  @click="removeSubtenantPhoto"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-              </div>
-              <div v-else class="issd-empty-thumb">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                  <circle cx="12" cy="13" r="4"></circle>
-                </svg>
-              </div>
-              <div class="issd-upload-actions">
-                <div class="issd-upload-btn-row">
-                  <label class="issd-file-choose-btn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="17 8 12 3 7 8"></polyline>
-                      <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
-                    <span>{{ subtenantForm.photoUrl ? 'เปลี่ยนรูปภาพ' : 'เลือกรูปถ่าย' }}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      class="issd-file-hidden-input"
-                      @change="handleSubtenantImageUpload"
-                    />
-                  </label>
-                  <button
-                    v-if="subtenantForm.photoUrl"
-                    type="button"
-                    class="issd-remove-text-btn"
-                    @click="removeSubtenantPhoto"
-                  >
-                    ลบรูป
-                  </button>
-                </div>
-                <span class="issd-upload-hint">รองรับไฟล์ JPG, PNG, WebP ขนาดไม่เกิน 2MB</span>
-              </div>
-            </div>
-          </div>
+          <AppImageUpload
+            v-model="subtenantForm.photoUrl"
+            class="full"
+            label="รูปถ่ายผู้เช่าช่วง / หน้าร้าน"
+            preview-alt="ภาพตัวอย่างผู้เช่าช่วงหรือหน้าร้าน"
+          />
           <label>
             <span>ชื่อ-นามสกุล ผู้เช่าช่วง <b class="req-star">*</b></span>
             <AppInput v-model="subtenantForm.name" placeholder="เช่น คุณวราภรณ์ สดใส" :error="subtenantErrors.name" />
@@ -3129,14 +3124,15 @@
           </label>
         </form>
         <template #footer>
-          <AppButton variant="secondary" @click="showAddSubtenantModal = false">ยกเลิก</AppButton>
-          <AppButton variant="primary" @click="saveSubtenant">บันทึกผู้เช่าช่วง</AppButton>
+          <AppButton variant="secondary" size="md" @click="showAddSubtenantModal = false">ยกเลิก</AppButton>
+          <AppButton variant="primary" size="md" @click="saveSubtenant">บันทึกผู้เช่าช่วง</AppButton>
         </template>
       </AppModal>
 
       <!-- Modal: แจ้งซ่อม / ขออนุญาต -->
       <AppModal
         v-model="showAddMaintenanceModal"
+        icon="tool"
         title="แจ้งซ่อม / ขออนุญาตดำเนินการ"
         :description="`บันทึกรายการสำหรับแผงค้า ${stallDisplayNumber || '-'}`"
       >
@@ -3184,14 +3180,15 @@
           </label>
         </form>
         <template #footer>
-          <AppButton variant="secondary" @click="showAddMaintenanceModal = false">ยกเลิก</AppButton>
-          <AppButton variant="primary" @click="saveMaintenance">บันทึกรายการ</AppButton>
+          <AppButton variant="secondary" size="md" @click="showAddMaintenanceModal = false">ยกเลิก</AppButton>
+          <AppButton variant="primary" size="md" @click="saveMaintenance">บันทึกรายการ</AppButton>
         </template>
       </AppModal>
 
       <!-- Modal: บันทึกการชำระเงิน -->
       <AppModal
         v-model="showAddPaymentModal"
+        icon="payment"
         title="บันทึกการชำระเงิน"
         :description="`บันทึกประวัติรับชำระสำหรับแผงค้า ${stallDisplayNumber || '-'}`"
       >
@@ -3222,14 +3219,15 @@
           </label>
         </form>
         <template #footer>
-          <AppButton variant="secondary" @click="showAddPaymentModal = false">ยกเลิก</AppButton>
-          <AppButton variant="primary" @click="savePayment">บันทึกการชำระเงิน</AppButton>
+          <AppButton variant="secondary" size="md" @click="showAddPaymentModal = false">ยกเลิก</AppButton>
+          <AppButton variant="primary" size="md" @click="savePayment">บันทึกการชำระเงิน</AppButton>
         </template>
       </AppModal>
 
       <!-- Modal: จัดการสัญญาเช่า (สร้างใหม่ / แก้ไข) -->
       <AppModal
         v-model="showContractModal"
+        icon="document"
         :title="isEditingContract ? 'แก้ไขสัญญาเช่า' : 'ออกสัญญาเช่าใหม่'"
         :description="`จัดการสัญญาเช่าสำหรับแผงค้า ${stallDisplayNumber || '-'}`"
       >
@@ -3285,8 +3283,8 @@
           </label>
         </form>
         <template #footer>
-          <AppButton variant="secondary" @click="showContractModal = false">ยกเลิก</AppButton>
-          <AppButton variant="primary" @click="saveContract">{{ isEditingContract ? 'บันทึกการแก้ไข' : 'ยืนยันออกสัญญาเช่า' }}</AppButton>
+          <AppButton variant="secondary" size="md" @click="showContractModal = false">ยกเลิก</AppButton>
+          <AppButton variant="primary" size="md" @click="saveContract">{{ isEditingContract ? 'บันทึกการแก้ไข' : 'ยืนยันออกสัญญาเช่า' }}</AppButton>
         </template>
       </AppModal>
 
@@ -3300,31 +3298,15 @@
           @click.self="resolveUnsavedLeave('cancel')"
         >
           <div class="unsaved-leave-card">
-            <button
-              type="button"
-              class="unsaved-leave-close"
-              aria-label="อยู่หน้านี้ต่อ"
-              title="อยู่หน้านี้ต่อ"
-              @click="resolveUnsavedLeave('cancel')"
-            >
-              <CloseIcon />
-            </button>
-            <div class="unsaved-leave-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                <line x1="12" y1="9" x2="12" y2="13"></line>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-              </svg>
-            </div>
+            <AppModalHeader title="มีการแก้ไขที่ยังไม่ได้บันทึก" subtitle="เลือกดำเนินการก่อนออกจากหน้านี้" icon="warning" tone="warning" @close="resolveUnsavedLeave('cancel')" />
             <div class="unsaved-leave-content">
-              <h3>มีการแก้ไขที่ยังไม่ได้บันทึก</h3>
               <p>คุณมีการแก้ไขข้อมูลผังตลาดที่ยังไม่ได้บันทึก ต้องการบันทึกการแก้ไขก่อนออกจากหน้านี้หรือไม่?</p>
             </div>
             <div class="unsaved-leave-actions">
-              <AppButton variant="outline" :disabled="savingGIS" @click="resolveUnsavedLeave('discard')">
+              <AppButton variant="outline" size="md" :disabled="savingGIS" @click="resolveUnsavedLeave('discard')">
                 ไม่บันทึก
               </AppButton>
-              <AppButton variant="primary" :loading="savingGIS" @click="resolveUnsavedLeave('save')">
+              <AppButton variant="primary" size="md" :loading="savingGIS" @click="resolveUnsavedLeave('save')">
                 บันทึกการแก้ไข
               </AppButton>
             </div>
@@ -3341,15 +3323,7 @@
           @click.self="showInspectPhotoModal = false"
         >
           <div class="inspect-photo-modal">
-            <div class="ipm-head">
-              <div>
-                <strong>ภาพตัวอย่างแผง {{ stallDisplayNumber }}</strong>
-                <span>{{ selectedProject?.name || stallEdit.project_name }} · {{ formatFloorDisplay(stallEdit.floor) }}</span>
-              </div>
-              <button type="button" class="ipm-close" aria-label="ปิดตัวอย่างภาพ" @click="showInspectPhotoModal = false">
-                <CloseIcon />
-              </button>
-            </div>
+            <AppModalHeader :title="`ภาพตัวอย่างแผง ${stallDisplayNumber}`" :subtitle="`${selectedProject?.name || stallEdit.project_name} · ${formatFloorDisplay(stallEdit.floor)}`" icon="document" @close="showInspectPhotoModal = false" />
             <div class="ipm-stage">
               <img :src="inspectStallPhotos[inspectPhotoIndex]" :alt="`ภาพแผง ${stallDisplayNumber}`" class="ipm-main-img" />
               <button type="button" class="ipm-nav is-prev" aria-label="ภาพก่อนหน้า" @click="stepInspectPhoto(-1)">‹</button>
@@ -3377,24 +3351,32 @@
 
 <script setup lang="ts">
 import AppButton from '~/components/AppButton.vue'
+import AppImageUpload, { type AppImageFile } from '~/components/AppImageUpload.vue'
 import AppInput from '~/components/AppInput.vue'
 import AppModal from '~/components/AppModal.vue'
 import AppPagination from '~/components/AppPagination.vue'
 import AppSegmentedControl from '~/components/AppSegmentedControl.vue'
 import AppSelect from '~/components/AppSelect.vue'
-import StallUtilityBillingPanel from './components/StallUtilityBillingPanel.vue'
-import StallTempBillPanel from './components/StallTempBillPanel.vue'
-import StallCostDrawer from './components/StallCostDrawer.vue'
-import { useStallBilling, type CostFilter } from '../composables/useStallBilling'
+import { type MeterProjectRow, type MeterStallRow } from './components/StallMeterSummaryModal.vue'
+import MaintenanceActionModal, { type MaintenanceActionMode, type MaintenanceActionPayload } from './components/MaintenanceActionModal.vue'
+import { chargeRuleOf, needsReading, registerStallProjects, useStallBilling, type CostFilter } from '../composables/useStallBilling'
+import { useUtilitySettings } from '../composables/useUtilitySettings'
 import { getMarketGisConfig } from '../data/markets_registry'
-import { loadMarketGisJson, mergeMarketProjects, clearMarketGisCache, cloneProjects } from '../data/market_loader'
+import { mergeMarketProjects, clearMarketGisCache, cloneProjects } from '../data/market_loader'
 import { getAllFloorLayoutsForProject, isOverviewBoundaryProject } from '../data/market_stall_layout'
 import type { ProjectZone, MarketFacility } from '../data/market_gis_types'
 
+const StallUtilityBillingPanel = defineAsyncComponent(() => import('./components/StallUtilityBillingPanel.vue'))
+const StallTempBillPanel = defineAsyncComponent(() => import('./components/StallTempBillPanel.vue'))
+const StallCostDrawer = defineAsyncComponent(() => import('./components/StallCostDrawer.vue'))
+const StallMeterSummaryPanel = defineAsyncComponent(() => import('./components/StallMeterSummaryPanel.vue'))
+const StallMeterProjectCard = defineAsyncComponent(() => import('./components/StallMeterProjectCard.vue'))
+const StallMeterRecordCard = defineAsyncComponent(() => import('./components/StallMeterRecordCard.vue'))
+
 const route = useRoute()
 const router = useRouter()
-const { get, post, put, del } = useApi()
-const { showSuccess, showError, showConfirm } = useAppAlert()
+const { get, post, put, patch, del, apiFetch } = useApi()
+const { showSuccess, showError, showConfirm, showWarning } = useAppAlert()
 const { role } = useAuth()
 const { applyMarketOverride } = useMarketOverrides()
 const isStaff = computed(() => role.value === 'staff')
@@ -3404,6 +3386,8 @@ const isMapOverviewMode = computed(() => route.path === '/stalls/map' || route.q
 const isInspectMode = computed(() => isMapOverviewMode.value || String(route.query.mode || '') === 'inspect')
 export type MapPageViewMode = 'stalls' | 'payments' | 'meters'
 const pageMode = ref<MapPageViewMode>('stalls')
+// มุมมองที่ทำงานกับค่าใช้จ่าย (จดมิเตอร์ / การชำระเงิน): กดแผงบนแผนที่แล้วเปิดฟอร์มค่าน้ำ-ไฟ/บิล ไม่เปิดรายละเอียดแผงปกติ
+const isCostMode = computed(() => pageMode.value === 'meters' || pageMode.value === 'payments')
 const isViewDropdownOpen = ref(false)
 const viewDropdownWrapRef = ref<HTMLElement | null>(null)
 const dashboardPanelOpen = ref(false)
@@ -3475,6 +3459,19 @@ const marketBookings = ref<any[]>([])
 const marketWaitlistItems = ref<any[]>([])
 const marketApplications = ref<any[]>([])
 const marketContracts = ref<any[]>([])
+const marketDebts = ref<any[]>([])
+const extractStallCodesFromRecord = (record: any) => {
+  const codes = new Set<string>()
+  String(record?.stall_ident || record?.stall_number || record?.stall_code || record?.ident || record?.code || '')
+    .split(',')
+    .map(code => code.trim().toUpperCase())
+    .filter(Boolean)
+    .forEach(code => codes.add(code))
+  const descriptionCodes = String(record?.description || '').toUpperCase()
+    .match(/[A-Z]{1,10}-(?:\d+[A-Z]?)(?:-\d+[A-Z]?)+/g) || []
+  descriptionCodes.forEach(code => codes.add(code))
+  return Array.from(codes)
+}
 const dashboardZoneFilter = ref<string>('all')
 const dashboardUpdatedDateText = computed(() => {
   try {
@@ -3510,6 +3507,18 @@ const setDashboardStatusFilter = (status: typeof dashboardStatusFilter.value) =>
   dashboardStatusFilter.value = dashboardStatusFilter.value === status ? 'all' : status
 }
 const visibleProjects = computed(() => projects.value.filter(p => !isOverviewBoundaryProject(p, projects.value)))
+
+// Keep the KPI ribbon and the project drawer on the same authoritative GIS
+// dataset. Some registry entries only contain market metadata while the map
+// receives the complete projects from the backend.
+const handleMapDataLoaded = (payload: { projects?: ProjectZone[]; facilities?: MarketFacility[] }) => {
+  if (Array.isArray(payload.projects) && payload.projects.length) {
+    projects.value = payload.projects
+  }
+  if (Array.isArray(payload.facilities)) {
+    facilities.value = payload.facilities
+  }
+}
 
 const resolveRealStallStatus = (codeRaw: string, project?: ProjectZone | null, rawStall?: any): 'available' | 'reserved' | 'occupied' => {
   const code = String(codeRaw || '').trim()
@@ -3748,11 +3757,11 @@ const paymentSummary = computed(() => ({
 }))
 
 const meterDatasets = computed(() => {
-  const target = paymentDatasets.value.dueStalls
-  const recordedStalls = target.slice(0, 35)
-  const pendingStalls = target.slice(35, 42)
-  const overdueStalls: typeof target = []
-  const anomalyStalls = [recordedStalls[2], recordedStalls[11]].filter(Boolean)
+  const target = meterLiveRows.value
+  const recordedStalls = target.filter(row => row.recorded)
+  const pendingStalls = target.filter(row => !row.recorded && !row.skipped)
+  const overdueStalls = pendingStalls.filter(row => billing.getUtility(row.code)?.status === 'overdue')
+  const anomalyStalls = target.filter(row => row.abnormal)
 
   return {
     totalStalls: target,
@@ -3764,24 +3773,32 @@ const meterDatasets = computed(() => {
 })
 
 const meterStallCodeMap = computed(() => ({
-  total: meterDatasets.value.totalStalls.map(s => s.upperCode),
-  recorded: meterDatasets.value.recordedStalls.map(s => s.upperCode),
-  pending: meterDatasets.value.pendingStalls.map(s => s.upperCode),
-  overdue: meterDatasets.value.overdueStalls.map(s => s.upperCode),
-  anomaly: meterDatasets.value.anomalyStalls.map(s => s.upperCode)
+  total: meterDatasets.value.totalStalls.map(s => s.code.toUpperCase()),
+  recorded: meterDatasets.value.recordedStalls.map(s => s.code.toUpperCase()),
+  pending: meterDatasets.value.pendingStalls.map(s => s.code.toUpperCase()),
+  overdue: meterDatasets.value.overdueStalls.map(s => s.code.toUpperCase()),
+  anomaly: meterDatasets.value.anomalyStalls.map(s => s.code.toUpperCase())
 }))
 
-const meterSummary = computed(() => ({
-  totalCount: meterDatasets.value.totalStalls.length || 42,
-  waterCount: meterDatasets.value.totalStalls.length || 42,
-  electricCount: meterDatasets.value.totalStalls.length || 42,
-  recordedCount: meterDatasets.value.recordedStalls.length || 35,
-  completionRate: 83.3,
-  pendingCount: meterDatasets.value.pendingStalls.length || 7,
-  dueDateText: '30 ต.ค.',
-  overdueCount: meterDatasets.value.overdueStalls.length || 0,
-  anomalyCount: meterDatasets.value.anomalyStalls.length || 2
-}))
+const meterSummary = computed(() => {
+  const rows = meterDatasets.value.totalStalls
+  const dueDate = new Date(`${billing.billingMonth.value}-01T00:00:00`)
+  dueDate.setMonth(dueDate.getMonth() + 1, 0)
+  const dueDateText = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'short' }).format(dueDate)
+  const totalCount = rows.length
+  const recordedCount = meterDatasets.value.recordedStalls.length
+  return {
+    totalCount,
+    waterCount: rows.filter(row => needsReading(row.code, 'water')).length,
+    electricCount: rows.filter(row => needsReading(row.code, 'electric')).length,
+    recordedCount,
+    completionRate: totalCount ? Number(((recordedCount / totalCount) * 100).toFixed(1)) : 0,
+    pendingCount: meterDatasets.value.pendingStalls.length,
+    dueDateText,
+    overdueCount: meterDatasets.value.overdueStalls.length,
+    anomalyCount: meterDatasets.value.anomalyStalls.length
+  }
+})
 
 const mapActiveFilterCodes = computed<string[] | null>(() => {
   if (pageMode.value === 'stalls') {
@@ -3922,6 +3939,147 @@ const recordMatchesDashboardProject = (record: any) => {
 
 const dashboardContracts = computed(() => marketContracts.value.filter(recordMatchesDashboardProject))
 
+// แผงยอดนิยม: จัดอันดับการจองในช่วง 30 วันล่าสุด (นับการจองที่ยังไม่ถูกยกเลิก/ปฏิเสธ) สลับดูได้ 2 มุมมอง: ตามแผง / ตามโครงการ
+// แต่ละมุมมองมีช่วงเวลาของตัวเอง (แผงกับโครงการไม่ใช้ช่วงเดียวกัน)
+type PopularDays = 7 | 30 | 90
+const stallPopularDays = ref<PopularDays>(30)
+const projectPopularDays = ref<PopularDays>(30)
+// ช่วงเวลาของมุมมองที่เปิดอยู่ (ปุ่มเลือกช่วงอ่านและเขียนค่าของมุมมองนั้นเท่านั้น)
+const popularDays = computed<PopularDays>({
+  get: () => (popularMode.value === 'stall' ? stallPopularDays.value : projectPopularDays.value),
+  set: (value) => {
+    if (popularMode.value === 'stall') stallPopularDays.value = value
+    else projectPopularDays.value = value
+  }
+})
+const popularDayOptions: Array<7 | 30 | 90> = [7, 30, 90]
+const popularMode = ref<'stall' | 'project'>('stall')
+const popularModeOptions = [
+  { value: 'stall', label: 'แผง' },
+  { value: 'project', label: 'โครงการ' }
+]
+const recentActiveBookings = (days: PopularDays) => {
+  const since = Date.now() - days * 86_400_000
+  const excluded = new Set(['cancelled', 'rejected', 'not_interested', 'no_show', 'terminated'])
+  return marketBookings.value.filter((booking: any) => {
+    if (excluded.has(String(booking.booking_status || booking.status || '').toLowerCase())) return false
+    const time = new Date(booking.created_at || booking.visit_date || 0).getTime()
+    return !(Number.isFinite(time) && time > 0 && time < since)
+  })
+}
+const bookingTime = (booking: any) => {
+  const time = new Date(booking.created_at || booking.visit_date || 0).getTime()
+  return Number.isFinite(time) ? time : 0
+}
+// เลขอันดับและเหรียญ 1-3 ตามลำดับแถวเสมอ (แถวที่เท่ากันเรียงตามการจองล่าสุด)
+const withTies = <T extends { count: number }>(rows: T[]) => rows.map((row, index) => ({ ...row, rank: index + 1, hasMedal: index < 3 }))
+const popularStallRanking = computed(() => {
+  const counts = new Map<string, { code: string; count: number; projectName: string; last: number }>()
+  recentActiveBookings(stallPopularDays.value).filter(recordMatchesDashboardProject).forEach((booking: any) => {
+    getDashboardRecordCodes(booking).forEach((code) => {
+      const item = counts.get(code) || { code, count: 0, projectName: String(booking.project_name || ''), last: 0 }
+      item.count += 1
+      item.last = Math.max(item.last, bookingTime(booking))
+      counts.set(code, item)
+    })
+  })
+  const top = [...counts.values()].sort((a, b) => b.count - a.count || b.last - a.last).slice(0, 5)
+  if (!top.length) return []
+  // ชื่อแผงเรียกตามเลขจากผังสำรวจ (เช่น "แผง 129") และชื่อโครงการจากผัง เหมือนหัวแผงรายละเอียด ไม่ใช้รหัสภายในเต็ม
+  const wanted = new Set(top.map(item => item.code))
+  const info = new Map<string, { number: string; projectName: string }>()
+  visibleProjects.value.forEach((project) => {
+    getAllFloorLayoutsForProject(project).forEach((layout) => {
+      layout.stalls.forEach((stall: any) => {
+        const code = String(stall.code || stall.ident || stall.stall_ident || '').trim().toUpperCase()
+        if (!wanted.has(code) || info.has(code)) return
+        const number = String(stall.sourceProperties?.number ?? stall.sourceProperties?.Number ?? '').trim()
+        info.set(code, { number, projectName: cleanProjectName(project.name) })
+      })
+    })
+  })
+  return withTies(top.map(item => ({
+    ...item,
+    number: info.get(item.code)?.number || item.code,
+    projectName: info.get(item.code)?.projectName || cleanProjectName(item.projectName)
+  })))
+})
+const popularStallAllTied = computed(() => popularStallRanking.value.length > 1 && popularStallRanking.value.every(item => item.count === popularStallRanking.value[0]!.count))
+
+// มุมมองตามโครงการ: โครงการที่ถูกจองมากที่สุด (นับทุกโครงการ ไม่ผูกกับโครงการที่เลือกในแดชบอร์ด)
+const popularProjectRanking = computed(() => {
+  const bookings = recentActiveBookings(projectPopularDays.value)
+  if (!bookings.length) return []
+  const projectOfCode = new Map<string, { id: string; name: string }>()
+  const stallTotals = new Map<string, number>()
+  visibleProjects.value.forEach((project) => {
+    let total = 0
+    getAllFloorLayoutsForProject(project).forEach((layout) => {
+      layout.stalls.forEach((stall: any) => {
+        const code = String(stall.code || stall.ident || stall.stall_ident || '').trim().toUpperCase()
+        total += 1
+        if (code && !projectOfCode.has(code)) projectOfCode.set(code, { id: String(project.id), name: cleanProjectName(project.name) })
+      })
+    })
+    stallTotals.set(String(project.id), total)
+  })
+  const groups = new Map<string, { id: string; name: string; count: number; stalls: Set<string>; last: number }>()
+  bookings.forEach((booking: any) => {
+    getDashboardRecordCodes(booking).forEach((code) => {
+      const project = projectOfCode.get(code)
+      if (!project) return
+      const group = groups.get(project.id) || { id: project.id, name: project.name, count: 0, stalls: new Set<string>(), last: 0 }
+      group.count += 1
+      group.stalls.add(code)
+      group.last = Math.max(group.last, bookingTime(booking))
+      groups.set(project.id, group)
+    })
+  })
+  // เรียงตามสัดส่วนแผงที่ถูกจองเทียบจำนวนแผงทั้งโครงการ (โครงการใหญ่จึงไม่ได้เปรียบเพราะมีแผงเยอะ) แล้วตามจำนวนครั้ง
+  const rows = [...groups.values()].map((group) => {
+    const total = stallTotals.get(group.id) || 0
+    const percent = total > 0 ? (group.stalls.size / total) * 100 : 0
+    return { id: group.id, name: group.name, count: group.count, stallCount: group.stalls.size, total, percent, last: group.last }
+  })
+  rows.sort((a, b) => b.percent - a.percent || b.count - a.count || b.last - a.last)
+  const top = rows.slice(0, 5)
+  return top.map((row, index) => ({ ...row, rank: index + 1, hasMedal: index < 3 }))
+})
+const popularProjectAllTied = computed(() => popularProjectRanking.value.length > 1 && popularProjectRanking.value.every(item => item.percent === popularProjectRanking.value[0]!.percent && item.count === popularProjectRanking.value[0]!.count))
+
+// การ์ดแผงยอดนิยม: แต่ละมุมมอง (แผง / โครงการ) เก็บการเลือกของตัวเองแยกจากแผนที่
+// ไฮไลต์เกิดจากการกดแถวในการ์ดนี้เท่านั้น ไม่ดูจากช่องค้นหาหรือโครงการที่เปิดบนแผนที่
+const popularStallPick = ref('')
+const popularProjectPick = ref('')
+watch(popularMode, () => {
+  popularStallPick.value = ''
+  popularProjectPick.value = ''
+})
+const isPopularStallActive = (code: string) => popularMode.value === 'stall' && !!popularStallPick.value && popularStallPick.value === String(code || '').trim().toUpperCase()
+const isPopularProjectActive = (id: string) => popularMode.value === 'project' && !!popularProjectPick.value && popularProjectPick.value === String(id || '')
+const openPopularProject = (id: string) => {
+  const project = visibleProjects.value.find(item => item.id === id)
+  if (!project) return
+  if (isPopularProjectActive(id)) {
+    popularProjectPick.value = ''
+    mapRef.value?.exitProject?.()
+    return
+  }
+  popularProjectPick.value = String(id)
+  if (typeof mapRef.value?.enterProject === 'function') mapRef.value.enterProject(project)
+  else selectProject(project)
+}
+const filterStallFromDashboard = async (code: string) => {
+  const clean = String(code || '').trim().toUpperCase()
+  if (isPopularStallActive(clean)) {
+    popularStallPick.value = ''
+    mapRef.value?.clearAppliedSearch?.()
+    return
+  }
+  popularStallPick.value = clean
+  await mapRef.value?.searchStallFromDashboard?.(clean)
+}
+
 const contractHealthSummary = computed(() => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -3940,7 +4098,7 @@ const contractHealthSummary = computed(() => {
     if (['expired', 'terminated', 'cancelled'].includes(status) || (hasValidEnd && endDate < today)) expiredCount += 1
     else if (hasValidEnd && endDate <= cutoff) expiringCount += 1
     else normalCount += 1
-    totalMonthlyRent += Number(contract.monthly_rent || contract.rent_amount || contract.rent || 0)
+    totalMonthlyRent += Number(contract.monthly_rental || contract.monthly_rent || contract.rent_amount || contract.rent || 0)
   })
 
   if (dashboardContracts.value.length === 0) {
@@ -4318,10 +4476,20 @@ const contracts = ref<any[]>([])
 const stallHistory = ref<any[]>([])
 const gisPublished = ref(false)
 const isManageDataLoading = ref(true)
+const isActionDataLoading = ref(true)
+let loadDataController: AbortController | null = null
+let loadDataRun = 0
+let reloadAfterActivation = false
+let isManagePageActive = true
+let loadedMarketId = ''
+let hasActivatedManagePage = false
 const savingGIS = ref(false)
 const savingStall = ref(false)
 const showStallEditor = ref(false)
 const showInspectStallOverlay = ref(false)
+watch(showInspectStallOverlay, (open) => {
+  if (open) isViewDropdownOpen.value = false
+})
 const showInspectPhotoModal = ref(false)
 const emptyStall = () => ({ id: 0, ident: '', name: '', description: '', category: '', zone_id: 1, zone_name: selectedProject.value?.name || '', project_name: selectedProject.value?.name || '', floor: '1', width: 2, depth: 2, daily_rent: 150, monthly_rent: 1800, stall_status: 'available', coordinates_geojson: '', published: false })
 const stallEdit = ref(emptyStall())
@@ -4365,6 +4533,13 @@ const editablePhotos = computed<string[]>(() => {
   const list = (stallEdit.value as any)?.photos
   return Array.isArray(list) ? list : []
 })
+const editablePhotoFiles = computed<AppImageFile[]>({
+  get: () => editablePhotos.value.map((dataUrl, index) => ({ name: `stall-photo-${index + 1}`, dataUrl })),
+  set: (photos) => {
+    ;(stallEdit.value as any).photos = photos.map(photo => photo.dataUrl).filter(Boolean)
+    persistStallPhotos()
+  }
+})
 const persistStallPhotos = () => {
   const code = String(stallEdit.value.ident || '').trim()
   if (!import.meta.client || !code) return
@@ -4386,41 +4561,6 @@ const loadStallPhotos = () => {
 }
 // โหลดรูปที่ผู้ใช้อัปโหลดไว้ทุกครั้งที่เลือกแผงใหม่ (ต้องอยู่หลังประกาศ stallEdit และ loadStallPhotos)
 watch(stallEdit, () => loadStallPhotos())
-const readFileAsDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
-  const reader = new FileReader()
-  reader.onload = () => resolve(String(reader.result || ''))
-  reader.onerror = () => reject(reader.error)
-  reader.readAsDataURL(file)
-})
-const handleStallPhotoUpload = async (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const files = Array.from(input.files || [])
-  input.value = ''
-  if (!files.length) return
-  const next = [...editablePhotos.value]
-  for (const file of files) {
-    if (next.length >= MAX_STALL_PHOTOS) {
-      void showError(`เพิ่มรูปได้สูงสุด ${MAX_STALL_PHOTOS} รูปต่อแผง`, 'เพิ่มรูปครบแล้ว')
-      break
-    }
-    if (!file.type.startsWith('image/')) {
-      void showError('กรุณาเลือกไฟล์รูปภาพเท่านั้น (JPG, PNG, WebP)', 'ไฟล์ไม่ถูกต้อง')
-      continue
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      void showError(`รูป "${file.name}" ใหญ่เกิน 2 MB`, 'ไฟล์มีขนาดใหญ่เกินไป')
-      continue
-    }
-    try { next.push(await readFileAsDataUrl(file)) } catch {}
-  }
-  ;(stallEdit.value as any).photos = next
-  persistStallPhotos()
-}
-const removeStallPhoto = (idx: number) => {
-  const next = editablePhotos.value.filter((_, i) => i !== idx)
-  ;(stallEdit.value as any).photos = next
-  persistStallPhotos()
-}
 const openInspectPhotoPreview = (idx = 0) => {
   inspectPhotoIndex.value = idx
   showInspectPhotoModal.value = true
@@ -4492,7 +4632,8 @@ const inspectStallOccupancy = computed(() => {
   }
 })
 const activeHighlightedStallCodes = computed(() => {
-  if (isMapOverviewMode.value && pageMode.value === 'costs') {
+  if (isMapOverviewMode.value && isCostMode.value) {
+    if (meterCardCode.value) return [meterCardCode.value]
     if (costDrawerOpen.value && costStallCode.value) return [costStallCode.value]
     return costFilterCodes.value
   }
@@ -4533,6 +4674,24 @@ export interface StallMaintenanceItem {
   status: 'pending' | 'in_progress' | 'completed' | 'rejected'
   createdAt: string
   source?: 'tenant' | 'staff'
+  acceptedAt?: string
+  assigneeType?: 'market_technician' | 'contractor' | 'tenant'
+  assigneeName?: string
+  expensePayer?: 'market' | 'tenant' | 'shared'
+  priority?: 'normal' | 'urgent' | 'critical'
+  tenantMessage?: string
+  completedAt?: string
+  completionDate?: string
+  executorType?: 'market_technician' | 'contractor' | 'tenant'
+  executorName?: string
+  actualCost?: number
+  repairSummary?: string
+  beforePhotos?: Array<{ name: string; dataUrl?: string }>
+  afterPhotos?: Array<{ name: string; dataUrl?: string }>
+  rejectionReason?: string
+  rejectionDetail?: string
+  rejectedAt?: string
+  rejectedBy?: string
 }
 
 export interface StallPaymentItem {
@@ -4552,7 +4711,6 @@ export interface StallPaymentItem {
 
 const stallDrawerMode = ref<'detail' | 'edit' | 'full-detail'>('detail')
 const stallDetailTab = ref<'info' | 'contracts' | 'subtenants' | 'payments' | 'maintenance' | 'bookings' | 'history'>('info')
-const isActionAlertCollapsed = ref(false)
 const isMiniActionAlertExpanded = ref(false)
 const contractSubTab = ref<'active' | 'history'>('active')
 const bookingTypeFilter = ref<'all' | 'booking' | 'application'>('all')
@@ -4560,6 +4718,7 @@ const showZoneEditor = ref(false)
 const showFacilityEditor = ref(false)
 const facilityNameError = ref('')
 const mapVersion = ref(0)
+const touchManagedMapData = () => { mapVersion.value += 1 }
 const zoneOptions = [{ value: 1, label: 'โซน A' }, { value: 2, label: 'โซน B' }, { value: 3, label: 'โซน C' }, { value: 4, label: 'โซน D' }]
 const floorOptions = computed(() => {
   const fls = selectedProject.value?.floors
@@ -4680,6 +4839,45 @@ const formatThaiDateOnly = (dateStr?: string | null) => {
   const d = new Date(dateStr)
   if (isNaN(d.getTime())) return String(dateStr)
   return new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok' }).format(d)
+}
+
+const getBookingCountdownText = (dateStr?: string | null) => {
+  if (!dateStr) return ''
+  const target = new Date(dateStr)
+  if (isNaN(target.getTime())) return ''
+  const now = new Date()
+  const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const days = Math.round((targetDay - today) / 86400000)
+  if (days < 0) return ''
+  if (days === 0) return 'วันนี้'
+  return `อีก ${days} วัน`
+}
+
+const getApplicationWaitingText = (dateStr?: string | null) => {
+  if (!dateStr) return ''
+  const submitted = new Date(dateStr)
+  if (isNaN(submitted.getTime())) return ''
+  const days = Math.max(0, Math.floor((Date.now() - submitted.getTime()) / 86400000))
+  return days === 0 ? 'ยื่นวันนี้' : `รอ ${days} วัน`
+}
+
+const getContractRemainingDays = (endDateStr?: string | null) => {
+  if (!endDateStr) return null
+  const end = new Date(endDateStr)
+  if (isNaN(end.getTime())) return null
+  const now = new Date()
+  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  return Math.max(0, Math.ceil((endDay - today) / 86400000))
+}
+
+const getContractProgressPercent = (startDateStr?: string | null, endDateStr?: string | null) => {
+  if (!startDateStr || !endDateStr) return 0
+  const start = new Date(startDateStr).getTime()
+  const end = new Date(endDateStr).getTime()
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0
+  return Math.min(100, Math.max(0, ((Date.now() - start) / (end - start)) * 100))
 }
 
 const getContractDurationText = (startDateStr?: string | null, endDateStr?: string | null) => {
@@ -4835,6 +5033,17 @@ const stallActionRichItems = computed(() => {
         actionLabel: 'ไปที่การจอง',
         targetTab: 'bookings'
       })
+    } else if (st === 'pending_slot') {
+      list.push({
+        key: 'act-booking-slot',
+        category: 'การจอง',
+        severity: 'info',
+        title: 'รอเลือกวันนัดชม',
+        count: 1,
+        description: `ผู้จอง: ${applicant} ยังไม่ได้เลือกวันและเวลานัดเข้าชมแผง`,
+        actionLabel: 'ไปที่การจอง',
+        targetTab: 'bookings'
+      })
     } else if (st === 'approved') {
       list.push({
         key: 'act-booking-approved',
@@ -4863,7 +5072,18 @@ const stallActionRichItems = computed(() => {
   if (currentStallApplication.value) {
     const a = currentStallApplication.value
     const st = String(a.application_state || a.status || '').toLowerCase()
-    if (st !== 'approved' && st !== 'completed') {
+    if (['approved', 'director_approved'].includes(st) && !currentStallContract.value) {
+      list.push({
+        key: 'act-application-contract',
+        category: 'คำร้อง',
+        severity: 'warning',
+        title: 'รอออกสัญญา',
+        count: 1,
+        description: `คำร้อง ${a.application_number || a.application_no || '-'} อนุมัติแล้วและยังไม่มีสัญญาเช่า`,
+        actionLabel: 'ไปที่คำร้อง',
+        targetTab: 'bookings'
+      })
+    } else if (st !== 'approved' && st !== 'director_approved' && st !== 'completed') {
       list.push({
         key: 'act-application',
         category: 'คำร้อง',
@@ -4891,6 +5111,11 @@ const stallActionRichItems = computed(() => {
 
   return list
 })
+
+const stallActionTotalCount = computed(() => stallActionRichItems.value.reduce(
+  (total, item) => total + (item.count || 1),
+  0
+))
 
 // Badge ตัวเลขบนแท็บ: แสดงเฉพาะแท็บที่มีงานต้องดำเนินการ
 const tabActionCounts = computed(() => ({
@@ -4984,95 +5209,14 @@ const getContractsStorageKey = (code: string) => `stall_contracts_custom_${marke
 const loadStallContracts = (code: string) => {
   if (!code) return
   const upper = code.toUpperCase()
-  const key = getContractsStorageKey(upper)
-  if (import.meta.client) {
-    const raw = localStorage.getItem(key)
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          customStallContracts.value[upper] = parsed.map((c: any) =>
-            String(c.tenant_name || '').startsWith('แผง')
-              ? { ...c, tenant_name: 'คุณสมศักดิ์ มั่งคั่ง' }
-              : c
-          )
-          return
-        }
-      } catch {}
-    }
-  }
-  const status = String(stallEdit.value.stall_status || '').toLowerCase()
-  if (status === 'occupied') {
-    const rawName = String(stallEdit.value.name || '').trim()
-    const tenant = (rawName && !rawName.startsWith('แผง')) ? rawName : 'คุณสมศักดิ์ มั่งคั่ง'
-    const rent = Number(stallEdit.value.monthly_rent || 2000)
-    const defaultContract = {
-      id: `cnt-${upper}-01`,
-      contract_number: `CNT-2026-${upper}-01`,
-      stall_ident: upper,
-      stall_number: upper,
-      tenant_name: tenant,
-      tenant_phone: '081-889-9221',
-      tenant_id_card: '3-1006-00421-44-1',
-      shop_name: stallEdit.value.category || 'ร้านค้าทั่วไป',
-      start_date: '2026-01-01',
-      end_date: '2026-12-31',
-      monthly_rental: rent,
-      monthly_rent: rent,
-      security_deposit: rent * 2,
-      status: 'active',
-      note: 'สัญญาเช่าแผงค้ามาตรฐาน ชำระทุกวันที่ 5 ของเดือน',
-      created_at: '2026-01-01T08:00:00.000Z'
-    }
-    customStallContracts.value[upper] = [
-      defaultContract,
-      {
-        id: `cnt-${upper}-history-02`, contract_number: `CNT-2025-${upper}-02`, stall_ident: upper, stall_number: upper,
-        tenant_name: 'คุณกมลชนก แสงทอง', tenant_phone: '089-245-7810', shop_name: 'ร้านเครื่องดื่มสมุนไพร',
-        start_date: '2025-01-01', end_date: '2025-12-31', monthly_rental: Math.max(1200, rent - 200),
-        security_deposit: Math.max(2400, (rent - 200) * 2), status: 'expired',
-        note: 'สิ้นสุดสัญญาตามกำหนดและส่งคืนพื้นที่เรียบร้อย', created_at: '2025-01-01T08:00:00.000Z'
-      },
-      {
-        id: `cnt-${upper}-history-01`, contract_number: `CNT-2024-${upper}-01`, stall_ident: upper, stall_number: upper,
-        tenant_name: 'คุณประวิทย์ วัฒนกิจ', tenant_phone: '086-441-9082', shop_name: 'ร้านของฝากและสินค้าแห้ง',
-        start_date: '2024-03-01', end_date: '2024-11-30', monthly_rental: Math.max(1000, rent - 400),
-        security_deposit: Math.max(2000, (rent - 400) * 2), status: 'terminated',
-        note: 'ยกเลิกก่อนกำหนดตามคำขอของผู้เช่า', created_at: '2024-03-01T08:00:00.000Z'
-      }
-    ]
-  } else {
-    const rent = Number(stallEdit.value.monthly_rent || 2000)
-    customStallContracts.value[upper] = [
-      {
-        id: `cnt-${upper}-history-02`, contract_number: `CNT-2025-${upper}-02`, stall_ident: upper, stall_number: upper,
-        tenant_name: 'คุณกมลชนก แสงทอง', tenant_phone: '089-245-7810', shop_name: 'ร้านเครื่องดื่มสมุนไพร',
-        start_date: '2025-01-01', end_date: '2025-12-31', monthly_rental: Math.max(1200, rent - 200),
-        security_deposit: Math.max(2400, (rent - 200) * 2), status: 'expired',
-        note: 'สิ้นสุดสัญญาตามกำหนด', created_at: '2025-01-01T08:00:00.000Z'
-      }
-    ]
-  }
+  // สัญญาในหน้าข้อมูลแผงต้องมาจาก backend เท่านั้น
+  // ข้อมูลจำลอง/ฉบับร่างใน localStorage เคยทำให้สัญญาปัจจุบันและประวัติถูกนับซ้ำ
+  delete customStallContracts.value[upper]
 }
 
 const loadAllCustomContracts = () => {
-  if (!import.meta.client) return
-  try {
-    const prefix = `stall_contracts_custom_${marketId.value}_`
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)
-      if (key && key.startsWith(prefix)) {
-        const stallCode = key.replace(prefix, '').toUpperCase()
-        const raw = localStorage.getItem(key)
-        if (raw) {
-          const parsed = JSON.parse(raw)
-          if (Array.isArray(parsed)) {
-            customStallContracts.value[stallCode] = parsed
-          }
-        }
-      }
-    }
-  } catch {}
+  // คงฟังก์ชันไว้สำหรับจุดเรียกเดิม แต่ไม่โหลดสัญญาจำลองกลับมาปนกับข้อมูลจริง
+  customStallContracts.value = {}
 }
 
 const syncStallDataFromContracts = (code: string) => {
@@ -5091,7 +5235,11 @@ const syncStallDataFromContracts = (code: string) => {
     }
 
     const foundIdx = stalls.value.findIndex(s => String(s.ident || s.stall_ident).toUpperCase() === upperCode)
-    if (foundIdx >= 0) {
+    if (foundIdx >= 0 && (
+      String(stalls.value[foundIdx]?.stall_status || stalls.value[foundIdx]?.status) !== 'occupied'
+      || stalls.value[foundIdx]?.name !== stallEdit.value.name
+      || Number(stalls.value[foundIdx]?.monthly_rent) !== Number(stallEdit.value.monthly_rent)
+    )) {
       stalls.value[foundIdx] = {
         ...stalls.value[foundIdx],
         stall_status: 'occupied',
@@ -5101,7 +5249,9 @@ const syncStallDataFromContracts = (code: string) => {
       }
     }
 
-    projects.value.forEach(p => {
+    // แผงมีรหัสผูกกับโครงการที่กำลังเปิดอยู่ จึงไม่ต้องวนทุกโครงการ/ทุกแผงในตลาด
+    const projectsToSync = selectedProject.value ? [selectedProject.value] : []
+    projectsToSync.forEach(p => {
       getAllFloorLayoutsForProject(p).forEach(layout => {
         const layoutStall = layout.stalls.find((s: any) => String(s.code || s.ident).toUpperCase() === upperCode)
         if (layoutStall) {
@@ -5137,7 +5287,7 @@ const syncStallDataFromContracts = (code: string) => {
     }
 
     const foundIdx = stalls.value.findIndex(s => String(s.ident || s.stall_ident).toUpperCase() === upperCode)
-    if (foundIdx >= 0) {
+    if (foundIdx >= 0 && String(stalls.value[foundIdx]?.stall_status || stalls.value[foundIdx]?.status) !== targetStatus) {
       stalls.value[foundIdx] = {
         ...stalls.value[foundIdx],
         stall_status: targetStatus,
@@ -5146,7 +5296,8 @@ const syncStallDataFromContracts = (code: string) => {
       }
     }
 
-    projects.value.forEach(p => {
+    const projectsToSync = selectedProject.value ? [selectedProject.value] : []
+    projectsToSync.forEach(p => {
       getAllFloorLayoutsForProject(p).forEach(layout => {
         const layoutStall = layout.stalls.find((s: any) => String(s.code || s.ident).toUpperCase() === upperCode)
         if (layoutStall) {
@@ -5393,29 +5544,6 @@ const subtenantErrors = ref({
   startDate: ''
 })
 
-const handleSubtenantImageUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (!file) return
-  if (!file.type.startsWith('image/')) {
-    void showError('กรุณาเลือกไฟล์รูปภาพเท่านั้น (JPG, PNG, WebP)', 'ไฟล์ไม่ถูกต้อง')
-    return
-  }
-  if (file.size > 2 * 1024 * 1024) {
-    void showError('ขนาดไฟล์รูปภาพต้องไม่เกิน 2 MB', 'ไฟล์มีขนาดใหญ่เกินไป')
-    return
-  }
-  const reader = new FileReader()
-  reader.onload = () => {
-    subtenantForm.value.photoUrl = String(reader.result || '')
-  }
-  reader.readAsDataURL(file)
-}
-
-const removeSubtenantPhoto = () => {
-  subtenantForm.value.photoUrl = ''
-}
-
 const getSubtenantsStorageKey = (code: string) => `stall_subtenants_${marketId.value}_${code.toUpperCase()}`
 
 const loadStallSubtenants = (code: string) => {
@@ -5548,7 +5676,21 @@ const deleteSubtenant = async (id: string) => {
 
 // 2. Maintenance & Permission Requests Management
 const stallMaintenance = ref<StallMaintenanceItem[]>([])
+const maintenanceByStall = shallowRef<Record<string, StallMaintenanceItem[]>>({})
+const maintenanceIndexVersion = ref(0)
 const showAddMaintenanceModal = ref(false)
+const activeMaintenanceAction = ref<{ id: string; mode: MaintenanceActionMode } | null>(null)
+const activeMaintenanceItem = computed(() => {
+  if (!activeMaintenanceAction.value) return null
+  return stallMaintenance.value.find(item => item.id === activeMaintenanceAction.value?.id) || null
+})
+const maintenanceRejectReasonOptions = [
+  { value: 'tenant_responsibility', label: 'เป็นความรับผิดชอบของผู้เช่าตามสัญญา' },
+  { value: 'insufficient_information', label: 'ข้อมูลหรือหลักฐานไม่เพียงพอ' },
+  { value: 'duplicate', label: 'เป็นรายการซ้ำ' },
+  { value: 'outside_scope', label: 'อยู่นอกขอบเขตบริการของตลาด' },
+  { value: 'other', label: 'เหตุผลอื่น' }
+]
 const maintenanceForm = ref({
   type: 'repair' as 'repair' | 'renovation' | 'utility' | 'other',
   title: '',
@@ -5566,83 +5708,139 @@ const maintenanceErrors = ref({
   requestDate: ''
 })
 
-const getMaintenanceStorageKey = (code: string) => `stall_maintenance_${marketId.value}_${code.toUpperCase()}`
+const replaceMaintenanceIndex = (records: StallMaintenanceItem[]) => {
+  const next: Record<string, StallMaintenanceItem[]> = {}
+  records.forEach((record) => {
+    const code = String(record.stallIdent || (record as any).stall_ident || '').trim().toUpperCase()
+    if (!code) return
+    ;(next[code] ||= []).push({ ...record, stallIdent: code, id: String(record.id) })
+  })
+  maintenanceByStall.value = next
+  maintenanceIndexVersion.value += 1
+}
+
+const syncCurrentMaintenanceIndex = () => {
+  const code = String(stallEdit.value.ident || '').trim().toUpperCase()
+  if (!code) return
+  maintenanceByStall.value = { ...maintenanceByStall.value, [code]: [...stallMaintenance.value] }
+  maintenanceIndexVersion.value += 1
+}
+
+const maintenancePayload = (item: StallMaintenanceItem) => ({
+  ...item,
+  market_id: resolvedMarketID.value,
+  stall_ident: item.stallIdent
+})
+
+const persistMaintenanceItem = async (item: StallMaintenanceItem) => {
+  const numericID = Number(item.id)
+  const response = Number.isFinite(numericID) && numericID > 0
+    ? await put(`/maintenance-records/${numericID}`, maintenancePayload(item))
+    : await post('/maintenance-records', maintenancePayload(item))
+  return unwrap(response) as StallMaintenanceItem
+}
+
+const formatMaintenanceDate = (value?: string) => {
+  if (!value) return '–'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }).format(date)
+}
+
+const maintenanceWaitingDays = (item: StallMaintenanceItem) => {
+  const started = new Date(item.requestDate || item.createdAt)
+  if (Number.isNaN(started.getTime())) return 0
+  return Math.max(0, Math.ceil((Date.now() - started.getTime()) / 86400000))
+}
+
+const maintenanceDurationDays = (item: StallMaintenanceItem) => {
+  const started = new Date(item.acceptedAt || item.requestDate || item.createdAt)
+  const ended = new Date(item.completedAt || item.completionDate || '')
+  if (Number.isNaN(started.getTime()) || Number.isNaN(ended.getTime())) return 0
+  return Math.max(1, Math.ceil((ended.getTime() - started.getTime()) / 86400000))
+}
+
+const formatMaintenanceAssignee = (value?: StallMaintenanceItem['assigneeType']) => ({
+  market_technician: 'ช่างสำนักงานตลาด',
+  contractor: 'ผู้รับเหมา',
+  tenant: 'ผู้เช่าดำเนินการเอง'
+} as Record<string, string>)[value || ''] || '–'
+
+const formatMaintenancePayer = (value?: StallMaintenanceItem['expensePayer']) => ({
+  market: 'สำนักงานตลาด',
+  tenant: 'ผู้เช่า',
+  shared: 'ร่วมรับผิดชอบ'
+} as Record<string, string>)[value || ''] || '–'
+
+const formatMaintenancePriority = (value?: StallMaintenanceItem['priority']) => ({
+  normal: 'ปกติ',
+  urgent: 'เร่งด่วน',
+  critical: 'ฉุกเฉิน'
+} as Record<string, string>)[value || ''] || 'ปกติ'
+
+const formatMaintenanceRejectReason = (value?: string) => maintenanceRejectReasonOptions.find(option => option.value === value)?.label || value || '–'
+
+const openMaintenanceAction = (item: StallMaintenanceItem, mode: MaintenanceActionMode) => {
+  activeMaintenanceAction.value = { id: item.id, mode }
+}
+
+const closeMaintenanceAction = () => { activeMaintenanceAction.value = null }
+const handleMaintenanceModalVisibility = (visible: boolean) => { if (!visible) closeMaintenanceAction() }
+
+const submitMaintenanceAction = async (payload: MaintenanceActionPayload) => {
+  const item = activeMaintenanceItem.value
+  if (!item) return
+  const draft: StallMaintenanceItem = { ...item }
+
+  if (payload.mode === 'accept') {
+    draft.status = 'in_progress'
+    draft.assigneeType = payload.assigneeType
+    draft.assigneeName = formatMaintenanceAssignee(payload.assigneeType)
+    draft.scheduledDate = payload.scheduledDate
+    draft.expensePayer = payload.expensePayer
+    draft.priority = payload.priority
+    draft.tenantMessage = payload.tenantMessage.trim() || undefined
+    draft.acceptedAt = new Date().toISOString()
+  } else if (payload.mode === 'complete') {
+    draft.status = 'completed'
+    draft.executorType = payload.executorType
+    draft.executorName = payload.executorName.trim()
+    draft.completionDate = payload.completionDate || new Date().toISOString().slice(0, 10)
+    draft.completedAt = new Date().toISOString()
+    draft.actualCost = payload.actualCost === '' ? undefined : Number(payload.actualCost)
+    draft.repairSummary = payload.repairSummary.trim() || undefined
+    draft.afterPhotos = [...payload.afterPhotos]
+  } else {
+    draft.status = 'rejected'
+    draft.rejectionReason = payload.reason
+    draft.rejectionDetail = payload.detail.trim()
+    draft.rejectedAt = new Date().toISOString()
+    draft.rejectedBy = 'เจ้าหน้าที่ตลาด'
+  }
+
+  try {
+    const saved = await persistMaintenanceItem(draft)
+    Object.assign(item, saved, { id: String(saved.id || item.id) })
+    syncCurrentMaintenanceIndex()
+    closeMaintenanceAction()
+  } catch {
+    void showError('ไม่สามารถบันทึกการดำเนินงานซ่อมลงระบบได้', 'บันทึกไม่สำเร็จ')
+    return
+  }
+  const messages = {
+    accept: ['รับเรื่องและมอบหมายงานซ่อมเรียบร้อยแล้ว', 'รับเรื่องสำเร็จ'],
+    complete: ['บันทึกผลการซ่อมและปิดงานเรียบร้อยแล้ว', 'เสร็จสิ้น'],
+    reject: ['บันทึกการไม่รับเรื่องและข้อความถึงผู้เช่าแล้ว', 'บันทึกสำเร็จ']
+  } as const
+  void showSuccess(messages[payload.mode][0], messages[payload.mode][1])
+}
 
 const loadStallMaintenance = (code: string) => {
   if (!code) {
     stallMaintenance.value = []
     return
   }
-  const key = getMaintenanceStorageKey(code)
-  if (import.meta.client) {
-    const raw = localStorage.getItem(key)
-    if (raw) {
-      try {
-        stallMaintenance.value = JSON.parse(raw)
-        return
-      } catch {}
-    }
-  }
-  const status = String(stallEdit.value.stall_status || '').toLowerCase()
-  const hasActiveContract = (customStallContracts.value[code.toUpperCase()] || []).some((c: any) => c.status === 'active') ||
-    stallContractsList.value.some((c: any) => c.status === 'active')
-  if (status === 'occupied' || hasActiveContract) {
-    stallMaintenance.value = [
-      {
-        id: `maint-${code}-01`,
-        stallIdent: code,
-        type: 'repair',
-        title: 'ขอซ่อมแซมกระเบื้องปูพื้นชำรุด',
-        description: 'กระเบื้องหน้าแผงหลุดร่อนจำนวน 2 แผ่น ช่างส่วนกลางเข้าตรวจสอบแล้ว',
-        requesterName: stallEdit.value.name ? `${stallEdit.value.name} (ผู้เช่า)` : 'ผู้เช่าแผง',
-        technicianName: 'ช่างสมพงษ์ (งานอาคาร)',
-        requestDate: '2026-02-14',
-        scheduledDate: '2026-02-18',
-        estimatedCost: 350,
-        status: 'completed',
-        createdAt: '2026-02-14T09:30:00.000Z'
-      },
-      {
-        id: `maint-${code}-02`,
-        stallIdent: code,
-        type: 'utility',
-        title: 'ขออนุญาตติดตั้งมิเตอร์ไฟฟ้าและเบรกเกอร์ย่อย',
-        description: 'ขอเพิ่มปลั๊กพ่วงกำลังไฟ 15A สำหรับตู้แช่เครื่องดื่ม',
-        requesterName: stallEdit.value.name ? `${stallEdit.value.name} (ผู้เช่า)` : 'ผู้เช่าแผง',
-        technicianName: 'ฝ่ายช่างไฟฟ้าตลาด',
-        requestDate: '2026-03-01',
-        scheduledDate: '2026-03-05',
-        estimatedCost: 1200,
-        status: 'completed',
-        createdAt: '2026-03-01T10:15:00.000Z',
-        source: 'tenant'
-      },
-      {
-        id: `maint-${code}-03`, stallIdent: code, type: 'repair', title: 'ตรวจเช็กระบบระบายน้ำตามแผน',
-        description: 'เจ้าหน้าที่อาคารตรวจสภาพท่อระบายน้ำหลังแผงเพื่อป้องกันการอุดตัน',
-        requesterName: 'ฝ่ายอาคารและสถานที่', technicianName: 'ทีมซ่อมบำรุงตลาด', requestDate: '2026-10-25',
-        scheduledDate: '2026-10-30', estimatedCost: 0, status: 'in_progress', createdAt: '2026-10-25T09:00:00.000Z', source: 'staff'
-      }
-    ]
-  } else {
-    stallMaintenance.value = [
-      {
-        id: `maint-${code}-03`,
-        stallIdent: code,
-        type: 'repair',
-        title: 'ตรวจระบบระบายน้ำประจำเดือน',
-        description: 'ตรวจท่อระบายน้ำหลังแผง',
-        requesterName: 'ฝ่ายอาคารและสถานที่',
-        technicianName: 'ทีมซ่อมบำรุงตลาด',
-        requestDate: '2026-10-25',
-        scheduledDate: '2026-10-30',
-        estimatedCost: 0,
-        status: 'in_progress',
-        createdAt: '2026-10-25T09:00:00.000Z',
-        source: 'staff'
-      }
-    ]
-  }
+  stallMaintenance.value = [...(maintenanceByStall.value[code.toUpperCase()] || [])]
 }
 
 const openAddMaintenanceModal = () => {
@@ -5661,7 +5859,7 @@ const openAddMaintenanceModal = () => {
   showAddMaintenanceModal.value = true
 }
 
-const saveMaintenance = () => {
+const saveMaintenance = async () => {
   maintenanceErrors.value = {
     title: maintenanceForm.value.title ? '' : 'กรุณาระบุหัวข้อเรื่องการซ่อมหรือคำขอ',
     requesterName: maintenanceForm.value.requesterName ? '' : 'กรุณาระบุผู้แจ้งเรื่อง',
@@ -5685,21 +5883,29 @@ const saveMaintenance = () => {
     createdAt: new Date().toISOString()
   }
 
-  stallMaintenance.value.unshift(newItem)
-  if (import.meta.client && code) {
-    localStorage.setItem(getMaintenanceStorageKey(code), JSON.stringify(stallMaintenance.value))
+  try {
+    const saved = await persistMaintenanceItem(newItem)
+    stallMaintenance.value.unshift({ ...saved, id: String(saved.id), stallIdent: code })
+    syncCurrentMaintenanceIndex()
+  } catch {
+    void showError('ไม่สามารถบันทึกรายการซ่อมลงระบบได้', 'บันทึกไม่สำเร็จ')
+    return
   }
   showAddMaintenanceModal.value = false
   void showSuccess('บันทึกรายการซ่อม / ขออนุญาตเรียบร้อยแล้ว', 'บันทึกสำเร็จ')
 }
 
-const updateMaintenanceStatus = (id: string, newStatus: 'completed' | 'in_progress' | 'pending' | 'rejected') => {
+const updateMaintenanceStatus = async (id: string, newStatus: 'completed' | 'in_progress' | 'pending' | 'rejected') => {
   const item = stallMaintenance.value.find(m => m.id === id)
   if (!item) return
-  item.status = newStatus
-  const code = String(stallEdit.value.ident || '').trim().toUpperCase()
-  if (import.meta.client && code) {
-    localStorage.setItem(getMaintenanceStorageKey(code), JSON.stringify(stallMaintenance.value))
+  const draft = { ...item, status: newStatus }
+  try {
+    const saved = await persistMaintenanceItem(draft)
+    Object.assign(item, saved, { id: String(saved.id || item.id) })
+    syncCurrentMaintenanceIndex()
+  } catch {
+    void showError('ไม่สามารถอัปเดตสถานะงานซ่อมได้', 'อัปเดตไม่สำเร็จ')
+    return
   }
   void showSuccess('อัปเดตสถานะการดำเนินการเรียบร้อยแล้ว', 'อัปเดตสำเร็จ')
 }
@@ -5715,10 +5921,13 @@ const deleteMaintenance = async (id: string) => {
     }
   )
   if (!confirmed) return
-  stallMaintenance.value = stallMaintenance.value.filter(m => m.id !== id)
-  const code = String(stallEdit.value.ident || '').trim().toUpperCase()
-  if (import.meta.client && code) {
-    localStorage.setItem(getMaintenanceStorageKey(code), JSON.stringify(stallMaintenance.value))
+  try {
+    await del(`/maintenance-records/${encodeURIComponent(id)}`)
+    stallMaintenance.value = stallMaintenance.value.filter(m => m.id !== id)
+    syncCurrentMaintenanceIndex()
+  } catch {
+    void showError('ไม่สามารถลบรายการซ่อมได้', 'ลบไม่สำเร็จ')
+    return
   }
   void showSuccess('ลบรายการเรียบร้อยแล้ว', 'ลบสำเร็จ')
 }
@@ -5738,7 +5947,7 @@ const formatMaintenanceStatus = (s: string) => {
     pending: 'รอดำเนินการ',
     in_progress: 'กำลังดำเนินการ',
     completed: 'เสร็จสิ้น',
-    rejected: 'ไม่อนุมัติ'
+    rejected: 'ไม่รับเรื่อง'
   }
   return map[s] || s
 }
@@ -5767,80 +5976,25 @@ const loadStallPayments = (code: string) => {
     stallPayments.value = []
     return
   }
-  const key = getPaymentsStorageKey(code)
-  if (import.meta.client) {
-    const raw = localStorage.getItem(key)
-    if (raw) {
-      try {
-        stallPayments.value = JSON.parse(raw)
-        return
-      } catch {}
-    }
-  }
-  const status = String(stallEdit.value.stall_status || '').toLowerCase()
-  const hasActiveContract = (customStallContracts.value[code.toUpperCase()] || []).some((c: any) => c.status === 'active') ||
-    stallContractsList.value.some((c: any) => c.status === 'active')
-  if (status === 'occupied' || hasActiveContract) {
-    const rent = Number(stallEdit.value.monthly_rent || 1800)
-    stallPayments.value = [
-      {
-        id: `pay-${code}-01`,
-        stallIdent: code,
-        invoiceNumber: `INV-2026-03-${code}`,
-        periodMonth: 'งวดมีนาคม 2569',
-        title: 'ค่าเช่าแผงประจำงวดเดือนมีนาคม',
-        amount: rent,
-        paidDate: '2026-03-02',
-        paymentMethod: 'qr',
-        receiptNumber: `REC-6903-${code}-01`,
-        status: 'paid',
-        createdAt: '2026-03-02T11:20:00.000Z',
-        contractNumber: `CNT-2026-${code.toUpperCase()}-01`
-      },
-      {
-        id: `pay-${code}-02`,
-        stallIdent: code,
-        invoiceNumber: `INV-2026-02-${code}`,
-        periodMonth: 'งวดกุมภาพันธ์ 2569',
-        title: 'ค่าเช่าแผงประจำงวดเดือนกุมภาพันธ์',
-        amount: rent,
-        paidDate: '2026-02-01',
-        paymentMethod: 'transfer',
-        receiptNumber: `REC-6902-${code}-01`,
-        status: 'paid',
-        createdAt: '2026-02-01T14:45:00.000Z',
-        contractNumber: `CNT-2026-${code.toUpperCase()}-01`
-      },
-      {
-        id: `pay-${code}-03`,
-        stallIdent: code,
-        invoiceNumber: `INV-2026-01-${code}`,
-        periodMonth: 'งวดมกราคม 2569',
-        title: 'ค่าธรรมเนียมแรกเข้าและเงินประกัน',
-        amount: Number(inspectStallEntryFee.value || 36000),
-        paidDate: '2026-01-05',
-        paymentMethod: 'transfer',
-        receiptNumber: `REC-6901-${code}-00`,
-        status: 'paid',
-        createdAt: '2026-01-05T10:00:00.000Z',
-        contractNumber: `CNT-2026-${code.toUpperCase()}-01`
-      },
-      {
-        id: `pay-${code}-04`, stallIdent: code, invoiceNumber: `INV-2026-10-${code}`,
-        periodMonth: 'งวดตุลาคม 2569', title: 'ค่าเช่าแผงประจำงวดเดือนตุลาคม', amount: rent,
-        paymentMethod: 'transfer', status: 'overdue', createdAt: '2026-10-05T08:00:00.000Z',
-        contractNumber: `CNT-2026-${code.toUpperCase()}-01`
-      },
-      {
-        id: `pay-${code}-history-01`, stallIdent: code, invoiceNumber: `INV-2025-12-${code}`,
-        periodMonth: 'งวดธันวาคม 2568', title: 'ค่าเช่างวดสุดท้ายของสัญญาเดิม', amount: Math.max(1200, rent - 200),
-        paidDate: '2025-12-03', paymentMethod: 'cash', receiptNumber: `REC-6812-${code}-01`, status: 'paid',
-        createdAt: '2025-12-03T10:00:00.000Z', contractNumber: `CNT-2025-${code.toUpperCase()}-02`
+  const upperCode = code.trim().toUpperCase()
+  stallPayments.value = marketDebts.value
+    .filter(debt => extractStallCodesFromRecord(debt).includes(upperCode))
+    .map((debt: any) => {
+      const rawStatus = String(debt.status || '').trim().toLowerCase()
+      const isOutstanding = ['outstanding', 'overdue', 'past_due', 'ค้างชำระ'].includes(rawStatus)
+      return {
+        id: `debt-${debt.id}`,
+        stallIdent: upperCode,
+        invoiceNumber: `DEBT-${debt.id}`,
+        periodMonth: 'รายการหนี้',
+        title: String(debt.description || 'รายการค้างชำระ'),
+        amount: Number(debt.amount_satang || 0) / 100,
+        paymentMethod: 'transfer' as const,
+        status: isOutstanding ? 'overdue' as const : 'paid' as const,
+        createdAt: String(debt.created_at || ''),
+        paidDate: isOutstanding ? undefined : String(debt.updated_at || debt.created_at || '')
       }
-    ]
-  } else {
-    stallPayments.value = []
-  }
+    })
 }
 
 const openAddPaymentModal = () => {
@@ -5953,6 +6107,9 @@ const stallBookingsAndApps = computed(() => {
     refNumber: string
     applicantName: string
     phone?: string
+    rawDate?: string
+    rawStatus?: string
+    sourceRef?: string
     dateLabel: string
     dateText: string
     statusText: string
@@ -5994,6 +6151,8 @@ const stallBookingsAndApps = computed(() => {
       refNumber: bookingRef,
       applicantName: b.tenant_name || b.applicant_name || '-',
       phone: b.tenant_phone || b.applicant_phone || '',
+      rawDate: b.visit_date || b.created_at || '',
+      rawStatus: st,
       dateLabel: b.visit_date ? 'วันนัดชมแผง' : 'วันที่ทำรายการ',
       dateText: b.visit_date ? `${formatThaiDateOnly(b.visit_date)}${b.visit_time_slot ? ' · ' + b.visit_time_slot : ''}` : formatStallDate(b.created_at),
       statusText: mapped.label,
@@ -6019,6 +6178,9 @@ const stallBookingsAndApps = computed(() => {
       refNumber: appRef,
       applicantName: a.applicant_name || a.tenant_name || '-',
       phone: a.applicant_phone || a.tenant_phone || '',
+      rawDate: a.created_at || '',
+      rawStatus: st,
+      sourceRef: a.booking_number || a.source_booking_number || a.booking?.booking_number || '',
       dateLabel: 'วันที่ยื่นคำร้อง',
       dateText: formatStallDate(a.created_at),
       statusText: isApproved ? 'อนุมัติแล้ว' : (isRejected ? 'ไม่อนุมัติ' : 'รอพิจารณาอนุมัติ'),
@@ -6026,44 +6188,6 @@ const stallBookingsAndApps = computed(() => {
       targetUrl: a.id ? `/applications/${a.id}` : `/applications?search=${encodeURIComponent(a.application_number || target)}`
     })
   })
-
-  if (items.length === 0 && String(stallEdit.value.stall_status || '').toLowerCase() !== 'available') {
-    const rawName = String(stallEdit.value.name || '').trim()
-    const tenant = (rawName && !rawName.startsWith('แผง')) ? rawName : (currentStallContract.value?.tenant_name || 'สมชาย ใจดี')
-    const phone = currentStallContract.value?.tenant_phone || '081-234-5678'
-    const cleanCode = target.replace(/[^A-Z0-9]/g, '')
-    const refCode = cleanCode.slice(-6) || '015124'
-    items.push(
-      {
-        key: `mock-booking-${target}-01`,
-        id: 118,
-        typeKey: 'booking',
-        typeLabel: 'นัดเข้าชมพื้นที่',
-        refNumber: `BK-20261027-${refCode}`,
-        applicantName: tenant,
-        phone: phone,
-        dateLabel: 'วันนัดชมแผง',
-        dateText: '2026-11-01 · 13.00 - 14.00 น.',
-        statusText: 'ยื่นคำร้องขอเช่าแล้ว',
-        badgeClass: 'is-info',
-        targetUrl: '/bookings'
-      },
-      {
-        key: `mock-application-${target}-01`,
-        id: 33,
-        typeKey: 'application',
-        typeLabel: 'คำร้องขอเช่าแผง',
-        refNumber: `APP-20261027-${refCode}`,
-        applicantName: tenant,
-        phone: phone,
-        dateLabel: 'วันที่ยื่นคำร้อง',
-        dateText: '27 ต.ค. 2569 22:06',
-        statusText: 'รอพิจารณาอนุมัติ',
-        badgeClass: 'is-reserved',
-        targetUrl: `/applications?search=${encodeURIComponent(target)}`
-      }
-    )
-  }
 
   return items
 })
@@ -6116,16 +6240,12 @@ const stallActivityTimeline = computed(() => {
 const stallContractsList = computed(() => {
   const target = String(stallEdit.value.ident || stallEdit.value.stall_ident || '').trim().toUpperCase()
   if (!target) return []
-  const custom = customStallContracts.value[target] || []
   const contractMap = new Map<string, any>()
   ;[...marketContracts.value, ...contracts.value].forEach((c: any) => {
     const code = String(c.stall_ident || c.stall_number || c.stall_code || '').toUpperCase()
     if (!code.split(',').map(s => s.trim()).includes(target) && code !== target) return
-    const key = String(c.id || c.contract_number || c.contract_no || Math.random())
-    contractMap.set(key, c)
-  })
-  custom.forEach((c: any) => {
-    const key = String(c.id || c.contract_number || c.contract_no || Math.random())
+    const key = String(c.contract_number || c.contract_no || c.id || '')
+    if (!key) return
     contractMap.set(key, c)
   })
   return Array.from(contractMap.values())
@@ -6134,16 +6254,65 @@ const stallContractsList = computed(() => {
 const activeStallContracts = computed(() =>
   stallContractsList.value.filter((c: any) => {
     const st = String(c.status || c.contract_state || '').toLowerCase()
-    return st === 'active' || st === 'draft' || st === 'ใช้งานอยู่'
+    return st === 'active' || st === 'ใช้งานอยู่'
   })
 )
 
 const historyStallContracts = computed(() =>
   stallContractsList.value.filter((c: any) => {
     const st = String(c.status || c.contract_state || '').toLowerCase()
-    return st !== 'active' && st !== 'draft' && st !== 'ใช้งานอยู่'
+    return st !== 'active' && st !== 'ใช้งานอยู่'
   })
 )
+
+// ติดตามสัญญา (ต่อสัญญา / ส่งคืนแผง / คดี): บันทึกลงฐานข้อมูลผ่าน PATCH /contracts/:id/workflow แล้วแดชบอร์ดและตัวกรองอ่านค่าจริงจากสัญญา
+type ContractWorkflowKey = 'renewal_status' | 'return_status' | 'legal_status'
+const NO_WORKFLOW = 'none'
+const contractWorkflowFields: Array<{ key: ContractWorkflowKey; label: string; options: Array<{ value: string; label: string }> }> = [
+  { key: 'renewal_status', label: 'การต่อสัญญา', options: [
+    { value: NO_WORKFLOW, label: 'ไม่มี' }, { value: 'pending', label: 'รอต่ออายุ' }, { value: 'reviewing', label: 'อยู่ระหว่างพิจารณา' },
+    { value: 'approved', label: 'ต่อสัญญาแล้ว' }, { value: 'declined', label: 'ไม่ประสงค์ต่อ' }
+  ] },
+  { key: 'return_status', label: 'การส่งคืนแผง', options: [
+    { value: NO_WORKFLOW, label: 'ไม่มี' }, { value: 'notified', label: 'แจ้งไม่ต่อ' }, { value: 'pending_return', label: 'รอส่งคืน' },
+    { value: 'inspection', label: 'รอตรวจรับ' }, { value: 'returned', label: 'รับคืนแล้ว' }, { value: 'overdue', label: 'เกินกำหนดส่งคืน' }
+  ] },
+  { key: 'legal_status', label: 'การดำเนินคดี', options: [
+    { value: NO_WORKFLOW, label: 'ไม่มี' }, { value: 'legal_review', label: 'รอฝ่ายกฎหมาย' }, { value: 'in_progress', label: 'กำลังดำเนินคดี' },
+    { value: 'enforcement', label: 'บังคับคดี' }, { value: 'closed', label: 'สิ้นสุดคดี' }
+  ] }
+]
+const contractWorkflowDraft = ref<Record<string, Partial<Record<ContractWorkflowKey, string>>>>({})
+const contractWorkflowSaving = ref<string>('')
+const workflowSaved = (contract: any, key: ContractWorkflowKey) => String(contract?.[key] || '') || NO_WORKFLOW
+const workflowValue = (contract: any, key: ContractWorkflowKey) => contractWorkflowDraft.value[String(contract?.id)]?.[key] ?? workflowSaved(contract, key)
+const setWorkflowValue = (contract: any, key: ContractWorkflowKey, value: unknown) => {
+  const id = String(contract?.id)
+  contractWorkflowDraft.value = { ...contractWorkflowDraft.value, [id]: { ...(contractWorkflowDraft.value[id] || {}), [key]: String(value) } }
+}
+const isWorkflowDirty = (contract: any) => contractWorkflowFields.some(field => workflowValue(contract, field.key) !== workflowSaved(contract, field.key))
+const saveContractWorkflow = async (contract: any) => {
+  if (!contract?.id) return
+  contractWorkflowSaving.value = String(contract.id)
+  try {
+    const body = Object.fromEntries(contractWorkflowFields.map((field) => {
+      const value = workflowValue(contract, field.key)
+      return [field.key, value === NO_WORKFLOW ? '' : value]
+    }))
+    const saved: any = unwrap(await patch(`/contracts/${contract.id}/workflow`, body)) || {}
+    const next = Object.fromEntries(contractWorkflowFields.map(field => [field.key, String(saved[field.key] ?? '')]))
+    Object.assign(contract, next)
+    marketContracts.value = marketContracts.value.map((item: any) => String(item.id) === String(contract.id) ? { ...item, ...next } : item)
+    const drafts = { ...contractWorkflowDraft.value }
+    delete drafts[String(contract.id)]
+    contractWorkflowDraft.value = drafts
+    void showSuccess('บันทึกสถานะติดตามสัญญาแล้ว แดชบอร์ดอัปเดตตามข้อมูลนี้', 'บันทึกสำเร็จ')
+  } catch {
+    void showError('ไม่สามารถบันทึกสถานะติดตามสัญญาได้ กรุณาตรวจสอบสิทธิ์แล้วลองใหม่', 'บันทึกไม่สำเร็จ')
+  } finally {
+    contractWorkflowSaving.value = ''
+  }
+}
 
 const displayedStallContracts = computed(() =>
   contractSubTab.value === 'active' ? activeStallContracts.value : historyStallContracts.value
@@ -6171,11 +6340,31 @@ const loadStallExtraDetails = async (forceReloadLocal = false) => {
     ])
     if (cRes.status === 'fulfilled' && Array.isArray(unwrap(cRes.value))) {
       contracts.value = unwrap(cRes.value)
+      // สถานะมีผู้เช่าต้องสัมพันธ์กับสัญญา active ที่ backend ส่งกลับมาเสมอ
+      syncStallDataFromContracts(code)
     }
     if (hRes.status === 'fulfilled' && Array.isArray(unwrap(hRes.value))) {
       stallHistory.value = unwrap(hRes.value)
     }
   } catch {}
+}
+
+let scheduledStallDetailLoadToken = 0
+const scheduleStallExtraDetailsAfterOpen = (code: string) => {
+  const token = ++scheduledStallDetailLoadToken
+  if (!import.meta.client) {
+    void loadStallExtraDetails(false)
+    return
+  }
+  // ปล่อยให้ issdExpandFromCard (0.75s) และ content fade วาดจบก่อน
+  // เพื่อไม่ให้ response จาก API กระตุก animation ที่ได้รับอนุมัติไว้
+  window.setTimeout(() => {
+    if (token !== scheduledStallDetailLoadToken) return
+    if (!showInspectStallOverlay.value) return
+    const currentCode = String(stallEdit.value.ident || stallEdit.value.stall_ident || '').trim().toUpperCase()
+    if (currentCode !== code.trim().toUpperCase()) return
+    void loadStallExtraDetails(false)
+  }, 880)
 }
 
 const fullDetailSettling = ref(false)
@@ -6229,21 +6418,17 @@ const showSelectedStallPanel = (replaceExisting = false) => {
   }
 
   if (import.meta.client && isMapOverviewMode.value && isInspectMode.value && selectedProject.value) {
-    // ขยาย panel โครงการจริงก่อน แล้วสลับเฉพาะเนื้อหาภายในเมื่อกรอบถึงขนาดปลายทาง
-    showInspectStallOverlay.value = false
-    stallDrawerExpanded.value = false
+    // กล่องเดิมค้างอยู่: เนื้อหาโครงการหายทันที แล้วกล่องรายละเอียด
+    // ขยายขอบขวาจาก 380px เป็น 720px ด้วย issdExpandFromCard
+    isProjectMorphSwap.value = true
+    stallDrawerExpanded.value = true
     isProjectPanelMorphing.value = true
+    showInspectStallOverlay.value = true
     stallDrawerResizeTimer = window.setTimeout(() => {
-      isProjectMorphSwap.value = true
-      stallDrawerExpanded.value = true
-      showInspectStallOverlay.value = true
       isProjectPanelMorphing.value = false
+      isProjectMorphSwap.value = false
       stallDrawerResizeTimer = null
-      stallDrawerSwapTimer = window.setTimeout(() => {
-        isProjectMorphSwap.value = false
-        stallDrawerSwapTimer = null
-      }, 240)
-    }, STALL_DRAWER_MORPH_DURATION)
+    }, 850)
     return
   }
 
@@ -6295,7 +6480,21 @@ const restoreReturnedStall = async () => {
   if (String(route.query.drawer || '') === 'full') {
     const allowedTabs = ['info', 'contracts', 'subtenants', 'payments', 'maintenance', 'bookings', 'history']
     const tab = String(route.query.tab || 'info')
-    openStallFullDetail((allowedTabs.includes(tab) ? tab : 'info') as any)
+    // การกลับจากหน้ารายละเอียดภายนอกต้องคืน state ทันที ไม่เล่น morph ซ้ำ
+    // เพราะ openStallFullDetail จะล้าง timer ของ showSelectedStallPanel และทำให้
+    // panel โครงการค้างอยู่แทนรายละเอียดแผง
+    clearStallDrawerResizeTimer()
+    clearStallDrawerSwapTimer()
+    isProjectPanelMorphing.value = false
+    isProjectPanelReturning.value = false
+    isProjectMorphSwap.value = false
+    isStallDrawerClosing.value = false
+    fullDetailSettling.value = false
+    showInspectStallOverlay.value = true
+    stallDrawerExpanded.value = true
+    stallDrawerMode.value = 'full-detail'
+    stallDetailTab.value = (allowedTabs.includes(tab) ? tab : 'info') as any
+    await loadStallExtraDetails(false)
   }
 }
 
@@ -6381,9 +6580,9 @@ const stallStatusOverrides = computed(() => {
     const code = String(s.ident || s.stall_ident || s.stall_number || '').trim()
     const rawStatus = String(s.stall_status || s.status || '').toLowerCase()
     if (!code) return
-    if (rawStatus === 'reserved' || rawStatus === 'occupied') {
-      setStatus(code, rawStatus)
-    }
+    // occupied ไม่ใช้ค่าค้างในข้อมูลแผงเป็นแหล่งจริง เพราะอาจทำให้แสดงผู้เช่า
+    // ทั้งที่ไม่มีสัญญา active; สัญญาด้านล่างเป็นผู้กำหนด occupied เท่านั้น
+    if (rawStatus === 'reserved') setStatus(code, 'reserved')
   })
 
   const inactiveBookingStatuses = new Set([
@@ -6422,24 +6621,21 @@ const stallStatusOverrides = computed(() => {
     })
   })
 
-  const allCustomContracts = Object.values(customStallContracts.value).flat()
   const contractMap = new Map<string, any>()
   ;[...marketContracts.value, ...contracts.value].forEach((c: any) => {
     const key = String(c.id || c.contract_number || c.contract_no || '')
     if (key) contractMap.set(key, c)
   })
-  allCustomContracts.forEach((c: any) => {
-    const key = String(c.id || c.contract_number || c.contract_no || '')
-    if (key) contractMap.set(key, c)
-  })
-
   contractMap.forEach((c: any) => {
     const st = String(c.contract_state || c.status || '').toLowerCase()
-    if (st === 'terminated' || st === 'cancelled' || st === 'expired') return
+    const target = ['active', 'approved', 'effective', 'signed', 'ใช้งานอยู่'].includes(st)
+      ? 'occupied'
+      : ['pending', 'draft', 'contract_pending', 'รออนุมัติ'].includes(st) ? 'reserved' : ''
+    if (!target) return
     const rawCodes = String(c.stall_ident || c.stall_number || c.stall_code || '')
     rawCodes.split(',').forEach((code) => {
       const clean = code.trim()
-      if (clean) setStatus(clean, 'occupied')
+      if (clean) setStatus(clean, target)
     })
   })
 
@@ -6600,11 +6796,29 @@ const legalCaseStallCodes = computed<string[]>(() => {
 type StallOperationalMeta = {
   contractStatus?: 'active' | 'expiring' | 'expired'
   contractExpiryDays?: number
+  lastBookingAt?: number
   renewalStatus?: 'pending' | 'reviewing' | 'approved' | 'declined'
-  returnStatus?: 'pending' | 'inspection' | 'returned' | 'overdue'
+  returnStatus?: 'notified' | 'pending' | 'inspection' | 'returned' | 'overdue'
   legalStatus?: 'legal_review' | 'proceeding' | 'enforcement' | 'closed'
   maintenanceStatus?: 'pending' | 'repairing' | 'completed' | 'overdue'
   requestTypes?: Array<'contract_name_change' | 'transfer' | 'contract_cancel' | 'sublease'>
+  searchTerms?: string[]
+  searchReferences?: Array<{ type: 'booking' | 'application'; number: string }>
+}
+
+// ตัวกรองสถานะที่ใช้อยู่ในแผนที่ (ส่งกลับจากแผนที่) ใช้ไฮไลต์ตัวเลขบนแดชบอร์ดที่กำลังกรองอยู่
+type DashboardFilterKey = 'contractStatus' | 'renewalStatus' | 'returnStatus' | 'legalStatus' | 'maintenanceStatus'
+const operationalFilterState = ref<Record<string, string>>({})
+const onOperationalFilterChange = (filters: Record<string, string>) => { operationalFilterState.value = filters }
+const isDashFilterActive = (key: DashboardFilterKey, value: string) => operationalFilterState.value[key] === value
+// กดซ้ำเพื่อล้าง และกรองทีละมิติ (สัญญา/ต่ออายุ/ส่งคืน/คดี/ซ่อม) เพื่อให้ผลลัพธ์อ่านง่าย
+const toggleDashboardFilter = (key: DashboardFilterKey, value: string) => {
+  const next = isDashFilterActive(key, value) ? 'all' : value
+  mapRef.value?.applyDashboardFilter?.({
+    zone: next === 'all' ? 'all' : (selectedDashboardProjectId.value || 'all'),
+    contractStatus: 'all', renewalStatus: 'all', returnStatus: 'all', legalStatus: 'all', maintenanceStatus: 'all',
+    [key]: next
+  })
 }
 
 const stallOperationalFilterMeta = computed<Record<string, StallOperationalMeta>>(() => {
@@ -6612,13 +6826,51 @@ const stallOperationalFilterMeta = computed<Record<string, StallOperationalMeta>
   const ensure = (code: string) => {
     const cleanCode = code.trim().toUpperCase()
     if (!cleanCode) return null
-    if (!result[cleanCode]) result[cleanCode] = { requestTypes: [] }
+    if (!result[cleanCode]) result[cleanCode] = { requestTypes: [], searchTerms: [], searchReferences: [] }
     return result[cleanCode]
   }
   const recordCodes = (record: any) => String(record?.stall_ident || record?.stall_number || record?.stall_code || record?.ident || record?.code || '')
     .split(',').map(code => code.trim().toUpperCase()).filter(Boolean)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+
+  const addSearchTerms = (record: any, type: 'booking' | 'application', terms: unknown[]) => {
+    recordCodes(record).forEach((code) => {
+      const meta = ensure(code)
+      if (!meta) return
+      terms.map(term => String(term || '').trim()).filter(Boolean).forEach((term) => {
+        if (!meta.searchTerms?.includes(term)) meta.searchTerms?.push(term)
+        if (!meta.searchReferences?.some(reference => reference.type === type && reference.number === term)) {
+          meta.searchReferences?.push({ type, number: term })
+        }
+      })
+    })
+  }
+
+  marketBookings.value.forEach((booking: any) => addSearchTerms(booking, 'booking', [
+    booking.booking_number,
+    booking.booking_no,
+    booking.reference_number
+  ]))
+  // วันที่จองล่าสุดของแต่ละแผง (ไม่นับที่ยกเลิก/ปฏิเสธ) ใช้กรอง "มีการจองในช่วง"
+  const inactiveBookingStatuses = new Set(['cancelled', 'rejected', 'not_interested', 'no_show', 'terminated'])
+  marketBookings.value.forEach((booking: any) => {
+    if (inactiveBookingStatuses.has(String(booking.booking_status || booking.status || '').toLowerCase())) return
+    const time = new Date(booking.created_at || booking.visit_date || 0).getTime()
+    if (!Number.isFinite(time) || time <= 0) return
+    recordCodes(booking).forEach((code) => {
+      const meta = ensure(code)
+      if (meta) meta.lastBookingAt = Math.max(meta.lastBookingAt || 0, time)
+    })
+  })
+
+  marketApplications.value.forEach((application: any) => addSearchTerms(application, 'application', [
+    application.application_number,
+    application.document_number,
+    application.reference_number,
+    application.booking_number,
+    application.source_booking_number
+  ]))
 
   const allContracts = [...marketContracts.value, ...Object.values(customStallContracts.value).flat()]
   allContracts.forEach((contract: any) => {
@@ -6635,13 +6887,14 @@ const stallOperationalFilterMeta = computed<Record<string, StallOperationalMeta>
     const renewalRaw = String(contract.renewal_status || contract.renew_status || '').toLowerCase()
     const renewalMap: Record<string, StallOperationalMeta['renewalStatus']> = {
       pending: 'pending', pending_renewal: 'pending', waiting: 'pending',
-      reviewing: 'reviewing', under_review: 'reviewing', submitted: 'reviewing',
-      approved: 'approved', renewed: 'approved',
+      reviewing: 'reviewing', under_review: 'reviewing',
+      approved: 'approved', renewed: 'approved', completed: 'approved', submitted: 'approved',
       declined: 'declined', non_renewal: 'declined', not_renewing: 'declined'
     }
     const returnRaw = String(contract.return_status || contract.handover_status || contract.vacate_status || '').toLowerCase()
     const returnMap: Record<string, StallOperationalMeta['returnStatus']> = {
-      waiting: 'pending', pending_return: 'pending', vacating: 'pending', notified: 'pending',
+      notified: 'notified', notice: 'notified', non_renewal: 'notified',
+      waiting: 'pending', pending_return: 'pending', vacating: 'pending',
       inspection: 'inspection', pending_inspection: 'inspection',
       returned: 'returned', completed: 'returned', accepted: 'returned',
       overdue: 'overdue', late: 'overdue'
@@ -6679,33 +6932,25 @@ const stallOperationalFilterMeta = computed<Record<string, StallOperationalMeta>
     })
   })
 
-  visibleProjects.value.forEach((project) => {
-    getAllFloorLayoutsForProject(project).forEach((layout) => {
-      layout.stalls.forEach((stall: any) => {
-        const code = String(stall.code || '').trim().toUpperCase()
-        const meta = ensure(code)
-        if (!meta || !import.meta.client) return
-        const stored = localStorage.getItem(getMaintenanceStorageKey(code))
-        if (!stored) return
-        try {
-          const records = JSON.parse(stored)
-          if (!Array.isArray(records) || !records.length) return
-          const statuses = records.map((record: any) => {
-            const status = String(record.status || '').toLowerCase()
-            const dueValue = record.scheduledDate || record.dueDate
-            const dueDate = dueValue ? new Date(dueValue) : null
-            const overdue = dueDate && !Number.isNaN(dueDate.getTime()) && dueDate < today && !['completed', 'done', 'cancelled', 'rejected'].includes(status)
-            if (overdue) return 'overdue'
-            if (['in_progress', 'repairing', 'assigned'].includes(status)) return 'repairing'
-            if (['completed', 'done'].includes(status)) return 'completed'
-            return 'pending'
-          }) as NonNullable<StallOperationalMeta['maintenanceStatus']>[]
-          meta.maintenanceStatus = statuses.includes('overdue') ? 'overdue'
-            : statuses.includes('repairing') ? 'repairing'
-              : statuses.includes('pending') ? 'pending' : 'completed'
-        } catch {}
-      })
-    })
+  // งานซ่อมถูกโหลดจาก Backend ครั้งเดียวเป็น index ตามรหัสแผง
+  // ไม่ต้องเดินครบทุก polygon และอ่าน localStorage ซ้ำรายแผงอีกต่อไป
+  void maintenanceIndexVersion.value
+  Object.entries(maintenanceByStall.value).forEach(([code, records]) => {
+    const meta = ensure(code)
+    if (!meta || !records.length) return
+    const statuses = records.map((record: any) => {
+      const status = String(record.status || '').toLowerCase()
+      const dueValue = record.scheduledDate || record.dueDate
+      const dueDate = dueValue ? new Date(dueValue) : null
+      const overdue = dueDate && !Number.isNaN(dueDate.getTime()) && dueDate < today && !['completed', 'done', 'cancelled', 'rejected'].includes(status)
+      if (overdue) return 'overdue'
+      if (['in_progress', 'repairing', 'assigned'].includes(status)) return 'repairing'
+      if (['completed', 'done'].includes(status)) return 'completed'
+      return 'pending'
+    }) as NonNullable<StallOperationalMeta['maintenanceStatus']>[]
+    meta.maintenanceStatus = statuses.includes('overdue') ? 'overdue'
+      : statuses.includes('repairing') ? 'repairing'
+        : statuses.includes('pending') ? 'pending' : 'completed'
   })
   return result
 })
@@ -6713,38 +6958,51 @@ const stallOperationalFilterMeta = computed<Record<string, StallOperationalMeta>
 // รายชื่อรหัสแผงที่มีสิ่งที่เจ้าหน้าที่ต้องดำเนินการ (ค้างชำระ / ใกล้หมดสัญญา / งานซ่อมค้าง / รออนุมัติจองหรือคำร้อง)
 const actionRequiredStallCodes = computed<string[]>(() => {
   const actionSet = new Set<string>()
+  const addCode = (rawCode: unknown) => {
+    const code = String(rawCode || '').trim().toUpperCase()
+    if (code) actionSet.add(code)
+  }
+  const addRecordCodes = (record: any) => {
+    extractStallCodesFromRecord(record).forEach(addCode)
+  }
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const expiringCutoff = new Date(today)
   expiringCutoff.setDate(expiringCutoff.getDate() + 60)
-
-  // 1. การจองที่รอดำเนินการหรืออยู่ระหว่างติดตามผล
-  marketBookings.value.forEach((b: any) => {
-    const st = String(b.booking_status || b.status || '').toLowerCase()
-    if (['pending', 'pending_approval', 'pending_slot', 'approved', 'interested'].includes(st)) {
-      const rawCodes = String(b.stall_ident || b.stall_number || b.stall_code || '')
-      rawCodes.split(',').forEach((c) => {
-        const clean = c.trim().toUpperCase()
-        if (clean) actionSet.add(clean)
-      })
+  // วันที่จาก Backend อยู่ในรูป YYYY-MM-DD ซึ่ง JavaScript แปลเป็น UTC
+  // เปิดขอบเขตถึงสิ้นวันเพื่อให้สัญญาที่ครบ 60 วันพอดีไม่หลุดในเขตเวลาไทย
+  expiringCutoff.setHours(23, 59, 59, 999)
+  const bookingActionStates = new Set(['pending', 'pending_approval', 'pending_slot', 'approved', 'interested'])
+  const applicationTerminalStates = new Set(['completed', 'rejected', 'cancelled', 'terminated', 'closed'])
+  const allCustomContracts = Object.values(customStallContracts.value).flat()
+  const allContractsForAction = [...marketContracts.value, ...allCustomContracts]
+  const activeContractCodes = new Set<string>()
+  allContractsForAction.forEach((contract: any) => {
+    const status = String(contract.contract_state || contract.status || '').toLowerCase()
+    if (status === 'active' || status === 'ใช้งานอยู่') {
+      extractStallCodesFromRecord(contract).forEach(code => activeContractCodes.add(code))
     }
   })
 
-  // 2. คำร้องขอเช่าที่รอพิจารณาหรือรอทำสัญญา
+  // 1. การจองทุกสถานะที่กระบวนการยังไม่จบ รวมถึงนัดที่อนุมัติแล้ว
+  marketBookings.value.forEach((b: any) => {
+    const st = String(b.booking_status || b.status || '').toLowerCase()
+    if (bookingActionStates.has(st)) addRecordCodes(b)
+  })
+
+  // 2. คำร้องทุกสถานะที่ยังต้องตรวจ อนุมัติ หรือออกสัญญาต่อ
   marketApplications.value.forEach((a: any) => {
     const st = String(a.application_state || a.status || '').toLowerCase()
-    if (st && !['completed', 'rejected', 'cancelled', 'terminated', 'closed'].includes(st)) {
-      const rawCodes = String(a.stall_ident || a.stall_number || a.stall_code || '')
-      rawCodes.split(',').forEach((c) => {
-        const clean = c.trim().toUpperCase()
-        if (clean) actionSet.add(clean)
-      })
-    }
+    if (!st || applicationTerminalStates.has(st)) return
+    const codes = extractStallCodesFromRecord(a)
+    const isApproved = ['approved', 'director_approved'].includes(st)
+    codes.forEach((code) => {
+      if (!isApproved || !activeContractCodes.has(code)) addCode(code)
+    })
   })
 
   // 3. สัญญาเช่าที่ค้างชำระหรือใกล้หมดสัญญา
-  const allCustomContracts = Object.values(customStallContracts.value).flat()
-  ;[...marketContracts.value, ...allCustomContracts].forEach((contract: any) => {
+  allContractsForAction.forEach((contract: any) => {
     const contractStatus = String(contract.contract_state || contract.status || '').toLowerCase()
     if (['terminated', 'cancelled', 'expired'].includes(contractStatus)) return
     const rawCodes = String(contract.stall_ident || contract.stall_number || contract.stall_code || '')
@@ -6758,55 +7016,24 @@ const actionRequiredStallCodes = computed<string[]>(() => {
     const endDate = endDateValue ? new Date(endDateValue) : null
     const isExpiring = endDate instanceof Date && !Number.isNaN(endDate.getTime()) && endDate >= today && endDate <= expiringCutoff
 
-    if (isOverdue || isExpiring) {
-      rawCodes.split(',').forEach((c) => {
-        const clean = c.trim().toUpperCase()
-        if (clean) actionSet.add(clean)
-      })
-    }
+    if (isOverdue || isExpiring) rawCodes.split(',').forEach(addCode)
   })
 
-  // 4. แผงที่มีผู้เช่า (occupied) ซึ่งมีรายการค้างชำระหรืองานซ่อมที่ยังไม่ปิด
-  const checkStallHasLocalOrDefaultAction = (upperCode: string) => {
-    if (showInspectStallOverlay.value && String(stallEdit.value.ident || '').trim().toUpperCase() === upperCode) {
-      return stallActionRichItems.value.length > 0
-    }
-    if (import.meta.client) {
-      let hasOverduePay = true
-      const rawPay = localStorage.getItem(getPaymentsStorageKey(upperCode))
-      if (rawPay) {
-        try {
-          const parsedPay = JSON.parse(rawPay)
-          hasOverduePay = Array.isArray(parsedPay) && parsedPay.some((p: any) => p.status === 'overdue')
-        } catch {}
-      }
-      let hasOpenMaint = true
-      const rawMaint = localStorage.getItem(getMaintenanceStorageKey(upperCode))
-      if (rawMaint) {
-        try {
-          const parsedMaint = JSON.parse(rawMaint)
-          hasOpenMaint = Array.isArray(parsedMaint) && parsedMaint.some((m: any) => !['completed', 'rejected'].includes(m.status))
-        } catch {}
-      }
-      return hasOverduePay || hasOpenMaint
-    }
-    return true
-  }
+  // 4. หนี้ค้างจาก Backend รองรับทั้งฟิลด์รหัสแผงและรหัสที่อยู่ในรายละเอียดหนี้
+  marketDebts.value.forEach((debt: any) => {
+    const status = String(debt.status || '').trim().toLowerCase()
+    if (!['outstanding', 'overdue', 'past_due', 'ค้างชำระ'].includes(status)) return
+    addRecordCodes(debt)
+  })
 
-  visibleProjects.value.forEach((project) => {
-    getAllFloorLayoutsForProject(project).forEach((layout) => {
-      layout.stalls.forEach((stall: any) => {
-        const code = String(stall.code || stall.ident || stall.stall_ident || '').trim()
-        if (!code) return
-        const upper = code.toUpperCase()
-        const status = resolveRealStallStatus(code, project, stall)
-        if (status === 'occupied' && checkStallHasLocalOrDefaultAction(upper)) {
-          actionSet.add(upper)
-        } else if (status === 'reserved') {
-          actionSet.add(upper)
-        }
-      })
+  // 5. งานซ่อมของทุกแผงที่ยังไม่ปิดงาน
+  void maintenanceIndexVersion.value
+  Object.entries(maintenanceByStall.value).forEach(([code, records]) => {
+    const hasOpenWork = records.some((item: any) => {
+      const status = String(item.status || '').trim().toLowerCase()
+      return !['completed', 'done', 'rejected', 'cancelled', 'closed'].includes(status)
     })
+    if (hasOpenWork) addCode(code)
   })
 
   return Array.from(actionSet)
@@ -6930,6 +7157,10 @@ const niceChartMaximum = (value: number) => {
   return Math.ceil(value / (niceStep * magnitude)) * niceStep * magnitude
 }
 
+// กราฟแท่งแนวนอนของภาพรวมโครงการ: ชื่อโครงการซ้าย แท่งแบ่งสีตามสถานะ จำนวนแผงรวมที่ปลายแท่ง
+const sortedProjectBars = computed(() => [...stallProjectStatusBreakdown.value].sort((a, b) => a.order - b.order))
+const projectBarMax = computed(() => Math.max(1, ...stallProjectStatusBreakdown.value.map(project => project.total)))
+
 const allProjectsChartMax = computed(() => niceChartMaximum(
   Math.max(0, ...stallProjectStatusBreakdown.value.map(project => project.total))
 ))
@@ -7017,40 +7248,39 @@ const stallLegalStatusSummary = computed(() => {
   return summary
 })
 
+const renewalBarTotal = computed(() => stallContractRenewalSummary.value.submitted + stallContractRenewalSummary.value.pending + stallContractRenewalSummary.value.declined)
+const stallReturnTotal = computed(() => Object.values(stallReturnStatusSummary.value).reduce((sum, value) => sum + value, 0))
+const stallLegalTotal = computed(() => Object.values(stallLegalStatusSummary.value).reduce((sum, value) => sum + value, 0))
+
 const stallMaintenanceDashboardSummary = computed(() => {
   const summary = { pending: 0, repairing: 0, completed: 0, overdue: 0 }
-  const visited = new Set<string>()
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-
-  visibleProjects.value
-    .filter(project => !selectedDashboardProjectId.value || project.id === selectedDashboardProjectId.value)
-    .forEach((project) => {
-    getAllFloorLayoutsForProject(project).forEach((layout) => {
-      layout.stalls.forEach((stall: any) => {
-        const code = String(stall.code || stall.ident || stall.stall_ident || '').trim().toUpperCase()
-        if (!code || visited.has(code) || !import.meta.client) return
-        visited.add(code)
-        const stored = localStorage.getItem(`stall_maintenance_${marketId.value}_${code}`)
-        if (!stored) return
-        try {
-          const records = JSON.parse(stored)
-          if (!Array.isArray(records)) return
-          records.forEach((record: any) => {
-            const status = String(record.status || '').toLowerCase()
-            const dueValue = record.scheduledDate || record.dueDate
-            const dueDate = dueValue ? new Date(dueValue) : null
-            const isOverdue = dueDate instanceof Date && !Number.isNaN(dueDate.getTime()) && dueDate < today
-              && !['completed', 'rejected', 'cancelled'].includes(status)
-            if (isOverdue) summary.overdue += 1
-            else if (['in_progress', 'repairing', 'assigned'].includes(status)) summary.repairing += 1
-            else if (['completed', 'done'].includes(status)) summary.completed += 1
-            else if (!['rejected', 'cancelled'].includes(status)) summary.pending += 1
-          })
-        } catch {}
+  void maintenanceIndexVersion.value
+  let projectCodes: Set<string> | null = null
+  if (selectedDashboardProjectId.value) {
+    projectCodes = new Set<string>()
+    const selected = visibleProjects.value.find(project => project.id === selectedDashboardProjectId.value)
+    if (selected) {
+      getAllFloorLayoutsForProject(selected).forEach((layout) => {
+        layout.stalls.forEach((stall: any) => projectCodes?.add(String(stall.code || '').trim().toUpperCase()))
       })
+    }
+  }
+  Object.entries(maintenanceByStall.value).forEach(([code, records]) => {
+    if (projectCodes && !projectCodes.has(code)) return
+    records.forEach((record: any) => {
+      const status = String(record.status || '').toLowerCase()
+      const dueValue = record.scheduledDate || record.dueDate
+      const dueDate = dueValue ? new Date(dueValue) : null
+      const isOverdue = dueDate instanceof Date && !Number.isNaN(dueDate.getTime()) && dueDate < today
+        && !['completed', 'rejected', 'cancelled'].includes(status)
+      if (isOverdue) summary.overdue += 1
+      else if (['in_progress', 'repairing', 'assigned'].includes(status)) summary.repairing += 1
+      else if (['completed', 'done'].includes(status)) summary.completed += 1
+      else if (!['rejected', 'cancelled'].includes(status)) summary.pending += 1
     })
-    })
+  })
   return summary
 })
 
@@ -7160,6 +7390,7 @@ const revertUnsavedChanges = () => {
   pendingStallUpserts.value = []
   pendingStallDeleteIds.value = []
   hasUnsavedChanges.value = false
+  touchManagedMapData()
 }
 
 const queueStallUpsert = (payload: any) => {
@@ -7282,11 +7513,11 @@ const breadcrumbItems = computed(() => selectedProject.value
 const breadcrumbCurrent = computed(() => selectedProject.value
   ? selectedProject.value.name
   : modeLabel.value)
-const recomputeDirtyState = () => {
-  const projectsChanged = JSON.stringify(projects.value) !== JSON.stringify(savedProjectsSnapshot.value)
-  const facilitiesChanged = JSON.stringify(facilities.value) !== JSON.stringify(savedFacilitiesSnapshot.value)
-  const stallsChanged = JSON.stringify(stalls.value) !== JSON.stringify(savedStallsSnapshot.value)
-  hasUnsavedChanges.value = Boolean(projectsChanged || facilitiesChanged || stallsChanged || pendingStallDeleteIds.value.length > 0)
+// These handlers only run after an actual GIS edit. Avoid serializing the entire
+// 13MB project tree merely to determine whether the page is dirty.
+const markGISChanged = () => {
+  hasUnsavedChanges.value = true
+  touchManagedMapData()
 }
 
 const updateProjectPolygon = async (project: ProjectZone) => {
@@ -7295,7 +7526,7 @@ const updateProjectPolygon = async (project: ProjectZone) => {
   if (selectedProject.value?.id === project.id) {
     selectedProject.value = projects.value[index] || project
   }
-  recomputeDirtyState()
+  markGISChanged()
 }
 const updateStallPolygon = async (project: ProjectZone, updatedStall: any) => {
   const index = projects.value.findIndex(item => item.id === project.id)
@@ -7318,7 +7549,7 @@ const updateStallPolygon = async (project: ProjectZone, updatedStall: any) => {
     if (sIdx >= 0) stalls.value[sIdx] = updatedRecord
     queueStallUpsert(updatedRecord)
   }
-  recomputeDirtyState()
+  markGISChanged()
 }
 const openZoneEditor = (coordinates: [number, number][]) => {
   drawnZoneCoordinates.value = coordinates
@@ -7392,7 +7623,7 @@ const createZone = async () => {
   const project: ProjectZone = { id, name: String(zoneForm.value.name).trim(), sectionNumber: String(zoneForm.value.sectionNumber).trim().toUpperCase(), category: chosenCategory, color: resolveCategoryColor(chosenCategory), stallsAvailable: 0, totalStalls: 0, realAreaSqm: calcPolygonAreaSqm(ring), centroid, coordinates: ring, floors, stalls: [], layoutMode: 'manual' }
   projects.value = [...projects.value, project]
   selectedProject.value = project
-  hasUnsavedChanges.value = true
+  markGISChanged()
   dismissZoneEditor()
   void showSuccess('โซนถูกเพิ่มลงในผังแล้ว กดปุ่ม “บันทึกการแก้ไข” ด้านบนเพื่อบันทึกผัง', 'เพิ่มโซนในผังแล้ว')
 }
@@ -7424,7 +7655,7 @@ const createFacility = async () => {
       projectId: facilityForm.value.projectId
     }
   ]
-  hasUnsavedChanges.value = true
+  markGISChanged()
   closeFacilityEditor()
   void showSuccess('เพิ่มจุดบริการลงในผังแล้ว กดปุ่ม “บันทึกการแก้ไข” ด้านบนเพื่อบันทึกผัง', 'เพิ่มจุดบริการในผังแล้ว')
 }
@@ -7432,7 +7663,7 @@ const deleteFacility = async (facility: MarketFacility) => {
   const confirmed = await showConfirm(`ต้องการลบจุดบริการ “${facility.name}” ออกจากผังตลาดใช่หรือไม่`, { title: 'ยืนยันการลบจุดบริการ', type: 'error', icon: 'trash', confirmText: 'ลบจุดบริการ' })
   if (!confirmed) return
   facilities.value = facilities.value.filter(item => item.id !== facility.id)
-  hasUnsavedChanges.value = true
+  markGISChanged()
   void showSuccess(`ลบจุดบริการ “${facility.name}” ออกจากผังแล้ว กดปุ่ม “บันทึกการแก้ไข” ด้านบนเพื่อบันทึกผัง`, 'ลบจุดบริการในผังแล้ว')
 }
 const stallErrors = reactive({ ident: '', width: '', depth: '', monthly_rent: '' })
@@ -7500,7 +7731,7 @@ const deleteProject = async (project: ProjectZone, stats?: { total: number; avai
   ))
   stalls.value = stalls.value.filter(s => String(s.project_name || '').trim() !== String(project.name || '').trim())
   selectedProject.value = null
-  hasUnsavedChanges.value = true
+  markGISChanged()
   void showSuccess(`ลบโซน “${project.name}” ออกจากผังแล้ว กดปุ่ม “บันทึกการแก้ไข” ด้านบนเพื่อบันทึกผัง`, 'ลบโซนในผังแล้ว')
 }
 const stallPayload = (form: any) => ({ ...form, market_id: resolvedMarketID.value, market_slug: marketId.value, market_name: marketName.value, zone_id: Number(form.zone_id), width: Number(form.width), depth: Number(form.depth), daily_rent: Number(form.daily_rent), monthly_rent: Number(form.monthly_rent) })
@@ -7532,23 +7763,17 @@ const closeStall = () => {
     && stallDrawerMode.value === 'full-detail'
 
   if (shouldCollapseBeforeClose) {
-    // ซ่อนเฉพาะเนื้อหา แล้วส่งกรอบต่อให้ panel โครงการยุบกลับจาก 720px → 380px
+    // ส่วนขวาหุบกลับด้วย clip-path เหลือ 380px ขณะที่เนื้อหาโครงการเฟดกลับเข้ามาใต้กล่อง
     isStallDrawerClosing.value = true
+    isProjectPanelReturning.value = true
     stallDrawerResizeTimer = window.setTimeout(() => {
       stallDrawerResizeTimer = null
-      isProjectPanelMorphing.value = true
-      isProjectPanelReturning.value = true
       finishCloseStall(true)
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          isProjectPanelMorphing.value = false
-          stallDrawerResizeTimer = window.setTimeout(() => {
-            isProjectPanelReturning.value = false
-            stallDrawerResizeTimer = null
-          }, STALL_DRAWER_RETURN_DURATION)
-        })
-      })
-    }, 120)
+      stallDrawerResizeTimer = window.setTimeout(() => {
+        isProjectPanelReturning.value = false
+        stallDrawerResizeTimer = null
+      }, 400)
+    }, 640)
     return
   }
   finishCloseStall()
@@ -7579,7 +7804,7 @@ const cancelStallEdit = () => {
   }
 }
 const selectStall = async (mapStall: any) => {
-  if (isMapOverviewMode.value && pageMode.value === 'costs') {
+  if (isMapOverviewMode.value && isCostMode.value) {
     handleCostStallClick(mapStall)
     return
   }
@@ -7633,7 +7858,7 @@ const selectStall = async (mapStall: any) => {
     stallDrawerExpanded.value = false
     showSelectedStallPanel(replaceExistingStall)
     if (isInspectMode.value) {
-      void loadStallExtraDetails(false)
+      scheduleStallExtraDetailsAfterOpen(code)
     }
     return
   }
@@ -7654,13 +7879,8 @@ const selectStall = async (mapStall: any) => {
   stallDrawerExpanded.value = false
   showSelectedStallPanel(replaceExistingStall)
   if (isInspectMode.value) {
-    void loadStallExtraDetails(false)
+    scheduleStallExtraDetailsAfterOpen(code)
   }
-  get(`/stalls/${stored.id}/contracts`)
-    .then((res) => {
-      contracts.value = Array.isArray(unwrap(res)) ? unwrap(res) : []
-    })
-    .catch(() => {})
 }
 const deleteStall = async (projectArg?: ProjectZone | null, mapStallArg?: any) => {
   const targetProject = projectArg || selectedProject.value || projects.value.find(p => String(p.name || '').trim() === String(stallEdit.value.project_name || '').trim())
@@ -7709,7 +7929,7 @@ const deleteStall = async (projectArg?: ProjectZone | null, mapStallArg?: any) =
   if (dbId) pendingStallDeleteIds.value.push(Number(dbId))
   pendingStallUpserts.value = pendingStallUpserts.value.filter(item => String(item.ident || item.stall_ident).toUpperCase() !== code.toUpperCase())
   stalls.value = stalls.value.filter(s => String(s.ident || s.stall_ident).toUpperCase() !== code.toUpperCase() && (!dbId || s.id !== dbId))
-  hasUnsavedChanges.value = true
+  markGISChanged()
   if (showStallEditor.value) closeStall()
 
   void showSuccess(`ลบแผง “${code}” ออกจากผังแล้ว กดปุ่ม “บันทึกการแก้ไข” ด้านบนเพื่อบันทึกผัง`, 'ลบแผงในผังแล้ว')
@@ -7792,7 +8012,7 @@ const saveStall = async () => {
         selectedProject.value = projects.value[pIdx]!
       }
     }
-    hasUnsavedChanges.value = true
+    markGISChanged()
     closeStall()
     void showSuccess('อัปเดตข้อมูลแผงบนผังแล้ว กดปุ่ม “บันทึกการแก้ไข” ด้านบนเพื่อบันทึกผัง', 'อัปเดตแผงในผังแล้ว')
   } finally {
@@ -7828,51 +8048,60 @@ const confirmAndSaveGIS = async () => {
 const formatDate = (value: string) => new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 
 const loadData = async () => {
+  const requestedMarketId = marketId.value
+  loadDataController?.abort()
+  const controller = new AbortController()
+  loadDataController = controller
+  const run = ++loadDataRun
+  const isStale = () => controller.signal.aborted || run !== loadDataRun
   isManageDataLoading.value = true
-  const cfg = await loadMarketGisJson(marketId.value)
+  isActionDataLoading.value = true
+  // The map component owns the authoritative /gis-config request. The page only
+  // needs the synchronous registry metadata plus the editable draft below.
+  const cfg = getMarketGisConfig(requestedMarketId)
   apiMarketName.value = cfg.name
+  projects.value = cfg.projects.slice()
+  facilities.value = []
   try {
-    const [marketRes, stallRes, gisRes, bookingsRes, waitlistRes, appsRes, contractsRes] = await Promise.all([
-      get('/markets').catch(() => null),
-      get(`/stalls?market=${encodeURIComponent(marketId.value)}`).catch(() => null),
-      get(`/markets/${encodeURIComponent(marketId.value)}/gis-config/draft`).catch(() => null),
-      get('/bookings').catch(() => null),
-      get('/bookings/waitlist/mine').catch(() => null),
-      get('/applications').catch(() => null),
-      get('/contracts').catch(() => null)
+    const scopedMarketID = Number(cfg.id)
+    const scopedGet = <T = any>(endpoint: string, query?: Record<string, any>) =>
+      apiFetch<T>(endpoint, { method: 'GET', query, signal: controller.signal })
+
+    // Start all requests together, but only block the KPI skeleton on the four
+    // datasets it actually needs. Draft GIS and operational history can hydrate
+    // after the summary is already usable.
+    const coreRequest = Promise.all([
+      scopedGet('/stalls', { market_id: scopedMarketID }).catch(() => null),
+      scopedGet('/bookings', { market_id: scopedMarketID }).catch(() => null),
+      scopedGet('/contracts', { market_id: scopedMarketID }).catch(() => null)
     ])
-    const markets = unwrap(marketRes)
-    const market = (Array.isArray(markets) ? markets : []).find((item: any) => String(item.id) === marketId.value || item.slug === marketId.value || String(item.id) === String(cfg.id))
-    apiMarketRecord.value = market || null
-    resolvedMarketID.value = Number(market?.id || cfg.id)
-    apiMarketName.value = market?.name || cfg.name
+    const detailRequest = Promise.all([
+      // Published GIS is already owned by the map in inspect mode. Only the GIS
+      // editor needs the much larger draft payload.
+      isInspectMode.value
+        ? Promise.resolve(null)
+        : scopedGet(`/markets/${encodeURIComponent(requestedMarketId)}/gis-config/draft`).catch(() => null),
+      scopedGet('/bookings/waitlist/mine', { market_id: scopedMarketID }).catch(() => null),
+      scopedGet('/applications', { market_id: scopedMarketID }).catch(() => null),
+      scopedGet('/maintenance-records', { market_id: scopedMarketID }).catch(() => null),
+      scopedGet('/debts', { market_id: scopedMarketID }).catch(() => null)
+    ])
+
+    const [stallRes, bookingsRes, contractsRes] = await coreRequest
+    if (isStale()) return
+    // The route registry already resolves the selected market. Loading the
+    // complete market list here delayed every cold map refresh for no benefit.
+    apiMarketRecord.value = { id: cfg.id, name: cfg.name, slug: requestedMarketId }
+    resolvedMarketID.value = Number(cfg.id)
+    apiMarketName.value = cfg.name
     const stallData = unwrap(stallRes)
     stalls.value = Array.isArray(stallData)
       ? stallData.filter((s: any) => !s.market_id || Number(s.market_id) === resolvedMarketID.value)
       : []
-    const gis = unwrap(gisRes) || {}
-    projects.value = mergeMarketProjects(cfg.projects, gis.projects)
-    facilities.value = Array.isArray(gis.facilities) ? gis.facilities : []
-    gisPublished.value = Boolean(gis.published)
 
     const allBookings = unwrap(bookingsRes)
-    const allWaitlist = unwrap(waitlistRes)
-    const allApps = unwrap(appsRes)
     const allContracts = unwrap(contractsRes)
     const targetMktName = String(apiMarketName.value || cfg.name || '').trim()
-    const knownCodes = new Set<string>()
-    projects.value.forEach((p) => {
-      getAllFloorLayoutsForProject(p).forEach((layout) => {
-        layout.stalls.forEach((st: any) => {
-          const c = String(st.code || st.ident || '').trim().toUpperCase()
-          if (c) knownCodes.add(c)
-        })
-      })
-      ;(p.stalls || []).forEach((st: any) => {
-        const c = String(st.code || st.ident || '').trim().toUpperCase()
-        if (c) knownCodes.add(c)
-      })
-    })
     const matchesCurrentMarket = (item: any) => {
       if (!item) return false
       if (Number(item.market_id) > 0) {
@@ -7882,23 +8111,55 @@ const loadData = async () => {
       if (itemMktName && targetMktName) {
         return itemMktName.includes(targetMktName) || targetMktName.includes(itemMktName)
       }
-      const rawStall = String(item.stall_number || item.stall_ident || item.stall_code || '').trim()
-      if (rawStall && knownCodes.size > 0) {
-        return rawStall.split(',').some(code => knownCodes.has(code.trim().toUpperCase()))
-      }
       return false
     }
     marketBookings.value = Array.isArray(allBookings) ? allBookings.filter(matchesCurrentMarket) : []
+    marketContracts.value = Array.isArray(allContracts) ? allContracts.filter(matchesCurrentMarket) : []
+    isManageDataLoading.value = false
+
+    const targetProjectId = returnProjectId.value || selectedProject.value?.id
+    if (targetProjectId) selectedProject.value = projects.value.find(p => p.id === targetProjectId) || null
+
+    const [gisRes, waitlistRes, appsRes, maintenanceRes, debtsRes] = await detailRequest
+    if (isStale()) return
+    const gis = unwrap(gisRes) || {}
+    if (Array.isArray(gis.projects) && gis.projects.length) {
+      projects.value = mergeMarketProjects(cfg.projects, gis.projects, false)
+      facilities.value = Array.isArray(gis.facilities) ? gis.facilities : []
+      gisPublished.value = Boolean(gis.published)
+      touchManagedMapData()
+    }
+    const allWaitlist = unwrap(waitlistRes)
+    const allApps = unwrap(appsRes)
     marketWaitlistItems.value = Array.isArray(allWaitlist) ? allWaitlist.filter(matchesCurrentMarket) : []
     marketApplications.value = Array.isArray(allApps) ? allApps.filter(matchesCurrentMarket) : []
-    marketContracts.value = Array.isArray(allContracts) ? allContracts.filter(matchesCurrentMarket) : []
+    const maintenanceRecords = unwrap(maintenanceRes)
+    if (Array.isArray(maintenanceRecords)) replaceMaintenanceIndex(maintenanceRecords)
+    const debts = unwrap(debtsRes)
+    marketDebts.value = Array.isArray(debts)
+      ? debts.filter((debt: any) => Number(debt.market_id) === resolvedMarketID.value)
+      : []
     loadAllCustomContracts()
-  } catch {
-    projects.value = cloneProjects(cfg.projects)
+    isActionDataLoading.value = false
+    // Snapshots are only required by the editable GIS page. Cloning the complete
+    // market in inspect mode delayed the KPI ribbon even after every API resolved.
+    if (!isInspectMode.value) syncSnapshotsFromCurrent()
+  } catch (error: any) {
+    if (isStale() || error?.name === 'AbortError') return
+    projects.value = cfg.projects.slice()
     facilities.value = []
-  } finally {
-    syncSnapshotsFromCurrent()
     isManageDataLoading.value = false
+    isActionDataLoading.value = false
+  } finally {
+    if (isStale()) {
+      reloadAfterActivation = true
+      return
+    }
+    isManageDataLoading.value = false
+    isActionDataLoading.value = false
+    reloadAfterActivation = false
+    loadedMarketId = requestedMarketId
+    if (loadDataController === controller) loadDataController = null
   }
   const targetProjectId = returnProjectId.value || selectedProject.value?.id
   if (targetProjectId) selectedProject.value = projects.value.find(p => p.id === targetProjectId) || null
@@ -7917,9 +8178,11 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
 
 
 // ================================================================
-// โหมดจัดการค่าใช้จ่าย (ข้อมูลจำลอง): แผงรายการ + ลิ้นชักรายแผง + การ์ดกรอง
+// โหมดจัดการค่าใช้จ่าย: เชื่อมแผง สัญญา มิเตอร์ อัตราค่าน้ำ-ไฟ และรอบจด
 // ================================================================
 const billing = useStallBilling()
+// โหลดอัตราที่ตั้งไว้ของตลาด (ลงทะเบียนตัวคิดอัตราให้การคิดเงินด้านล่างใช้)
+const utilitySettings = useUtilitySettings(marketId.value)
 const costTool = ref<'utility' | 'bill' | null>(null)
 const costFilter = ref<CostFilter>('all')
 const costDrawerOpen = ref(false)
@@ -7936,14 +8199,107 @@ const rightSidePanelWidth = computed(() => {
 })
 
 
-const occupiedCostStalls = computed(() => {
-  const seen = new Set<string>()
-  Object.entries(stallStatusOverrides.value).forEach(([code, st]) => {
-    if (st === 'occupied') seen.add(code.toUpperCase())
+const contractStallCodes = (contract: any) => String(contract?.stall_ident || contract?.stall_number || contract?.stall_code || '')
+  .split(',')
+  .map(code => code.trim().toUpperCase())
+  .filter(Boolean)
+const isEffectiveContract = (contract: any) => {
+  const status = String(contract?.contract_state || contract?.status || '').trim().toLowerCase()
+  return ['active', 'approved', 'effective', 'signed', 'ใช้งานอยู่'].includes(status)
+}
+const activeMeterContracts = computed(() => {
+  const byStall = new Map<string, any>()
+  // รายการจดมิเตอร์ใช้สัญญาจาก backend เท่านั้น ข้อมูลร่างใน localStorage ห้ามสร้างผู้เช่าหรือมิเตอร์จริง
+  marketContracts.value.forEach((contract: any) => {
+    if (!isEffectiveContract(contract)) return
+    contractStallCodes(contract).forEach(code => {
+      if (!byStall.has(code)) byStall.set(code, contract)
+    })
   })
-  return [...seen].map(code => ({ code, tenant: tenantNameOf(code) }))
+  return byStall
 })
-watch([occupiedCostStalls, () => billing.billingMonth.value], () => billing.ensureUtilityBills(occupiedCostStalls.value), { immediate: true })
+const meterProjectMap = computed<Record<string, string>>(() => {
+  const map: Record<string, string> = {}
+  visibleProjects.value.forEach(project => getAllFloorLayoutsForProject(project).forEach(layout => layout.stalls.forEach((stall: any) => {
+    const code = String(stall?.code || stall?.ident || stall?.stall_ident || '').trim().toUpperCase()
+    if (code) map[code] = String(project.id)
+  })))
+  return map
+})
+const testReadingOf = (code: string, kind: 'water' | 'electric') => {
+  const seed = [...`${code}:${kind}`].reduce((sum, char) => ((sum * 31) + char.charCodeAt(0)) >>> 0, 0)
+  return kind === 'water' ? 100 + (seed % 400) : 1000 + (seed % 3000)
+}
+const meterRelations = computed(() => {
+  const projectMap = meterProjectMap.value
+  return [...activeMeterContracts.value.entries()].map(([code, contract]) => {
+    const projectId = projectMap[code] || ''
+    const binding = utilitySettings.getMeter(code)
+    const devices = binding.devices || []
+    const activeDevice = (kind: 'water' | 'electric') => devices.find(device => device.kind === kind && device.status === 'active')
+    const water = activeDevice('water')
+    const electric = activeDevice('electric')
+    const contractId = String(contract.id || '')
+    const persisted = utilitySettings.getReading(billing.billingMonth.value, code)
+    // ห้ามนำเลขที่จดของผู้เช่ารายเดิมมาใช้กับสัญญาใหม่ในแผงเดียวกัน
+    const saved = persisted && (!persisted.contractId || persisted.contractId === contractId) ? persisted : null
+    return {
+      code,
+      projectId,
+      tenant: contract.tenant_name || 'ผู้เช่าตามสัญญา',
+      contractId,
+      contractNumber: contract.contract_number || contract.contract_no || '',
+      shopName: contract.shop_name || contract.business_name || '',
+      prevWater: saved?.prevWater ?? water?.currentReading ?? testReadingOf(code, 'water'),
+      prevElectric: saved?.prevElectric ?? electric?.currentReading ?? testReadingOf(code, 'electric'),
+      currWater: saved?.currWater ?? null,
+      currElectric: saved?.currElectric ?? null,
+      status: saved?.status || 'unrecorded',
+      waterMeterCode: water?.code || binding.water,
+      electricMeterCode: electric?.code || binding.electric
+    }
+  }).filter(item => item.projectId && (
+    utilitySettings.resolve(item.projectId, item.code, 'water').rule.mode === 'meter'
+    || utilitySettings.resolve(item.projectId, item.code, 'electric').rule.mode === 'meter'
+  ))
+})
+const ensureMeterRelations = async () => {
+  await utilitySettings.ready
+  const projectMap = meterProjectMap.value
+  registerStallProjects(projectMap)
+  let createdMeter = false
+  const meterUpdates: Record<string, ReturnType<typeof utilitySettings.getMeter>> = {}
+  activeMeterContracts.value.forEach((_contract, code) => {
+    const projectId = projectMap[code]
+    if (!projectId) return
+    const binding = utilitySettings.getMeter(code)
+    const devices = [...(binding.devices || [])]
+    ;(['electric', 'water'] as const).forEach(kind => {
+      if (utilitySettings.resolve(projectId, code, kind).rule.mode !== 'meter') return
+      if (devices.some(device => device.kind === kind && device.status === 'active')) return
+      const prefix = kind === 'electric' ? 'EM' : 'WM'
+      devices.push({
+        id: `trial-${kind}-${code}`,
+        name: kind === 'electric' ? 'มิเตอร์ไฟฟ้า' : 'มิเตอร์น้ำประปา',
+        kind,
+        code: `${prefix}-${code}`,
+        currentReading: testReadingOf(code, kind),
+        status: 'active'
+      })
+      createdMeter = true
+    })
+    if (devices.length !== (binding.devices || []).length) meterUpdates[code] = { ...binding, devices }
+  })
+  if (Object.keys(meterUpdates).length) {
+    utilitySettings.setMeters(meterUpdates)
+    createdMeter = true
+  }
+  billing.ensureUtilityBills(meterRelations.value)
+  if (createdMeter) void utilitySettings.syncNow()
+}
+watch([activeMeterContracts, () => billing.billingMonth.value, pageMode], () => {
+  if (pageMode.value === 'meters' || pageMode.value === 'payments') void ensureMeterRelations()
+}, { immediate: true })
 watch(stalls, (list) => {
   const vacant = list
     .map((x: any) => String(x.ident || x.stall_ident || '').trim())
@@ -7983,10 +8339,247 @@ const handleCostStallClick = (mapStall: any) => {
   const occupied = status === 'occupied'
   const stored = stalls.value.find((x: any) => String(x.ident || x.stall_ident || '').toUpperCase() === code)
   clickedCostStalls.set(code, { occupied, dailyRate: Number(stored?.daily_rent) || 150 })
-  if (occupied) billing.ensureUtilityBills([{ code, tenant: tenantNameOf(code) }])
+  if (occupied) {
+    const relation = meterRelations.value.find(item => item.code === code)
+    if (relation) billing.ensureUtilityBills([relation])
+  }
+  // จดมิเตอร์: กดแผงไหนก็เปิดการ์ดของแผงนั้นฝั่งซ้าย (แทนการ์ดโครงการ) แผงว่างขึ้นการ์ดพร้อมข้อความว่าไม่ต้องจด (รอกำหนดว่าจะแสดงอะไรเพิ่ม)
+  if (pageMode.value === 'meters') {
+    openMeterCard(code)
+    return
+  }
   // ไม่ได้เปิดแผงไหนอยู่: เลือกชนิดตามสถานะแผง (มีผู้เช่า = ค่าน้ำไฟ, ไม่มี = บิลชั่วคราว)
   openCostDrawer(code, costTool.value ? (costTool.value === 'utility' ? 'utility' : 'temp') : (occupied ? 'utility' : 'temp'))
 }
+
+// การจดมิเตอร์น้ำ-ไฟจากสัญญาที่มีผลและมิเตอร์ที่ผูกกับแผง
+// กดโครงการ -> การ์ดสรุปการจดของโครงการ (ซ้าย) / กดแผง -> การ์ดจดรายแผงแทนการ์ดโครงการ / บันทึกแล้วไปแผงถัดไปที่ยังไม่จด
+// ตารางสรุปการจด (ไอคอนมุมล่างซ้าย) ใช้ดูภาพรวมทุกโครงการ
+const meterSummaryOpen = ref(false)
+const meterCardCode = ref('')
+const meterMonthLabel = computed(() => new Intl.DateTimeFormat('th-TH', { month: 'short', year: 'numeric' }).format(new Date(`${billing.billingMonth.value}-01T00:00:00`)))
+const METER_ABNORMAL_FACTOR = 2.5
+const stallCodeOf = (stall: any) => String(stall?.code || stall?.ident || stall?.stall_ident || '').trim().toUpperCase()
+// แผง -> โครงการ ให้การคิดเงินหาอัตราระดับโครงการได้ (ทำเมื่อเข้าโหมดจดมิเตอร์/ค่าใช้จ่าย)
+let registeredProjectsKey = ''
+watch([isCostMode, visibleProjects], ([on]) => {
+  if (!on) return
+  // สร้างแผนที่แผง->โครงการใหม่เฉพาะเมื่อรายการโครงการเปลี่ยนจริง (ไล่ทุกแผงใช้เวลา)
+  const key = visibleProjects.value.map(p => `${p.id}:${p.floors?.length ?? 0}`).join('|')
+  if (key === registeredProjectsKey) return
+  registeredProjectsKey = key
+  const map: Record<string, string> = {}
+  visibleProjects.value.forEach(project => getAllFloorLayoutsForProject(project).forEach(layout => layout.stalls.forEach((stall: any) => {
+    const code = stallCodeOf(stall)
+    if (code) map[code] = String(project.id)
+  })))
+  registerStallProjects(map)
+}, { immediate: true })
+type MeterData = { projects: MeterProjectRow[]; stalls: MeterStallRow[]; averages: Record<string, { electric: number; water: number }> }
+const EMPTY_METER_DATA: MeterData = { projects: [], stalls: [], averages: {} }
+
+// onlyProjectId: คำนวณเฉพาะโครงการเดียว (การ์ดโครงการ) ไม่ระบุ = ทุกโครงการ (ตารางสรุป)
+const buildMeterData = (onlyProjectId?: string): MeterData => {
+  const info = new Map<string, { projectId: string; projectName: string; number: string }>()
+  visibleProjects.value.forEach((project) => {
+    if (onlyProjectId && String(project.id) !== onlyProjectId) return
+    getAllFloorLayoutsForProject(project).forEach((layout) => {
+      layout.stalls.forEach((stall: any) => {
+        const code = stallCodeOf(stall)
+        if (!code || info.has(code)) return
+        const number = String(stall.sourceProperties?.number ?? stall.sourceProperties?.Number ?? '').trim()
+        info.set(code, { projectId: String(project.id), projectName: cleanProjectName(project.name), number })
+      })
+    })
+  })
+  // เฉพาะแผงที่มีมิเตอร์ที่ต้องจดอย่างน้อย 1 ประเภท (เหมาจ่าย/ไม่คิดค่าใช้บริการทั้งคู่ไม่ต้องจด)
+  const bills = billing.utilityList.value.filter(bill => info.has(bill.stall.toUpperCase()) && (needsReading(bill.stall, 'water') || needsReading(bill.stall, 'electric')))
+  // ค่าเฉลี่ยหน่วยของแต่ละโครงการ ใช้ตรวจค่าที่ใช้สูงผิดปกติ (เทียบเมื่อจดแล้วอย่างน้อย 3 แผง)
+  const samples = new Map<string, { electric: number[]; water: number[] }>()
+  bills.forEach((bill) => {
+    if (bill.status === 'unrecorded') return
+    const id = info.get(bill.stall.toUpperCase())!.projectId
+    const bucket = samples.get(id) || { electric: [], water: [] }
+    bucket.electric.push(billing.electricUnits(bill) ?? 0)
+    bucket.water.push(billing.waterUnits(bill) ?? 0)
+    samples.set(id, bucket)
+  })
+  const mean = (list: number[]) => (list.length >= 3 ? list.reduce((sum, value) => sum + value, 0) / list.length : 0)
+  const averages: MeterData['averages'] = {}
+  samples.forEach((bucket, id) => { averages[id] = { electric: mean(bucket.electric), water: mean(bucket.water) } })
+
+  const stalls: MeterStallRow[] = bills.map((bill) => {
+    const meta = info.get(bill.stall.toUpperCase())!
+    const recorded = bill.status !== 'unrecorded'
+    const eUsed = billing.electricUnits(bill)
+    const wUsed = billing.waterUnits(bill)
+    const projectAverage = averages[meta.projectId] || { electric: 0, water: 0 }
+    const abnormal = recorded && (
+      (projectAverage.electric > 0 && (eUsed ?? 0) > projectAverage.electric * METER_ABNORMAL_FACTOR)
+      || (projectAverage.water > 0 && (wUsed ?? 0) > projectAverage.water * METER_ABNORMAL_FACTOR)
+    )
+    const skipReason = recorded ? '' : billing.getUtilitySkip(bill.stall)
+    return {
+      code: bill.stall,
+      projectId: meta.projectId,
+      label: `แผง ${meta.number || bill.stall}`,
+      tenant: bill.tenant,
+      recorded,
+      abnormal,
+      skipped: !!skipReason,
+      electricPrev: bill.prevElectric,
+      electricCurr: bill.currElectric,
+      electricUsed: eUsed,
+      waterPrev: bill.prevWater,
+      waterCurr: bill.currWater,
+      waterUsed: wUsed,
+      amount: billing.utilityTotal(bill),
+      recordedBy: '',
+      state: recorded ? (abnormal ? 'abnormal' : 'recorded') : (skipReason ? 'skipped' : 'pending')
+    }
+  })
+  const groups = new Map<string, MeterProjectRow>()
+  stalls.forEach((row) => {
+    const project = [...info.values()].find(item => item.projectId === row.projectId)
+    const sampleCode = row.code
+    const modeLabel = (kind: 'water' | 'electric') => ({ meter: 'ตามมิเตอร์', flat: 'เหมาจ่าย', none: 'ไม่คิดค่าใช้บริการ' }[chargeRuleOf(sampleCode, kind).mode])
+    const currentMethod = `${modeLabel('electric')} / ${modeLabel('water')}`
+    const group = groups.get(row.projectId) || { id: row.projectId, name: project?.projectName || row.projectId, method: currentMethod, recorded: 0, total: 0, abnormal: 0, skipped: 0, electricUnits: 0, waterUnits: 0, ready: false }
+    if (group.total > 0 && group.method !== currentMethod) group.method = 'หลายรูปแบบตามแผง'
+    group.total += 1
+    if (row.recorded) { group.recorded += 1; group.electricUnits += row.electricUsed || 0; group.waterUnits += row.waterUsed || 0 }
+    if (row.abnormal) group.abnormal += 1
+    if (row.skipped) group.skipped += 1
+    groups.set(row.projectId, group)
+  })
+  const projects = [...groups.values()].map(group => ({ ...group, ready: group.total > 0 && group.recorded === group.total && group.abnormal === 0 }))
+  return { projects, stalls, averages }
+}
+const meterSummaryData = computed<MeterData>(() => (meterSummaryOpen.value ? buildMeterData() : EMPTY_METER_DATA))
+const meterProjectData = computed<MeterData>(() => (pageMode.value === 'meters' && selectedProject.value ? buildMeterData(String(selectedProject.value.id)) : EMPTY_METER_DATA))
+// ระหว่างสลับตลาด/โครงการ Vue อาจประเมิน computed ก่อนข้อมูลรอบใหม่พร้อม จึงต้องมี fallback ทุกจุดที่อ่านผลลัพธ์
+const meterSummaryProjects = computed<MeterProjectRow[]>(() => meterSummaryData.value?.projects ?? [])
+const meterProjectStalls = computed<MeterStallRow[]>(() => meterProjectData.value?.stalls ?? [])
+const meterProjectAverages = computed<MeterData['averages']>(() => meterProjectData.value?.averages ?? {})
+const meterLiveData = computed<MeterData>(() => buildMeterData())
+const meterLiveRows = computed<MeterStallRow[]>(() => meterLiveData.value?.stalls ?? [])
+const meterLiveProjects = computed<MeterProjectRow[]>(() => meterLiveData.value?.projects ?? [])
+const meterAnomalyRows = computed<MeterStallRow[]>(() => meterLiveRows.value.filter(row => row.abnormal))
+const meterUsageSummary = computed(() => {
+  const recorded = meterLiveRows.value.filter(row => row.recorded)
+  const waterValues = recorded.map(row => row.waterUsed).filter((value): value is number => value != null)
+  const electricValues = recorded.map(row => row.electricUsed).filter((value): value is number => value != null)
+  const waterTotal = waterValues.reduce((sum, value) => sum + value, 0)
+  const electricTotal = electricValues.reduce((sum, value) => sum + value, 0)
+  return {
+    waterTotal,
+    electricTotal,
+    waterAverage: waterValues.length ? Math.round(waterTotal / waterValues.length) : 0,
+    electricAverage: electricValues.length ? Math.round(electricTotal / electricValues.length) : 0
+  }
+})
+const meterOrderedStalls = computed(() => [...meterProjectStalls.value].sort((a, b) => a.label.localeCompare(b.label, 'th', { numeric: true })))
+const meterCardRow = computed(() => meterProjectStalls.value.find(row => row.code.toUpperCase() === meterCardCode.value) || null)
+// ชื่อแผงบนการ์ด: แผงที่มีผู้เช่าใช้ชื่อจากรายการจด แผงว่างหาเลขแผงจากผังของโครงการที่เปิดอยู่
+const meterCardLabel = computed(() => {
+  if (meterCardRow.value) return meterCardRow.value.label
+  const code = meterCardCode.value
+  if (!code) return ''
+  let number = ''
+  if (selectedProject.value) {
+    getAllFloorLayoutsForProject(selectedProject.value).forEach((layout) => {
+      layout.stalls.forEach((stall: any) => {
+        if (!number && stallCodeOf(stall) === code) number = String(stall.sourceProperties?.number ?? stall.sourceProperties?.Number ?? '').trim()
+      })
+    })
+  }
+  return `แผง ${number || code}`
+})
+const meterPendingLeft = computed(() => meterProjectStalls.value.filter(row => row.state === 'pending').length)
+const meterAverages = computed(() => meterProjectAverages.value[String(selectedProject.value?.id)] || { electric: 0, water: 0 })
+// แผงถัดไปที่ยังไม่จด (ไล่ตามลำดับเลขแผง วนกลับไปต้นรายการ ไม่นับแผงที่ข้ามแล้ว)
+const findNextMeterStall = (afterCode: string) => {
+  const list = meterOrderedStalls.value
+  const start = list.findIndex(row => row.code.toUpperCase() === afterCode.toUpperCase())
+  for (let i = 1; i <= list.length; i++) {
+    const row = list[(start + i + list.length) % list.length]
+    if (row && row.state === 'pending' && row.code.toUpperCase() !== afterCode.toUpperCase()) return row
+  }
+  return null
+}
+const meterHasNext = computed(() => !!findNextMeterStall(meterCardCode.value))
+const openMeterCard = (code: string) => {
+  closeCostDrawer()
+  meterCardCode.value = String(code).toUpperCase()
+}
+const closeMeterCard = () => { meterCardCode.value = '' }
+const openNextMeterStall = () => {
+  const next = findNextMeterStall(meterCardCode.value)
+  if (next) openMeterCard(next.code)
+  else void showSuccess('จดครบทุกแผงของโครงการนี้แล้ว', 'จดครบแล้ว')
+}
+const persistRecordedMeterReadings = (code: string) => {
+  const bill = billing.getUtility(code)
+  if (!bill) return
+  const binding = utilitySettings.getMeter(code)
+  const devices = (binding.devices || []).map(device => {
+    if (device.status !== 'active') return device
+    if (device.kind === 'water' && needsReading(code, 'water') && bill.currWater != null) return { ...device, currentReading: bill.currWater }
+    if (device.kind === 'electric' && needsReading(code, 'electric') && bill.currElectric != null) return { ...device, currentReading: bill.currElectric }
+    return device
+  })
+  utilitySettings.setMeter(code, { ...binding, devices })
+  utilitySettings.setReading({
+    billingMonth: billing.billingMonth.value,
+    stall: bill.stall,
+    contractId: bill.contractId || '',
+    contractNumber: bill.contractNumber || '',
+    tenant: bill.tenant,
+    shopName: bill.shopName || '',
+    waterMeterCode: bill.waterMeterCode || '',
+    electricMeterCode: bill.electricMeterCode || '',
+    prevWater: bill.prevWater,
+    prevElectric: bill.prevElectric,
+    currWater: bill.currWater,
+    currElectric: bill.currElectric,
+    status: bill.status,
+    recordedAt: new Date().toISOString()
+  })
+  void utilitySettings.syncNow()
+}
+const handleMeterRecorded = (code: string) => {
+  persistRecordedMeterReadings(code)
+  const next = findNextMeterStall(code)
+  if (next) { openMeterCard(next.code); return }
+  closeMeterCard()
+  void showSuccess('จดครบทุกแผงของโครงการนี้แล้ว', 'จดครบแล้ว')
+}
+// จากตารางสรุปการจด: ปิดตาราง เข้าโครงการของแผงนั้น แล้วเปิดการ์ดจดแผง
+const openMeterStall = async (code: string) => {
+  meterSummaryOpen.value = false
+  const upper = String(code).toUpperCase()
+  const project = visibleProjects.value.find(item => getAllFloorLayoutsForProject(item).some(layout => layout.stalls.some((stall: any) => stallCodeOf(stall) === upper)))
+  if (project && selectedProject.value?.id !== project.id) {
+    if (typeof mapRef.value?.enterProject === 'function') mapRef.value.enterProject(project)
+    else selectProject(project)
+    await nextTick()
+  }
+  openMeterCard(upper)
+}
+const openMeterProject = (id: string) => {
+  meterSummaryOpen.value = false
+  closeMeterCard()
+  const project = visibleProjects.value.find(item => String(item.id) === String(id))
+  if (!project) return
+  if (typeof mapRef.value?.enterProject === 'function') mapRef.value.enterProject(project)
+  else selectProject(project)
+}
+// ยังไม่เชื่อมระบบออกใบแจ้งหนี้ (ข้อมูลจำลอง): แจ้งให้ชัดเจน ไม่ทำเหมือนส่งสำเร็จ
+const sendMeterInvoice = () => {
+  void showWarning('ฟังก์ชันส่งไปออกใบแจ้งหนี้ยังไม่เชื่อมต่อกับระบบออกใบแจ้งหนี้ ขณะนี้ใช้ข้อมูลจำลอง', 'ยังไม่พร้อมใช้งาน')
+}
+watch(pageMode, () => { meterCardCode.value = ''; meterSummaryOpen.value = false })
+watch(() => selectedProject.value?.id, () => { meterCardCode.value = '' })
 
 const costCards = computed(() => {
   const isBill = costTool.value === 'bill'
@@ -8044,7 +8637,8 @@ const resetCostFilters = () => {
 }
 // ความกว้างของแผงที่เปิดอยู่ทางซ้าย: ใช้เลื่อนปุ่มลอยไปอยู่ข้างแผง และให้แผงชิดล่าง
 const leftPanelWidth = computed(() => {
-  if (pageMode.value === 'costs') return costTool.value ? '640px' : ''
+  if (meterCardCode.value) return '380px'
+  if (isCostMode.value && costTool.value) return '640px'
   if (dashboardPanelOpen.value) return '380px'
   // ให้คอนโทรลลอยเคลื่อนพร้อมกรอบที่กำลัง morph ไม่กระโดดตอนสลับเนื้อหา
   if (isProjectPanelMorphing.value) return '720px'
@@ -8058,6 +8652,7 @@ const handleClearStallSelection = () => {
 }
 const onStallEsc = (e: KeyboardEvent) => {
   if (e.key !== 'Escape' || showInspectPhotoModal.value) return
+  if (meterCardCode.value) { closeMeterCard(); return }
   if (showInspectStallOverlay.value) closeStall()
   else handleClearStallSelection()
 }
@@ -8074,13 +8669,29 @@ const costFilterCodes = computed<string[]>(() => {
     .map(b => b.stall)
 })
 
+const bindManagePageListeners = () => {
+  if (!import.meta.client) return
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+  window.removeEventListener('keydown', onStallEsc)
+  window.removeEventListener('click', handleClickOutsideDropdown)
+  window.addEventListener('beforeunload', handleBeforeUnload)
+  window.addEventListener('keydown', onStallEsc)
+  window.addEventListener('click', handleClickOutsideDropdown)
+}
+
+const unbindManagePageListeners = () => {
+  if (!import.meta.client) return
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+  window.removeEventListener('keydown', onStallEsc)
+  window.removeEventListener('click', handleClickOutsideDropdown)
+}
+
 onMounted(() => {
+  isManagePageActive = true
   void loadData()
   loadAllCustomContracts()
   if (import.meta.client) {
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    window.addEventListener('keydown', onStallEsc)
-    window.addEventListener('click', handleClickOutsideDropdown)
+    bindManagePageListeners()
     if (isMapOverviewMode.value) {
       nextTick(() => {
         setTimeout(() => {
@@ -8092,10 +8703,38 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  if (import.meta.client) {
-    window.removeEventListener('beforeunload', handleBeforeUnload)
-    window.removeEventListener('keydown', onStallEsc)
-    window.removeEventListener('click', handleClickOutsideDropdown)
+  isManagePageActive = false
+  loadDataController?.abort()
+  loadDataController = null
+  loadDataRun += 1
+  unbindManagePageListeners()
+})
+
+onDeactivated(() => {
+  isManagePageActive = false
+  unbindManagePageListeners()
+  if (loadDataController) {
+    reloadAfterActivation = true
+    loadDataController.abort()
+    loadDataController = null
+  }
+})
+
+onActivated(() => {
+  isManagePageActive = true
+  bindManagePageListeners()
+  // KeepAlive also calls onActivated on the initial mount. loadData() already
+  // starts in onMounted, so do not abort and restart that first request.
+  if (!hasActivatedManagePage) {
+    hasActivatedManagePage = true
+    return
+  }
+  if (reloadAfterActivation || loadedMarketId !== marketId.value) {
+    void loadData()
+    return
+  }
+  if (isMapOverviewMode.value && import.meta.client) {
+    nextTick(() => window.requestAnimationFrame(() => mapRef.value?.resize?.()))
   }
 })
 
@@ -8112,10 +8751,18 @@ onBeforeRouteUpdate(async (to, from) => {
   return true
 })
 
-watch(marketId, () => { selectedProject.value = null; closeStall(); void loadData() })
+watch(marketId, () => {
+  if (!isManagePageActive || route.path !== '/stalls/map') {
+    reloadAfterActivation = true
+    return
+  }
+  selectedProject.value = null
+  closeStall()
+  void loadData()
+})
 
 watch(() => route.fullPath, () => {
-  if (isMapOverviewMode.value && import.meta.client) {
+  if (isManagePageActive && route.path === '/stalls/map' && isMapOverviewMode.value && import.meta.client) {
     nextTick(() => {
       setTimeout(() => {
         window.dispatchEvent(new Event('resize'))
@@ -8128,44 +8775,44 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 </script>
 
 <style scoped>
-.gis-panel{padding:26px 28px!important}.gis-panel-heading{align-items:center;margin-bottom:22px!important}.gis-panel-heading h2{font-size:1.25rem!important;font-weight:800;color:#0f172a;margin:0}.gis-panel-heading p{margin:6px 0 0!important}.gis-heading-right{display:flex;align-items:center;gap:12px;margin-left:auto;flex-wrap:wrap}.gis-map-toolbar{display:flex;flex:0 1 auto;min-width:0}.gis-map-toolbar :deep(.master-map-top-bar){width:auto;margin:0}.gis-map-toolbar :deep(.master-map-tools-right){margin-left:0;flex-wrap:nowrap}@media(max-width:700px){.gis-panel-heading{align-items:flex-start}.gis-heading-right,.gis-map-toolbar{width:100%;margin-left:0}.gis-map-toolbar :deep(.master-map-top-bar),.gis-map-toolbar :deep(.master-map-tools-right){width:100%;flex-wrap:wrap}.gis-map-toolbar :deep(.search-input-group){flex:1;width:auto}}
-.staff-dashboard-intro{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:8px 0 22px}.dashboard-intro-left h1{margin:0;color:#0f172a;font-size:1.5rem;font-weight:700;letter-spacing:-.01em;line-height:1.3}.dashboard-updated-sub{margin:4px 0 0;color:#64748b;font-size:.875rem;font-weight:500}.dashboard-intro-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.gis-panel{padding:26px 28px!important}.gis-panel-heading{align-items:center;margin-bottom:22px!important}.gis-panel-heading h2{font-size:1.25rem!important;font-weight:800;color:var(--tx-0f172a);margin:0}.gis-panel-heading p{margin:6px 0 0!important}.gis-heading-right{display:flex;align-items:center;gap:12px;margin-left:auto;flex-wrap:wrap}.gis-map-toolbar{display:flex;flex:0 1 auto;min-width:0}.gis-map-toolbar :deep(.master-map-top-bar){width:auto;margin:0}.gis-map-toolbar :deep(.master-map-tools-right){margin-left:0;flex-wrap:nowrap}@media(max-width:700px){.gis-panel-heading{align-items:flex-start}.gis-heading-right,.gis-map-toolbar{width:100%;margin-left:0}.gis-map-toolbar :deep(.master-map-top-bar),.gis-map-toolbar :deep(.master-map-tools-right){width:100%;flex-wrap:wrap}.gis-map-toolbar :deep(.search-input-group){flex:1;width:auto}}
+.staff-dashboard-intro{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:8px 0 22px}.dashboard-intro-left h1{margin:0;color:var(--tx-0f172a);font-size:1.5rem;font-weight:700;letter-spacing:-.01em;line-height:1.3}.dashboard-updated-sub{margin:4px 0 0;color:var(--tx-64748b);font-size:.875rem;font-weight:500}.dashboard-intro-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .officer-summary-dashboard{display:grid;gap:20px;margin-bottom:12px}.dash-kpi-ribbon{margin:0!important}.dash-kpi-ribbon .map-summary-card{cursor:default}.dash-kpi-ribbon .map-summary-card:hover{transform:none;box-shadow:0 1px 3px rgba(15,23,42,.03)}.dash-two-col-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:stretch}
-.dash-system-card{background:#fff;border:1px solid #eef2f6;border-radius:16px;box-shadow:0 1px 3px rgba(15,23,42,.03);padding:22px 24px;display:flex;flex-direction:column;gap:16px}
-.dash-card-header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.dash-card-title{margin:0;color:#1e293b;font-size:1.05rem;font-weight:700;line-height:1.3}.dash-card-subtitle{margin:3px 0 0;color:#64748b;font-size:.8125rem;font-weight:500}
-.dash-status-badge{display:inline-flex;align-items:center;justify-content:center;padding:3px 10px;border-radius:7px;font-size:.75rem;font-weight:600;white-space:nowrap}.dash-status-badge.badge-amber{background:#fef3c7;color:#d97706}.dash-status-badge.badge-green{background:#dcfce7;color:#15803d}.dash-status-badge.badge-red{background:#fee2e2;color:#dc2626}.dash-status-badge.badge-gray{background:#f1f5f9;color:#64748b}
+.dash-system-card{background:var(--bg-ffffff);border:1px solid var(--bd-eef2f6);border-radius:16px;box-shadow:0 1px 3px rgba(15,23,42,.03);padding:22px 24px;display:flex;flex-direction:column;gap:16px}
+.dash-card-header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.dash-card-title{margin:0;color:var(--tx-1e293b);font-size:1.05rem;font-weight:700;line-height:1.3}.dash-card-subtitle{margin:3px 0 0;color:var(--tx-64748b);font-size:.8125rem;font-weight:500}
+.dash-status-badge{display:inline-flex;align-items:center;justify-content:center;padding:3px 10px;border-radius:7px;font-size:.75rem;font-weight:600;white-space:nowrap}.dash-status-badge.badge-amber{background:var(--bg-fef3c7);color:var(--tx-d97706)}.dash-status-badge.badge-green{background:var(--bg-dcfce7);color:var(--tx-15803d)}.dash-status-badge.badge-red{background:var(--bg-fee2e2);color:var(--tx-dc2626)}.dash-status-badge.badge-gray{background:var(--bg-f1f5f9);color:var(--tx-64748b)}
 .dash-donut-layout{display:grid;grid-template-columns:148px minmax(0,1fr);gap:22px;align-items:center;margin:auto 0}
-.dash-donut-wrap{position:relative;width:148px;height:148px;display:flex;align-items:center;justify-content:center;margin:0 auto}.dash-donut-svg{width:148px;height:148px;display:block}.dash-donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}.dash-donut-center strong{color:#0f172a;font-size:1.25rem;font-weight:800;line-height:1.1}.dash-donut-center span{color:#64748b;font-size:.75rem;font-weight:600;margin-top:3px}
-.dash-donut-legend-list{display:grid;gap:8px}.dash-legend-row{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border:1px solid #eef2f6;border-radius:10px;background:#f8fafc}.legend-left{display:inline-flex;align-items:center;gap:8px;color:#334155;font-size:.875rem;font-weight:600}.legend-left i{width:10px;height:10px;border-radius:50%;display:inline-block}.dot-available{background:#10b981}.dot-reserved{background:#f59e0b}.dot-occupied{background:#475569}.legend-right{display:inline-flex;align-items:center;gap:8px}.legend-right strong{color:#0f172a;font-size:.9375rem;font-weight:700}
-.dash-mini-rev-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:12px;border-top:1px solid #f1f5f9}.dash-mini-rev-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;border-radius:10px;background:#f8fafc;border:1px solid #eef2f6}.dash-mini-rev-item span{color:#64748b;font-size:.8125rem;font-weight:500}.dash-mini-rev-item strong{font-size:1rem;font-weight:700;color:#0f172a}.dash-mini-rev-item strong.is-blue{color:#2563eb}.dash-mini-rev-item strong.is-green{color:#059669}
-.dash-bar-chart-list{display:grid;gap:14px;margin:auto 0}.dash-bar-row{display:grid;gap:6px}.dash-bar-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.dash-bar-name{display:inline-flex;align-items:center;gap:8px;color:#1e293b;font-size:.875rem;font-weight:600;min-width:0;max-width:62%;overflow:hidden;white-space:nowrap}.dash-bar-name>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dash-bar-name i{width:10px;height:10px;border-radius:3px;flex-shrink:0}.dash-bar-meta{color:#64748b;font-size:.8125rem;font-weight:500;white-space:nowrap}.dash-bar-meta strong{color:#0f172a;font-weight:700}.dash-bar-track{height:10px;border-radius:999px;background:#f1f5f9;overflow:hidden}.dash-bar-fill{display:block;height:100%;border-radius:999px;transition:width .3s ease}
+.dash-donut-wrap{position:relative;width:148px;height:148px;display:flex;align-items:center;justify-content:center;margin:0 auto}.dash-donut-svg{width:148px;height:148px;display:block}.dash-donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}.dash-donut-center strong{color:var(--tx-0f172a);font-size:1.25rem;font-weight:800;line-height:1.1}.dash-donut-center span{color:var(--tx-64748b);font-size:.75rem;font-weight:600;margin-top:3px}
+.dash-donut-legend-list{display:grid;gap:8px}.dash-legend-row{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border:1px solid var(--bd-eef2f6);border-radius:10px;background:var(--bg-f8fafc)}.legend-left{display:inline-flex;align-items:center;gap:8px;color:var(--tx-334155);font-size:.875rem;font-weight:600}.legend-left i{width:10px;height:10px;border-radius:50%;display:inline-block}.dot-available{background:#10b981}.dot-reserved{background:#f59e0b}.dot-occupied{background:#475569}.legend-right{display:inline-flex;align-items:center;gap:8px}.legend-right strong{color:var(--tx-0f172a);font-size:.9375rem;font-weight:700}
+.dash-mini-rev-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:12px;border-top:1px solid var(--bd-f1f5f9)}.dash-mini-rev-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;border-radius:10px;background:var(--bg-f8fafc);border:1px solid var(--bd-eef2f6)}.dash-mini-rev-item span{color:var(--tx-64748b);font-size:.8125rem;font-weight:500}.dash-mini-rev-item strong{font-size:1rem;font-weight:700;color:var(--tx-0f172a)}.dash-mini-rev-item strong.is-blue{color:var(--tx-2563eb)}.dash-mini-rev-item strong.is-green{color:var(--tx-059669)}
+.dash-bar-chart-list{display:grid;gap:14px;margin:auto 0}.dash-bar-row{display:grid;gap:6px}.dash-bar-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.dash-bar-name{display:inline-flex;align-items:center;gap:8px;color:var(--tx-1e293b);font-size:.875rem;font-weight:600;min-width:0;max-width:62%;overflow:hidden;white-space:nowrap}.dash-bar-name>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dash-bar-name i{width:10px;height:10px;border-radius:3px;flex-shrink:0}.dash-bar-meta{color:var(--tx-64748b);font-size:.8125rem;font-weight:500;white-space:nowrap}.dash-bar-meta strong{color:var(--tx-0f172a);font-weight:700}.dash-bar-track{height:10px;border-radius:999px;background:var(--bg-f1f5f9);overflow:hidden}.dash-bar-fill{display:block;height:100%;border-radius:999px;transition:width .3s ease}
 @media(max-width:640px){.dash-donut-layout{grid-template-columns:1fr}.dash-mini-rev-row{grid-template-columns:1fr}}
 .dash-table-card{padding:24px 28px;gap:16px}.dash-table-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.dash-table-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.dash-category-select{min-width:210px}
-.dash-search-box{position:relative;display:inline-flex;align-items:center;min-width:240px}.dash-search-box svg{position:absolute;left:12px;color:#94a3b8;pointer-events:none;z-index:1}.dash-search-box :deep(.app-input){min-height:40px;padding-left:36px;border-color:#e2e8f0;border-radius:8px}
-.dash-filter-tabs{display:flex;align-items:center;gap:24px;border-bottom:1px solid #f1f5f9;overflow-x:auto}.dash-filter-tab{position:relative;padding:10px 4px 12px;border:0;background:transparent;color:#64748b;font:inherit;font-size:.9375rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:color .15s}.dash-filter-tab:hover{color:#1e293b}.dash-filter-tab.active{color:#2563eb}.dash-filter-tab.active::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:3px;border-radius:2px;background:#2563eb}
-.dash-table-wrap{width:100%;overflow-x:auto}.dash-std-table{width:100%;border-collapse:collapse;text-align:left}.dash-std-table thead th{padding:14px 16px;color:#64748b;font-size:.8125rem;font-weight:500;border-bottom:1px solid #f1f5f9;white-space:nowrap;background:#fff}.dash-std-table tbody td{padding:16px;color:#334155;font-size:.875rem;font-weight:500;border-bottom:1px solid #f1f5f9;vertical-align:middle}.dash-std-table tbody tr:hover{background:#f8fafc}.dash-std-table .text-right{text-align:right}.dash-std-table .text-center{text-align:center}.dash-std-table strong{color:#1e293b;font-weight:700}.dash-std-table .code-primary{color:#2563eb}
-.zone-name-cell{display:flex;align-items:center;gap:12px}.zone-color-dot{width:12px;height:12px;border-radius:4px;flex-shrink:0}.zone-name-cell strong{display:block;color:#1e293b;font-size:.875rem;font-weight:600}.zone-name-cell small,.applicant-cell small{display:block;margin-top:2px;color:#64748b;font-size:.75rem;font-weight:500}.applicant-cell strong{display:block;color:#1e293b;font-size:.875rem;font-weight:600}
-.zone-occ-cell{display:flex;align-items:center;gap:10px}.zone-occ-bar{flex:1;height:8px;border-radius:999px;background:#e2e8f0;overflow:hidden;min-width:80px}.zone-occ-bar span{display:block;height:100%;border-radius:999px;background:#2563eb}.zone-occ-cell strong{font-size:.8125rem;min-width:36px;text-align:right}
-.dash-table-view-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#334155;font:inherit;font-size:.825rem;font-weight:600;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}.dash-table-view-btn:hover{background:#eff6ff;border-color:#93c5fd;color:#2563eb}
-.dash-empty-row{padding:32px 16px!important;text-align:center;color:#64748b!important;font-size:.875rem}
+.dash-search-box{position:relative;display:inline-flex;align-items:center;min-width:240px}.dash-search-box svg{position:absolute;left:12px;color:var(--tx-94a3b8);pointer-events:none;z-index:1}.dash-search-box :deep(.app-input){min-height:40px;padding-left:36px;border-color:var(--bd-e2e8f0);border-radius:8px}
+.dash-filter-tabs{display:flex;align-items:center;gap:24px;border-bottom:1px solid var(--bd-f1f5f9);overflow-x:auto}.dash-filter-tab{position:relative;padding:10px 4px 12px;border:0;background:transparent;color:var(--tx-64748b);font:inherit;font-size:.9375rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:color .15s}.dash-filter-tab:hover{color:var(--tx-1e293b)}.dash-filter-tab.active{color:var(--tx-2563eb)}.dash-filter-tab.active::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:3px;border-radius:2px;background:#2563eb}
+.dash-table-wrap{width:100%;overflow-x:auto}.dash-std-table{width:100%;border-collapse:collapse;text-align:left}.dash-std-table thead th{padding:14px 16px;color:var(--tx-64748b);font-size:.8125rem;font-weight:500;border-bottom:1px solid var(--bd-f1f5f9);white-space:nowrap;background:var(--bg-ffffff)}.dash-std-table tbody td{padding:16px;color:var(--tx-334155);font-size:.875rem;font-weight:500;border-bottom:1px solid var(--bd-f1f5f9);vertical-align:middle}.dash-std-table tbody tr:hover{background:var(--bg-f8fafc)}.dash-std-table .text-right{text-align:right}.dash-std-table .text-center{text-align:center}.dash-std-table strong{color:var(--tx-1e293b);font-weight:700}.dash-std-table .code-primary{color:var(--tx-2563eb)}
+.zone-name-cell{display:flex;align-items:center;gap:12px}.zone-color-dot{width:12px;height:12px;border-radius:4px;flex-shrink:0}.zone-name-cell strong{display:block;color:var(--tx-1e293b);font-size:.875rem;font-weight:600}.zone-name-cell small,.applicant-cell small{display:block;margin-top:2px;color:var(--tx-64748b);font-size:.75rem;font-weight:500}.applicant-cell strong{display:block;color:var(--tx-1e293b);font-size:.875rem;font-weight:600}
+.zone-occ-cell{display:flex;align-items:center;gap:10px}.zone-occ-bar{flex:1;height:8px;border-radius:999px;background:var(--bg-e2e8f0);overflow:hidden;min-width:80px}.zone-occ-bar span{display:block;height:100%;border-radius:999px;background:#2563eb}.zone-occ-cell strong{font-size:.8125rem;min-width:36px;text-align:right}
+.dash-table-view-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid var(--bd-e2e8f0);border-radius:8px;background:var(--bg-ffffff);color:var(--tx-334155);font:inherit;font-size:.825rem;font-weight:600;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}.dash-table-view-btn:hover{background:var(--bg-eff6ff);border-color:var(--bd-93c5fd);color:var(--tx-2563eb)}
+.dash-empty-row{padding:32px 16px!important;text-align:center;color:var(--tx-64748b)!important;font-size:.875rem}
 @media(max-width:1080px){.dash-two-col-grid{grid-template-columns:1fr}}@media(max-width:768px){.dash-revenue-grid{grid-template-columns:1fr}.dash-queue-item{flex-direction:column;align-items:flex-start}.dash-queue-right{width:100%;justify-content:space-between}}
-.workspace-grid{display:grid;grid-template-columns:minmax(0,1fr)!important;margin-top:0}.workspace-grid[style*="display: none"]{display:none!important}.gis-panel-heading h2{font-size:1.15rem}.map-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin:4px 0 24px}.map-summary-card{background:#fff;border:1px solid #eef2f6;border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;font-family:inherit;text-align:left;position:relative;transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:0 1px 3px rgba(15,23,42,.03)}.map-summary-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(15,23,42,.07)}.map-summary-card:focus-visible{outline:2px solid #2563eb;outline-offset:2px}.map-summary-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s ease}.map-summary-content{display:flex;flex-direction:column;min-width:0}.map-summary-title{font-size:.8125rem;color:#64748b;font-weight:500;line-height:1.25;margin-bottom:6px;white-space:nowrap}.map-summary-value-row{display:flex;align-items:baseline;gap:8px}.map-summary-count{font-size:1.45rem;font-weight:800;color:#0f172a;line-height:1.1}.map-summary-unit-pill{font-size:.78rem;font-weight:600;padding:2px 8px;border-radius:6px;line-height:1.2;font-style:normal}.summary-total .map-summary-icon{background:#eff6ff;color:#2563eb;border:1px solid #dbeafe}.summary-total .map-summary-unit-pill{background:#eff6ff;color:#1d4ed8}.summary-total.active{border-color:#2563eb;background:#f8faff;box-shadow:0 0 0 2px rgba(37,99,235,.18)}.summary-available .map-summary-icon{background:#ecfdf5;color:#059669;border:1px solid #d1fae5}.summary-available .map-summary-unit-pill{background:#dcfce7;color:#15803d}.summary-available.active{border-color:#10b981;background:#f0fdf4;box-shadow:0 0 0 2px rgba(16,185,129,.2)}.summary-reserved .map-summary-icon{background:#fffbeb;color:#d97706;border:1px solid #fef3c7}.summary-reserved .map-summary-unit-pill{background:#fef3c7;color:#b45309}.summary-reserved.active{border-color:#f59e0b;background:#fffdf7;box-shadow:0 0 0 2px rgba(245,158,11,.2)}.summary-occupied .map-summary-icon{background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0}.summary-occupied .map-summary-unit-pill{background:#f1f5f9;color:#64748b}.summary-occupied.active{border-color:#94a3b8;background:#f8fafc;box-shadow:0 0 0 2px rgba(100,116,139,.18)}@media(max-width:800px){.map-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:440px){.map-summary-grid{grid-template-columns:1fr}}.header-actions{display:inline-flex;align-items:center;gap:10px}.draft-status{display:inline-flex;align-items:center;gap:7px;height:34px;box-sizing:border-box;padding:0 12px;border-radius:999px;background:#f1f5f9;color:#475569;font-size:.8125rem;font-weight:600;transition:all .2s ease}.draft-status i{width:8px;height:8px;border-radius:50%;background:currentColor}.draft-status.published{background:#ecfdf5;color:#15803d;border:1px solid #bbf7d0}.draft-status.is-dirty{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}.draft-status.is-dirty i{background:#ea580c;box-shadow:0 0 0 3px rgba(234,88,12,.18)}.header-status-skeleton,.header-action-skeleton{display:block;border-radius:999px;background:linear-gradient(90deg,#eef2f7 25%,#f8fafc 50%,#eef2f7 75%);background-size:200% 100%;animation:headerSkeletonShimmer 1.35s ease-in-out infinite}.header-status-skeleton{width:102px;height:34px}.header-action-skeleton{width:128px;height:34px;border-radius:7px}@keyframes headerSkeletonShimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}@media(prefers-reduced-motion:reduce){.header-status-skeleton,.header-action-skeleton{animation:none}}
-.unsaved-leave-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:99999}.unsaved-leave-card{background:#fff;border-radius:18px;width:100%;max-width:430px;padding:28px 24px 22px;text-align:center;box-shadow:0 24px 48px -12px rgba(15,23,42,.28),0 0 0 1px rgba(226,232,240,.8);position:relative}.unsaved-leave-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:8px;border:0;background:transparent;color:#64748b;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s}.unsaved-leave-close:hover{background:#f1f5f9;color:#0f172a}.unsaved-leave-close svg{width:18px;height:18px}.unsaved-leave-icon{width:56px;height:56px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:#fef3c7;color:#d97706;box-shadow:0 0 0 6px #fffbeb}.unsaved-leave-content h3{font-size:1.15rem;font-weight:700;color:#0f172a;margin:0 0 8px}.unsaved-leave-content p{font-size:.9375rem;color:#475569;line-height:1.55;margin:0 0 22px}.unsaved-leave-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.inspect-selected-stall-drawer{position:absolute;top:62px;right:14px;width:min(380px,calc(100vw - 28px));max-height:calc(100% - 76px);display:flex;flex-direction:column;pointer-events:auto;z-index:125;background:#ffffff;border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 16px 38px rgba(15,23,42,.16);overflow:hidden;contain:layout paint;will-change:width,transform,opacity;transition:width .46s cubic-bezier(.16,1,.3,1),box-shadow .36s ease,background-color .28s ease}
+.workspace-grid{display:grid;grid-template-columns:minmax(0,1fr)!important;margin-top:0}.workspace-grid[style*="display: none"]{display:none!important}.gis-panel-heading h2{font-size:1.15rem}.map-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin:4px 0 24px}.map-summary-card{background:var(--bg-ffffff);border:1px solid var(--bd-eef2f6);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;font-family:inherit;text-align:left;position:relative;transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:0 1px 3px rgba(15,23,42,.03)}.map-summary-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(15,23,42,.07)}.map-summary-card:focus-visible{outline:2px solid #2563eb;outline-offset:2px}.map-summary-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s ease}.map-summary-content{display:flex;flex-direction:column;min-width:0}.map-summary-title{font-size:.8125rem;color:var(--tx-64748b);font-weight:500;line-height:1.25;margin-bottom:6px;white-space:nowrap}.map-summary-value-row{display:flex;align-items:baseline;gap:8px}.map-summary-count{font-size:1.45rem;font-weight:800;color:var(--tx-0f172a);line-height:1.1}.map-summary-unit-pill{font-size:.78rem;font-weight:600;padding:2px 8px;border-radius:6px;line-height:1.2;font-style:normal}.summary-total .map-summary-icon{background:var(--bg-eff6ff);color:var(--tx-2563eb);border:1px solid var(--bd-dbeafe)}.summary-total .map-summary-unit-pill{background:var(--bg-eff6ff);color:var(--tx-1d4ed8)}.summary-total.active{border-color:#2563eb;background:var(--bg-f8faff);box-shadow:0 0 0 2px rgba(37,99,235,.18)}.summary-available .map-summary-icon{background:var(--bg-ecfdf5);color:var(--tx-059669);border:1px solid var(--bd-d1fae5)}.summary-available .map-summary-unit-pill{background:var(--bg-dcfce7);color:var(--tx-15803d)}.summary-available.active{border-color:#10b981;background:var(--bg-f0fdf4);box-shadow:0 0 0 2px rgba(16,185,129,.2)}.summary-reserved .map-summary-icon{background:var(--bg-fffbeb);color:var(--tx-d97706);border:1px solid var(--bd-fef3c7)}.summary-reserved .map-summary-unit-pill{background:var(--bg-fef3c7);color:var(--tx-b45309)}.summary-reserved.active{border-color:#f59e0b;background:var(--bg-fffdf7);box-shadow:0 0 0 2px rgba(245,158,11,.2)}.summary-occupied .map-summary-icon{background:var(--bg-f1f5f9);color:var(--tx-64748b);border:1px solid var(--bd-e2e8f0)}.summary-occupied .map-summary-unit-pill{background:var(--bg-f1f5f9);color:var(--tx-64748b)}.summary-occupied.active{border-color:var(--bd-94a3b8);background:var(--bg-f8fafc);box-shadow:0 0 0 2px rgba(100,116,139,.18)}@media(max-width:800px){.map-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:440px){.map-summary-grid{grid-template-columns:1fr}}.header-actions{display:inline-flex;align-items:center;gap:10px}.draft-status{display:inline-flex;align-items:center;gap:7px;height:34px;box-sizing:border-box;padding:0 12px;border-radius:999px;background:var(--bg-f1f5f9);color:var(--tx-475569);font-size:.8125rem;font-weight:600;transition:all .2s ease}.draft-status i{width:8px;height:8px;border-radius:50%;background:currentColor}.draft-status.published{background:var(--bg-ecfdf5);color:var(--tx-15803d);border:1px solid var(--bd-bbf7d0)}.draft-status.is-dirty{background:var(--bg-fff7ed);color:var(--tx-c2410c);border:1px solid var(--bd-fed7aa)}.draft-status.is-dirty i{background:#ea580c;box-shadow:0 0 0 3px rgba(234,88,12,.18)}.header-status-skeleton,.header-action-skeleton{display:block;border-radius:999px;background:linear-gradient(90deg,var(--bg-eef2f7) 25%,var(--bg-f8fafc) 50%,var(--bg-eef2f7) 75%);background-size:200% 100%;animation:headerSkeletonShimmer 1.35s ease-in-out infinite}.header-status-skeleton{width:102px;height:34px}.header-action-skeleton{width:128px;height:34px;border-radius:7px}@keyframes headerSkeletonShimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}@media(prefers-reduced-motion:reduce){.header-status-skeleton,.header-action-skeleton{animation:none}}
+.unsaved-leave-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:99999}.unsaved-leave-card{background:var(--bg-ffffff);border-radius:20px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 24px 48px -12px rgba(15,23,42,.28),0 0 0 1px rgba(226,232,240,.8);position:relative}.unsaved-leave-content{padding:24px 28px}.unsaved-leave-content p{font-size:.9375rem;color:var(--tx-475569);line-height:1.55;margin:0}.unsaved-leave-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 28px;border-top:1px solid var(--bd-e2e8f0);background:var(--bg-f8fafc)}
+.inspect-selected-stall-drawer{position:absolute;top:62px;right:14px;width:min(380px,calc(100vw - 28px));max-height:calc(100% - 76px);display:flex;flex-direction:column;pointer-events:auto;z-index:125;background:var(--bg-ffffff);border:1px solid var(--bd-e2e8f0);border-radius:18px;box-shadow:0 16px 38px rgba(15,23,42,.16);overflow:hidden;contain:layout paint;will-change:width,transform,opacity;transition:width .46s cubic-bezier(.16,1,.3,1),box-shadow .36s ease,background-color .28s ease}
 .inspect-selected-stall-drawer.is-edit-mode{width:min(440px,calc(100% - 28px))}
 .inspect-selected-stall-drawer.is-full-detail-mode{width:min(760px,calc(100vw - 36px));z-index:130}
 @media(min-width:769px){.inspect-selected-stall-drawer.is-management-mode{bottom:100px;max-height:calc(100% - 176px)}}
-.issd-header{padding:16px 18px 14px;border-bottom:1px solid #f1f5f9;background:#fff;flex-shrink:0}.issd-header-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.issd-title-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}.issd-title-group strong{font-size:1rem;font-weight:700;color:#0f172a}.issd-project-sub{margin-top:4px;font-size:.8125rem;font-weight:500;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.issd-back-btn{width:28px;height:28px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#475569;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s,border-color .15s,color .15s}.issd-back-btn:hover{background:#f1f5f9;color:#0f172a;border-color:#cbd5e1}
-.issd-close-btn{width:28px;height:28px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#475569;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s,border-color .15s,color .15s}.issd-close-btn:hover{background:#fef2f2;border-color:#fca5a5;color:#ef4444}
+.issd-header{padding:16px 18px 14px;border-bottom:1px solid var(--bd-f1f5f9);background:var(--bg-ffffff);flex-shrink:0}.issd-header-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.issd-title-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}.issd-title-group strong{font-size:1rem;font-weight:700;color:var(--tx-0f172a)}.issd-project-sub{margin-top:4px;font-size:.8125rem;font-weight:500;color:var(--tx-64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.issd-back-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--bd-e2e8f0);background:var(--bg-ffffff);color:var(--tx-475569);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s,border-color .15s,color .15s}.issd-back-btn:hover{background:var(--bg-f1f5f9);color:var(--tx-0f172a);border-color:var(--bd-cbd5e1)}
+.issd-close-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--bd-e2e8f0);background:var(--bg-ffffff);color:var(--tx-475569);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s,border-color .15s,color .15s}.issd-close-btn:hover{background:var(--bg-fef2f2);border-color:var(--bd-fca5a5);color:var(--tx-ef4444)}
 .issd-detail-tabs-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   padding: 10px 14px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border-bottom: 1px solid var(--bd-e2e8f0);
   flex-shrink: 0;
   overflow: visible;
 }
@@ -8178,9 +8825,9 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   height: 32px;
   padding: 0 10px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #475569;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
+  color: var(--tx-475569);
   font-family: inherit;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -8190,9 +8837,9 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 .issd-tab-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
-  border-color: #cbd5e1;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-0f172a);
+  border-color: var(--bd-cbd5e1);
 }
 .issd-tab-btn.active {
   background: #2563eb;
@@ -8212,24 +8859,24 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   height: 17px;
   padding: 0 5px;
   border-radius: 999px;
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-475569);
   font-size: 0.75rem;
   font-weight: 700;
   line-height: 1;
 }
 .issd-tab-btn.active .issd-tab-count {
-  background: rgba(255, 255, 255, 0.28);
+  background: var(--bg-rgba-255-255-255-0p28);
   color: #ffffff;
 }
 .issd-tab-count.is-urgent {
-  background: #fef3c7;
-  color: #d97706;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
 }
 .issd-tab-btn.has-urgent-badge {
   border-color: #fcd34d;
-  background: #fffbeb;
-  color: #b45309;
+  background: var(--bg-fffbeb);
+  color: var(--tx-b45309);
 }
 .issd-body {
   flex: 1 1 auto;
@@ -8282,22 +8929,22 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .issd-photo-banner.is-full{height:124px}
 .issd-kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0;flex-shrink:0}
 
-.issd-kpi-card{padding:10px 12px;border-radius:11px;border:1px solid #e2e8f0;background:#f8fafc;display:grid;gap:2px}
-.issd-kpi-card span{color:#64748b;font-size:.75rem;font-weight:500}
-.issd-kpi-card strong{color:#0f172a;font-size:1.15rem;font-weight:700;line-height:1.2}
-.issd-kpi-card.is-green strong{color:#10b981}
-.issd-kpi-card em{font-style:normal;color:#64748b;font-size:.75rem;font-weight:500}
+.issd-kpi-card{padding:10px 12px;border-radius:11px;border:1px solid var(--bd-e2e8f0);background:var(--bg-f8fafc);display:grid;gap:2px}
+.issd-kpi-card span{color:var(--tx-64748b);font-size:.75rem;font-weight:500}
+.issd-kpi-card strong{color:var(--tx-0f172a);font-size:1.15rem;font-weight:700;line-height:1.2}
+.issd-kpi-card.is-green strong{color:var(--tx-10b981)}
+.issd-kpi-card em{font-style:normal;color:var(--tx-64748b);font-size:.75rem;font-weight:500}
 .issd-fact-section{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
-.issd-section-title{font-size:.8125rem;font-weight:700;color:#1e293b}
+.issd-section-title{font-size:.8125rem;font-weight:700;color:var(--tx-1e293b)}
 .issd-fact-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:0}
-.issd-fact-cell{padding:9px 12px;border:1px solid #e2e8f0;border-radius:9px;background:#fff}
+.issd-fact-cell{padding:9px 12px;border:1px solid var(--bd-e2e8f0);border-radius:9px;background:var(--bg-ffffff)}
 .issd-fact-cell.full{grid-column:1/-1}
-.issd-fact-cell dt{color:#64748b;font-size:.75rem;font-weight:500}
-.issd-fact-cell dd{margin:3px 0 0;color:#1e293b;font-size:.8125rem;font-weight:600;word-break:break-word}
-.issd-ops-snapshot{display:grid;gap:10px;padding:13px;border:1px solid #dbeafe;border-radius:12px;background:#f8fbff;flex-shrink:0}
-.issd-ops-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.issd-ops-heading>div{display:grid;gap:2px}.issd-ops-heading strong{font-size:.9375rem;color:#0f172a}.issd-ops-heading span:not(.issd-status-pill){font-size:.75rem;color:#64748b}
-.issd-ops-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:#e2e8f0;border:1px solid #e2e8f0;border-radius:9px;overflow:hidden}.issd-ops-grid>div{display:grid;gap:2px;padding:9px 10px;background:#fff}.issd-ops-grid span{font-size:.75rem;color:#64748b}.issd-ops-grid strong{font-size:.8125rem;color:#1e293b;line-height:1.35}.issd-ops-grid strong.is-alert{color:#dc2626}
-.issd-action-summary{display:grid;gap:5px;padding:9px 10px;border-radius:9px;background:#fffbeb;border:1px solid #fde68a}.issd-action-summary>strong{font-size:.8125rem;color:#92400e}.issd-action-summary ul{display:grid;gap:3px;margin:0;padding-left:18px;color:#92400e;font-size:.75rem;line-height:1.45}
+.issd-fact-cell dt{color:var(--tx-64748b);font-size:.75rem;font-weight:500}
+.issd-fact-cell dd{margin:3px 0 0;color:var(--tx-1e293b);font-size:.8125rem;font-weight:600;word-break:break-word}
+.issd-ops-snapshot{display:grid;gap:10px;padding:13px;border:1px solid var(--bd-dbeafe);border-radius:12px;background:var(--bg-f8fbff);flex-shrink:0}
+.issd-ops-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.issd-ops-heading>div{display:grid;gap:2px}.issd-ops-heading strong{font-size:.9375rem;color:var(--tx-0f172a)}.issd-ops-heading span:not(.issd-status-pill){font-size:.75rem;color:var(--tx-64748b)}
+.issd-ops-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--bg-e2e8f0);border:1px solid var(--bd-e2e8f0);border-radius:9px;overflow:hidden}.issd-ops-grid>div{display:grid;gap:2px;padding:9px 10px;background:var(--bg-ffffff)}.issd-ops-grid span{font-size:.75rem;color:var(--tx-64748b)}.issd-ops-grid strong{font-size:.8125rem;color:var(--tx-1e293b);line-height:1.35}.issd-ops-grid strong.is-alert{color:var(--tx-dc2626)}
+.issd-action-summary{display:grid;gap:5px;padding:9px 10px;border-radius:9px;background:var(--bg-fffbeb);border:1px solid var(--bd-fde68a)}.issd-action-summary>strong{font-size:.8125rem;color:var(--tx-92400e)}.issd-action-summary ul{display:grid;gap:3px;margin:0;padding-left:18px;color:var(--tx-92400e);font-size:.75rem;line-height:1.45}
 
 /* Action Task Cards in "สิ่งที่ต้องดำเนินการ" Tab */
 .issd-action-cards-list {
@@ -8308,24 +8955,24 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .issd-action-task-card {
   padding: 13px 15px;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
   display: flex;
   flex-direction: column;
   gap: 6px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 .issd-action-task-card.is-danger {
-  border-color: #fecaca;
-  background: #fffafa;
+  border-color: var(--bd-fecaca);
+  background: var(--bg-fffafa);
 }
 .issd-action-task-card.is-warning {
-  border-color: #fde68a;
-  background: #fffdf7;
+  border-color: var(--bd-fde68a);
+  background: var(--bg-fffdf7);
 }
 .issd-action-task-card.is-info {
-  border-color: #bfdbfe;
-  background: #f8fbff;
+  border-color: var(--bd-bfdbfe);
+  background: var(--bg-f8fbff);
 }
 .issd-action-task-top {
   display: flex;
@@ -8342,62 +8989,62 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   font-weight: 600;
 }
 .issd-action-cat-badge.is-danger {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
 }
 .issd-action-cat-badge.is-warning {
-  background: #fef3c7;
-  color: #d97706;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
 }
 .issd-action-cat-badge.is-info {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
 }
 .issd-action-priority-text {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 .issd-action-task-title {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 .issd-action-task-desc {
   margin: 0;
   font-size: 0.8125rem;
-  color: #475569;
+  color: var(--tx-475569);
   line-height: 1.45;
 }
 .issd-action-task-footer {
   display: flex;
   justify-content: flex-end;
   padding-top: 6px;
-  border-top: 1px dashed #e2e8f0;
+  border-top: 1px dashed var(--bd-e2e8f0);
 }
 .issd-empty-box.is-clean-state {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
+  background: var(--bg-f0fdf4);
+  border-color: var(--bd-bbf7d0);
 }
 .issd-empty-box.is-clean-state svg {
-  color: #16a34a;
+  color: var(--tx-16a34a);
 }
 .issd-empty-box.is-clean-state p {
-  color: #15803d;
+  color: var(--tx-15803d);
   font-weight: 700;
 }
 .issd-empty-sub {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .issd-booking-list,.issd-contract-list{display:flex;flex-direction:column;gap:10px}
-.issd-booking-card,.issd-contract-card{padding:14px 16px;border:1px solid #e2e8f0;border-radius:12px;background:#fff;display:flex;flex-direction:column;gap:10px;flex-shrink:0;transition:border-color .15s ease,box-shadow .15s ease}
-.issd-contract-card.is-current{border-color:#93c5fd;box-shadow:inset 3px 0 0 #2563eb}.issd-current-label{display:inline-flex;padding:2px 7px;border-radius:6px;background:#eff6ff;color:#2563eb;font-size:.75rem;font-weight:600}
-.issd-booking-card:hover,.issd-contract-card:hover{border-color:#cbd5e1;box-shadow:0 3px 10px rgba(15,23,42,.05)}
+.issd-booking-card,.issd-contract-card{padding:14px 16px;border:1px solid var(--bd-e2e8f0);border-radius:12px;background:var(--bg-ffffff);display:flex;flex-direction:column;gap:10px;flex-shrink:0;transition:border-color .15s ease,box-shadow .15s ease}
+.issd-contract-card.is-current{border-color:var(--bd-93c5fd);box-shadow:inset 3px 0 0 #2563eb}.issd-current-label{display:inline-flex;padding:2px 7px;border-radius:6px;background:var(--bg-eff6ff);color:var(--tx-2563eb);font-size:.75rem;font-weight:600}
+.issd-booking-card:hover,.issd-contract-card:hover{border-color:var(--bd-cbd5e1);box-shadow:0 3px 10px rgba(15,23,42,.05)}
 .issd-card-top-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.issd-card-type-tag{display:inline-flex;align-items:center;gap:5px;font-size:.75rem;font-weight:600;color:#2563eb;background:#eff6ff;padding:3px 9px;border-radius:6px}
-.issd-card-type-tag.is-application{color:#7c3aed;background:#f5f3ff}
+.issd-card-type-tag{display:inline-flex;align-items:center;gap:5px;font-size:.75rem;font-weight:600;color:var(--tx-2563eb);background:var(--bg-eff6ff);padding:3px 9px;border-radius:6px}
+.issd-card-type-tag.is-application{color:var(--tx-7c3aed);background:var(--bg-f5f3ff)}
 .issd-booking-card-header {
   display: flex;
   align-items: center;
@@ -8412,10 +9059,9 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   flex-wrap: wrap;
 }
 .issd-booking-ref-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #334155;
+  color: var(--tx-334155);
 }
 .issd-booking-applicant-row {
   display: flex;
@@ -8433,9 +9079,9 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   width: 34px;
   height: 34px;
   border-radius: 9px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  color: #475569;
+  background: var(--bg-f1f5f9);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-475569);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -8449,13 +9095,13 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 }
 .issd-booking-role-label {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   line-height: 1.2;
 }
 .issd-booking-phone {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 .issd-booking-footer-bar {
@@ -8465,8 +9111,8 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   gap: 10px;
   padding: 8px 10px;
   border-radius: 9px;
-  background: #f8fafc;
-  border: 1px solid #f1f5f9;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-f1f5f9);
   flex-wrap: wrap;
 }
 .issd-booking-info-item {
@@ -8474,14 +9120,14 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   align-items: center;
   gap: 6px;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 .issd-booking-info-item svg {
-  color: #64748b;
+  color: var(--tx-64748b);
   flex-shrink: 0;
 }
 .issd-booking-info-item strong {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 600;
 }
 
@@ -8495,9 +9141,9 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   font-size: 0.75rem;
   font-weight: 600;
   text-decoration: none;
-  border: 1px solid #bfdbfe;
-  background: #ffffff;
-  color: #1d4ed8;
+  border: 1px solid var(--bd-bfdbfe);
+  background: var(--bg-ffffff);
+  color: var(--tx-1d4ed8);
   flex-shrink: 0;
   transition: all 0.15s ease;
 }
@@ -8507,9 +9153,9 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   border-color: #2563eb;
 }
 .issd-booking-direct-btn.is-application {
-  border-color: #ddd6fe;
-  background: #f5f3ff;
-  color: #6d28d9;
+  border-color: var(--bd-ddd6fe);
+  background: var(--bg-f5f3ff);
+  color: var(--tx-6d28d9);
 }
 .issd-booking-direct-btn.is-application:hover {
   background: #7c3aed;
@@ -8530,7 +9176,7 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 /* Mini Drawer Occupant Action Links */
 .issd-occupant-action-strip {
   padding-top: 8px;
-  border-top: 1px dashed #e2e8f0;
+  border-top: 1px dashed var(--bd-e2e8f0);
   display: flex;
 }
 .issd-occupant-action-btn {
@@ -8546,22 +9192,22 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   transition: all 0.15s ease;
 }
 .issd-occupant-action-btn.is-app {
-  background: #f5f3ff;
-  border: 1px solid #ddd6fe;
-  color: #6d28d9;
+  background: var(--bg-f5f3ff);
+  border: 1px solid var(--bd-ddd6fe);
+  color: var(--tx-6d28d9);
 }
 .issd-occupant-action-btn.is-app:hover {
-  background: #ede9fe;
-  border-color: #c4b5fd;
+  background: var(--bg-ede9fe);
+  border-color: var(--bd-c4b5fd);
 }
 .issd-occupant-action-btn.is-booking {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
+  color: var(--tx-1d4ed8);
 }
 .issd-occupant-action-btn.is-booking:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
+  background: var(--bg-dbeafe);
+  border-color: var(--bd-93c5fd);
 }
 
 /* ==========================================================================
@@ -8569,8 +9215,8 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
    ========================================================================== */
 .issd-action-alert-card {
   margin: 10px 14px 4px;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
+  background: var(--bg-fffbeb);
+  border: 1px solid var(--bd-fde68a);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);
   display: flex;
@@ -8586,14 +9232,14 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   justify-content: space-between;
   gap: 10px;
   padding: 9px 12px;
-  background: #fffbeb;
+  background: var(--bg-fffbeb);
   cursor: pointer;
   user-select: none;
   transition: background 0.15s ease;
 }
 
 .issd-aac-header:hover {
-  background: #fef3c7;
+  background: var(--bg-fef3c7);
 }
 
 .issd-aac-title-group {
@@ -8607,9 +9253,9 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: #fef3c7;
-  color: #d97706;
-  border: 1px solid #fde68a;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
+  border: 1px solid var(--bd-fde68a);
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -8632,7 +9278,7 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .issd-aac-title-row strong {
   font-size: 0.84375rem;
   font-weight: 700;
-  color: #92400e;
+  color: var(--tx-92400e);
 }
 
 .issd-aac-count-badge {
@@ -8641,14 +9287,14 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   padding: 1px 7px;
   border-radius: 999px;
   background: #fde68a;
-  color: #78350f;
+  color: var(--tx-78350f);
   font-size: 0.75rem;
   font-weight: 700;
 }
 
 .issd-aac-sub {
   font-size: 0.75rem;
-  color: #b45309;
+  color: var(--tx-b45309);
 }
 
 .issd-aac-toggle-btn {
@@ -8656,8 +9302,8 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   height: 26px;
   border-radius: 6px;
   border: 1px solid rgba(217, 119, 6, 0.25);
-  background: #ffffff;
-  color: #92400e;
+  background: var(--bg-ffffff);
+  color: var(--tx-92400e);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -8667,7 +9313,7 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 }
 
 .issd-aac-toggle-btn:hover {
-  background: #fef3c7;
+  background: var(--bg-fef3c7);
   border-color: #d97706;
 }
 
@@ -8682,7 +9328,7 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .issd-aac-list {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .issd-aac-row {
@@ -8691,17 +9337,17 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   justify-content: space-between;
   gap: 12px;
   padding: 8px 12px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .issd-aac-row:hover {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .issd-aac-row:hover .issd-aac-action-text {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
 }
 
 .issd-aac-row:hover .issd-aac-row-right svg {
@@ -8709,15 +9355,15 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 }
 
 .issd-aac-row.is-danger:hover {
-  background: #fef2f2;
+  background: var(--bg-fef2f2);
 }
 
 .issd-aac-row.is-warning:hover {
-  background: #fffbeb;
+  background: var(--bg-fffbeb);
 }
 
 .issd-aac-row.is-info:hover {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
 }
 
 .issd-aac-row-left {
@@ -8741,27 +9387,27 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 }
 
 .issd-aac-tag.is-danger {
-  background: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
+  border: 1px solid var(--bd-fecaca);
 }
 
 .issd-aac-tag.is-warning {
-  background: #fef3c7;
-  color: #d97706;
-  border: 1px solid #fde68a;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
+  border: 1px solid var(--bd-fde68a);
 }
 
 .issd-aac-tag.is-info {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-bfdbfe);
 }
 
 .issd-aac-row-title {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -8772,7 +9418,7 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   align-items: center;
   gap: 5px;
   flex-shrink: 0;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-size: 0.78125rem;
   font-weight: 600;
 }
@@ -8784,56 +9430,56 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .issd-aac-action-text {
   white-space: nowrap;
 }
-.issd-card-title,.issd-contract-num{font-size:.875rem;font-weight:700;color:#0f172a}
-.issd-contract-tenant{font-size:.8125rem;color:#475569}
-.issd-contract-tenant strong{color:#1e293b;font-weight:600}
-.issd-card-meta-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.75rem;color:#64748b;flex-wrap:wrap}
-.issd-card-meta-row .is-rent{color:#10b981;font-weight:700;font-size:.8125rem}
+.issd-card-title,.issd-contract-num{font-size:.875rem;font-weight:700;color:var(--tx-0f172a)}
+.issd-contract-tenant{font-size:.8125rem;color:var(--tx-475569)}
+.issd-contract-tenant strong{color:var(--tx-1e293b);font-weight:600}
+.issd-card-meta-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.75rem;color:var(--tx-64748b);flex-wrap:wrap}
+.issd-card-meta-row .is-rent{color:var(--tx-10b981);font-weight:700;font-size:.8125rem}
 .issd-timeline-list{display:flex;flex-direction:column;padding:4px 4px 10px}
-.issd-timeline-panel{padding:12px 14px 4px;border:1px solid #e2e8f0;border-radius:12px;background:#fff}
+.issd-timeline-panel{padding:12px 14px 4px;border:1px solid var(--bd-e2e8f0);border-radius:12px;background:var(--bg-ffffff)}
 .issd-timeline-item{position:relative;display:flex;gap:12px;padding-bottom:16px}
-.issd-timeline-item:not(:last-child)::before{content:'';position:absolute;left:5px;top:13px;bottom:0;width:1px;background:#e2e8f0}
+.issd-timeline-item:not(:last-child)::before{content:'';position:absolute;left:5px;top:13px;bottom:0;width:1px;background:var(--bg-e2e8f0)}
 .issd-timeline-dot{position:relative;z-index:1;width:11px;height:11px;margin-top:4px;flex:0 0 11px;border-radius:50%;background:#3b82f6;box-shadow:0 0 0 3px #dbeafe}
 .issd-timeline-dot.is-green{background:#10b981;box-shadow:0 0 0 3px #dcfce7}
 .issd-timeline-dot.is-amber{background:#f59e0b;box-shadow:0 0 0 3px #fef3c7}
 .issd-timeline-dot.is-gray{background:#64748b;box-shadow:0 0 0 3px #f1f5f9}
 .issd-timeline-copy{flex:1;min-width:0}
 .issd-timeline-head-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.issd-timeline-cat-pill{display:inline-flex;padding:2px 8px;border-radius:6px;background:#f1f5f9;color:#475569;font-size:.75rem;font-weight:600}
-.issd-timeline-copy strong{display:block;font-size:.8125rem;color:#1e293b;font-weight:600}
-.issd-timeline-copy time{display:block;color:#64748b;font-size:.75rem;margin-top:2px}
-.issd-timeline-copy p{margin:6px 0 0;padding:7px 10px;border-radius:8px;background:#f8fafc;border:1px solid #f1f5f9;color:#475569;font-size:.75rem;line-height:1.45}
-.issd-empty-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:32px 16px;text-align:center;color:#94a3b8;background:#f8fafc;border-radius:12px;border:1px dashed #e2e8f0}
-.issd-empty-box svg{color:#cbd5e1}
-.issd-empty-box p{margin:0;font-size:.8125rem;color:#64748b}
+.issd-timeline-cat-pill{display:inline-flex;padding:2px 8px;border-radius:6px;background:var(--bg-f1f5f9);color:var(--tx-475569);font-size:.75rem;font-weight:600}
+.issd-timeline-copy strong{display:block;font-size:.8125rem;color:var(--tx-1e293b);font-weight:600}
+.issd-timeline-copy time{display:block;color:var(--tx-64748b);font-size:.75rem;margin-top:2px}
+.issd-timeline-copy p{margin:6px 0 0;padding:7px 10px;border-radius:8px;background:var(--bg-f8fafc);border:1px solid var(--bd-f1f5f9);color:var(--tx-475569);font-size:.75rem;line-height:1.45}
+.issd-empty-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:32px 16px;text-align:center;color:var(--tx-94a3b8);background:var(--bg-f8fafc);border-radius:12px;border:1px dashed var(--bd-e2e8f0)}
+.issd-empty-box svg{color:var(--tx-cbd5e1)}
+.issd-empty-box p{margin:0;font-size:.8125rem;color:var(--tx-64748b)}
 .issd-body-edit{padding:12px 14px}
 .issd-form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0}
 .issd-form-grid .full{grid-column:1/-1}
-.issd-form-grid label{display:grid;gap:5px;color:#475569;font-size:.8125rem;font-weight:600}
-.issd-form-grid textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;color:#1e293b;background:#fff;font:inherit;resize:vertical;min-height:56px}
+.issd-form-grid label{display:grid;gap:5px;color:var(--tx-475569);font-size:.8125rem;font-weight:600}
+.issd-form-grid textarea{width:100%;box-sizing:border-box;border:1px solid var(--bd-cbd5e1);border-radius:8px;padding:8px 10px;color:var(--tx-1e293b);background:var(--bg-ffffff);font:inherit;resize:vertical;min-height:56px}
 .issd-form-grid textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .issd-footer-edit{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .issd-footer-right{display:flex;align-items:center;gap:8px;margin-left:auto}
 @media(max-width:480px){.issd-form-grid{grid-template-columns:1fr}}
-.issd-status-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:600;border:1px solid transparent;white-space:nowrap}.issd-status-pill.is-available{background:#dcfce7;color:#15803d;border-color:#bbf7d0}.issd-status-pill.is-reserved{background:#fef3c7;color:#d97706;border-color:#fde68a}.issd-status-pill.is-info{background:#eff6ff;color:#2563eb;border-color:#bfdbfe}.issd-status-pill.is-occupied{background:#f1f5f9;color:#475569;border-color:#cbd5e1}
-.issd-photo-banner{position:relative;height:124px;flex-shrink:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;background:#0f172a;cursor:pointer}.issd-photo-banner img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s ease}.issd-photo-banner:hover img{transform:scale(1.05)}.issd-photo-count-badge{position:absolute;right:10px;bottom:10px;display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:8px;background:rgba(15,23,42,.82);backdrop-filter:blur(4px);color:#fff;font-size:.75rem;font-weight:600}
-.issd-detail-list{margin:0;flex-shrink:0;border:1px solid #e2e8f0;border-radius:12px;background:#fff;overflow:hidden}.issd-detail-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 14px;font-size:.8125rem}.issd-detail-row+.issd-detail-row{border-top:1px solid #f1f5f9}.issd-detail-row dt{color:#64748b;font-size:.8125rem;font-weight:500;flex-shrink:0;white-space:nowrap}.issd-detail-row dd{margin:0;color:#1e293b;font-size:.8125rem;font-weight:600;text-align:right;max-width:65%;line-height:1.4}.issd-detail-row dd.is-rent{color:#15803d;font-weight:700}.issd-detail-row dd.is-bold{color:#0f172a;font-weight:700}
-.issd-occupancy-box{padding:11px 14px;flex-shrink:0;border-radius:12px;border:1px solid #e2e8f0;background:#f8fafc;display:grid;gap:3px}.issd-occupancy-box.is-available{background:#f0fdf4;border-color:#bbf7d0}.issd-occupancy-box.is-reserved{background:#fffbeb;border-color:#fde68a}.issd-occupancy-box.is-occupied{background:#f8fafc;border-color:#cbd5e1}.issd-occupancy-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.issd-occupancy-head span{font-size:.75rem;font-weight:600;color:#64748b}.issd-occupancy-head small{font-size:.75rem;font-weight:700;color:#2563eb}.issd-occupancy-box strong{font-size:.8125rem;font-weight:700;color:#0f172a;line-height:1.35}.issd-occupancy-box p{margin:0;font-size:.75rem;color:#475569;line-height:1.35}
-.issd-footer{padding:12px 18px 16px;background:#fff;border-top:1px solid #f1f5f9;box-shadow:0 -4px 12px rgba(15,23,42,.04);flex-shrink:0}.issd-cta-btn{width:100%;box-sizing:border-box;padding:11px 16px;border:0;border-radius:11px;background:linear-gradient(180deg,#3b82f6 0%,#2563eb 100%);color:#fff;font-family:inherit;font-size:.875rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.32);transition:transform .15s ease,box-shadow .15s ease}.issd-cta-btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(37,99,235,.4)}
+.issd-status-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:600;border:1px solid transparent;white-space:nowrap}.issd-status-pill.is-available{background:var(--bg-dcfce7);color:var(--tx-15803d);border-color:var(--bd-bbf7d0)}.issd-status-pill.is-reserved{background:var(--bg-fef3c7);color:var(--tx-d97706);border-color:var(--bd-fde68a)}.issd-status-pill.is-info{background:var(--bg-eff6ff);color:var(--tx-2563eb);border-color:var(--bd-bfdbfe)}.issd-status-pill.is-occupied{background:var(--bg-f1f5f9);color:var(--tx-475569);border-color:var(--bd-cbd5e1)}
+.issd-photo-banner{position:relative;height:124px;flex-shrink:0;border-radius:12px;overflow:hidden;border:1px solid var(--bd-e2e8f0);background:#0f172a;cursor:pointer}.issd-photo-banner img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s ease}.issd-photo-banner:hover img{transform:scale(1.05)}.issd-photo-count-badge{position:absolute;right:10px;bottom:10px;display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:8px;background:rgba(15,23,42,.82);backdrop-filter:blur(4px);color:#fff;font-size:.75rem;font-weight:600}
+.issd-detail-list{margin:0;flex-shrink:0;border:1px solid var(--bd-e2e8f0);border-radius:12px;background:var(--bg-ffffff);overflow:hidden}.issd-detail-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 14px;font-size:.8125rem}.issd-detail-row+.issd-detail-row{border-top:1px solid var(--bd-f1f5f9)}.issd-detail-row dt{color:var(--tx-64748b);font-size:.8125rem;font-weight:500;flex-shrink:0;white-space:nowrap}.issd-detail-row dd{margin:0;color:var(--tx-1e293b);font-size:.8125rem;font-weight:600;text-align:right;max-width:65%;line-height:1.4}.issd-detail-row dd.is-rent{color:var(--tx-15803d);font-weight:700}.issd-detail-row dd.is-bold{color:var(--tx-0f172a);font-weight:700}
+.issd-occupancy-box{padding:11px 14px;flex-shrink:0;border-radius:12px;border:1px solid var(--bd-e2e8f0);background:var(--bg-f8fafc);display:grid;gap:3px}.issd-occupancy-box.is-available{background:var(--bg-f0fdf4);border-color:var(--bd-bbf7d0)}.issd-occupancy-box.is-reserved{background:var(--bg-fffbeb);border-color:var(--bd-fde68a)}.issd-occupancy-box.is-occupied{background:var(--bg-f8fafc);border-color:var(--bd-cbd5e1)}.issd-occupancy-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.issd-occupancy-head span{font-size:.75rem;font-weight:600;color:var(--tx-64748b)}.issd-occupancy-head small{font-size:.75rem;font-weight:700;color:var(--tx-2563eb)}.issd-occupancy-box strong{font-size:.8125rem;font-weight:700;color:var(--tx-0f172a);line-height:1.35}.issd-occupancy-box p{margin:0;font-size:.75rem;color:var(--tx-475569);line-height:1.35}
+.issd-footer{padding:12px 18px 16px;background:var(--bg-ffffff);border-top:1px solid var(--bd-f1f5f9);box-shadow:0 -4px 12px rgba(15,23,42,.04);flex-shrink:0}.issd-cta-btn{width:100%;box-sizing:border-box;padding:11px 16px;border:0;border-radius:11px;background:linear-gradient(180deg,#3b82f6 0%,#2563eb 100%);color:#fff;font-family:inherit;font-size:.875rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.32);transition:transform .15s ease,box-shadow .15s ease}.issd-cta-btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(37,99,235,.4)}
 .issd-footer-full{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .issd-footer-full :deep(.app-button),
 .issd-footer-full > button,
 .issd-footer-full > a {
   flex: 1;
 }
-.inspect-photo-Modal,.inspect-photo-modal{width:min(820px,94vw);background:#0f172a;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px -20px rgba(0,0,0,.6);display:flex;flex-direction:column}.ipm-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;color:#fff}.ipm-head strong{display:block;font-size:1rem;font-weight:700}.ipm-head span{display:block;font-size:.8125rem;color:#94a3b8;margin-top:2px}.ipm-close{width:34px;height:34px;border-radius:10px;border:0;background:rgba(255,255,255,.12);color:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.ipm-close svg{width:18px;height:18px}.ipm-stage{position:relative;height:min(480px,58vh);background:#000;display:flex;align-items:center;justify-content:center}.ipm-main-img{width:100%;height:100%;object-fit:contain}.ipm-nav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.9);color:#0f172a;font-size:1.35rem;font-weight:700;cursor:pointer;display:grid;place-items:center}.ipm-nav.is-prev{left:14px}.ipm-nav.is-next{right:14px}.ipm-counter{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.78);color:#fff;font-size:.75rem;font-weight:600;padding:3px 12px;border-radius:999px}.ipm-thumbs{display:flex;justify-content:center;gap:8px;padding:12px 18px 16px}.ipm-thumb{width:76px;height:52px;border-radius:8px;overflow:hidden;border:2px solid transparent;padding:0;background:#1e293b;cursor:pointer;opacity:.6}.ipm-thumb.active{border-color:#60a5fa;opacity:1}.ipm-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.inspect-photo-Modal,.inspect-photo-modal{width:min(820px,94vw);background:#0f172a;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px -20px rgba(0,0,0,.6);display:flex;flex-direction:column}.ipm-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;color:#fff}.ipm-head strong{display:block;font-size:1rem;font-weight:700}.ipm-head span{display:block;font-size:.8125rem;color:var(--tx-94a3b8);margin-top:2px}.ipm-close{width:34px;height:34px;border-radius:10px;border:0;background:var(--bg-rgba-255-255-255-0p12);color:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.ipm-close svg{width:18px;height:18px}.ipm-stage{position:relative;height:min(480px,58vh);background:#000;display:flex;align-items:center;justify-content:center}.ipm-main-img{width:100%;height:100%;object-fit:contain}.ipm-nav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:0;background:var(--bg-rgba-255-255-255-0p9);color:var(--tx-0f172a);font-size:1.35rem;font-weight:700;cursor:pointer;display:grid;place-items:center}.ipm-nav.is-prev{left:14px}.ipm-nav.is-next{right:14px}.ipm-counter{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.78);color:#fff;font-size:.75rem;font-weight:600;padding:3px 12px;border-radius:999px}.ipm-thumbs{display:flex;justify-content:center;gap:8px;padding:12px 18px 16px}.ipm-thumb{width:76px;height:52px;border-radius:8px;overflow:hidden;border:2px solid transparent;padding:0;background:#1e293b;cursor:pointer;opacity:.6}.ipm-thumb.active{border-color:#60a5fa;opacity:1}.ipm-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 @media(max-width:768px){.inspect-selected-stall-drawer{position:fixed;left:0;right:0;bottom:0;top:58px;width:100%!important;height:calc(100vh - 58px);max-height:calc(100vh - 58px);border-radius:0;z-index:1000}.inspect-selected-stall-drawer.is-full-detail-mode{width:100%!important;top:58px;height:calc(100vh - 58px);max-height:calc(100vh - 58px);border-radius:0}}
-.map-edit-status{display:flex;gap:10px;align-items:flex-start;padding:13px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;color:#1e40af}.map-edit-status strong,.map-edit-status small{display:block}.map-edit-status strong{font-size:.875rem}.map-edit-status small{margin-top:3px;font-size:.75rem;color:#476587}.map-edit-dot{width:10px;height:10px;flex:0 0 10px;border-radius:50%;background:#3b5bff;margin-top:5px;box-shadow:0 0 0 4px #dbeafe}
-.zone-form,.facility-form{display:grid;grid-template-columns:1fr 1fr;gap:13px}.zone-form label,.facility-form label{display:grid;align-content:start;gap:6px;color:#475569;font-size:.8125rem;font-weight:600}.zone-form .full,.facility-form .full{grid-column:1/-1}.req-star{color:#ef4444;font-weight:700}.stall-detail-summary{display:grid;gap:5px;padding:16px;margin:20px 0 14px;border:1px solid #dbeafe;border-radius:12px;background:#f8fbff}.stall-detail-summary strong{color:#1e293b;font-size:1rem}.stall-detail-summary>span:last-child{color:#64748b;font-size:.875rem}.stall-detail-summary .soft-badge{justify-self:start}.status-available{background:#dcfce7;color:#15803d!important}.status-reserved{background:#fef3c7;color:#d97706!important}.status-occupied{background:#f1f5f9;color:#64748b!important}.stall-detail-tabs{display:flex!important;width:100%;margin:0 0 14px}.stall-detail-tabs :deep(.app-segmented-option){flex:1}.stall-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}.stall-detail-grid>div{padding:12px 14px;border:1px solid #e2e8f0;border-radius:10px;background:#fff}.stall-detail-grid .full{grid-column:1/-1}.stall-detail-grid dt{color:#64748b;font-size:.8125rem;font-weight:500}.stall-detail-grid dd{margin:4px 0 0;color:#1e293b;font-size:.9375rem;font-weight:600;word-break:break-word}.detail-section.is-tab-content{margin-top:0}.detail-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.detail-section-heading h3{margin:0}
+.map-edit-status{display:flex;gap:10px;align-items:flex-start;padding:13px;background:var(--bg-eff6ff);border:1px solid var(--bd-bfdbfe);border-radius:10px;color:var(--tx-1e40af)}.map-edit-status strong,.map-edit-status small{display:block}.map-edit-status strong{font-size:.875rem}.map-edit-status small{margin-top:3px;font-size:.75rem;color:var(--tx-476587)}.map-edit-dot{width:10px;height:10px;flex:0 0 10px;border-radius:50%;background:#3b5bff;margin-top:5px;box-shadow:0 0 0 4px #dbeafe}
+.zone-form,.facility-form{display:grid;grid-template-columns:1fr 1fr;gap:13px}.zone-form label,.facility-form label{display:grid;align-content:start;gap:6px;color:var(--tx-475569);font-size:.8125rem;font-weight:600}.zone-form .full,.facility-form .full{grid-column:1/-1}.req-star{color:var(--tx-ef4444);font-weight:700}.stall-detail-summary{display:grid;gap:5px;padding:16px;margin:20px 0 14px;border:1px solid var(--bd-dbeafe);border-radius:12px;background:var(--bg-f8fbff)}.stall-detail-summary strong{color:var(--tx-1e293b);font-size:1rem}.stall-detail-summary>span:last-child{color:var(--tx-64748b);font-size:.875rem}.stall-detail-summary .soft-badge{justify-self:start}.status-available{background:var(--bg-dcfce7);color:var(--tx-15803d)!important}.status-reserved{background:var(--bg-fef3c7);color:var(--tx-d97706)!important}.status-occupied{background:var(--bg-f1f5f9);color:var(--tx-64748b)!important}.stall-detail-tabs{display:flex!important;width:100%;margin:0 0 14px}.stall-detail-tabs :deep(.app-segmented-option){flex:1}.stall-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}.stall-detail-grid>div{padding:12px 14px;border:1px solid var(--bd-e2e8f0);border-radius:10px;background:var(--bg-ffffff)}.stall-detail-grid .full{grid-column:1/-1}.stall-detail-grid dt{color:var(--tx-64748b);font-size:.8125rem;font-weight:500}.stall-detail-grid dd{margin:4px 0 0;color:var(--tx-1e293b);font-size:.9375rem;font-weight:600;word-break:break-word}.detail-section.is-tab-content{margin-top:0}.detail-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.detail-section-heading h3{margin:0}
 .issd-tab-header-row {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
   margin-bottom: 2px;
   flex-shrink: 0;
 }
@@ -8858,7 +9504,7 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .issd-inline-filter-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
   white-space: nowrap;
 }
 .issd-inline-filter-select {
@@ -8884,12 +9530,12 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   display: block;
   font-size: 0.9375rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 .issd-tab-subtitle {
   display: block;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 1px;
 }
 
@@ -8905,9 +9551,9 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .issd-payment-card,
 .issd-maintenance-card {
   padding: 12px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
-  background: #fff;
+  background: var(--bg-ffffff);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -8917,12 +9563,12 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .issd-subtenant-card:hover,
 .issd-payment-card:hover,
 .issd-maintenance-card:hover {
-  border-color: #cbd5e1;
+  border-color: var(--bd-cbd5e1);
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
-.issd-contract-context{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;padding:10px 12px;border:1px solid #dbeafe;border-radius:10px;background:#f8fbff;flex-shrink:0}.issd-contract-context span{font-size:.75rem;color:#64748b}.issd-contract-context strong{font-size:.8125rem;color:#2563eb}.issd-contract-context small{grid-column:2;font-size:.75rem;color:#475569}
-.issd-finance-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex-shrink:0}.issd-finance-summary>div{display:grid;gap:2px;padding:9px 10px;border:1px solid #e2e8f0;border-radius:9px;background:#fff}.issd-finance-summary span{font-size:.75rem;color:#64748b}.issd-finance-summary strong{font-size:.8125rem;color:#1e293b}.issd-finance-summary .is-success{color:#15803d}.issd-finance-summary .is-alert{color:#dc2626}
-.issd-source-filter{display:flex;align-items:center;gap:6px;padding-bottom:2px;overflow-x:auto;flex-shrink:0}.issd-source-filter button{min-height:34px;padding:6px 12px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;font:inherit;font-size:.8125rem;font-weight:600;white-space:nowrap;cursor:pointer;flex-shrink:0;transition:all .15s ease}.issd-source-filter button:hover{background:#f8fafc;color:#1e293b}.issd-source-filter button.active{border-color:#93c5fd;background:#eff6ff;color:#2563eb}.issd-maintenance-tags{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.issd-source-pill{display:inline-flex;padding:2px 8px;border-radius:6px;background:#f1f5f9;color:#475569;font-size:.75rem;font-weight:600}
+.issd-contract-context{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;padding:10px 12px;border:1px solid var(--bd-dbeafe);border-radius:10px;background:var(--bg-f8fbff);flex-shrink:0}.issd-contract-context span{font-size:.75rem;color:var(--tx-64748b)}.issd-contract-context strong{font-size:.8125rem;color:var(--tx-2563eb)}.issd-contract-context small{grid-column:2;font-size:.75rem;color:var(--tx-475569)}
+.issd-finance-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex-shrink:0}.issd-finance-summary>div{display:grid;gap:2px;padding:9px 10px;border:1px solid var(--bd-e2e8f0);border-radius:9px;background:var(--bg-ffffff)}.issd-finance-summary span{font-size:.75rem;color:var(--tx-64748b)}.issd-finance-summary strong{font-size:.8125rem;color:var(--tx-1e293b)}.issd-finance-summary .is-success{color:var(--tx-15803d)}.issd-finance-summary .is-alert{color:var(--tx-dc2626)}
+.issd-source-filter{display:flex;align-items:center;gap:6px;padding-bottom:2px;overflow-x:auto;flex-shrink:0}.issd-source-filter button{min-height:34px;padding:6px 12px;border:1px solid var(--bd-e2e8f0);border-radius:8px;background:var(--bg-ffffff);color:var(--tx-64748b);font:inherit;font-size:.8125rem;font-weight:600;white-space:nowrap;cursor:pointer;flex-shrink:0;transition:all .15s ease}.issd-source-filter button:hover{background:var(--bg-f8fafc);color:var(--tx-1e293b)}.issd-source-filter button.active{border-color:var(--bd-93c5fd);background:var(--bg-eff6ff);color:var(--tx-2563eb)}.issd-maintenance-tags{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.issd-source-pill{display:inline-flex;padding:2px 8px;border-radius:6px;background:var(--bg-f1f5f9);color:var(--tx-475569);font-size:.75rem;font-weight:600}
 
 .issd-subtenant-header-info {
   display: flex;
@@ -8936,8 +9582,8 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
-  border: 1px solid #e2e8f0;
-  background: #f1f5f9;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-f1f5f9);
 }
 .issd-subtenant-avatar img {
   width: 100%;
@@ -8949,8 +9595,8 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
-  background: #f8fafc;
+  color: var(--tx-94a3b8);
+  background: var(--bg-f8fafc);
 }
 .issd-subtenant-text-block {
   display: flex;
@@ -8959,123 +9605,8 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 }
 .issd-subtenant-idcard {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 1px;
-}
-
-/* Photo Upload in Modal */
-.issd-photo-upload-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.issd-upload-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #475569;
-}
-.issd-photo-upload-box {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px dashed #cbd5e1;
-  background: #f8fafc;
-}
-.issd-preview-thumb {
-  position: relative;
-  width: 56px;
-  height: 56px;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-  flex-shrink: 0;
-}
-.issd-preview-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.issd-remove-photo-btn {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: rgba(15, 23, 42, 0.75);
-  color: #ffffff;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  transition: background 0.15s ease;
-}
-.issd-remove-photo-btn:hover {
-  background: #dc2626;
-}
-.issd-empty-thumb {
-  width: 56px;
-  height: 56px;
-  border-radius: 10px;
-  background: #f1f5f9;
-  border: 1px dashed #cbd5e1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #94a3b8;
-  flex-shrink: 0;
-}
-.issd-upload-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.issd-upload-btn-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.issd-file-choose-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #1e293b;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.issd-file-choose-btn:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
-}
-.issd-remove-text-btn {
-  border: none;
-  background: transparent;
-  color: #ef4444;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 4px 6px;
-}
-.issd-remove-text-btn:hover {
-  text-decoration: underline;
-}
-.issd-file-hidden-input {
-  display: none;
-}
-.issd-upload-hint {
-  font-size: 0.75rem;
-  color: #64748b;
 }
 
 .issd-subtenant-details {
@@ -9083,25 +9614,25 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   flex-wrap: wrap;
   gap: 12px;
   font-size: 0.8125rem;
-  color: #475569;
+  color: var(--tx-475569);
 }
 .issd-detail-item {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: #475569;
+  color: var(--tx-475569);
 }
 .issd-detail-item svg {
-  color: #64748b;
+  color: var(--tx-64748b);
   flex-shrink: 0;
 }
 .issd-subtenant-note {
   font-size: 0.75rem;
-  color: #64748b;
-  background: #f8fafc;
+  color: var(--tx-64748b);
+  background: var(--bg-f8fafc);
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--bd-f1f5f9);
   line-height: 1.4;
 }
 
@@ -9111,12 +9642,12 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   justify-content: flex-end;
   gap: 8px;
   padding-top: 6px;
-  border-top: 1px dashed #f1f5f9;
+  border-top: 1px dashed var(--bd-f1f5f9);
 }
 .issd-mini-action-btn {
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  color: #475569;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
+  color: var(--tx-475569);
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: 600;
@@ -9126,27 +9657,27 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   transition: all .15s ease;
 }
 .issd-mini-action-btn:hover {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #cbd5e1;
+  background: var(--bg-f8fafc);
+  color: var(--tx-0f172a);
+  border-color: var(--bd-cbd5e1);
 }
 .issd-mini-action-btn.is-success {
-  color: #15803d;
-  border-color: #bbf7d0;
-  background: #f0fdf4;
+  color: var(--tx-15803d);
+  border-color: var(--bd-bbf7d0);
+  background: var(--bg-f0fdf4);
 }
 .issd-mini-action-btn.is-success:hover {
-  background: #dcfce7;
-  border-color: #86efac;
+  background: var(--bg-dcfce7);
+  border-color: var(--bd-86efac);
 }
 .issd-mini-action-btn.is-danger {
-  color: #ef4444;
-  border-color: #fecaca;
-  background: #fff;
+  color: var(--tx-ef4444);
+  border-color: var(--bd-fecaca);
+  background: var(--bg-ffffff);
 }
 .issd-mini-action-btn.is-danger:hover {
-  background: #fef2f2;
-  border-color: #f87171;
+  background: var(--bg-fef2f2);
+  border-color: var(--bd-f87171);
 }
 
 .issd-contract-top-left {
@@ -9155,14 +9686,14 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   gap: 8px;
 }
 .issd-contract-icon {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   flex-shrink: 0;
 }
 .issd-contract-details-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 6px 12px;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
   padding: 8px 10px;
   border-radius: 8px;
   margin-top: 4px;
@@ -9177,54 +9708,54 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   grid-column: 1 / -1;
 }
 .issd-contract-detail-item .detail-label {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   flex-shrink: 0;
 }
 .issd-contract-detail-item .detail-value {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 600;
 }
 .issd-contract-detail-item .detail-value.is-rent {
-  color: #15803d;
+  color: var(--tx-15803d);
   font-weight: 700;
 }
 .issd-mini-action-btn.is-primary {
-  color: #2563eb;
-  border-color: #bfdbfe;
-  background: #eff6ff;
+  color: var(--tx-2563eb);
+  border-color: var(--bd-bfdbfe);
+  background: var(--bg-eff6ff);
 }
 .issd-mini-action-btn.is-primary:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
+  background: var(--bg-dbeafe);
+  border-color: var(--bd-93c5fd);
 }
 .issd-status-pill.is-cancelled {
-  background: #fee2e2;
-  color: #dc2626;
-  border-color: #fecaca;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
+  border-color: var(--bd-fecaca);
 }
 
 .issd-pay-period strong {
   display: block;
   font-size: 0.875rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 .issd-pay-period span {
   display: block;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 .issd-pay-amount-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin: 2px 0;
+  margin: 1px 0;
 }
 .issd-pay-method {
   font-size: 0.8125rem;
-  color: #475569;
+  color: var(--tx-475569);
 }
 
 .issd-maintenance-type-pill {
@@ -9236,25 +9767,25 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   font-weight: 600;
 }
 .issd-maintenance-type-pill.type-repair {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--bg-fef2f2);
+  color: var(--tx-dc2626);
 }
 .issd-maintenance-type-pill.type-renovation {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
 }
 .issd-maintenance-type-pill.type-utility {
-  background: #fef3c7;
-  color: #d97706;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
 }
 .issd-maintenance-type-pill.type-other {
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-475569);
 }
 .issd-maintenance-desc {
   margin: 2px 0 4px;
   font-size: 0.8125rem;
-  color: #475569;
+  color: var(--tx-475569);
   line-height: 1.45;
 }
 .issd-maintenance-meta-grid {
@@ -9262,14 +9793,14 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   grid-template-columns: repeat(2, 1fr);
   gap: 4px 10px;
   font-size: 0.75rem;
-  color: #64748b;
-  background: #f8fafc;
+  color: var(--tx-64748b);
+  background: var(--bg-f8fafc);
   padding: 8px 10px;
   border-radius: 8px;
   margin: 2px 0;
 }
 .issd-maintenance-meta-grid strong {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 600;
 }
 @media(max-width:480px){.issd-ops-grid,.issd-finance-summary{grid-template-columns:1fr}.issd-contract-context{grid-template-columns:1fr}.issd-contract-context small{grid-column:auto}}
@@ -9283,7 +9814,7 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
   display: grid;
   align-content: start;
   gap: 6px;
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.8125rem;
   font-weight: 600;
 }
@@ -9293,17 +9824,24 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .issd-textarea {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 8px 12px;
+  border: 1px solid var(--bd-cbd5e1);
+  border-radius: 10px;
+  padding: 9px 14px;
   font-family: inherit;
   font-size: 0.875rem;
-  color: #1e293b;
-  background: #fff;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--tx-1e293b);
+  background: var(--bg-ffffff);
   resize: vertical;
   outline: none;
   min-height: 64px;
   transition: border-color .15s ease, box-shadow .15s ease;
+}
+.issd-textarea::placeholder {
+  color: var(--tx-94a3b8);
+  font-weight: 500;
+  opacity: 1;
 }
 .issd-textarea:focus {
   border-color: #2563eb;
@@ -9326,7 +9864,7 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 
 .manage-page-heading .page-title {
   margin: 0;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 1.5rem;
   font-weight: 800;
   line-height: 1.3;
@@ -9334,7 +9872,7 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 
 .manage-page-heading .page-desc {
   margin: 4px 0 0;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.5;
@@ -9348,8 +9886,8 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 
 .panel,
 .gis-panel {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
   padding: 24px 28px !important;
@@ -9373,7 +9911,7 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .gis-panel-header-left h2 {
   font-size: 1.125rem !important;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
   line-height: 1.3;
 }
@@ -9381,7 +9919,7 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .gis-panel-header-left p {
   font-size: 0.8125rem !important;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin: 4px 0 0 !important;
   line-height: 1.4;
 }
@@ -9444,40 +9982,40 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .tool-panel{align-self:start;position:sticky;top:86px}
 .vertex-list,.form-stack{display:grid;gap:10px}
 .vertex-row{display:grid;grid-template-columns:24px 1fr 1fr 30px;gap:6px;align-items:center}
-.vertex-row span{font-size:.75rem;color:#64748b;text-align:center}
-.vertex-row button,.facility-list button,.icon-button{border:0;background:transparent;color:#64748b;cursor:pointer;padding:5px}
+.vertex-row span{font-size:.75rem;color:var(--tx-64748b);text-align:center}
+.vertex-row button,.facility-list button,.icon-button{border:0;background:transparent;color:var(--tx-64748b);cursor:pointer;padding:5px}
 .vertex-row svg,.facility-list svg,.icon-button svg{width:18px;height:18px}
-.form-stack label,.form-grid label{display:grid;gap:6px;color:#475569;font-size:.8125rem;font-weight:600}
+.form-stack label,.form-grid label{display:grid;gap:6px;color:var(--tx-475569);font-size:.8125rem;font-weight:600}
 .coordinate-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .facility-list{display:grid;gap:7px;margin-top:15px}
-.facility-list>div{display:flex;justify-content:space-between;padding:9px 10px;background:#f8fafc;border-radius:9px}
+.facility-list>div{display:flex;justify-content:space-between;padding:9px 10px;background:var(--bg-f8fafc);border-radius:9px}
 .facility-list span{display:grid}
-.facility-list small{font-size:.75rem;color:#64748b}
+.facility-list small{font-size:.75rem;color:var(--tx-64748b)}
 .check-list{display:grid;gap:8px}
-.check-list>div{display:flex;gap:10px;padding:12px;background:#f8fafc;border-radius:10px}
-.check-list svg{width:20px;color:#16a34a}
+.check-list>div{display:flex;gap:10px;padding:12px;background:var(--bg-f8fafc);border-radius:10px}
+.check-list svg{width:20px;color:var(--tx-16a34a)}
 .check-list span{display:grid}
 .check-list strong{font-size:.875rem}
-.check-list small{font-size:.75rem;color:#64748b}
+.check-list small{font-size:.75rem;color:var(--tx-64748b)}
 .stacked{display:grid;margin-top:16px}
-.empty-state{padding:20px;text-align:center;color:#64748b;background:#f8fafc;border-radius:10px;font-size:.875rem}
+.empty-state{padding:20px;text-align:center;color:var(--tx-64748b);background:var(--bg-f8fafc);border-radius:10px;font-size:.875rem}
 .compact{padding:12px}
 
 .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px;margin:20px 0}
 .form-grid .full{grid-column:1/-1}
-input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:9px 10px;color:#1e293b;background:#fff;font:inherit}
-.detail-section{border-top:1px solid #e2e8f0;padding-top:17px;margin-top:17px}
-.detail-section h3{font-size:.9375rem;color:#1e293b}
+input,textarea{width:100%;box-sizing:border-box;border:1px solid var(--bd-cbd5e1);border-radius:8px;padding:9px 10px;color:var(--tx-1e293b);background:var(--bg-ffffff);font:inherit}
+.detail-section{border-top:1px solid var(--bd-e2e8f0);padding-top:17px;margin-top:17px}
+.detail-section h3{font-size:.9375rem;color:var(--tx-1e293b)}
 .contract-list{display:grid;gap:8px}
-.contract-list article{display:flex;justify-content:space-between;gap:10px;padding:11px;background:#f8fafc;border-radius:9px}
+.contract-list article{display:flex;justify-content:space-between;gap:10px;padding:11px;background:var(--bg-f8fafc);border-radius:9px}
 .contract-list article div{display:grid}
-.contract-list span{font-size:.8125rem;color:#64748b}
-.soft-badge{background:#eff6ff;color:#2563eb!important;padding:4px 8px;border-radius:7px;height:max-content}
+.contract-list span{font-size:.8125rem;color:var(--tx-64748b)}
+.soft-badge{background:var(--bg-eff6ff);color:var(--tx-2563eb)!important;padding:4px 8px;border-radius:7px;height:max-content}
 .history-list{display:grid}
 .history-list>div{display:flex;gap:10px;padding:6px 0}
 .history-list i{width:9px;height:9px;border-radius:50%;background:#3b82f6;margin-top:5px}
 .history-list span{display:grid}
-.history-list small{font-size:.75rem;color:#64748b}
+.history-list small{font-size:.75rem;color:var(--tx-64748b)}
 
 @media (max-width: 768px) {
   .manage-page-heading {
@@ -9498,7 +10036,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   position: absolute;
   top: 18px;
   left: 18px;
-  z-index: 125;
+  z-index: 180;
 }
 .map-mode-trigger-btn {
   display: flex;
@@ -9506,10 +10044,10 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   gap: 8px;
   height: 48px;
   padding: 0 14px 0 8px;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--bg-rgba-255-255-255-0p96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.95);
+  border: 1px solid var(--bd-rgba-226-232-240-0p95);
   border-radius: 9999px;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
   cursor: pointer;
@@ -9518,13 +10056,13 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   font-family: inherit;
 }
 .map-mode-trigger-btn:hover {
-  background: #ffffff;
-  border-color: #cbd5e1;
+  background: var(--bg-ffffff);
+  border-color: var(--bd-cbd5e1);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
   transform: translateY(-1px);
 }
 .map-mode-trigger-btn.is-open {
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16), 0 10px 28px rgba(15, 23, 42, 0.12);
 }
@@ -9538,9 +10076,9 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
-.trigger-icon-box.tone-blue { background: #eff6ff; color: #2563eb; }
-.trigger-icon-box.tone-emerald { background: #ecfdf5; color: #059669; }
-.trigger-icon-box.tone-amber { background: #fffbeb; color: #d97706; }
+.trigger-icon-box.tone-blue { background: var(--bg-eff6ff); color: var(--tx-2563eb); }
+.trigger-icon-box.tone-emerald { background: var(--bg-ecfdf5); color: var(--tx-059669); }
+.trigger-icon-box.tone-amber { background: var(--bg-fffbeb); color: var(--tx-d97706); }
 
 .trigger-text-group {
   display: flex;
@@ -9550,24 +10088,24 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 }
 .trigger-eyebrow {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   line-height: 1;
 }
 .trigger-title {
   font-size: 0.875rem;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-weight: 700;
   line-height: 1;
 }
 .trigger-chevron {
-  color: #64748b;
+  color: var(--tx-64748b);
   transition: transform 0.2s ease;
   margin-left: 2px;
 }
 .trigger-chevron.is-open {
   transform: rotate(180deg);
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 /* Dropdown Menu */
@@ -9576,8 +10114,8 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   top: calc(100% + 8px);
   left: 0;
   width: 320px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 16px;
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16);
   padding: 8px;
@@ -9601,10 +10139,10 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   font-family: inherit;
 }
 .map-mode-menu-item:hover {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 .map-mode-menu-item.is-selected {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
 }
 .item-icon-box {
   width: 40px;
@@ -9615,9 +10153,9 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   justify-content: center;
   flex-shrink: 0;
 }
-.item-icon-box.tone-blue { background: #eff6ff; color: #2563eb; }
-.item-icon-box.tone-emerald { background: #ecfdf5; color: #059669; }
-.item-icon-box.tone-amber { background: #fffbeb; color: #d97706; }
+.item-icon-box.tone-blue { background: var(--bg-eff6ff); color: var(--tx-2563eb); }
+.item-icon-box.tone-emerald { background: var(--bg-ecfdf5); color: var(--tx-059669); }
+.item-icon-box.tone-amber { background: var(--bg-fffbeb); color: var(--tx-d97706); }
 .map-mode-menu-item.is-selected .item-icon-box.tone-blue { background: #2563eb; color: #ffffff; }
 .map-mode-menu-item.is-selected .item-icon-box.tone-emerald { background: #059669; color: #ffffff; }
 .map-mode-menu-item.is-selected .item-icon-box.tone-amber { background: #d97706; color: #ffffff; }
@@ -9630,15 +10168,15 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 }
 .item-title {
   font-size: 0.9375rem;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-weight: 700;
 }
 .map-mode-menu-item.is-selected .item-title {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
 }
 .item-desc {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 .item-check {
@@ -9667,12 +10205,12 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   .manage-page.is-map-page { --mp-top: 148px; --mp-top-2row: 148px; }
 }
 
-.market-map-kpi.tone-blue .market-map-kpi-icon { background: #eff6ff; color: #2563eb; }
-.market-map-kpi.tone-green .market-map-kpi-icon { background: #ecfdf5; color: #059669; }
-.market-map-kpi.tone-amber .market-map-kpi-icon { background: #fffbeb; color: #d97706; }
-.market-map-kpi.tone-red .market-map-kpi-icon { background: #fef2f2; color: #dc2626; }
-.market-map-kpi.tone-rose .market-map-kpi-icon { background: #fff1f2; color: #e11d48; }
-.market-map-kpi.tone-violet .market-map-kpi-icon { background: #f5f3ff; color: #7c3aed; }
+.market-map-kpi.tone-blue .market-map-kpi-icon { background: var(--bg-eff6ff); color: var(--tx-2563eb); }
+.market-map-kpi.tone-green .market-map-kpi-icon { background: var(--bg-ecfdf5); color: var(--tx-059669); }
+.market-map-kpi.tone-amber .market-map-kpi-icon { background: var(--bg-fffbeb); color: var(--tx-d97706); }
+.market-map-kpi.tone-red .market-map-kpi-icon { background: var(--bg-fef2f2); color: var(--tx-dc2626); }
+.market-map-kpi.tone-rose .market-map-kpi-icon { background: var(--bg-fff1f2); color: var(--tx-e11d48); }
+.market-map-kpi.tone-violet .market-map-kpi-icon { background: var(--bg-f5f3ff); color: var(--tx-7c3aed); }
 
 .dash-breakdown-list {
   display: flex;
@@ -9690,7 +10228,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #334155;
+  color: var(--tx-334155);
   font-weight: 500;
 }
 .dot-indicator {
@@ -9705,17 +10243,17 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   gap: 6px;
 }
 .dash-breakdown-val strong {
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-weight: 700;
 }
 .dash-breakdown-val small {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8125rem;
 }
 .dash-progress-bar {
   width: 100%;
   height: 6px;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
   border-radius: 9999px;
   overflow: hidden;
 }
@@ -9736,31 +10274,31 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   text-align: left;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #64748b;
-  border-bottom: 1px solid #f1f5f9;
-  background: #f8fafc;
+  color: var(--tx-64748b);
+  border-bottom: 1px solid var(--bd-f1f5f9);
+  background: var(--bg-f8fafc);
 }
 .dash-mini-table td {
   padding: 10px 10px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   vertical-align: middle;
 }
 .table-stall-pill {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 6px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   font-weight: 700;
   font-size: 0.8125rem;
 }
 .table-tenant-name {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 600;
   font-size: 0.875rem;
 }
 .table-tenant-sub {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
 }
 .table-status-pill {
@@ -9771,12 +10309,12 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   font-weight: 600;
 }
 .table-status-pill.pill-overdue {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
 }
 .table-status-pill.pill-anomaly {
-  background: #fef2f2;
-  color: #b91c1c;
+  background: var(--bg-fef2f2);
+  color: var(--tx-b91c1c);
 }
 .table-type-badge {
   display: inline-block;
@@ -9786,12 +10324,12 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   font-weight: 600;
 }
 .table-type-badge.badge-water {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
 }
 .table-type-badge.badge-electric {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--bg-fef3c7);
+  color: var(--tx-b45309);
 }
 
 /* ปุ่มและแผงแดชบอร์ดลอยบนแผนที่ (อยู่เหนือปุ่มคำอธิบายสีโครงการ) */
@@ -9805,7 +10343,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   display: grid;
   place-items: center;
   padding: 0;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--bd-ffffff);
   border-radius: 12px;
   background: #2563eb;
   color: #ffffff;
@@ -9815,7 +10353,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 }
 .map-dashboard-fab:hover { transform: translateY(-1px); background: #1d4ed8; }
 .map-dashboard-fab.active { background: #1e3a8a; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3), 0 4px 14px rgba(15, 23, 42, 0.25); }
-.map-dashboard-fab:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+.map-dashboard-fab:focus-visible { outline: 3px solid var(--bd-93c5fd); outline-offset: 2px; }
 
 .officer-summary-dashboard.is-map-floating {
   position: absolute;
@@ -9833,8 +10371,8 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   align-content: start;
   overflow-x: hidden;
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid #e2e8f0;
+  background: var(--bg-rgba-255-255-255-0p98);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 16px;
   box-shadow: 0 18px 44px rgba(15, 23, 42, 0.22);
   -webkit-overflow-scrolling: touch;
@@ -9849,30 +10387,59 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   gap: 12px;
   margin: 0 -16px;
   padding: 16px 16px 12px;
-  background: #ffffff;
-  border-bottom: 1px solid #f1f5f9;
+  background: var(--bg-ffffff);
+  border-bottom: 1px solid var(--bd-f1f5f9);
 }
-.is-map-floating .map-dash-panel-head h2 { margin: 0; color: #0f172a; font-size: 1.125rem; font-weight: 700; }
-.is-map-floating .map-dash-panel-head p { margin: 2px 0 0; color: #64748b; font-size: .8125rem; font-weight: 500; }
+.is-map-floating .map-dash-panel-head h2 { margin: 0; color: var(--tx-0f172a); font-size: 1.125rem; font-weight: 700; }
+.is-map-floating .map-dash-panel-head p { margin: 2px 0 0; color: var(--tx-64748b); font-size: .8125rem; font-weight: 500; }
 .map-dash-panel-close {
   flex: 0 0 auto;
   width: 34px;
   height: 34px;
   display: grid;
   place-items: center;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
-  background: #ffffff;
-  color: #475569;
+  background: var(--bg-ffffff);
+  color: var(--tx-475569);
   cursor: pointer;
 }
-.map-dash-panel-close:hover { background: #f1f5f9; }
+.map-dash-panel-close:hover { background: var(--bg-f1f5f9); }
 .is-map-floating .dash-kpi-ribbon { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
 .is-map-floating .dash-two-col-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
 .is-map-floating .dash-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 @media (max-width: 720px) {
   .map-dashboard-fab { left: 10px; bottom: 12px; }
   .officer-summary-dashboard.is-map-floating { top: var(--mp-top); left: 10px; bottom: 10px; width: calc(100% - 20px); }
+}
+
+/* ปุ่มเปิดตารางจดมิเตอร์น้ำ-ไฟ: ไอคอนอย่างเดียว พื้นสีเข้ม ลอยมุมล่างซ้ายของแผนที่ ขนาดเท่าปุ่ม md (40px) */
+.is-fullscreen-map-panel .map-meter-float-btn,
+.map-meter-float-btn {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  z-index: 46;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid #1d4ed8;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  cursor: pointer;
+  transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+.map-meter-float-btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.map-meter-float-btn:hover { transform: translateY(-1px); background: #1d4ed8; border-color: #1e40af; }
+/* มีการ์ดฝั่งซ้ายเปิดอยู่: ขยับปุ่มไปอยู่ทางขวาของการ์ด ไม่ซ้อนทับ (เหมือนปุ่มแดชบอร์ด) */
+.has-left-panel .map-meter-float-btn { left: calc(18px + min(var(--lp-w), calc(100% - 36px)) + 12px); transition: left 0.2s ease, transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease; }
+.map-meter-float-btn:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.25); outline-offset: 2px; }
+@media (max-width: 720px) {
+  .map-meter-float-btn { left: 10px; bottom: 12px; }
 }
 
 /* โหมดจัดการค่าใช้จ่าย: ปุ่มลอย 2 ปุ่ม แผงรายการ และการ์ดกรอง */
@@ -9889,13 +10456,13 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid #e2e8f0;
+  background: var(--bg-rgba-255-255-255-0p98);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 16px;
   box-shadow: 0 18px 44px rgba(15, 23, 42, 0.22);
 }
-.market-map-kpi.is-overdue .market-map-kpi-icon { background: #fee2e2; color: #dc2626; }
-.market-map-kpi-copy small.kpi-sub { color: #64748b; font-size: 0.8125rem; font-weight: 500; }
+.market-map-kpi.is-overdue .market-map-kpi-icon { background: var(--bg-fee2e2); color: var(--tx-dc2626); }
+.market-map-kpi-copy small.kpi-sub { color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 500; }
 @media (max-width: 1000px) { .map-cost-float { top: var(--mp-top-2row); } }
 @media (max-width: 720px) {
   .map-dashboard-fab.is-cost-fab.fab-utility { bottom: 12px; }
@@ -9905,17 +10472,17 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 
 /* ตัวกรองค่าใช้จ่าย (อยู่ในแผงสไลด์ของแผนที่) */
 .cf-wrap { display: flex; flex-direction: column; gap: 16px; }
-.cf-hint { margin: 0; color: #64748b; font-size: 0.875rem; font-weight: 500; line-height: 1.5; }
+.cf-hint { margin: 0; color: var(--tx-64748b); font-size: 0.875rem; font-weight: 500; line-height: 1.5; }
 .cf-group { display: flex; flex-direction: column; gap: 10px; }
-.cf-label { color: #475569; font-size: 0.875rem; font-weight: 600; }
+.cf-label { color: var(--tx-475569); font-size: 0.875rem; font-weight: 600; }
 .cf-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.cf-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 6px 14px; border: 1px solid #e2e8f0; border-radius: 9999px; background: #fff; color: #475569; font-family: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
-.cf-chip span { color: #94a3b8; font-size: 0.8125rem; }
-.cf-chip:hover { background: #f8fafc; }
+.cf-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 6px 14px; border: 1px solid var(--bd-e2e8f0); border-radius: 9999px; background: var(--bg-ffffff); color: var(--tx-475569); font-family: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+.cf-chip span { color: var(--tx-94a3b8); font-size: 0.8125rem; }
+.cf-chip:hover { background: var(--bg-f8fafc); }
 .cf-chip.active { border-color: #2563eb; background: #2563eb; color: #fff; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3); }
 .cf-chip.active span { color: #dbeafe; }
-.cf-result { margin: 0; padding: 10px 12px; border-radius: 10px; background: #eff6ff; color: #475569; font-size: 0.875rem; font-weight: 500; }
-.cf-result strong { color: #2563eb; font-weight: 700; }
+.cf-result { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--bg-eff6ff); color: var(--tx-475569); font-size: 0.875rem; font-weight: 500; }
+.cf-result strong { color: var(--tx-2563eb); font-weight: 700; }
 
 /* กันตัวอักษรในการ์ด KPI ล้นกรอบ */
 .market-map-kpi { overflow: hidden; }
@@ -9927,8 +10494,13 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 /* ลิ้นชักแผงจอดชิดซ้ายแทนแผงโครงการ (หน้าข้อมูลตลาดบนจอ Desktop) */
 @media (min-width: 769px) {
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock) {
+    top: var(--mp-top) !important;
+    bottom: 18px !important;
     left: 18px !important;
     right: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    z-index: 150 !important;
     width: min(380px, calc(100% - 36px)) !important;
   }
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-edit-mode) { width: min(440px, calc(100% - 36px)) !important; }
@@ -9951,40 +10523,34 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
     width: min(380px, calc(100% - 36px)) !important;
     box-sizing: border-box !important;
     padding: 18px 20px !important;
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid var(--bd-e2e8f0) !important;
     border-radius: 18px !important;
-    background: #ffffff !important;
+    background: var(--bg-ffffff) !important;
     box-shadow: 0 16px 38px rgba(15, 23, 42, 0.16) !important;
     transition: width .42s cubic-bezier(.2, .8, .2, 1), box-shadow .3s ease, background-color .18s ease !important;
   }
 }
 .is-fullscreen-map-panel :deep(.stall-mode-panel.is-expanding-to-stall) {
-  width: min(720px, calc(100% - 100px)) !important;
-  background: #f8fafc !important;
-  overflow: hidden !important;
-  transition: width .42s cubic-bezier(.2, .8, .2, 1), box-shadow .3s ease, background-color .18s ease !important;
-  will-change: width;
+  z-index: 140 !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
   pointer-events: none;
 }
-.is-fullscreen-map-panel :deep(.stall-mode-panel.is-exiting-project) {
-  opacity: 0 !important;
-  transition: opacity .18s ease !important;
-  pointer-events: none;
-}
+/* แผงโครงการถูกดันออกไปทางขวาพร้อมเฟด จังหวะเดียวกับที่แผงแผงเลื่อนเข้ามา (ตอนปิดก็กลับเข้ามาย้อนทิศ) */
 .is-fullscreen-map-panel :deep(.stall-mode-panel.is-expanding-to-stall > *) {
-  animation: projectPanelContentOut .18s ease .22s both;
+  animation: projectPanelPushOut .7s cubic-bezier(.22, 1, .36, 1) both;
+  will-change: transform, opacity;
 }
-@keyframes projectPanelContentOut {
-  from { opacity: 1; transform: translateX(0); }
-  to { opacity: 0; transform: translateX(-8px); }
-}
-.is-fullscreen-map-panel :deep(.stall-mode-panel.is-returning-from-stall > *) {
-  animation: projectPanelContentIn .18s ease both;
+@keyframes projectPanelPushOut {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(340px); opacity: 0; }
 }
 .is-fullscreen-map-panel :deep(.stall-mode-panel.is-returning-from-stall) {
-  transition: width .62s cubic-bezier(.22, 1, .36, 1), box-shadow .4s ease, background-color .24s ease !important;
+  animation: projectPanelFadeIn .3s ease .3s both;
+  will-change: opacity;
 }
-@keyframes projectPanelContentIn {
+@keyframes projectPanelFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
@@ -10035,26 +10601,57 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   transform: scaleX(.528) !important;
   opacity: 0 !important;
 }
-.is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-project-morph-swap.slide-fade-enter-active) {
-  transition: none !important;
+@media (min-width: 769px) {
+  .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode {
+    transform: translateX(0);
+    clip-path: inset(0 0 0 0 round 18px);
+    will-change: clip-path;
+  }
+  /* เปิด: เริ่มเป็นการ์ดขาวขนาดเดียวกับการ์ดโครงการ (ตรึงขอบซ้ายไว้ที่เดิม กว้าง 380px) แล้วขยายขอบขวาออกไปจนสุด ด้วย clip-path ไม่ยืด width */
+  .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-project-morph-swap {
+    animation: issdExpandFromCard .75s cubic-bezier(.3, .7, .25, 1) both;
+  }
+  /* ปิด: ขอบขวาหดกลับเป็นขนาดการ์ดโครงการ */
+  .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-drawer-closing {
+    clip-path: inset(0 calc(100% - 380px) 0 0 round 18px);
+    background-color: var(--bg-ffffff);
+    opacity: 0;
+    transition: clip-path .5s cubic-bezier(.4, 0, .2, 1), background-color .5s ease, opacity .12s ease .48s !important;
+    pointer-events: none;
+  }
 }
-.is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-project-morph-swap.slide-fade-enter-from),
-.is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-project-morph-swap.slide-fade-enter-to) {
-  transform: scaleX(1) !important;
-  opacity: 1 !important;
+@keyframes issdExpandFromCard {
+  from { clip-path: inset(0 calc(100% - 380px) 0 0 round 18px); background-color: var(--bg-ffffff); }
+  to { clip-path: inset(0 0 0 0 round 18px); background-color: var(--bg-f8fafc); }
 }
 .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-project-morph-swap .issd-header,
 .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-project-morph-swap .issd-full-sidebar,
 .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-project-morph-swap .issd-full-main {
-  animation: stallPanelContentFadeIn .16s ease-out both;
+  animation: stallPanelContentFadeIn .5s ease-out both;
 }
 @keyframes stallPanelContentFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-drawer-closing > * {
+/* ปิด: ยกแต่ละส่วนของเนื้อหาขึ้นเป็นเลเยอร์ของตัวเอง ให้ clip-path หุบโดยไม่ต้องวาดเนื้อหาทั้งหมดใหม่ทุกเฟรม (กันกระตุก) */
+.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-drawer-closing > *,
+.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-drawer-closing .issd-header,
+.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-drawer-closing .issd-full-sidebar {
+  will-change: opacity;
+  transform: translateZ(0);
+}
+/* ปิด: เนื้อหาคงอยู่จนขอบขวาหุบถึงซ้ายแล้วค่อยเฟดออก เห็นเป็นการหุบจากขวาไปซ้ายชัดเจน */
+.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-drawer-closing > *,
+.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-drawer-closing .issd-header,
+.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-drawer-closing .issd-full-sidebar {
   opacity: 0;
-  transition: opacity .12s ease !important;
+  transition: opacity .15s ease .4s !important;
+}
+/* ปิด: ฝั่งเนื้อหาด้านขวาเลื่อนเข้าซ้ายไปพร้อมขอบที่หุบ (720 -> 380px) และจางลงระหว่างทาง ไอคอนกับข้อความจึงเคลื่อนตามขอบ ไม่ใช่แค่ถูกตัดทิ้ง */
+.inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode.is-drawer-closing .issd-full-main {
+  transform: translateX(-340px);
+  opacity: 0;
+  transition: transform .5s cubic-bezier(.4, 0, .2, 1), opacity .32s ease-in !important;
 }
 @media (max-width: 768px) {
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.slide-fade-enter-from),
@@ -10070,7 +10667,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 .issd-return-btn { box-sizing: border-box; height: 34px; min-height: 34px; line-height: 1; }
 
 /* เส้นคั่นใต้ปุ่มย้อนกลับของแผงแผง (เหมือนแผงโครงการ) */
-.issd-return-row { width: 100%; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid #e8eef6; }
+.issd-return-row { width: 100%; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--bd-e8eef6); }
 .issd-return-row .issd-return-btn { margin: 0; }
 
 /* รายละเอียดแผงแบบเต็มบนจอ Desktop: หัวแผงกว้างเท่าแถบเมนูข้าง แล้วการ์ด "สิ่งที่ต้องดำเนินการ" อยู่บนสุดของคอลัมน์ขวา */
@@ -10079,20 +10676,20 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
     display: grid !important;
     grid-template-columns: 188px minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr) auto;
-    background: #f8fafc;
+    background: var(--bg-f8fafc);
   }
   .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode .issd-full-layout { display: contents; }
   .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode .issd-full-main { grid-column: 2; grid-row: 1 / 4; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
   .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode .issd-header {
     grid-column: 1;
     grid-row: 1;
-    padding: 18px 14px 14px;
-    border-right: 1px solid #eef2f6;
-    background: #ffffff;
+    padding: 18px 20px 14px; /* ขอบในซ้าย-ขวาเท่าแผงโครงการ (20px) */
+    border-right: 1px solid var(--bd-eef2f6);
+    background: var(--bg-ffffff);
   }
   .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode .issd-full-sidebar { grid-column: 1; grid-row: 2 / 4; width: auto; }
   /* การ์ดต้องดำเนินการอยู่บนสุดของคอลัมน์ขวา ชิดกับเนื้อหาด้านล่าง ไม่เว้นช่องว่าง */
-  .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode .issd-action-alert-card { margin: 16px 18px 12px !important; flex: 0 0 auto; }
+  .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode .issd-action-alert-card { margin: 20px 18px 0 !important; flex: 0 0 auto; }
   .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode .issd-body-full { flex: 1 0 auto; min-height: 0; overflow: visible; }
   /* เลื่อนทั้งคอลัมน์ขวาพร้อมกัน (การ์ด + เนื้อหา) แถบปุ่มท้ายหน้าตรึงอยู่ด้านล่าง */
   .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode .issd-footer-full { position: sticky; bottom: 0; z-index: 2; margin-top: auto; flex: 0 0 auto; }
@@ -10137,10 +10734,10 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   align-items: center;
   gap: 4px;
   padding: 4px;
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--bd-bfdbfe);
   border-radius: 999px;
   overflow: visible;
-  background: rgba(255, 255, 255, 0.97);
+  background: var(--bg-rgba-255-255-255-0p97);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
 }
 .is-fullscreen-map-panel :deep(.market-floor-tab) {
@@ -10154,21 +10751,20 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.9375rem;
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.is-fullscreen-map-panel :deep(.market-floor-tab:hover:not(.active)) { background: #f1f5f9; color: #0f172a; }
+.is-fullscreen-map-panel :deep(.market-floor-tab:hover:not(.active)) { background: var(--bg-f1f5f9); color: var(--tx-0f172a); }
 .is-fullscreen-map-panel :deep(.market-floor-tab.active) { background: #2563eb; color: #ffffff; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3); }
 
 
-/* แผงโครงการและแผงรายละเอียดแผงบน Desktop: ความสูงเท่ากัน (ยืดจากใต้การ์ด KPI ถึงเหนือปุ่มแดชบอร์ด) */
+/* แผงโครงการบน Desktop: ความสูงยืดจากใต้การ์ด KPI ถึงเหนือปุ่มแดชบอร์ด */
 @media (min-width: 769px) {
-  .is-fullscreen-map-panel :deep(.stall-mode-panel.stall-mode-panel),
-  .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-left-dock) {
+  .is-fullscreen-map-panel :deep(.stall-mode-panel.stall-mode-panel) {
     top: var(--mp-top) !important;
     bottom: 18px !important;
     height: auto !important;
@@ -10176,8 +10772,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   }
 }
 @media (min-width: 769px) and (max-width: 1000px) {
-  .is-fullscreen-map-panel :deep(.stall-mode-panel.stall-mode-panel),
-  .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer.is-left-dock.is-left-dock) { top: var(--mp-top-2row) !important; }
+  .is-fullscreen-map-panel :deep(.stall-mode-panel.stall-mode-panel) { top: var(--mp-top-2row) !important; }
 }
 
 /* ปุ่มย้อนกลับของแผงโครงการและแผงแผงใช้สไตล์เดียวกัน (เท่า AppButton sm) */
@@ -10206,7 +10801,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 .issd-return-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .is-fullscreen-map-panel :deep(.smp-back-btn:hover),
 .issd-return-btn:hover { background: #1d4ed8; box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3); transform: none; }
-.issd-return-btn:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+.issd-return-btn:focus-visible { outline: 3px solid var(--bd-93c5fd); outline-offset: 2px; }
 .is-fullscreen-map-panel :deep(.smp-back-section) { padding-bottom: 14px; }
 .is-fullscreen-map-panel :deep(.smp-back-btn) { margin: 0; }
 
@@ -10237,7 +10832,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .is-fullscreen-map-view {
@@ -10305,10 +10900,10 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   box-sizing: border-box !important;
   border-radius: 12px !important;
   padding: 8px 14px !important;
-  background: rgba(255, 255, 255, 0.96) !important;
+  background: var(--bg-rgba-255-255-255-0p96) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(226, 232, 240, 0.95) !important;
+  border: 1px solid var(--bd-rgba-226-232-240-0p95) !important;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08) !important;
   z-index: 100 !important;
 }
@@ -10349,19 +10944,19 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 
 /* 1. Hero Revenue / Health Box */
 .ov-dash-hero-box {
-  background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
-  border: 1px solid #dbeafe;
+  background: linear-gradient(135deg, var(--bg-f8fafc) 0%, var(--bg-eff6ff) 100%);
+  border: 1px solid var(--bd-dbeafe);
   border-radius: 14px;
   padding: 16px 18px;
   box-shadow: 0 2px 6px rgba(37, 99, 235, 0.04);
 }
 .ov-dash-hero-box.finance {
-  background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
-  border-color: #bbf7d0;
+  background: linear-gradient(135deg, var(--bg-f0fdf4) 0%, var(--bg-eff6ff) 100%);
+  border-color: var(--bd-bbf7d0);
 }
 .ov-dash-hero-box.meter {
-  background: linear-gradient(135deg, #f0fdfa 0%, #eff6ff 100%);
-  border-color: #99f6e4;
+  background: linear-gradient(135deg, var(--bg-f0fdfa) 0%, var(--bg-eff6ff) 100%);
+  border-color: var(--bd-99f6e4);
 }
 .ov-dash-hero-header {
   display: flex;
@@ -10374,7 +10969,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #1e40af;
+  color: var(--tx-1e40af);
   font-size: 0.8125rem;
   font-weight: 600;
   margin-bottom: 3px;
@@ -10382,30 +10977,30 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 .ov-dash-hero-value {
   font-size: 1.75rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
 .ov-dash-hero-value small {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
   letter-spacing: normal;
 }
 .ov-dash-hero-pill {
   display: inline-flex;
   align-items: center;
   padding: 3px 10px;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--bg-dbeafe);
+  color: var(--tx-1d4ed8);
   font-size: 0.75rem;
   font-weight: 700;
   border-radius: 9999px;
   white-space: nowrap;
 }
 .ov-dash-hero-pill.green {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 .ov-dash-health-bar-wrap {
   display: flex;
@@ -10421,14 +11016,14 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   font-size: 0.75rem;
   font-weight: 600;
 }
-.health-label-good { color: #16a34a; }
-.health-label-warn { color: #d97706; }
-.health-label-danger { color: #dc2626; }
+.health-label-good { color: var(--tx-16a34a); }
+.health-label-warn { color: var(--tx-d97706); }
+.health-label-danger { color: var(--tx-dc2626); }
 .ov-dash-health-track {
   display: flex;
   width: 100%;
   height: 7px;
-  background: #e2e8f0;
+  background: var(--bg-e2e8f0);
   border-radius: 9999px;
   overflow: hidden;
 }
@@ -10447,8 +11042,8 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   gap: 10px;
 }
 .ov-dash-kpi-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
   padding: 12px 14px;
   display: flex;
@@ -10457,7 +11052,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .ov-dash-kpi-card:hover {
-  border-color: #cbd5e1;
+  border-color: var(--bd-cbd5e1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 .ov-dash-kpi-card.card-blue { border-left: 3px solid #2563eb; }
@@ -10479,53 +11074,53 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   justify-content: center;
   flex-shrink: 0;
 }
-.ov-dash-kpi-icon.blue { background: #eff6ff; color: #2563eb; }
-.ov-dash-kpi-icon.amber { background: #fef3c7; color: #d97706; }
-.ov-dash-kpi-icon.red { background: #fee2e2; color: #dc2626; }
-.ov-dash-kpi-icon.green { background: #dcfce7; color: #16a34a; }
+.ov-dash-kpi-icon.blue { background: var(--bg-eff6ff); color: var(--tx-2563eb); }
+.ov-dash-kpi-icon.amber { background: var(--bg-fef3c7); color: var(--tx-d97706); }
+.ov-dash-kpi-icon.red { background: var(--bg-fee2e2); color: var(--tx-dc2626); }
+.ov-dash-kpi-icon.green { background: var(--bg-dcfce7); color: var(--tx-16a34a); }
 
 .ov-dash-kpi-title {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 600;
   white-space: nowrap;
 }
 .ov-dash-kpi-number {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   line-height: 1.15;
 }
 .ov-dash-kpi-number small {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
-.ov-dash-kpi-number.text-amber { color: #d97706; }
-.ov-dash-kpi-number.text-red { color: #dc2626; }
-.ov-dash-kpi-number.text-green { color: #16a34a; }
+.ov-dash-kpi-number.text-amber { color: var(--tx-d97706); }
+.ov-dash-kpi-number.text-red { color: var(--tx-dc2626); }
+.ov-dash-kpi-number.text-green { color: var(--tx-16a34a); }
 
 .ov-dash-legal-card {
   width: 100%; min-height: 64px; display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px; border: 1px solid #fecaca; border-radius: 12px;
-  background: #fff7f7; color: #991b1b; font-family: inherit; text-align: left; cursor: pointer;
+  padding: 10px 12px; border: 1px solid var(--bd-fecaca); border-radius: 12px;
+  background: var(--bg-fff7f7); color: var(--tx-991b1b); font-family: inherit; text-align: left; cursor: pointer;
   transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
 }
-.ov-dash-legal-card:hover,.ov-dash-legal-card.active { border-color: #ef4444; background: #fef2f2; box-shadow: 0 2px 8px rgba(220,38,38,.1); }
-.ov-dash-legal-icon { width: 34px; height: 34px; flex: 0 0 34px; display: grid; place-items: center; border-radius: 9px; background: #fee2e2; color: #dc2626; }
+.ov-dash-legal-card:hover,.ov-dash-legal-card.active { border-color: #ef4444; background: var(--bg-fef2f2); box-shadow: 0 2px 8px rgba(220,38,38,.1); }
+.ov-dash-legal-icon { width: 34px; height: 34px; flex: 0 0 34px; display: grid; place-items: center; border-radius: 9px; background: var(--bg-fee2e2); color: var(--tx-dc2626); }
 .ov-dash-legal-icon svg { width: 18px; height: 18px; }
 .ov-dash-legal-copy { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.ov-dash-legal-copy small { font-size: .8125rem; color: #7f1d1d; font-weight: 600; }
-.ov-dash-legal-copy strong { font-size: 1.125rem; color: #b91c1c; font-weight: 800; line-height: 1.2; }
+.ov-dash-legal-copy small { font-size: .8125rem; color: var(--tx-7f1d1d); font-weight: 600; }
+.ov-dash-legal-copy strong { font-size: 1.125rem; color: var(--tx-b91c1c); font-weight: 800; line-height: 1.2; }
 .ov-dash-legal-copy em { font-size: .8125rem; font-style: normal; font-weight: 600; }
-.ov-dash-legal-action { flex: 0 0 auto; color: #dc2626; font-size: .8125rem; font-weight: 600; }
+.ov-dash-legal-action { flex: 0 0 auto; color: var(--tx-dc2626); font-size: .8125rem; font-weight: 600; }
 
 /* การ์ดสรุปร่วมสำหรับแดชบอร์ดข้อมูลแผง การชำระเงิน และการจดมิเตอร์ */
 .ov-dash-summary-card,
 .ov-stall-overview-card,
 .ov-stall-priority-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   padding: 14px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
@@ -10542,7 +11137,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 .ov-stall-card-head h4,
 .ov-stall-section-head h4 {
   margin: 0;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 0.9375rem;
   font-weight: 700;
   line-height: 1.35;
@@ -10550,14 +11145,14 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 
 .ov-stall-card-head p {
   margin: 2px 0 0;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8125rem;
   font-weight: 500;
 }
 
 .ov-stall-section-note {
   margin: 2px 0 0;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8125rem;
   font-weight: 500;
 }
@@ -10568,8 +11163,8 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   min-height: 26px;
   padding: 3px 9px;
   border-radius: 999px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   font-size: 0.75rem;
   font-weight: 700;
   white-space: nowrap;
@@ -10582,7 +11177,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   margin: 12px 0;
   overflow: hidden;
   border-radius: 999px;
-  background: #e2e8f0;
+  background: var(--bg-e2e8f0);
 }
 
 .ov-stall-status-track span {
@@ -10613,10 +11208,10 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   align-items: flex-start;
   justify-content: space-between;
   gap: 4px;
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 10px;
-  background: #f8fafc;
-  color: #334155;
+  background: var(--bg-f8fafc);
+  color: var(--tx-334155);
   font-family: inherit;
   text-align: left;
   cursor: pointer;
@@ -10625,8 +11220,8 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 
 .ov-stall-status-actions button:hover,
 .ov-stall-status-actions button.active {
-  border-color: #93c5fd;
-  background: #eff6ff;
+  border-color: var(--bd-93c5fd);
+  background: var(--bg-eff6ff);
   box-shadow: 0 1px 4px rgba(37, 99, 235, 0.08);
 }
 
@@ -10635,7 +11230,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   align-items: center;
   gap: 5px;
   max-width: 100%;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
@@ -10649,7 +11244,7 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
 }
 
 .ov-stall-status-actions button strong {
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 1.125rem;
   font-weight: 800;
   line-height: 1.1;
@@ -10670,10 +11265,10 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-
   grid-template-columns: 30px minmax(0, 1fr) auto 16px;
   align-items: center;
   gap: 8px;
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 10px;
-  background: #f8fafc;
-  color: #334155;
+  background: var(--bg-f8fafc);
+  color: var(--tx-334155);
   font-family: inherit;
   text-align: left;
 }
@@ -10685,8 +11280,8 @@ button.ov-stall-priority-row {
 
 button.ov-stall-priority-row:hover,
 button.ov-stall-priority-row.active {
-  border-color: #93c5fd;
-  background: #eff6ff;
+  border-color: var(--bd-93c5fd);
+  background: var(--bg-eff6ff);
   box-shadow: 0 1px 4px rgba(37, 99, 235, 0.08);
 }
 
@@ -10703,14 +11298,14 @@ button.ov-stall-priority-row.active {
   height: 17px;
 }
 
-.ov-stall-priority-row.is-action .ov-stall-priority-icon { background: #eff6ff; color: #2563eb; }
-.ov-stall-priority-row.is-legal .ov-stall-priority-icon { background: #fee2e2; color: #dc2626; }
-.ov-stall-priority-row.is-expiring .ov-stall-priority-icon { background: #fef3c7; color: #d97706; }
+.ov-stall-priority-row.is-action .ov-stall-priority-icon { background: var(--bg-eff6ff); color: var(--tx-2563eb); }
+.ov-stall-priority-row.is-legal .ov-stall-priority-icon { background: var(--bg-fee2e2); color: var(--tx-dc2626); }
+.ov-stall-priority-row.is-expiring .ov-stall-priority-icon { background: var(--bg-fef3c7); color: var(--tx-d97706); }
 
 .ov-stall-priority-label {
   min-width: 0;
   overflow: hidden;
-  color: #334155;
+  color: var(--tx-334155);
   font-size: 0.8125rem;
   font-weight: 600;
   text-overflow: ellipsis;
@@ -10719,19 +11314,19 @@ button.ov-stall-priority-row.active {
 
 .ov-stall-priority-row strong {
   min-width: 24px;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 1rem;
   font-weight: 800;
   text-align: right;
 }
 
-.ov-stall-priority-row.is-legal strong { color: #dc2626; }
-.ov-stall-priority-row.is-expiring strong { color: #b45309; }
+.ov-stall-priority-row.is-legal strong { color: var(--tx-dc2626); }
+.ov-stall-priority-row.is-expiring strong { color: var(--tx-b45309); }
 
 .ov-stall-priority-chevron {
   width: 15px;
   height: 15px;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
 }
 
 .ov-dash-summary-main {
@@ -10742,18 +11337,18 @@ button.ov-stall-priority-row.active {
   justify-content: space-between;
   gap: 12px;
   border-radius: 10px;
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
 }
 
 .ov-dash-summary-main span,
 .ov-dash-summary-grid span {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8125rem;
   font-weight: 500;
 }
 
 .ov-dash-summary-main strong {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
   font-size: 1.125rem;
   font-weight: 800;
   white-space: nowrap;
@@ -10761,7 +11356,7 @@ button.ov-stall-priority-row.active {
 
 .ov-dash-summary-main strong small {
   margin-left: 4px;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -10774,7 +11369,7 @@ button.ov-stall-priority-row.active {
   justify-content: center;
   gap: 8px;
   border-radius: 10px;
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
 }
 
 .ov-dash-utilization-head {
@@ -10785,13 +11380,13 @@ button.ov-stall-priority-row.active {
 }
 
 .ov-dash-utilization-head span {
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.8125rem;
   font-weight: 600;
 }
 
 .ov-dash-utilization-head strong {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
   font-size: 1.125rem;
   font-weight: 800;
 }
@@ -10801,7 +11396,7 @@ button.ov-stall-priority-row.active {
   height: 6px;
   overflow: hidden;
   border-radius: 999px;
-  background: #dbeafe;
+  background: var(--bg-dbeafe);
 }
 
 .ov-dash-utilization-track span {
@@ -10824,25 +11419,25 @@ button.ov-stall-priority-row.active {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 10px;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .ov-dash-summary-grid strong {
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 1rem;
   font-weight: 800;
   white-space: nowrap;
 }
 
-.ov-dash-summary-grid .is-success strong { color: #15803d; }
-.ov-dash-summary-grid .is-pending strong { color: #b45309; }
+.ov-dash-summary-grid .is-success strong { color: var(--tx-15803d); }
+.ov-dash-summary-grid .is-pending strong { color: var(--tx-b45309); }
 .ov-dash-summary-grid .is-danger strong,
-.ov-dash-summary-grid .is-expired strong { color: #dc2626; }
+.ov-dash-summary-grid .is-expired strong { color: var(--tx-dc2626); }
 
 .ov-dash-summary-grid small {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -10855,7 +11450,7 @@ button.ov-stall-priority-row.active {
   justify-content: center;
   gap: 8px;
   border-radius: 10px;
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
 }
 
 .ov-dash-meter-progress-head {
@@ -10866,20 +11461,20 @@ button.ov-stall-priority-row.active {
 }
 
 .ov-dash-meter-progress-head span {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8125rem;
   font-weight: 500;
 }
 
 .ov-dash-meter-progress-head strong {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
   font-size: 1rem;
   font-weight: 800;
   white-space: nowrap;
 }
 
 .ov-dash-meter-progress-head small {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -10893,17 +11488,17 @@ button.ov-stall-priority-row.active {
   justify-content: space-between;
   gap: 10px;
   border-radius: 9px;
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
 }
 
 .ov-dash-income-total span {
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.8125rem;
   font-weight: 600;
 }
 
 .ov-dash-income-total strong {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
   font-size: 1rem;
   font-weight: 800;
   white-space: nowrap;
@@ -10914,7 +11509,7 @@ button.ov-stall-priority-row.active {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -10956,7 +11551,7 @@ button.ov-stall-priority-row.active {
 
 .ov-project-status-list::-webkit-scrollbar { width: 6px; }
 .ov-project-status-list::-webkit-scrollbar-track { background: transparent; }
-.ov-project-status-list::-webkit-scrollbar-thumb { border-radius: 999px; background: #cbd5e1; }
+.ov-project-status-list::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--bg-cbd5e1); }
 .ov-project-status-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 .ov-project-donut-focus {
@@ -10966,9 +11561,9 @@ button.ov-stall-priority-row.active {
   grid-template-columns: 132px minmax(0, 1fr);
   align-items: center;
   gap: 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
-  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(145deg, var(--bg-ffffff) 0%, var(--bg-f8fafc) 100%);
 }
 
 .ov-project-donut-wrap {
@@ -10994,7 +11589,7 @@ button.ov-stall-priority-row.active {
   position: absolute;
   inset: 17px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   box-shadow: inset 0 0 0 1px #f1f5f9;
   content: '';
 }
@@ -11009,14 +11604,14 @@ button.ov-stall-priority-row.active {
 }
 
 .ov-project-donut-chart strong {
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 1.5rem;
   font-weight: 800;
   line-height: 1.15;
 }
 
 .ov-project-donut-chart small {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -11024,7 +11619,7 @@ button.ov-stall-priority-row.active {
 .ov-project-donut-name {
   max-width: 100%;
   overflow: hidden;
-  color: #334155;
+  color: var(--tx-334155);
   font-size: 0.875rem;
   font-weight: 700;
   text-align: center;
@@ -11046,9 +11641,9 @@ button.ov-stall-priority-row.active {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 1px 7px;
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--bg-rgba-255-255-255-0p88);
 }
 
 .ov-project-donut-stats span {
@@ -11056,7 +11651,7 @@ button.ov-stall-priority-row.active {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8125rem;
   font-weight: 600;
   white-space: nowrap;
@@ -11070,7 +11665,7 @@ button.ov-stall-priority-row.active {
 }
 
 .ov-project-donut-stats strong {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 1rem;
   font-weight: 800;
 }
@@ -11078,7 +11673,7 @@ button.ov-stall-priority-row.active {
 .ov-project-donut-stats small {
   grid-column: 1 / -1;
   padding-left: 14px;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -11086,16 +11681,16 @@ button.ov-stall-priority-row.active {
 .ov-project-donut-stats .is-available i { background: #10b981; }
 .ov-project-donut-stats .is-occupied i { background: #64748b; }
 .ov-project-donut-stats .is-reserved i { background: #f59e0b; }
-.ov-project-donut-stats .is-available strong { color: #047857; }
-.ov-project-donut-stats .is-reserved strong { color: #b45309; }
+.ov-project-donut-stats .is-available strong { color: var(--tx-047857); }
+.ov-project-donut-stats .is-reserved strong { color: var(--tx-b45309); }
 
 .ov-project-donut-empty {
   margin-top: 14px;
   padding: 28px 16px;
-  border: 1px dashed #cbd5e1;
+  border: 1px dashed var(--bd-cbd5e1);
   border-radius: 12px;
-  background: #f8fafc;
-  color: #64748b;
+  background: var(--bg-f8fafc);
+  color: var(--tx-64748b);
   font-size: 0.875rem;
   font-weight: 500;
   text-align: center;
@@ -11115,7 +11710,7 @@ button.ov-stall-priority-row.active {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.8125rem;
   font-weight: 500;
 }
@@ -11129,7 +11724,7 @@ button.ov-stall-priority-row.active {
 
 .ov-project-column-legend strong {
   margin-left: 2px;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 0.875rem;
   font-weight: 800;
 }
@@ -11149,7 +11744,7 @@ button.ov-stall-priority-row.active {
   position: relative;
   height: 238px;
   margin-top: 8px;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 500;
   pointer-events: none;
@@ -11174,28 +11769,28 @@ button.ov-stall-priority-row.active {
 
 .ov-project-column-scroll:focus-visible {
   border-radius: 8px;
-  outline: 2px solid #93c5fd;
+  outline: 2px solid var(--bd-93c5fd);
   outline-offset: 2px;
 }
 
 .ov-project-column-scroll::-webkit-scrollbar { height: 8px; }
-.ov-project-column-scroll::-webkit-scrollbar-track { border-radius: 999px; background: #f1f5f9; }
-.ov-project-column-scroll::-webkit-scrollbar-thumb { border-radius: 999px; background: #cbd5e1; }
+.ov-project-column-scroll::-webkit-scrollbar-track { border-radius: 999px; background: var(--bg-f1f5f9); }
+.ov-project-column-scroll::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--bg-cbd5e1); }
 .ov-project-column-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 .ov-project-column-grid {
   position: relative;
-  min-width: max(100%, calc(var(--project-count) * 62px));
+  min-width: max(100%, calc(var(--project-count) * 96px));
   height: 268px;
   padding: 8px 4px 0;
   display: grid;
-  grid-template-columns: repeat(var(--project-count), minmax(48px, 1fr));
+  grid-template-columns: repeat(var(--project-count), minmax(84px, 1fr));
   align-items: end;
   gap: 10px;
   background-image: repeating-linear-gradient(
     to top,
-    #e2e8f0 0,
-    #e2e8f0 1px,
+    var(--bg-e2e8f0) 0,
+    var(--bg-e2e8f0) 1px,
     transparent 1px,
     transparent var(--grid-step)
   );
@@ -11233,13 +11828,13 @@ button.ov-stall-priority-row.active {
 
 .ov-project-column-item:hover,
 .ov-project-column-item:focus-visible {
-  background: rgba(239, 246, 255, 0.72);
+  background: var(--bg-rgba-239-246-255-0p72);
   outline: none;
 }
 
 .ov-project-column-item.active {
   box-shadow: inset 0 0 0 2px #2563eb;
-  background: rgba(239, 246, 255, 0.76);
+  background: var(--bg-rgba-239-246-255-0p76);
 }
 
 .ov-project-column-item.active::after { background: #2563eb; }
@@ -11249,7 +11844,7 @@ button.ov-stall-priority-row.active {
   bottom: calc(34px + (var(--bar-ratio, 0) * 205px));
   left: 50%;
   z-index: 2;
-  color: #334155;
+  color: var(--tx-334155);
   font-size: 0.75rem;
   font-weight: 800;
   line-height: 1;
@@ -11258,14 +11853,14 @@ button.ov-stall-priority-row.active {
 }
 
 .ov-project-column-stack {
-  width: min(38px, 82%);
+  width: min(30px, 68%);
   height: calc(var(--bar-ratio, 0) * 205px);
   min-height: 2px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   overflow: hidden;
-  border-radius: 7px 7px 2px 2px;
+  border-radius: 6px 6px 2px 2px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
   transition: filter 0.16s ease, transform 0.16s ease;
 }
@@ -11289,8 +11884,8 @@ button.ov-stall-priority-row.active {
   bottom: 5px;
   left: 1px;
   overflow: hidden;
-  color: #475569;
-  font-size: 0.8125rem;
+  color: var(--tx-475569);
+  font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.2;
   text-align: center;
@@ -11298,7 +11893,7 @@ button.ov-stall-priority-row.active {
   white-space: nowrap;
 }
 
-.ov-project-column-item.active .ov-project-column-label { color: #1d4ed8; font-weight: 800; }
+.ov-project-column-item.active .ov-project-column-label { color: var(--tx-1d4ed8); font-weight: 800; }
 
 .ov-project-column-tooltip {
   position: absolute;
@@ -11330,7 +11925,7 @@ button.ov-stall-priority-row.active {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  color: #cbd5e1;
+  color: var(--tx-cbd5e1);
   font-size: 0.75rem;
   font-weight: 500;
   white-space: nowrap;
@@ -11376,7 +11971,7 @@ button.ov-stall-priority-row.active {
 
 .ov-project-mini-donut-grid::-webkit-scrollbar { width: 6px; }
 .ov-project-mini-donut-grid::-webkit-scrollbar-track { background: transparent; }
-.ov-project-mini-donut-grid::-webkit-scrollbar-thumb { border-radius: 999px; background: #cbd5e1; }
+.ov-project-mini-donut-grid::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--bg-cbd5e1); }
 
 .ov-project-mini-donut-card {
   position: relative;
@@ -11389,9 +11984,9 @@ button.ov-stall-priority-row.active {
   justify-content: center;
   gap: 8px;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 13px;
-  background: linear-gradient(155deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(155deg, var(--bg-ffffff) 0%, var(--bg-f8fafc) 100%);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   outline: none;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
@@ -11401,13 +11996,13 @@ button.ov-stall-priority-row.active {
 .ov-project-mini-donut-card:focus-visible,
 .ov-project-mini-donut-card.active {
   z-index: 2;
-  border-color: #93c5fd;
+  border-color: var(--bd-93c5fd);
   box-shadow: 0 7px 18px rgba(37, 99, 235, 0.13);
   transform: translateY(-2px);
 }
 
 .ov-project-mini-donut-card.active {
-  background: linear-gradient(155deg, #ffffff 0%, #eff6ff 100%);
+  background: linear-gradient(155deg, var(--bg-ffffff) 0%, var(--bg-eff6ff) 100%);
   box-shadow: 0 0 0 1px #bfdbfe, 0 7px 18px rgba(37, 99, 235, 0.13);
 }
 
@@ -11423,8 +12018,8 @@ button.ov-stall-priority-row.active {
   line-height: 1.2;
 }
 
-.ov-project-mini-badge.is-danger { background: #fee2e2; color: #dc2626; }
-.ov-project-mini-badge.is-available { background: #dcfce7; color: #15803d; }
+.ov-project-mini-badge.is-danger { background: var(--bg-fee2e2); color: var(--tx-dc2626); }
+.ov-project-mini-badge.is-available { background: var(--bg-dcfce7); color: var(--tx-15803d); }
 
 .ov-project-mini-donut {
   position: relative;
@@ -11443,7 +12038,7 @@ button.ov-stall-priority-row.active {
   position: absolute;
   inset: 12px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   box-shadow: inset 0 0 0 1px #f1f5f9;
   content: '';
 }
@@ -11457,13 +12052,13 @@ button.ov-stall-priority-row.active {
   line-height: 1.05;
 }
 
-.ov-project-mini-donut strong { color: #0f172a; font-size: 1.125rem; font-weight: 800; }
-.ov-project-mini-donut small { color: #64748b; font-size: 0.75rem; font-weight: 600; }
+.ov-project-mini-donut strong { color: var(--tx-0f172a); font-size: 1.125rem; font-weight: 800; }
+.ov-project-mini-donut small { color: var(--tx-64748b); font-size: 0.75rem; font-weight: 600; }
 
 .ov-project-mini-name {
   width: 100%;
   overflow: hidden;
-  color: #334155;
+  color: var(--tx-334155);
   font-size: 0.8125rem;
   font-weight: 700;
   text-align: center;
@@ -11505,7 +12100,7 @@ button.ov-stall-priority-row.active {
 }
 
 .ov-project-mini-tooltip strong { color: #ffffff; font-size: 0.8125rem; font-weight: 700; }
-.ov-project-mini-tooltip small { color: #cbd5e1; font-size: 0.75rem; font-weight: 500; }
+.ov-project-mini-tooltip small { color: var(--tx-cbd5e1); font-size: 0.75rem; font-weight: 500; }
 .ov-project-mini-tooltip .is-available::before,
 .ov-project-mini-tooltip .is-occupied::before,
 .ov-project-mini-tooltip .is-reserved::before { display: none; }
@@ -11527,7 +12122,7 @@ button.ov-stall-priority-row.active {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.8125rem;
   font-weight: 600;
 }
@@ -11540,7 +12135,7 @@ button.ov-stall-priority-row.active {
 }
 
 .ov-project-status-meta strong {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 0.8125rem;
   font-weight: 700;
 }
@@ -11552,7 +12147,7 @@ button.ov-stall-priority-row.active {
   height: 8px;
   overflow: hidden;
   border-radius: 999px;
-  background: #e2e8f0;
+  background: var(--bg-e2e8f0);
 }
 
 .ov-project-stacked-bar span {
@@ -11582,7 +12177,7 @@ button.ov-stall-priority-row.active {
   position: absolute;
   inset: 12px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   content: '';
 }
 
@@ -11596,13 +12191,13 @@ button.ov-stall-priority-row.active {
 }
 
 .ov-contract-donut strong {
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 1.125rem;
   font-weight: 800;
 }
 
 .ov-contract-donut small {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -11611,14 +12206,14 @@ button.ov-stall-priority-row.active {
   display: flex;
   flex-direction: column;
   gap: 7px;
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.8125rem;
   font-weight: 500;
 }
 
 .ov-contract-health-legend span strong {
   margin-left: auto;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 0.8125rem;
   font-weight: 700;
 }
@@ -11633,12 +12228,12 @@ button.ov-stall-priority-row.active {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 
 .ov-contract-renewal-row span {
   min-width: 0;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 500;
   text-align: center;
@@ -11647,7 +12242,7 @@ button.ov-stall-priority-row.active {
 .ov-contract-renewal-row strong {
   display: block;
   margin-top: 2px;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 0.9375rem;
   font-weight: 800;
 }
@@ -11670,27 +12265,27 @@ button.ov-stall-priority-row.active {
   flex-direction: column;
   justify-content: center;
   gap: 2px;
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 9px;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .ov-status-summary-grid span {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 500;
   line-height: 1.25;
 }
 
 .ov-status-summary-grid strong {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 1rem;
   font-weight: 800;
 }
 
-.ov-status-summary-grid .is-success strong { color: #15803d; }
-.ov-status-summary-grid .is-pending strong { color: #b45309; }
-.ov-status-summary-grid .is-danger strong { color: #dc2626; }
+.ov-status-summary-grid .is-success strong { color: var(--tx-15803d); }
+.ov-status-summary-grid .is-pending strong { color: var(--tx-b45309); }
+.ov-status-summary-grid .is-danger strong { color: var(--tx-dc2626); }
 
 .ov-maintenance-legend i.is-pending { background: #f59e0b; }
 .ov-maintenance-legend i.is-repairing { background: #2563eb; }
@@ -11718,7 +12313,7 @@ button.ov-stall-priority-row.active {
   position: absolute;
   inset: 14px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   box-shadow: inset 0 0 0 1px #f1f5f9;
   content: '';
 }
@@ -11734,13 +12329,13 @@ button.ov-stall-priority-row.active {
 }
 
 .ov-maintenance-donut strong {
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 1.25rem;
   font-weight: 800;
 }
 
 .ov-maintenance-donut small {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -11750,14 +12345,14 @@ button.ov-stall-priority-row.active {
   display: flex;
   flex-direction: column;
   gap: 7px;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 500;
 }
 
 .ov-maintenance-legend strong {
   margin-left: auto;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 0.8125rem;
   font-weight: 700;
 }
@@ -11824,8 +12419,8 @@ button.ov-stall-priority-row.active {
 
 /* 3. Section Cards */
 .ov-dash-section-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   padding: 14px 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
@@ -11846,7 +12441,7 @@ button.ov-stall-priority-row.active {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 .ov-dash-count-badge {
   font-size: 0.75rem;
@@ -11855,12 +12450,12 @@ button.ov-stall-priority-row.active {
   border-radius: 9999px;
 }
 .ov-dash-count-badge.badge-amber {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--bg-fef3c7);
+  color: var(--tx-b45309);
 }
 .ov-dash-count-badge.badge-red {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
 }
 
 /* 4. Streamlined Watchlist Rows */
@@ -11875,41 +12470,41 @@ button.ov-stall-priority-row.active {
   justify-content: space-between;
   gap: 10px;
   padding: 9px 12px;
-  background: #f8fafc;
-  border: 1px solid #eef2f6;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .ov-dash-watchlist-row:hover {
-  background: #ffffff;
-  border-color: #93c5fd;
+  background: var(--bg-ffffff);
+  border-color: var(--bd-93c5fd);
   box-shadow: 0 2px 6px rgba(37, 99, 235, 0.06);
   transform: translateY(-1px);
 }
 .ov-dash-watchlist-row.urgency-expired {
   border-left: 3px solid #ef4444;
-  background: #fef2f2;
+  background: var(--bg-fef2f2);
 }
 .ov-dash-watchlist-row.urgency-expired:hover {
-  background: #ffffff;
-  border-color: #fca5a5;
+  background: var(--bg-ffffff);
+  border-color: var(--bd-fca5a5);
 }
 .ov-dash-watchlist-row.urgency-urgent {
   border-left: 3px solid #f97316;
-  background: #fff7ed;
+  background: var(--bg-fff7ed);
 }
 .ov-dash-watchlist-row.urgency-urgent:hover {
-  background: #ffffff;
-  border-color: #fdba74;
+  background: var(--bg-ffffff);
+  border-color: var(--bd-fdba74);
 }
 .ov-dash-watchlist-row.urgency-warning {
   border-left: 3px solid #f59e0b;
-  background: #fffbeb;
+  background: var(--bg-fffbeb);
 }
 .ov-dash-watchlist-row.urgency-warning:hover {
-  background: #ffffff;
-  border-color: #fde68a;
+  background: var(--bg-ffffff);
+  border-color: var(--bd-fde68a);
 }
 
 .ov-dash-w-left {
@@ -11922,8 +12517,8 @@ button.ov-stall-priority-row.active {
 .ov-dash-code-tag {
   font-size: 0.8125rem;
   font-weight: 800;
-  color: #1e293b;
-  background: #e2e8f0;
+  color: var(--tx-1e293b);
+  background: var(--bg-e2e8f0);
   padding: 2px 6px;
   border-radius: 5px;
   letter-spacing: 0.02em;
@@ -11932,7 +12527,7 @@ button.ov-stall-priority-row.active {
 .ov-dash-w-tenant {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -11952,30 +12547,30 @@ button.ov-stall-priority-row.active {
   white-space: nowrap;
 }
 .ov-dash-w-pill.pill-expired {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
   font-weight: 700;
 }
 .ov-dash-w-pill.pill-urgent {
-  background: #ffedd5;
-  color: #c2410c;
+  background: var(--bg-ffedd5);
+  color: var(--tx-c2410c);
   font-weight: 700;
 }
 .ov-dash-w-pill.pill-warning {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--bg-fef3c7);
+  color: var(--tx-b45309);
 }
 .ov-dash-w-pill.pill-renew-submitted {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 .ov-dash-w-pill.pill-renew-pending_submit {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
 }
 .ov-dash-w-pill.pill-renew-declined {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--bg-fee2e2);
+  color: var(--tx-991b1b);
 }
 
 .ov-dash-w-icon {
@@ -11985,13 +12580,13 @@ button.ov-stall-priority-row.active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
-  background: #f1f5f9;
+  color: var(--tx-94a3b8);
+  background: var(--bg-f1f5f9);
   transition: all 0.15s ease;
 }
 .ov-dash-watchlist-row:hover .ov-dash-w-icon {
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
 }
 
 /* 5. Minimalist 4-Stat Strip */
@@ -11999,8 +12594,8 @@ button.ov-stall-priority-row.active {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  background: #f8fafc;
-  border: 1px solid #eef2f6;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 10px;
   padding: 10px 8px;
 }
@@ -12013,20 +12608,20 @@ button.ov-stall-priority-row.active {
 }
 .ov-dash-pipe-stat small {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   white-space: nowrap;
 }
 .ov-dash-pipe-stat strong {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   line-height: 1.1;
 }
-.ov-dash-pipe-stat strong.text-blue { color: #2563eb; }
-.ov-dash-pipe-stat strong.text-amber { color: #d97706; }
-.ov-dash-pipe-stat strong.text-purple { color: #7c3aed; }
-.ov-dash-pipe-stat strong.text-green { color: #16a34a; }
+.ov-dash-pipe-stat strong.text-blue { color: var(--tx-2563eb); }
+.ov-dash-pipe-stat strong.text-amber { color: var(--tx-d97706); }
+.ov-dash-pipe-stat strong.text-purple { color: var(--tx-7c3aed); }
+.ov-dash-pipe-stat strong.text-green { color: var(--tx-16a34a); }
 
 /* 6. Category Breakdown List */
 .ov-dash-category-list {
@@ -12039,7 +12634,7 @@ button.ov-stall-priority-row.active {
   flex-direction: column;
   gap: 4px;
   padding-bottom: 6px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
 }
 .ov-dash-category-row:last-child {
   border-bottom: none;
@@ -12057,7 +12652,7 @@ button.ov-stall-priority-row.active {
   gap: 6px;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--tx-334155);
 }
 .ov-dash-cat-name .cat-dot {
   width: 7px;
@@ -12068,12 +12663,12 @@ button.ov-stall-priority-row.active {
 .ov-dash-cat-pct {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 .ov-dash-cat-bar {
   width: 100%;
   height: 5px;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
   border-radius: 9999px;
   overflow: hidden;
 }
@@ -12112,9 +12707,9 @@ button.ov-stall-priority-row.active {
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   cursor: pointer;
   text-align: left;
   font-family: inherit;
@@ -12128,7 +12723,7 @@ button.ov-stall-priority-row.active {
 
 .ov-dash-status-pill:hover {
   transform: translateY(-1px);
-  border-color: #cbd5e1;
+  border-color: var(--bd-cbd5e1);
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
@@ -12161,7 +12756,7 @@ button.ov-stall-priority-row.active {
 
 .ov-dash-status-pill-label {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   line-height: 1.25;
   white-space: normal;
@@ -12171,7 +12766,7 @@ button.ov-stall-priority-row.active {
 .ov-dash-status-pill-val {
   font-size: 1.0625rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   line-height: 1.2;
   margin-top: 2px;
   display: flex;
@@ -12182,49 +12777,49 @@ button.ov-stall-priority-row.active {
 .ov-dash-status-pill-val small {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 /* Color schemes for each status */
-.ov-dash-status-pill.is-total .ov-dash-status-pill-icon { background: #eff6ff; color: #2563eb; }
+.ov-dash-status-pill.is-total .ov-dash-status-pill-icon { background: var(--bg-eff6ff); color: var(--tx-2563eb); }
 .ov-dash-status-pill.is-total.active {
   border-color: #2563eb;
-  background: #f8faff;
+  background: var(--bg-f8faff);
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
 }
 
-.ov-dash-status-pill.is-available .ov-dash-status-pill-icon { background: #ecfdf5; color: #059669; }
+.ov-dash-status-pill.is-available .ov-dash-status-pill-icon { background: var(--bg-ecfdf5); color: var(--tx-059669); }
 .ov-dash-status-pill.is-available.active {
   border-color: #10b981;
-  background: #f0fdf4;
+  background: var(--bg-f0fdf4);
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
-.ov-dash-status-pill.is-reserved .ov-dash-status-pill-icon { background: #fffbeb; color: #d97706; }
+.ov-dash-status-pill.is-reserved .ov-dash-status-pill-icon { background: var(--bg-fffbeb); color: var(--tx-d97706); }
 .ov-dash-status-pill.is-reserved.active {
   border-color: #f59e0b;
-  background: #fffdf7;
+  background: var(--bg-fffdf7);
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
 }
 
-.ov-dash-status-pill.is-occupied .ov-dash-status-pill-icon { background: #f1f5f9; color: #64748b; }
+.ov-dash-status-pill.is-occupied .ov-dash-status-pill-icon { background: var(--bg-f1f5f9); color: var(--tx-64748b); }
 .ov-dash-status-pill.is-occupied.active {
-  border-color: #94a3b8;
-  background: #f8fafc;
+  border-color: var(--bd-94a3b8);
+  background: var(--bg-f8fafc);
   box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.18);
 }
 
-.ov-dash-status-pill.is-legal-case .ov-dash-status-pill-icon { background: #fef2f2; color: #ef4444; }
+.ov-dash-status-pill.is-legal-case .ov-dash-status-pill-icon { background: var(--bg-fef2f2); color: var(--tx-ef4444); }
 .ov-dash-status-pill.is-legal-case.active {
   border-color: #ef4444;
-  background: #fef2f2;
+  background: var(--bg-fef2f2);
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
 }
 
-.ov-dash-status-pill.is-action-required .ov-dash-status-pill-icon { background: #eef2ff; color: #6366f1; }
+.ov-dash-status-pill.is-action-required .ov-dash-status-pill-icon { background: var(--bg-eef2ff); color: var(--tx-6366f1); }
 .ov-dash-status-pill.is-action-required.active {
   border-color: #6366f1;
-  background: #f5f3ff;
+  background: var(--bg-f5f3ff);
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
@@ -12232,11 +12827,11 @@ button.ov-stall-priority-row.active {
 .market-map-kpi-strip {
   position: absolute;
   top: 18px;
-  left: 50%;
+  left: calc(50% + 34px);
   right: auto;
   transform: translateX(-50%);
-  width: min(1240px, calc(100% - 320px));
-  max-width: 1240px;
+  width: min(1560px, calc(100% - 320px));
+  max-width: 1560px;
   margin: 0;
   z-index: 110;
   display: grid;
@@ -12256,18 +12851,18 @@ button.ov-stall-priority-row.active {
 
 .market-map-kpi {
   min-width: 0;
-  min-height: 72px;
-  padding: 12px 14px;
+  min-height: 80px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
   gap: 10px;
-  border: 1px solid rgba(226, 232, 240, 0.94);
+  border: 1px solid var(--bd-rgba-226-232-240-0p94);
   border-radius: 15px;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--bg-rgba-255-255-255-0p96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.11);
-  color: #475569;
+  color: var(--tx-475569);
   font-family: inherit;
   text-align: left;
   pointer-events: auto;
@@ -12280,13 +12875,13 @@ button.market-map-kpi {
 
 button.market-map-kpi:hover {
   transform: translateY(-1px);
-  border-color: #bfdbfe;
+  border-color: var(--bd-bfdbfe);
   box-shadow: 0 10px 26px rgba(15, 23, 42, 0.14);
 }
 
 .market-map-kpi.active {
   border: 2px solid #3b82f6;
-  padding: 11px 13px;
+  padding: 13px 15px;
   box-shadow: 0 8px 24px rgba(37, 99, 235, 0.2);
 }
 
@@ -12297,8 +12892,8 @@ button.market-map-kpi:hover {
   display: grid;
   place-items: center;
   border-radius: 11px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
 }
 
 .market-map-kpi-icon svg {
@@ -12316,7 +12911,7 @@ button.market-map-kpi:hover {
 
 .market-map-kpi-copy small {
   overflow: hidden;
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.2;
@@ -12332,8 +12927,8 @@ button.market-map-kpi:hover {
 .market-map-kpi-copy strong {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  color: #0f172a;
+  gap: 8px;
+  color: var(--tx-0f172a);
   font-size: clamp(1.15rem, 1.45vw, 1.55rem);
   font-weight: 800;
   line-height: 1.1;
@@ -12341,29 +12936,29 @@ button.market-map-kpi:hover {
 }
 
 .market-map-kpi-copy em {
-  padding: 3px 7px;
+  padding: 4px 10px;
   border-radius: 7px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   font-size: 0.75rem;
   font-style: normal;
   font-weight: 700;
 }
 
 .market-map-kpi.is-available .market-map-kpi-icon,
-.market-map-kpi.is-available .market-map-kpi-copy em { background: #ecfdf5; color: #059669; }
+.market-map-kpi.is-available .market-map-kpi-copy em { background: var(--bg-ecfdf5); color: var(--tx-059669); }
 .market-map-kpi.is-reserved .market-map-kpi-icon,
-.market-map-kpi.is-reserved .market-map-kpi-copy em { background: #fff7ed; color: #ea580c; }
+.market-map-kpi.is-reserved .market-map-kpi-copy em { background: var(--bg-fff7ed); color: var(--tx-ea580c); }
 .market-map-kpi.is-occupied .market-map-kpi-icon,
-.market-map-kpi.is-occupied .market-map-kpi-copy em { background: #f1f5f9; color: #475569; }
+.market-map-kpi.is-occupied .market-map-kpi-copy em { background: var(--bg-f1f5f9); color: var(--tx-475569); }
 .market-map-kpi.is-action-required {
-  background: #eef2ff;
-  border: 1px solid #c7d2fe;
+  background: var(--bg-eef2ff);
+  border: 1px solid var(--bd-c7d2fe);
   box-shadow: 0 8px 24px rgba(79, 70, 229, 0.14);
 }
 .market-map-kpi.is-action-required:hover {
-  background: #e0e7ff;
-  border-color: #818cf8;
+  background: var(--bg-e0e7ff);
+  border-color: var(--bd-818cf8);
   box-shadow: 0 10px 28px rgba(79, 70, 229, 0.2);
 }
 .market-map-kpi.is-action-required .market-map-kpi-icon {
@@ -12372,28 +12967,28 @@ button.market-map-kpi:hover {
   box-shadow: 0 4px 10px rgba(79, 70, 229, 0.28);
 }
 .market-map-kpi.is-action-required .market-map-kpi-copy small {
-  color: #4338ca;
+  color: var(--tx-4338ca);
   font-weight: 700;
 }
 .market-map-kpi.is-action-required .market-map-kpi-copy strong {
-  color: #312e81;
+  color: var(--tx-312e81);
 }
 .market-map-kpi.is-action-required .market-map-kpi-copy em {
-  background: #ffffff;
-  color: #4338ca;
-  border: 1px solid #c7d2fe;
+  background: var(--bg-ffffff);
+  color: var(--tx-4338ca);
+  border: 1px solid var(--bd-c7d2fe);
 }
 .market-map-kpi.is-action-required.active {
   border: 2px solid #4f46e5;
-  background: #e0e7ff;
+  background: var(--bg-e0e7ff);
   box-shadow: 0 10px 26px rgba(79, 70, 229, 0.26);
 }
 .market-map-kpi.is-legal-case .market-map-kpi-icon,
-.market-map-kpi.is-legal-case .market-map-kpi-copy em { background: #fee2e2; color: #dc2626; }
+.market-map-kpi.is-legal-case .market-map-kpi-copy em { background: var(--bg-fee2e2); color: var(--tx-dc2626); }
 .market-map-kpi.is-overdue .market-map-kpi-icon,
-.market-map-kpi.is-overdue .market-map-kpi-copy em { background: #fef2f2; color: #dc2626; }
+.market-map-kpi.is-overdue .market-map-kpi-copy em { background: var(--bg-fef2f2); color: var(--tx-dc2626); }
 .market-map-kpi.is-expiring .market-map-kpi-icon,
-.market-map-kpi.is-expiring .market-map-kpi-copy em { background: #f5f3ff; color: #7c3aed; }
+.market-map-kpi.is-expiring .market-map-kpi-copy em { background: var(--bg-f5f3ff); color: var(--tx-7c3aed); }
 
 /* Market Map KPI Skeleton Loading */
 .market-map-kpi.is-loading {
@@ -12413,7 +13008,7 @@ button.market-map-kpi:hover {
   width: 52px;
   height: 20px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background: linear-gradient(90deg, var(--bg-f1f5f9) 25%, var(--bg-e2e8f0) 50%, var(--bg-f1f5f9) 75%);
   background-size: 200% 100%;
   animation: kpiSkeletonShimmer 1.35s ease-in-out infinite;
 }
@@ -12423,7 +13018,7 @@ button.market-map-kpi:hover {
   width: 32px;
   height: 18px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background: linear-gradient(90deg, var(--bg-f1f5f9) 25%, var(--bg-e2e8f0) 50%, var(--bg-f1f5f9) 75%);
   background-size: 200% 100%;
   animation: kpiSkeletonShimmer 1.35s ease-in-out infinite;
 }
@@ -12450,10 +13045,10 @@ button.market-map-kpi:hover {
   flex-direction: column;
   align-items: stretch;
   padding: 4px 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-right: 0;
   border-radius: 14px 0 0 14px;
-  background: rgba(255, 255, 255, 0.97);
+  background: var(--bg-rgba-255-255-255-0p97);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
   transform: translateY(-50%);
   transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
@@ -12505,16 +13100,16 @@ button.market-map-kpi:hover {
 }
 
 .market-map-tool-rail .gis-map-toolbar :deep(.search-input-group:focus-within .map-search-input) {
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--bd-bfdbfe);
   border-radius: 10px;
-  background: #ffffff;
-  color: #1e293b;
+  background: var(--bg-ffffff);
+  color: var(--tx-1e293b);
   cursor: text;
 }
 
 .market-map-tool-rail .gis-map-toolbar :deep(.map-search-input::placeholder) { color: transparent; }
-.market-map-tool-rail .gis-map-toolbar :deep(.search-input-group:focus-within .map-search-input::placeholder) { color: #94a3b8; }
-.market-map-tool-rail .gis-map-toolbar :deep(.search-icon) { left: 17px; color: #334155; }
+.market-map-tool-rail .gis-map-toolbar :deep(.search-input-group:focus-within .map-search-input::placeholder) { color: var(--tx-94a3b8); }
+.market-map-tool-rail .gis-map-toolbar :deep(.search-icon) { left: 17px; color: var(--tx-334155); }
 
 .market-map-tool-rail .gis-map-toolbar :deep(.map-advanced-filter-btn),
 .market-map-view-button {
@@ -12525,7 +13120,7 @@ button.market-map-kpi:hover {
   place-items: center;
   overflow: hidden;
   border: 0;
-  border-top: 1px solid #eef2f6;
+  border-top: 1px solid var(--bd-eef2f6);
   border-radius: 0;
   background: transparent;
   color: transparent;
@@ -12537,14 +13132,14 @@ button.market-map-kpi:hover {
   width: 20px;
   height: 20px;
   min-width: 20px;
-  color: #334155;
+  color: var(--tx-334155);
 }
 
 .market-map-tool-rail .gis-map-toolbar :deep(.map-advanced-filter-btn:hover),
 .market-map-tool-rail .gis-map-toolbar :deep(.map-advanced-filter-btn.active),
 .market-map-view-button:hover,
 .market-map-view-button.active {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
 }
 
 .market-map-tool-rail .gis-map-toolbar :deep(.map-advanced-filter-panel) {
@@ -12559,7 +13154,7 @@ button.market-map-kpi:hover {
   color: #ffffff;
 }
 
-.market-map-view-button.active svg { color: #2563eb; }
+.market-map-view-button.active svg { color: var(--tx-2563eb); }
 
 .is-fullscreen-map-panel :deep(.map-project-guidance),
 .is-fullscreen-map-panel :deep(.map-floating-floor-preview-pill) {
@@ -12608,13 +13203,13 @@ button.market-map-kpi:hover {
     height: 68vh !important;
     max-height: calc(100dvh - 58px) !important;
     border-radius: 20px 20px 0 0 !important;
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid var(--bd-e2e8f0) !important;
     border-bottom: 0 !important;
     box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.18) !important;
     z-index: 200 !important;
     display: flex !important;
     flex-direction: column !important;
-    background: #ffffff !important;
+    background: var(--bg-ffffff) !important;
     padding: 0 !important;
     overflow: hidden !important;
     box-sizing: border-box !important;
@@ -12649,8 +13244,8 @@ button.market-map-kpi:hover {
     width: 100% !important;
     padding: 12px 0 10px !important;
     margin: 0 !important;
-    background: #ffffff !important;
-    border-bottom: 1px solid #f1f5f9 !important;
+    background: var(--bg-ffffff) !important;
+    border-bottom: 1px solid var(--bd-f1f5f9) !important;
     border-radius: 20px 20px 0 0 !important;
     cursor: grab !important;
     touch-action: none !important;
@@ -12667,7 +13262,7 @@ button.market-map-kpi:hover {
     display: flex !important;
     flex-direction: column !important;
     gap: 12px !important;
-    background: #ffffff !important;
+    background: var(--bg-ffffff) !important;
   }
 
   /* หน้าต่างรายละเอียดแผงบนโหมด Responsive: เปิดเต็มหน้าจอใต้ Navbar พร้อมแถบแท็บแนวนอน */
@@ -12693,7 +13288,7 @@ button.market-map-kpi:hover {
     z-index: 1000 !important;
     display: flex !important;
     flex-direction: column !important;
-    background: #f8fafc !important;
+    background: var(--bg-f8fafc) !important;
     overflow: hidden !important;
   }
 
@@ -12704,8 +13299,8 @@ button.market-map-kpi:hover {
     flex-direction: column !important;
     gap: 8px !important;
     padding: 14px 16px 10px !important;
-    background: #ffffff !important;
-    border-bottom: 1px solid #eef2f6 !important;
+    background: var(--bg-ffffff) !important;
+    border-bottom: 1px solid var(--bd-eef2f6) !important;
     border-right: none !important;
     flex: 0 0 auto !important;
   }
@@ -12717,7 +13312,7 @@ button.market-map-kpi:hover {
     justify-content: flex-start !important;
     padding: 0 0 12px !important;
     margin: 0 0 4px !important;
-    border-bottom: 1px solid #e8eef6 !important;
+    border-bottom: 1px solid var(--bd-e8eef6) !important;
     width: 100% !important;
   }
 
@@ -12730,9 +13325,9 @@ button.market-map-kpi:hover {
     height: 42px !important;
     padding: 0 16px 0 12px !important;
     border-radius: 10px !important;
-    border: 1px solid #bfdbfe !important;
-    background: #eff6ff !important;
-    color: #2563eb !important;
+    border: 1px solid var(--bd-bfdbfe) !important;
+    background: var(--bg-eff6ff) !important;
+    color: var(--tx-2563eb) !important;
     font-size: 0.875rem !important;
     font-weight: 600 !important;
     cursor: pointer !important;
@@ -12743,7 +13338,7 @@ button.market-map-kpi:hover {
 
   .inspect-selected-stall-drawer .issd-return-btn:hover,
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer .issd-return-btn:hover) {
-    background: #dbeafe !important;
+    background: var(--bg-dbeafe) !important;
   }
 
   .issd-mobile-only {
@@ -12752,14 +13347,14 @@ button.market-map-kpi:hover {
     width: 38px !important;
     height: 38px !important;
     border-radius: 10px !important;
-    border: 1px solid #e2e8f0 !important;
-    background: #ffffff !important;
-    color: #475569 !important;
+    border: 1px solid var(--bd-e2e8f0) !important;
+    background: var(--bg-ffffff) !important;
+    color: var(--tx-475569) !important;
     cursor: pointer !important;
   }
   .issd-mobile-only:hover {
-    background: #f1f5f9 !important;
-    color: #0f172a !important;
+    background: var(--bg-f1f5f9) !important;
+    color: var(--tx-0f172a) !important;
   }
 
   .inspect-selected-stall-drawer .issd-header-top,
@@ -12782,13 +13377,13 @@ button.market-map-kpi:hover {
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer .issd-title-group strong) {
     font-size: 1.15rem !important;
     font-weight: 700 !important;
-    color: #0f172a !important;
+    color: var(--tx-0f172a) !important;
   }
 
   .inspect-selected-stall-drawer .issd-project-sub,
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer .issd-project-sub) {
     font-size: 0.8125rem !important;
-    color: #64748b !important;
+    color: var(--tx-64748b) !important;
     margin: 0 !important;
   }
 
@@ -12807,8 +13402,8 @@ button.market-map-kpi:hover {
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer .issd-full-sidebar) {
     width: 100% !important;
     flex: 0 0 auto !important;
-    background: #ffffff !important;
-    border-bottom: 1px solid #e2e8f0 !important;
+    background: var(--bg-ffffff) !important;
+    border-bottom: 1px solid var(--bd-e2e8f0) !important;
     border-right: none !important;
     padding: 0 12px !important;
     margin: 0 !important;
@@ -12843,8 +13438,8 @@ button.market-map-kpi:hover {
     padding: 0 16px !important;
     border-radius: 999px !important;
     border: 1px solid transparent !important;
-    background: #f1f5f9 !important;
-    color: #475569 !important;
+    background: var(--bg-f1f5f9) !important;
+    color: var(--tx-475569) !important;
     font-size: 0.875rem !important;
     font-weight: 600 !important;
     display: inline-flex !important;
@@ -12857,8 +13452,8 @@ button.market-map-kpi:hover {
 
   .inspect-selected-stall-drawer .issd-sidebar-tab:hover,
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer .issd-sidebar-tab:hover) {
-    background: #e2e8f0 !important;
-    color: #1e293b !important;
+    background: var(--bg-e2e8f0) !important;
+    color: var(--tx-1e293b) !important;
   }
 
   .inspect-selected-stall-drawer .issd-sidebar-tab.active,
@@ -12882,12 +13477,12 @@ button.market-map-kpi:hover {
     -webkit-overflow-scrolling: touch !important;
     display: flex !important;
     flex-direction: column !important;
-    background: #f8fafc !important;
+    background: var(--bg-f8fafc) !important;
   }
 
   .inspect-selected-stall-drawer .issd-action-alert-card,
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer .issd-action-alert-card) {
-    margin: 12px 14px 4px !important;
+    margin: 12px 14px 0 !important;
   }
 
   .inspect-selected-stall-drawer .issd-body-full,
@@ -12936,8 +13531,8 @@ button.market-map-kpi:hover {
   .is-fullscreen-map-panel :deep(.inspect-selected-stall-drawer .issd-footer-full) {
     position: sticky !important;
     bottom: 0 !important;
-    background: #ffffff !important;
-    border-top: 1px solid #e2e8f0 !important;
+    background: var(--bg-ffffff) !important;
+    border-top: 1px solid var(--bd-e2e8f0) !important;
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
     box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06) !important;
     z-index: 10 !important;
@@ -12986,7 +13581,7 @@ button.market-map-kpi:hover {
   .market-map-kpi-strip {
     display: none !important;
   }
-  .market-map-tool-rail { right: 10px; border-right: 1px solid #e2e8f0; border-radius: 14px; }
+  .market-map-tool-rail { right: 10px; border-right: 1px solid var(--bd-e2e8f0); border-radius: 14px; }
   .is-fullscreen-map-panel :deep(.map-project-guidance),
   .is-fullscreen-map-panel :deep(.map-floating-floor-preview-pill) { top: 76px !important; }
 }
@@ -12995,8 +13590,8 @@ button.market-map-kpi:hover {
 .issd-mini-alert-card {
   width: 100%;
   box-sizing: border-box;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
+  background: var(--bg-fffbeb);
+  border: 1px solid var(--bd-fde68a);
   border-radius: 11px;
   overflow: hidden;
   transition: all 0.2s ease;
@@ -13018,19 +13613,19 @@ button.market-map-kpi:hover {
   transition: background 0.15s ease;
 }
 .issd-mini-alert-card .issd-mini-alert-banner:hover {
-  background: #fef3c7;
+  background: var(--bg-fef3c7);
 }
 .issd-mini-alert-head {
   display: flex;
   align-items: center;
   gap: 7px;
-  color: #b45309;
+  color: var(--tx-b45309);
   font-size: 0.8125rem;
   font-weight: 700;
   min-width: 0;
 }
 .issd-mini-alert-head svg {
-  color: #d97706;
+  color: var(--tx-d97706);
   flex-shrink: 0;
 }
 .issd-mini-alert-link {
@@ -13039,7 +13634,7 @@ button.market-map-kpi:hover {
   gap: 4px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #d97706;
+  color: var(--tx-d97706);
   flex-shrink: 0;
 }
 .issd-mini-alert-link svg {
@@ -13053,8 +13648,8 @@ button.market-map-kpi:hover {
   flex-direction: column;
   gap: 6px;
   padding: 6px 10px 10px;
-  border-top: 1px dashed #fde68a;
-  background: #fffdf5;
+  border-top: 1px dashed var(--bd-fde68a);
+  background: var(--bg-fffdf5);
 }
 .issd-mini-alert-row {
   display: flex;
@@ -13062,15 +13657,15 @@ button.market-map-kpi:hover {
   justify-content: space-between;
   gap: 8px;
   padding: 8px 10px;
-  background: #ffffff;
-  border: 1px solid #fef3c7;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-fef3c7);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
 }
 .issd-mini-alert-row:hover {
-  background: #fefce8;
+  background: var(--bg-fefce8);
   border-color: #fde047;
   transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(217, 119, 6, 0.08);
@@ -13090,7 +13685,7 @@ button.market-map-kpi:hover {
 }
 .issd-mini-alert-text strong {
   font-size: 0.8125rem;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 600;
   line-height: 1.25;
   white-space: nowrap;
@@ -13099,7 +13694,7 @@ button.market-map-kpi:hover {
 }
 .issd-mini-alert-desc {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -13111,53 +13706,53 @@ button.market-map-kpi:hover {
   gap: 3px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #d97706;
+  color: var(--tx-d97706);
   white-space: nowrap;
   flex-shrink: 0;
   padding: 3px 8px;
   border-radius: 6px;
-  background: #fef3c7;
-  border: 1px solid #fde68a;
+  background: var(--bg-fef3c7);
+  border: 1px solid var(--bd-fde68a);
   transition: all 0.15s ease;
 }
 .issd-mini-alert-action-pill.is-danger {
-  color: #dc2626;
-  background: #fee2e2;
-  border-color: #fca5a5;
+  color: var(--tx-dc2626);
+  background: var(--bg-fee2e2);
+  border-color: var(--bd-fca5a5);
 }
 .issd-mini-alert-action-pill.is-warning {
-  color: #d97706;
-  background: #fef3c7;
-  border-color: #fde68a;
+  color: var(--tx-d97706);
+  background: var(--bg-fef3c7);
+  border-color: var(--bd-fde68a);
 }
 .issd-mini-alert-action-pill.is-info {
-  color: #2563eb;
-  background: #eff6ff;
-  border-color: #bfdbfe;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
+  border-color: var(--bd-bfdbfe);
 }
 
 /* Mini Drawer: Primary Occupant Card */
 .issd-card-section {
   padding: 14px 16px;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
   display: flex;
   flex-direction: column;
   gap: 10px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 .issd-card-section.is-occupied {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--bd-cbd5e1);
+  background: var(--bg-f8fafc);
 }
 .issd-card-section.is-reserved {
-  border-color: #fde68a;
-  background: #fffdf5;
+  border-color: var(--bd-fde68a);
+  background: var(--bg-fffdf5);
 }
 .issd-card-section.is-available {
-  border-color: #bbf7d0;
-  background: #f0fdf4;
+  border-color: var(--bd-bbf7d0);
+  background: var(--bg-f0fdf4);
 }
 .issd-section-top {
   display: flex;
@@ -13171,7 +13766,7 @@ button.market-map-kpi:hover {
   gap: 6px;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 .issd-badge {
   display: inline-flex;
@@ -13184,12 +13779,12 @@ button.market-map-kpi:hover {
 }
 .issd-badge.badge-active,
 .issd-badge.badge-success {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 .issd-badge.badge-warning {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--bg-fef3c7);
+  color: var(--tx-b45309);
 }
 .issd-occupant-name {
   display: flex;
@@ -13201,7 +13796,7 @@ button.market-map-kpi:hover {
 .issd-occupant-name strong {
   font-size: 0.9375rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -13212,9 +13807,9 @@ button.market-map-kpi:hover {
   gap: 5px;
   padding: 3px 9px;
   border-radius: 7px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
+  color: var(--tx-2563eb);
   font-size: 0.75rem;
   font-weight: 600;
   text-decoration: none;
@@ -13222,15 +13817,15 @@ button.market-map-kpi:hover {
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .issd-phone-link:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
+  background: var(--bg-dbeafe);
+  border-color: var(--bd-93c5fd);
 }
 .issd-occupant-meta {
   display: flex;
   flex-direction: column;
   gap: 7px;
   padding-top: 10px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--bd-e2e8f0);
 }
 .issd-meta-item {
   display: flex;
@@ -13240,12 +13835,12 @@ button.market-map-kpi:hover {
   font-size: 0.8125rem;
 }
 .issd-meta-item .meta-k {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   flex-shrink: 0;
 }
 .issd-meta-item .meta-v {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 600;
   text-align: right;
   overflow: hidden;
@@ -13254,16 +13849,16 @@ button.market-map-kpi:hover {
 }
 .issd-meta-item .code-font {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .issd-contract-code-pill {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-dbeafe);
   padding: 2px 8px;
   border-radius: 6px;
 }
@@ -13283,14 +13878,14 @@ button.market-map-kpi:hover {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #dbeafe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-dbeafe);
 }
 .issd-person-avatar.is-reserved {
-  background: #fef3c7;
-  color: #d97706;
-  border-color: #fde68a;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
+  border-color: var(--bd-fde68a);
 }
 .issd-person-info {
   display: flex;
@@ -13302,13 +13897,13 @@ button.market-map-kpi:hover {
 .issd-person-role {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
   line-height: 1.2;
 }
 .issd-person-name {
   font-size: 0.9375rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -13319,13 +13914,13 @@ button.market-map-kpi:hover {
   flex-direction: column;
   gap: 6px;
   padding: 9px 11px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 9px;
 }
 .issd-subdoc-box.is-reserved {
-  border-color: #fde68a;
-  background: #ffffff;
+  border-color: var(--bd-fde68a);
+  background: var(--bg-ffffff);
 }
 .issd-subdoc-row {
   display: flex;
@@ -13336,12 +13931,12 @@ button.market-map-kpi:hover {
   line-height: 1.35;
 }
 .issd-subdoc-row .subdoc-k {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   flex-shrink: 0;
 }
 .issd-subdoc-row .subdoc-v {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 600;
   text-align: right;
   overflow: hidden;
@@ -13349,14 +13944,13 @@ button.market-map-kpi:hover {
   white-space: nowrap;
 }
 .issd-subdoc-row .subdoc-v.is-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 700;
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 .issd-subdoc-row .subdoc-duration {
   font-style: normal;
   font-weight: 600;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   margin-left: 2px;
 }
 .issd-occupant-compact-foot {
@@ -13365,9 +13959,9 @@ button.market-map-kpi:hover {
   justify-content: space-between;
   gap: 8px;
   padding-top: 8px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--bd-e2e8f0);
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 .issd-duration-tag {
@@ -13375,15 +13969,15 @@ button.market-map-kpi:hover {
   align-items: center;
   padding: 2px 8px;
   border-radius: 6px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   font-size: 0.75rem;
   font-weight: 700;
   white-space: nowrap;
 }
 .issd-sep-dot {
   margin: 0 5px;
-  color: #cbd5e1;
+  color: var(--tx-cbd5e1);
 }
 
 /* Mini Drawer: 4-KPI Operational Grid */
@@ -13397,8 +13991,8 @@ button.market-map-kpi:hover {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 11px;
   min-width: 0;
   cursor: default;
@@ -13410,8 +14004,8 @@ button.market-map-kpi:hover {
   width: 32px;
   height: 32px;
   border-radius: 9px;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -13424,7 +14018,7 @@ button.market-map-kpi:hover {
 }
 .issd-mini-ops-card .ops-label {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   line-height: 1.2;
   overflow: hidden;
@@ -13433,7 +14027,7 @@ button.market-map-kpi:hover {
 }
 .issd-mini-ops-card .ops-info strong {
   font-size: 0.8125rem;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 700;
   line-height: 1.25;
   overflow: hidden;
@@ -13441,37 +14035,37 @@ button.market-map-kpi:hover {
   white-space: nowrap;
 }
 .issd-mini-ops-card .ops-info strong.text-success {
-  color: #15803d;
+  color: var(--tx-15803d);
 }
 .issd-mini-ops-card .ops-info strong.text-warning {
-  color: #d97706;
+  color: var(--tx-d97706);
 }
 .issd-mini-ops-card .ops-info strong.text-danger {
-  color: #dc2626;
+  color: var(--tx-dc2626);
 }
 .issd-mini-ops-card.is-ok .ops-icon {
-  background: #ecfdf5;
-  color: #10b981;
+  background: var(--bg-ecfdf5);
+  color: var(--tx-10b981);
 }
 .issd-mini-ops-card.is-info-tint .ops-icon {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
 }
 .issd-mini-ops-card.is-alert {
-  background: #fef2f2;
-  border-color: #fecaca;
+  background: var(--bg-fef2f2);
+  border-color: var(--bd-fecaca);
 }
 .issd-mini-ops-card.is-alert .ops-icon {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
 }
 .issd-mini-ops-card.is-warning {
-  background: #fffbeb;
-  border-color: #fde68a;
+  background: var(--bg-fffbeb);
+  border-color: var(--bd-fde68a);
 }
 .issd-mini-ops-card.is-warning .ops-icon {
-  background: #fef3c7;
-  color: #d97706;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
 }
 .issd-mini-ops-grid.is-full-view {
   grid-template-columns: repeat(4, 1fr);
@@ -13489,7 +14083,7 @@ button.market-map-kpi:hover {
 }
 .issd-mini-ops-card.is-clickable:hover {
   transform: translateY(-2px);
-  border-color: #cbd5e1;
+  border-color: var(--bd-cbd5e1);
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07);
 }
 .issd-mini-ops-card.is-clickable:active {
@@ -13527,10 +14121,10 @@ button.market-map-kpi:hover {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--bg-rgba-255-255-255-0p96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.95);
+  border: 1px solid var(--bd-rgba-226-232-240-0p95);
   border-radius: 12px;
   padding: 4px;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
@@ -13547,7 +14141,7 @@ button.market-map-kpi:hover {
   border-radius: 8px;
   border: none;
   background: transparent;
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
@@ -13556,8 +14150,8 @@ button.market-map-kpi:hover {
 }
 
 .view-toggle-btn:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-1e293b);
 }
 
 .view-toggle-btn.active {
@@ -13586,10 +14180,10 @@ button.market-map-kpi:hover {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--bg-rgba-255-255-255-0p96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.95);
+  border: 1px solid var(--bd-rgba-226-232-240-0p95);
   border-radius: 12px;
   padding: 4px 6px;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
@@ -13608,7 +14202,7 @@ button.market-map-kpi:hover {
   border-radius: 8px;
   border: 1px solid transparent;
   background: transparent;
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
@@ -13617,8 +14211,8 @@ button.market-map-kpi:hover {
 }
 
 .map-filter-chip:hover {
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--bg-f8fafc);
+  color: var(--tx-0f172a);
 }
 
 .chip-label {
@@ -13628,7 +14222,7 @@ button.market-map-kpi:hover {
 .chip-badge {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .chip-color-dot {
@@ -13647,33 +14241,33 @@ button.market-map-kpi:hover {
 .chip-color-dot.is-none { background: #10b981; }
 
 .map-filter-chip.active {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  border-color: var(--bd-bfdbfe);
+  color: var(--tx-1d4ed8);
 }
 
 .map-filter-chip.chip-demand-high.active {
-  background: #fef2f2;
-  border-color: #fca5a5;
-  color: #b91c1c;
+  background: var(--bg-fef2f2);
+  border-color: var(--bd-fca5a5);
+  color: var(--tx-b91c1c);
 }
 
 .map-filter-chip.chip-demand-medium.active {
-  background: #fff7ed;
-  border-color: #fed7aa;
-  color: #c2410c;
+  background: var(--bg-fff7ed);
+  border-color: var(--bd-fed7aa);
+  color: var(--tx-c2410c);
 }
 
 .map-filter-chip.chip-demand-low.active {
-  background: #fefce8;
-  border-color: #fef08a;
-  color: #a16207;
+  background: var(--bg-fefce8);
+  border-color: var(--bd-fef08a);
+  color: var(--tx-a16207);
 }
 
 .map-filter-chip.chip-demand-none.active {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-  color: #15803d;
+  background: var(--bg-f0fdf4);
+  border-color: var(--bd-bbf7d0);
+  color: var(--tx-15803d);
 }
 
 .map-floating-overlay-bar .gis-map-toolbar {
@@ -13682,18 +14276,18 @@ button.market-map-kpi:hover {
 }
 
 .map-floating-overlay-bar .gis-map-toolbar :deep(.map-search-input) {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-rgba-255-255-255-0p95);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--bd-rgba-226-232-240-0p9);
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
 }
 
 .map-floating-overlay-bar .gis-map-toolbar :deep(.map-advanced-filter-btn) {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-rgba-255-255-255-0p95);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--bd-rgba-226-232-240-0p9);
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
 }
 
@@ -13701,8 +14295,8 @@ button.market-map-kpi:hover {
   .map-floating-overlay-bar {
     position: static;
     padding: 10px 12px;
-    background: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
+    background: var(--bg-ffffff);
+    border-bottom: 1px solid var(--bd-e2e8f0);
     pointer-events: auto;
     flex-direction: column;
     align-items: stretch;
@@ -13773,35 +14367,80 @@ button.market-map-kpi:hover {
 .issd-aac-tag.is-warning .issd-aac-tag-count { background: #d97706; }
 .issd-aac-tag.is-info .issd-aac-tag-count { background: #2563eb; }
 
-/* การ์ดสิ่งที่ต้องดำเนินการ (หน้ารายละเอียดเต็ม): โปร่ง อ่านง่าย แถบสีบอกระดับ ปุ่มลิงก์เป็นกรอบ */
-.issd-full-main .issd-action-alert-card { background: #ffffff; border: 1px solid #fde68a; border-radius: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); }
-.issd-full-main .issd-aac-header { background: #fffbeb; padding: 12px 16px; }
-.issd-full-main .issd-aac-row { padding: 12px 16px; gap: 12px; border-top: 1px solid #f1f5f9; }
-.issd-full-main .issd-aac-row-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+/* การ์ดสิ่งที่ต้องดำเนินการ (หน้ารายละเอียดเต็ม): สรุปเป็นการ์ดเล็กหนึ่งแถวและเลื่อนแนวนอน */
+.issd-full-main .issd-action-alert-card {
+  display: block;
+  min-height: 0;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.issd-action-card-rail {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+  padding: 0 2px;
+}
+.issd-action-summary-card {
+  display: flex;
+  align-items: stretch;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+  min-height: 64px;
+  padding: 9px 14px;
+  border: 1px solid var(--bd-e2e8f0);
+  border-radius: 10px;
+  background: var(--bg-ffffff);
+  color: var(--tx-334155);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.issd-action-summary-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.issd-action-summary-card:hover { border-color: var(--bd-93c5fd); background: var(--bg-f8fbff); }
+.issd-action-summary-card.is-danger { border-color: var(--bd-fecaca); background: var(--bg-fffafa); }
+.issd-action-summary-card.is-warning { border-color: var(--bd-fde68a); background: var(--bg-fffdf5); }
+.issd-action-summary-card.is-info { border-color: var(--bd-bfdbfe); background: var(--bg-f8fbff); }
+.issd-action-summary-card.is-danger:hover { border-color: var(--bd-fca5a5); background: var(--bg-fef2f2); }
+.issd-action-summary-card.is-warning:hover { border-color: #fcd34d; background: var(--bg-fffbeb); }
+.issd-action-summary-card.is-info:hover { border-color: var(--bd-93c5fd); background: var(--bg-eff6ff); }
+.issd-action-summary-card:focus-visible { outline: 3px solid rgba(37, 99, 235, .18); outline-offset: 2px; }
+.issd-action-summary-copy { display: flex; flex: 1 1 auto; flex-direction: column; justify-content: center; gap: 3px; min-width: 0; }
+.issd-action-summary-title { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.issd-action-summary-title strong { overflow: hidden; color: var(--tx-1e293b); font-size: .9375rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.issd-action-summary-copy small { overflow: hidden; color: var(--tx-64748b); font-size: .8125rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.issd-action-summary-chevron { align-self: center; flex: 0 0 auto; color: var(--tx-2563eb); }
 .issd-aac-bar { flex: 0 0 4px; align-self: stretch; min-height: 34px; border-radius: 9999px; background: #94a3b8; }
 .issd-aac-bar.is-danger { background: #dc2626; }
 .issd-aac-bar.is-warning { background: #f59e0b; }
 .issd-aac-bar.is-info { background: #2563eb; }
 .issd-aac-row-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.issd-aac-row-text strong { display: inline-flex; align-items: center; gap: 8px; color: #1e293b; font-size: 1rem; font-weight: 700; line-height: 1.3; }
-.issd-aac-row-text small { color: #64748b; font-size: 0.875rem; font-weight: 500; line-height: 1.3; }
+.issd-aac-row-text strong { display: inline-flex; align-items: center; gap: 8px; color: var(--tx-1e293b); font-size: 1rem; font-weight: 700; line-height: 1.3; }
+.issd-aac-row-text small { color: var(--tx-64748b); font-size: 0.875rem; font-weight: 500; line-height: 1.3; }
 .issd-aac-count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 9999px; color: #ffffff; font-size: 0.8125rem; font-weight: 700; line-height: 1; background: #94a3b8; }
 .issd-aac-count.is-danger { background: #dc2626; }
 .issd-aac-count.is-warning { background: #d97706; }
 .issd-aac-count.is-info { background: #2563eb; }
-.issd-full-main .issd-aac-row-right { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 12px; border: 1px solid #93c5fd; border-radius: 7px; background: #ffffff; color: #2563eb; font-size: 0.875rem; font-weight: 600; white-space: nowrap; transition: background 0.15s ease; }
-.issd-full-main .issd-aac-row:hover .issd-aac-row-right { background: #eff6ff; }
+@media (max-width: 768px) {
+  .issd-action-card-rail { grid-template-columns: minmax(0, 1fr); padding: 0 2px; }
+  .issd-action-summary-card:last-child:nth-child(odd) { grid-column: auto; }
+}
 
 /* การ์ดสิ่งที่ต้องดำเนินการ (หน้าสรุปแผง): แถวโปร่ง แถบสีบอกระดับ เหมือนหน้ารายละเอียดเต็ม */
-.issd-mini-alert-card { background: #ffffff; border: 1px solid #fde68a; border-radius: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); }
-.issd-mini-alert-card .issd-mini-alert-banner { background: #fffbeb; padding: 12px 16px; }
-.issd-mini-alert-card .issd-mini-alert-list { padding: 0; background: #ffffff; border-top: 1px solid #fde68a; }
-.issd-mini-alert-list .issd-mini-alert-row { display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 12px 16px; border: 0; border-top: 1px solid #f1f5f9; border-radius: 0; background: #ffffff; }
+.issd-mini-alert-card { background: var(--bg-ffffff); border: 1px solid var(--bd-fde68a); border-radius: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); }
+.issd-mini-alert-card .issd-mini-alert-banner { background: var(--bg-fffbeb); padding: 12px 16px; }
+.issd-mini-alert-card .issd-mini-alert-list { padding: 0; background: var(--bg-ffffff); border-top: 1px solid var(--bd-fde68a); }
+.issd-mini-alert-list .issd-mini-alert-row { display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 12px 16px; border: 0; border-top: 1px solid var(--bd-f1f5f9); border-radius: 0; background: var(--bg-ffffff); }
 .issd-mini-alert-list .issd-mini-alert-row:first-child { border-top: 0; }
-.issd-mini-alert-list .issd-mini-alert-row:hover { background: #f8fafc; }
+.issd-mini-alert-list .issd-mini-alert-row:hover { background: var(--bg-f8fafc); }
 .issd-mini-alert-list .issd-aac-bar { flex: 0 0 4px; align-self: stretch; min-height: 34px; }
 .issd-mini-alert-list .issd-aac-row-text { flex: 1 1 auto; }
-.issd-mini-alert-chevron { flex: 0 0 auto; color: #2563eb; }
+.issd-mini-alert-chevron { flex: 0 0 auto; color: var(--tx-2563eb); }
 
 /* ตัวกรองสัญญาในแท็บชำระเงิน: ย่อตามความกว้างแผง ไม่ล้นขอบ */
 .inspect-selected-stall-drawer .issd-full-main .issd-tab-header-row.is-inline-controls { flex-wrap: wrap; }
@@ -13810,11 +14449,11 @@ button.market-map-kpi:hover {
 .inspect-selected-stall-drawer .issd-full-main .issd-inline-filter-select :deep(.app-select-trigger) { min-width: 0; }
 
 /* สวิตช์โหมด ข้อมูล / ค่าใช้จ่าย: ปรับให้เรียบ สมส่วน ตัวอักษรชัด */
-.map-mode-float { padding: 3px; border: 1px solid rgba(203, 213, 225, 0.8); border-radius: 12px; background: rgba(255, 255, 255, 0.97); box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1); }
+.map-mode-float { padding: 3px; border: 1px solid var(--bd-rgba-203-213-225-0p8); border-radius: 12px; background: var(--bg-rgba-255-255-255-0p97); box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1); }
 .map-mode-float :deep(.app-segmented-control) { gap: 2px; padding: 0; border: 0; background: transparent; }
-.map-mode-float :deep(.app-segmented-option) { min-width: 116px; min-height: 38px; padding: 0 16px; gap: 8px; justify-content: center; border-radius: 9px; font-size: 0.9375rem; font-weight: 600; color: #475569; }
+.map-mode-float :deep(.app-segmented-option) { min-width: 116px; min-height: 38px; padding: 0 16px; gap: 8px; justify-content: center; border-radius: 9px; font-size: 0.9375rem; font-weight: 600; color: var(--tx-475569); }
 .map-mode-float :deep(.app-segmented-option svg) { width: 18px; height: 18px; flex: 0 0 18px; }
-.map-mode-float :deep(.app-segmented-option:hover:not(.is-active)) { background: #f1f5f9; color: #1e293b; }
+.map-mode-float :deep(.app-segmented-option:hover:not(.is-active)) { background: var(--bg-f1f5f9); color: var(--tx-1e293b); }
 .map-mode-float :deep(.app-segmented-option.is-active) { background: #2563eb; color: #ffffff; font-weight: 700; box-shadow: none; }
 @media (max-width: 720px) { .map-mode-float :deep(.app-segmented-option) { min-width: 96px; padding: 0 12px; } }
 
@@ -13827,9 +14466,9 @@ button.market-map-kpi:hover {
   height: 72px;
   box-sizing: border-box;
   padding: 6px;
-  border: 1px solid rgba(226, 232, 240, 0.94);
+  border: 1px solid var(--bd-rgba-226-232-240-0p94);
   border-radius: 15px;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--bg-rgba-255-255-255-0p96);
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.11);
 }
@@ -13846,13 +14485,13 @@ button.market-map-kpi:hover {
   border-radius: 10px;
   background: transparent;
   box-shadow: none;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.1;
 }
 .map-mode-float :deep(.app-segmented-option svg) { width: 22px; height: 22px; flex: 0 0 22px; }
-.map-mode-float :deep(.app-segmented-option:hover:not(.is-active)) { background: #f1f5f9; color: #1e293b; }
+.map-mode-float :deep(.app-segmented-option:hover:not(.is-active)) { background: var(--bg-f1f5f9); color: var(--tx-1e293b); }
 .map-mode-float :deep(.app-segmented-option.is-active) { background: #2563eb; color: #ffffff; font-weight: 700; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3); }
 @media (max-width: 720px) {
   .map-mode-float { top: 10px; left: 10px; height: 56px; }
@@ -13863,7 +14502,7 @@ button.market-map-kpi:hover {
 
 /* โครงว่างระหว่างรอกล่องขยายจบ */
 .issd-full-skeleton { display: flex; flex-direction: column; gap: 14px; padding: 18px 22px; }
-.issd-full-skeleton span { display: block; border-radius: 14px; background: linear-gradient(90deg, #eef2f6 25%, #f8fafc 50%, #eef2f6 75%); background-size: 200% 100%; animation: issdSkeleton 1.1s ease-in-out infinite; }
+.issd-full-skeleton span { display: block; border-radius: 14px; background: linear-gradient(90deg, var(--bg-eef2f6) 25%, var(--bg-f8fafc) 50%, var(--bg-eef2f6) 75%); background-size: 200% 100%; animation: issdSkeleton 1.1s ease-in-out infinite; }
 .issd-full-skeleton span:nth-child(1) { height: 56px; }
 .issd-full-skeleton span:nth-child(2) { height: 150px; }
 .issd-full-skeleton span:nth-child(3) { height: 90px; }
@@ -13883,18 +14522,17 @@ button.market-map-kpi:hover {
 }
 .market-map-kpi-copy { gap: 5px; } /* ระยะระหว่างชื่อการ์ดกับตัวเลข */
 @container kpi (max-width: 1130px) {
-  /* ยังไม่เปิดแผงข้าง: เก็บไอคอนไว้ ลดระยะในการ์ด และซ่อนป้ายหน่วย "แผง" (ตัวเลขกับชื่อการ์ดยังครบ ไม่ถูกตัด) */
+  /* ยังไม่เปิดแผงข้าง: เก็บไอคอนไว้และลดระยะในการ์ด โดยคงป้ายหน่วย "แผง" ไว้ */
   .market-map-kpi { padding: 10px 6px 10px 10px; gap: 12px; }
   .market-map-kpi.active { padding: 9px 5px 9px 9px; }
   .market-map-kpi-copy small { font-size: 0.75rem; } /* 12px = ขนาดต่ำสุดของระบบ ให้ "ต้องดำเนินการ" แสดงครบในพื้นที่ที่เหลือ */
-  /* คำว่า "แผง" ยังแสดงอยู่ แต่เป็นตัวหนังสือเล็กธรรมดา ไม่ใช้ป้ายพื้นสี เพื่อประหยัดที่ให้ไอคอนอยู่ได้ */
+  /* คงรูปแบบป้ายหน่วยให้เห็นพื้นหลังชัดเจน แม้ยังไม่ได้เปิดแผงด้านข้าง */
   .market-map-kpi-strip:not(.has-side-panel) .market-map-kpi .market-map-kpi-copy strong { font-size: 1.0625rem; gap: 6px; }
   .market-map-kpi-strip:not(.has-side-panel) .market-map-kpi .market-map-kpi-copy strong em {
     display: inline-block;
-    padding: 0;
-    background: transparent;
+    padding: 4px 10px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     align-self: flex-end;
   }
   /* เปิดแผงข้างแล้ว แถบแคบลง: ซ่อนไอคอนแทน แล้วคืนป้ายหน่วย "แผง" */
@@ -13920,7 +14558,8 @@ button.market-map-kpi:hover {
 
 /* แถบการ์ดอยู่กึ่งกลางเสมอและเว้นทางซ้ายพอสำหรับตัวเลือกมุมมองเต็ม ไม่ให้ชนเมื่อย่อหน้าต่าง */
 /* แถบการ์ดอยู่กึ่งกลางของพื้นที่ที่เหลือ โดยเว้นซ้ายให้ตัวเลือกมุมมอง (ไม่ซ้อนกันทุกความกว้างจอ) */
-.market-map-kpi-strip:not(.has-side-panel) { left: 190px; right: 76px; width: auto; max-width: 1240px; margin: 0 auto; transform: none; }
+/* การ์ดด้านบนอยู่กึ่งกลางพื้นที่แผนที่ที่มองเห็น (เริ่มหลังแถบเมนู 68px ถึงขอบขวาของแผนที่) เว้นสองข้างเท่ากัน 190px */
+.market-map-kpi-strip:not(.has-side-panel) { left: calc(50% + 34px); right: auto; width: min(1560px, calc(100% - 320px)); max-width: 1560px; margin: 0; transform: translateX(-50%); }
 
 /* Desktop (กว้างกว่า 1024px) ตอนเปิดแผงข้างทางขวา (ตัวกรอง/ค้นหา/ชั้นข้อมูล/แดชบอร์ด): ตัวเลือกมุมมองย่อเหลือเฉพาะไอคอน */
 /* iPad และมือถือ (ไม่เกิน 1024px) ไม่ย่อ แสดงชื่อเหมือนเดิม */
@@ -13937,7 +14576,7 @@ button.market-map-kpi:hover {
 
 /* Desktop จอไม่กว้าง (1025–1280px): แถบการ์ดไม่เว้นสองข้างเท่ากัน แต่ใช้พื้นที่ทางขวาของปุ่มมุมมองให้เต็ม เพื่อให้การ์ดทั้ง 6 ใบยังอ่านได้ */
 @media (min-width: 1025px) and (max-width: 1280px) {
-  .market-map-kpi-strip:not(.has-side-panel) { left: 190px; transform: none; width: calc(100% - 190px - 76px); max-width: none; }
+  .market-map-kpi-strip:not(.has-side-panel) { left: calc(50% + 34px); transform: translateX(-50%); width: calc(100% - 320px); max-width: none; }
   /* เปิดแผงข้างบนจอเล็ก: การ์ดคงขนาดอ่านได้ (ไม่บีบ) แล้วเลื่อนแนวนอนดูใบที่เหลือได้ */
   .market-map-kpi-strip.has-side-panel {
     left: 85px;
@@ -13957,17 +14596,110 @@ button.market-map-kpi:hover {
 .inspect-selected-stall-drawer.is-left-dock.is-full-detail-mode { container-type: inline-size; container-name: detail; }
 @container detail (max-width: 600px) {
   .inspect-selected-stall-drawer .issd-full-layout { flex-direction: column; }
-  .inspect-selected-stall-drawer .issd-full-sidebar { width: 100%; border-right: 0; border-bottom: 1px solid #eef2f6; padding: 0 8px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .inspect-selected-stall-drawer .issd-full-sidebar { width: 100%; border-right: 0; border-bottom: 1px solid var(--bd-eef2f6); padding: 0 8px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
   .inspect-selected-stall-drawer .issd-full-sidebar::-webkit-scrollbar { display: none; }
   .inspect-selected-stall-drawer .issd-sidebar-nav { flex-direction: row; gap: 2px; white-space: nowrap; }
   .inspect-selected-stall-drawer .issd-sidebar-tab { width: auto; flex: 0 0 auto; padding: 11px 10px; border: 0; border-radius: 0; border-bottom: 3px solid transparent; background: transparent; box-shadow: none; }
-  .inspect-selected-stall-drawer .issd-sidebar-tab.active { background: transparent; color: #2563eb; border-bottom-color: #2563eb; }
+  .inspect-selected-stall-drawer .issd-sidebar-tab.active { background: transparent; color: var(--tx-2563eb); border-bottom-color: #2563eb; }
   .inspect-selected-stall-drawer .issd-sidebar-tab svg { display: none; }
   .inspect-selected-stall-drawer .issd-kpi-grid.is-three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .inspect-selected-stall-drawer .issd-full-main .issd-body-full { padding: 14px 14px 18px; }
   .inspect-selected-stall-drawer .issd-full-main .issd-footer-full { padding: 12px 14px 14px; }
   .inspect-selected-stall-drawer .issd-full-main .issd-tab-header-row.is-inline-controls { flex-wrap: wrap; }
 }
+
+/* ตัวเลขสถานะบนแดชบอร์ดที่กดกรองแผนที่ได้: หน้าตาเป็นปุ่ม (มีกรอบ ชี้แล้วเปลี่ยนสี) */
+.ov-dash-hint { color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 500; }
+.ov-dash-mode-view .is-filterable { cursor: pointer; border: 1px solid var(--bd-e2e8f0); border-radius: 10px; transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.ov-contract-health-legend span.is-filterable,
+.ov-maintenance-legend span.is-filterable { padding: 6px 10px; background: var(--bg-ffffff); }
+.ov-contract-renewal-row span.is-filterable { padding: 8px 4px; background: var(--bg-ffffff); }
+.ov-stage-flow > div.is-filterable { border-color: var(--bd-e2e8f0); }
+.ov-dash-mode-view .is-filterable:hover { background-color: var(--bg-eff6ff); border-color: #93c5fd; box-shadow: 0 1px 4px rgba(37, 99, 235, 0.15); }
+.ov-dash-mode-view .is-filterable:focus-visible { outline: 2px solid #93c5fd; outline-offset: 1px; }
+.ov-dash-mode-view .is-filterable.is-selected { background-color: var(--bg-eff6ff); border-color: #2563eb; box-shadow: inset 0 0 0 1px #2563eb; }
+
+/* แผงยอดนิยมบนแดชบอร์ด: ตารางอันดับ แถวละ 2 บรรทัด (ชื่อแผง/โครงการ) เหรียญ 1-3 จำนวนครั้งอยู่ขวา กดแล้วเปิดแผงนั้นบนแผนที่ */
+.ov-popular-toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; margin: -2px 0 6px; overflow-x: auto; scrollbar-width: none; }
+.ov-popular-toolbar::-webkit-scrollbar { display: none; }
+.ov-popular-range { flex: 0 0 auto; padding: 3px 10px; border: 1px solid var(--bd-e2e8f0); border-radius: 999px; background: var(--bg-ffffff); color: var(--tx-64748b); font: inherit; font-size: 0.8125rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background-color .15s ease, color .15s ease, border-color .15s ease; }
+.ov-popular-range:hover { background: var(--bg-f8fafc); color: var(--tx-0f172a); }
+.ov-popular-range.is-active { background: var(--bg-eff6ff); border-color: #93c5fd; color: var(--tx-2563eb); }
+/* แผงยอดนิยม: แถวอันดับ 2 บรรทัด (ชื่อแผง/โครงการ) เหรียญ 1-3 จำนวนครั้งอยู่ขวา */
+.ov-popular-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; }
+.ov-popular-list > li + li { border-top: 1px solid var(--bd-f1f5f9); }
+.ov-popular-row { width: 100%; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 10px 8px; border: 0; border-radius: 10px; background: transparent; color: var(--tx-0f172a); font: inherit; text-align: left; cursor: pointer; transition: background-color .15s ease; }
+.ov-popular-row:hover { background: var(--bg-f8fafc); }
+.ov-popular-row.is-selected { background: var(--bg-eff6ff); box-shadow: inset 0 0 0 1.5px #2563eb; }
+.ov-popular-row:focus-visible { outline: 2px solid #93c5fd; outline-offset: 1px; }
+.ov-popular-rank { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--bg-f1f5f9); color: var(--tx-475569); font-size: 0.875rem; font-weight: 800; }
+.ov-popular-row.is-rank-1 .ov-popular-rank { background: #f59e0b; color: #ffffff; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3); }
+.ov-popular-row.is-rank-2 .ov-popular-rank { background: #94a3b8; color: #ffffff; }
+.ov-popular-row.is-rank-3 .ov-popular-rank { background: #c2713a; color: #ffffff; }
+.ov-popular-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ov-popular-main strong { font-size: 1rem; font-weight: 700; color: var(--tx-0f172a); line-height: 1.35; }
+.ov-popular-main small { color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 500; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov-popular-count { display: flex; align-items: baseline; gap: 4px; color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 500; white-space: nowrap; }
+.ov-popular-count b { color: var(--tx-0f172a); font-size: 1.25rem; font-weight: 800; }
+
+/* แดชบอร์ด: หัวข้อที่เป็นขั้นตอน (ส่งคืนแผง / คดี) แสดงเป็นช่องเรียงตามลำดับ (ไม่มีลูกศร) ตัวเลข 0 จางลง */
+.ov-dash-section-meta { color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 600; }
+.ov-stage-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.ov-stage-flow > div { position: relative; min-width: 0; padding: 10px 4px 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 1px solid var(--bd-eef2f6); border-top: 3px solid var(--bd-cbd5e1); border-radius: 10px; background: var(--bg-f8fafc); text-align: center; }
+.ov-stage-flow > div > span { color: var(--tx-64748b); font-size: 0.75rem; font-weight: 500; line-height: 1.25; }
+.ov-stage-flow > div > strong { color: var(--tx-1e293b); font-size: 1.25rem; font-weight: 800; line-height: 1.2; }
+.ov-stage-flow > div.is-pending { border-top-color: #f59e0b; }
+.ov-stage-flow > div.is-success { border-top-color: #16a34a; }
+.ov-stage-flow > div.is-danger { border-top-color: #ef4444; }
+.ov-stage-flow > div.is-zero > strong { opacity: 0.4; font-weight: 700; }
+.ov-stage-alert { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border: 1px solid var(--bd-eef2f6); border-radius: 10px; background: var(--bg-f8fafc); color: var(--tx-475569); font-size: 0.8125rem; font-weight: 600; }
+.ov-stage-alert strong { color: var(--tx-dc2626); font-size: 1.0625rem; font-weight: 800; }
+.ov-stage-alert.is-zero { opacity: 0.6; }
+.ov-stage-alert.is-zero strong { color: var(--tx-64748b); }
+.ov-stage-alert.is-selected, .ov-stage-flow > div.is-selected { border-color: #2563eb; background-color: var(--bg-eff6ff); }
+/* แถบสัดส่วนการต่อสัญญา */
+.ov-renewal-bar { margin-top: 12px; display: flex; height: 8px; overflow: hidden; border-radius: 999px; background: var(--bg-e2e8f0); }
+.ov-renewal-bar i { display: block; height: 100%; transition: width .3s ease; }
+.ov-renewal-bar .is-renewed { background: #16a34a; }
+.ov-renewal-bar .is-awaiting { background: #f59e0b; }
+.ov-renewal-bar .is-declined { background: #94a3b8; }
+.ov-renewal-bar + .ov-contract-renewal-row { margin-top: 10px; }
+.ov-popular-note { margin: 8px 0 0; padding: 8px 10px; border-radius: 8px; background: var(--bg-f8fafc); color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 500; line-height: 1.4; }
+
+/* ชื่อแกนตั้งของกราฟภาพรวมโครงการ = จำนวนแผง (แกนนอนเป็นชื่อโครงการใต้แท่งอยู่แล้ว) */
+.ov-chart-axis-title { color: var(--tx-64748b); font-size: 0.75rem; font-weight: 600; }
+.ov-chart-axis-title.is-y { margin: 14px 0 10px 2px; }
+
+/* ภาพรวมโครงการ: กราฟแท่งแนวนอน */
+.ov-hbar-list { list-style: none; margin: 6px 0 0; padding: 0 4px 0 0; max-height: 340px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.ov-hbar-row { width: 100%; display: grid; grid-template-columns: 96px minmax(0, 1fr) 44px; align-items: center; gap: 10px; padding: 6px 8px; border: 1px solid transparent; border-radius: 10px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background-color .15s ease, border-color .15s ease; }
+.ov-hbar-row:hover { background: var(--bg-f8fafc); }
+.ov-hbar-row:focus-visible { outline: 2px solid #93c5fd; outline-offset: 1px; }
+.ov-hbar-row.active { background: var(--bg-eff6ff); border-color: #2563eb; }
+.ov-hbar-name { overflow: hidden; color: var(--tx-334155); font-size: 0.8125rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.ov-hbar-row.active .ov-hbar-name { color: var(--tx-2563eb); font-weight: 700; }
+.ov-hbar-track { display: flex; align-items: stretch; height: 14px; overflow: hidden; border-radius: 999px; background: var(--bg-f1f5f9); }
+.ov-hbar-track i { display: block; height: 100%; min-width: 2px; transition: width .3s ease; }
+.ov-hbar-track .is-occupied { background: #475569; }
+.ov-hbar-track .is-reserved { background: #f59e0b; }
+.ov-hbar-track .is-available { background: #10b981; }
+.ov-hbar-total { color: var(--tx-64748b); font-size: 0.875rem; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.ov-hbar-row:hover .ov-hbar-total { color: var(--tx-334155); }
+.ov-hbar-row.active .ov-hbar-total { color: var(--tx-2563eb); }
+
+/* คำอธิบายสีของกราฟภาพรวมโครงการ: อยู่ใต้รายการ ตรึงไว้ไม่เลื่อนไปกับแท่ง */
+.ov-project-column-legend.is-footer { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--bd-f1f5f9); justify-content: center; }
+
+/* เส้นคั่นใต้หัวข้อของทุกการ์ดบนแดชบอร์ด */
+.ov-dash-mode-view .ov-dash-section-head,
+.ov-dash-mode-view .ov-stall-section-head { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--bd-f1f5f9); }
+
+/* ติดตามสัญญาในการ์ดสัญญา (เจ้าหน้าที่): ต่อสัญญา / ส่งคืนแผง / คดี */
+.issd-workflow { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px dashed var(--bd-e2e8f0); }
+.issd-workflow-title { color: var(--tx-0f172a); font-size: 0.875rem; font-weight: 700; }
+.issd-workflow-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.issd-workflow-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.issd-workflow-field > span { color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 500; }
 </style>
 
 <style>
@@ -13979,8 +14711,8 @@ button.market-map-kpi:hover {
 .inspect-selected-stall-drawer .issd-action-alert-card,
 .issd-action-alert-card {
   margin: 10px 14px 4px;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
+  background: var(--bg-fffbeb);
+  border: 1px solid var(--bd-fde68a);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);
   display: flex;
@@ -13997,7 +14729,7 @@ button.market-map-kpi:hover {
   justify-content: space-between;
   gap: 10px;
   padding: 9px 12px;
-  background: #fffbeb;
+  background: var(--bg-fffbeb);
   cursor: pointer;
   user-select: none;
   transition: background 0.15s ease;
@@ -14005,7 +14737,7 @@ button.market-map-kpi:hover {
 
 .inspect-selected-stall-drawer .issd-aac-header:hover,
 .issd-aac-header:hover {
-  background: #fef3c7;
+  background: var(--bg-fef3c7);
 }
 
 .inspect-selected-stall-drawer .issd-aac-title-group,
@@ -14021,9 +14753,9 @@ button.market-map-kpi:hover {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: #fef3c7;
-  color: #d97706;
-  border: 1px solid #fde68a;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
+  border: 1px solid var(--bd-fde68a);
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -14049,7 +14781,7 @@ button.market-map-kpi:hover {
 .issd-aac-title-row strong {
   font-size: 0.84375rem;
   font-weight: 700;
-  color: #92400e;
+  color: var(--tx-92400e);
 }
 
 .inspect-selected-stall-drawer .issd-aac-count-badge,
@@ -14059,7 +14791,7 @@ button.market-map-kpi:hover {
   padding: 1px 7px;
   border-radius: 999px;
   background: #fde68a;
-  color: #78350f;
+  color: var(--tx-78350f);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -14067,7 +14799,7 @@ button.market-map-kpi:hover {
 .inspect-selected-stall-drawer .issd-aac-sub,
 .issd-aac-sub {
   font-size: 0.75rem;
-  color: #b45309;
+  color: var(--tx-b45309);
 }
 
 .inspect-selected-stall-drawer .issd-aac-toggle-btn,
@@ -14076,8 +14808,8 @@ button.market-map-kpi:hover {
   height: 26px;
   border-radius: 6px;
   border: 1px solid rgba(217, 119, 6, 0.25);
-  background: #ffffff;
-  color: #92400e;
+  background: var(--bg-ffffff);
+  color: var(--tx-92400e);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -14088,7 +14820,7 @@ button.market-map-kpi:hover {
 
 .inspect-selected-stall-drawer .issd-aac-toggle-btn:hover,
 .issd-aac-toggle-btn:hover {
-  background: #fef3c7;
+  background: var(--bg-fef3c7);
   border-color: #d97706;
 }
 
@@ -14106,7 +14838,7 @@ button.market-map-kpi:hover {
 .issd-aac-list {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .inspect-selected-stall-drawer .issd-aac-row,
@@ -14116,19 +14848,19 @@ button.market-map-kpi:hover {
   justify-content: space-between;
   gap: 12px;
   padding: 8px 12px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .inspect-selected-stall-drawer .issd-aac-row:hover,
 .issd-aac-row:hover {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .inspect-selected-stall-drawer .issd-aac-row:hover .issd-aac-action-text,
 .issd-aac-row:hover .issd-aac-action-text {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
 }
 
 .inspect-selected-stall-drawer .issd-aac-row:hover .issd-aac-row-right svg,
@@ -14138,17 +14870,17 @@ button.market-map-kpi:hover {
 
 .inspect-selected-stall-drawer .issd-aac-row.is-danger:hover,
 .issd-aac-row.is-danger:hover {
-  background: #fef2f2;
+  background: var(--bg-fef2f2);
 }
 
 .inspect-selected-stall-drawer .issd-aac-row.is-warning:hover,
 .issd-aac-row.is-warning:hover {
-  background: #fffbeb;
+  background: var(--bg-fffbeb);
 }
 
 .inspect-selected-stall-drawer .issd-aac-row.is-info:hover,
 .issd-aac-row.is-info:hover {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
 }
 
 .inspect-selected-stall-drawer .issd-aac-row-left,
@@ -14175,30 +14907,30 @@ button.market-map-kpi:hover {
 
 .inspect-selected-stall-drawer .issd-aac-tag.is-danger,
 .issd-aac-tag.is-danger {
-  background: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
+  border: 1px solid var(--bd-fecaca);
 }
 
 .inspect-selected-stall-drawer .issd-aac-tag.is-warning,
 .issd-aac-tag.is-warning {
-  background: #fef3c7;
-  color: #d97706;
-  border: 1px solid #fde68a;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
+  border: 1px solid var(--bd-fde68a);
 }
 
 .inspect-selected-stall-drawer .issd-aac-tag.is-info,
 .issd-aac-tag.is-info {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-bfdbfe);
 }
 
 .inspect-selected-stall-drawer .issd-aac-row-title,
 .issd-aac-row-title {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -14210,7 +14942,7 @@ button.market-map-kpi:hover {
   align-items: center;
   gap: 5px;
   flex-shrink: 0;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-size: 0.78125rem;
   font-weight: 600;
 }
@@ -14251,7 +14983,7 @@ button.market-map-kpi:hover {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   animation: issdModeFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -14260,8 +14992,8 @@ button.market-map-kpi:hover {
 .issd-full-sidebar {
   width: 152px;
   flex-shrink: 0;
-  background: #f8fafc;
-  border-right: 1px solid #eef2f6;
+  background: var(--bg-f8fafc);
+  border-right: 1px solid var(--bd-eef2f6);
   display: flex;
   flex-direction: column;
   padding: 12px 8px;
@@ -14285,7 +15017,7 @@ button.market-map-kpi:hover {
   border-radius: 9px;
   border: 1px solid transparent;
   background: transparent;
-  color: #475569;
+  color: var(--tx-475569);
   font-family: inherit;
   font-size: 0.84375rem;
   font-weight: 500;
@@ -14298,16 +15030,16 @@ button.market-map-kpi:hover {
 
 .inspect-selected-stall-drawer .issd-sidebar-tab:hover,
 .issd-sidebar-tab:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-0f172a);
 }
 
 .inspect-selected-stall-drawer .issd-sidebar-tab.active,
 .issd-sidebar-tab.active {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   font-weight: 600;
-  border-color: #dbeafe;
+  border-color: var(--bd-dbeafe);
   box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
 }
 
@@ -14334,8 +15066,8 @@ button.market-map-kpi:hover {
   font-weight: 700;
   padding: 1px 7px;
   border-radius: 999px;
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-475569);
   line-height: 1.25;
   flex-shrink: 0;
   transition: all 0.15s ease;
@@ -14355,12 +15087,12 @@ button.market-map-kpi:hover {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .inspect-selected-stall-drawer .issd-full-main .issd-action-alert-card,
 .issd-full-main .issd-action-alert-card {
-  margin: 12px 18px 4px;
+  margin: 12px 18px 0;
 }
 
 .inspect-selected-stall-drawer .issd-full-main .issd-body-full,
@@ -14392,7 +15124,7 @@ button.market-map-kpi:hover {
 .issd-inline-filter-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
   white-space: nowrap;
 }
 
@@ -14404,8 +15136,8 @@ button.market-map-kpi:hover {
 .inspect-selected-stall-drawer .issd-full-main .issd-footer-full,
 .issd-full-main .issd-footer-full {
   padding: 12px 18px 16px;
-  background: #ffffff;
-  border-top: 1px solid #f1f5f9;
+  background: var(--bg-ffffff);
+  border-top: 1px solid var(--bd-f1f5f9);
   box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.03);
 }
 
@@ -14438,7 +15170,7 @@ button.market-map-kpi:hover {
   .issd-full-sidebar {
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid #eef2f6;
+    border-bottom: 1px solid var(--bd-eef2f6);
     padding: 8px 12px;
     overflow-x: auto;
     overflow-y: hidden;
@@ -14465,41 +15197,41 @@ button.market-map-kpi:hover {
 /* ================================================================ */
 /* รายละเอียดแผงแบบเต็ม: ธีมเดียวกันทุกแท็บ (การ์ด ตัวอักษร ปุ่ม สถานะ) */
 /* ================================================================ */
-.inspect-selected-stall-drawer .issd-full-main { background: #f8fafc; }
+.inspect-selected-stall-drawer .issd-full-main { background: var(--bg-f8fafc); }
 .inspect-selected-stall-drawer .issd-full-main .issd-body-full { padding: 20px 22px 24px; gap: 16px; display: flex; flex-direction: column; }
-.inspect-selected-stall-drawer .issd-full-main .issd-footer-full { padding: 14px 22px 16px; background: #ffffff; }
-.inspect-selected-stall-drawer .issd-full-sidebar { width: 168px; padding: 14px 10px; background: #ffffff; }
-.inspect-selected-stall-drawer .issd-sidebar-tab { padding: 10px 12px; font-size: 0.9375rem; font-weight: 600; color: #475569; border-radius: 10px; }
-.inspect-selected-stall-drawer .issd-sidebar-tab.active { background: #eff6ff; border-color: transparent; color: #2563eb; box-shadow: none; }
+.inspect-selected-stall-drawer .issd-full-main .issd-footer-full { padding: 14px 22px 16px; background: var(--bg-ffffff); }
+.inspect-selected-stall-drawer .issd-full-sidebar { width: 168px; padding: 14px 10px; background: var(--bg-ffffff); }
+.inspect-selected-stall-drawer .issd-sidebar-tab { padding: 10px 12px; font-size: 0.9375rem; font-weight: 600; color: var(--tx-475569); border-radius: 10px; }
+.inspect-selected-stall-drawer .issd-sidebar-tab.active { background: var(--bg-eff6ff); border-color: transparent; color: var(--tx-2563eb); box-shadow: none; }
 
 /* หัวข้อแท็บ + ตัวกรอง */
 .inspect-selected-stall-drawer .issd-full-main .issd-tab-header-row { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; margin: 0; text-align: left; }
-.inspect-selected-stall-drawer .issd-full-main .issd-tab-title { margin: 0; color: #1e293b; font-size: 1.125rem; font-weight: 700; }
-.inspect-selected-stall-drawer .issd-full-main .app-segmented-control { align-self: flex-start; background: #ffffff; }
+.inspect-selected-stall-drawer .issd-full-main .issd-tab-title { margin: 0; color: var(--tx-1e293b); font-size: 1.125rem; font-weight: 700; }
+.inspect-selected-stall-drawer .issd-full-main .app-segmented-control { align-self: flex-start; background: var(--bg-ffffff); }
 .inspect-selected-stall-drawer .issd-full-main .app-segmented-option { font-size: 0.875rem; min-height: 34px; padding: 5px 14px; }
-.inspect-selected-stall-drawer .issd-full-main .app-segmented-option.is-active { background: #eff6ff; color: #2563eb; box-shadow: none; }
+.inspect-selected-stall-drawer .issd-full-main .app-segmented-option.is-active { background: var(--bg-eff6ff); color: var(--tx-2563eb); box-shadow: none; }
 .inspect-selected-stall-drawer .issd-full-main .issd-scroll-list { display: flex; flex-direction: column; gap: 12px; }
 
 /* การ์ดรายการทุกชนิดหน้าตาเดียวกัน */
 .inspect-selected-stall-drawer .issd-full-main :is(.issd-booking-card, .issd-contract-card, .issd-subtenant-card, .issd-payment-card, .issd-maintenance-card) {
   display: flex; flex-direction: column; gap: 14px; padding: 16px 18px;
-  background: #ffffff; border: 1px solid #eef2f6; border-radius: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  background: var(--bg-ffffff); border: 1px solid var(--bd-eef2f6); border-radius: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
-.inspect-selected-stall-drawer .issd-full-main .issd-contract-card.is-current { background: #ffffff; border-color: #eef2f6; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); }
+.inspect-selected-stall-drawer .issd-full-main .issd-contract-card.is-current { background: var(--bg-ffffff); border-color: var(--bd-eef2f6); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); }
 .inspect-selected-stall-drawer .issd-full-main :is(.issd-card-top-row, .issd-booking-card-header) { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.inspect-selected-stall-drawer .issd-full-main .issd-card-title { color: #1e293b; font-size: 1rem; font-weight: 700; }
-.inspect-selected-stall-drawer .issd-full-main :is(.issd-contract-num, .issd-booking-ref-code, .issd-pay-period strong) { color: #1e293b; font-size: 1rem; font-weight: 700; }
-.inspect-selected-stall-drawer .issd-full-main :is(.detail-label, .issd-booking-role-label, .issd-maintenance-meta-grid span, .issd-pay-method) { color: #64748b; font-size: 0.8125rem; font-weight: 500; }
-.inspect-selected-stall-drawer .issd-full-main :is(.detail-value, .issd-maintenance-meta-grid strong) { color: #1e293b; font-size: 0.9375rem; font-weight: 600; }
-.inspect-selected-stall-drawer .issd-full-main .is-rent { color: #10b981; font-weight: 700; }
+.inspect-selected-stall-drawer .issd-full-main .issd-card-title { color: var(--tx-1e293b); font-size: 1rem; font-weight: 700; }
+.inspect-selected-stall-drawer .issd-full-main :is(.issd-contract-num, .issd-booking-ref-code, .issd-pay-period strong) { color: var(--tx-1e293b); font-size: 1rem; font-weight: 700; }
+.inspect-selected-stall-drawer .issd-full-main :is(.detail-label, .issd-booking-role-label, .issd-maintenance-meta-grid span, .issd-pay-method) { color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 500; }
+.inspect-selected-stall-drawer .issd-full-main :is(.detail-value, .issd-maintenance-meta-grid strong) { color: var(--tx-1e293b); font-size: 0.9375rem; font-weight: 600; }
+.inspect-selected-stall-drawer .issd-full-main .is-rent { color: var(--tx-10b981); font-weight: 700; }
 .inspect-selected-stall-drawer .issd-full-main .issd-contract-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
 .inspect-selected-stall-drawer .issd-full-main .issd-contract-detail-item { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .inspect-selected-stall-drawer .issd-full-main .issd-contract-detail-item.is-wide { grid-column: 1 / -1; }
 .inspect-selected-stall-drawer .issd-full-main .issd-maintenance-meta-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; }
 .inspect-selected-stall-drawer .issd-full-main .issd-maintenance-meta-grid > div { display: flex; flex-direction: column; gap: 2px; }
-.inspect-selected-stall-drawer .issd-full-main .issd-card-actions-row { display: flex; justify-content: flex-end; gap: 8px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
+.inspect-selected-stall-drawer .issd-full-main .issd-card-actions-row { display: flex; justify-content: flex-end; gap: 8px; padding-top: 12px; border-top: 1px solid var(--bd-f1f5f9); }
 .inspect-selected-stall-drawer .issd-full-main .issd-card-meta-row,
-.inspect-selected-stall-drawer .issd-full-main .issd-pay-amount-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #475569; font-size: 0.9375rem; font-weight: 500; }
+.inspect-selected-stall-drawer .issd-full-main .issd-pay-amount-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--tx-475569); font-size: 0.9375rem; font-weight: 500; }
 .inspect-selected-stall-drawer .issd-full-main .issd-pay-amount-row strong { font-size: 1.125rem; font-weight: 800; }
 
 /* ป้ายสถานะ (soft pill ตามมาตรฐานระบบ) */
@@ -14508,41 +15240,41 @@ button.market-map-kpi:hover {
 /* ผู้เช่า / ผู้จอง */
 .inspect-selected-stall-drawer .issd-full-main .issd-booking-applicant-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .inspect-selected-stall-drawer .issd-full-main .issd-phone-link { font-size: 0.875rem; font-weight: 600; }
-.inspect-selected-stall-drawer .issd-full-main .issd-booking-footer-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 12px; border-top: 1px solid #f1f5f9; color: #475569; font-size: 0.9375rem; }
-.inspect-selected-stall-drawer .issd-full-main .issd-booking-direct-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid #93c5fd; border-radius: 7px; background: #fff; color: #2563eb; font-size: 0.875rem; font-weight: 600; text-decoration: none; }
-.inspect-selected-stall-drawer .issd-full-main .issd-booking-direct-btn:hover { background: #eff6ff; }
+.inspect-selected-stall-drawer .issd-full-main .issd-booking-footer-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 12px; border-top: 1px solid var(--bd-f1f5f9); color: var(--tx-475569); font-size: 0.9375rem; }
+.inspect-selected-stall-drawer .issd-full-main .issd-booking-direct-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid var(--bd-93c5fd); border-radius: 7px; background: var(--bg-ffffff); color: var(--tx-2563eb); font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+.inspect-selected-stall-drawer .issd-full-main .issd-booking-direct-btn:hover { background: var(--bg-eff6ff); }
 
 /* สรุปการเงิน */
 .inspect-selected-stall-drawer .issd-full-main .issd-finance-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.inspect-selected-stall-drawer .issd-full-main .issd-finance-summary > div { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; background: #fff; border: 1px solid #eef2f6; border-radius: 12px; }
-.inspect-selected-stall-drawer .issd-full-main .issd-finance-summary span { color: #64748b; font-size: 0.8125rem; font-weight: 500; }
-.inspect-selected-stall-drawer .issd-full-main .issd-finance-summary strong { color: #1e293b; font-size: 1.125rem; font-weight: 800; }
+.inspect-selected-stall-drawer .issd-full-main .issd-finance-summary > div { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; background: var(--bg-ffffff); border: 1px solid var(--bd-eef2f6); border-radius: 12px; }
+.inspect-selected-stall-drawer .issd-full-main .issd-finance-summary span { color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 500; }
+.inspect-selected-stall-drawer .issd-full-main .issd-finance-summary strong { color: var(--tx-1e293b); font-size: 1.125rem; font-weight: 800; }
 
 /* ข้อมูลแผง: การ์ดตัวเลข + รายการรายละเอียดเป็นแถว */
-.inspect-selected-stall-drawer .issd-full-main .issd-kpi-card { background: #fff; border: 1px solid #eef2f6; border-radius: 14px; }
+.inspect-selected-stall-drawer .issd-full-main .issd-kpi-card { background: var(--bg-ffffff); border: 1px solid var(--bd-eef2f6); border-radius: 14px; }
 .inspect-selected-stall-drawer .issd-full-main .issd-fact-section { display: flex; flex-direction: column; gap: 10px; }
-.inspect-selected-stall-drawer .issd-full-main .issd-section-title { color: #1e293b; font-size: 1.125rem; font-weight: 700; }
-.inspect-selected-stall-drawer .issd-full-main .issd-fact-grid { display: flex; flex-direction: column; background: #fff; border: 1px solid #eef2f6; border-radius: 14px; overflow: hidden; }
+.inspect-selected-stall-drawer .issd-full-main .issd-section-title { color: var(--tx-1e293b); font-size: 1.125rem; font-weight: 700; }
+.inspect-selected-stall-drawer .issd-full-main .issd-fact-grid { display: flex; flex-direction: column; background: var(--bg-ffffff); border: 1px solid var(--bd-eef2f6); border-radius: 14px; overflow: hidden; }
 .inspect-selected-stall-drawer .issd-full-main .issd-fact-cell,
-.inspect-selected-stall-drawer .issd-full-main .issd-fact-cell.full { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; width: auto; padding: 14px 18px; border: 0; border-bottom: 1px solid #f1f5f9; border-radius: 0; background: transparent; box-shadow: none; }
+.inspect-selected-stall-drawer .issd-full-main .issd-fact-cell.full { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; width: auto; padding: 14px 18px; border: 0; border-bottom: 1px solid var(--bd-f1f5f9); border-radius: 0; background: transparent; box-shadow: none; }
 .inspect-selected-stall-drawer .issd-full-main .issd-fact-cell:last-child { border-bottom: 0; }
-.inspect-selected-stall-drawer .issd-full-main .issd-fact-cell dt { color: #64748b; font-size: 0.9375rem; font-weight: 500; white-space: nowrap; }
-.inspect-selected-stall-drawer .issd-full-main .issd-fact-cell dd { margin: 0; color: #1e293b; font-size: 0.9375rem; font-weight: 600; text-align: right; }
+.inspect-selected-stall-drawer .issd-full-main .issd-fact-cell dt { color: var(--tx-64748b); font-size: 0.9375rem; font-weight: 500; white-space: nowrap; }
+.inspect-selected-stall-drawer .issd-full-main .issd-fact-cell dd { margin: 0; color: var(--tx-1e293b); font-size: 0.9375rem; font-weight: 600; text-align: right; }
 .inspect-selected-stall-drawer .issd-full-main .issd-photo-banner { border-radius: 14px; overflow: hidden; }
 
 /* ประวัติ (timeline) */
-.inspect-selected-stall-drawer .issd-full-main .issd-timeline-panel { background: #fff; border: 1px solid #eef2f6; border-radius: 14px; padding: 8px 18px; }
+.inspect-selected-stall-drawer .issd-full-main .issd-timeline-panel { background: var(--bg-ffffff); border: 1px solid var(--bd-eef2f6); border-radius: 14px; padding: 8px 18px; }
 .inspect-selected-stall-drawer .issd-full-main .issd-timeline-item { padding: 12px 0; }
-.inspect-selected-stall-drawer .issd-full-main .issd-timeline-copy strong { color: #1e293b; font-size: 0.9375rem; font-weight: 700; }
-.inspect-selected-stall-drawer .issd-full-main .issd-timeline-copy time { color: #94a3b8; font-size: 0.8125rem; font-weight: 500; }
-.inspect-selected-stall-drawer .issd-full-main .issd-timeline-copy p { margin: 4px 0 0; color: #475569; font-size: 0.9375rem; line-height: 1.55; }
+.inspect-selected-stall-drawer .issd-full-main .issd-timeline-copy strong { color: var(--tx-1e293b); font-size: 0.9375rem; font-weight: 700; }
+.inspect-selected-stall-drawer .issd-full-main .issd-timeline-copy time { color: var(--tx-94a3b8); font-size: 0.8125rem; font-weight: 500; }
+.inspect-selected-stall-drawer .issd-full-main .issd-timeline-copy p { margin: 4px 0 0; color: var(--tx-475569); font-size: 0.9375rem; line-height: 1.55; }
 
 /* สถานะว่าง */
-.inspect-selected-stall-drawer .issd-full-main .issd-empty-box { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 36px 20px; background: #fff; border: 1px dashed #dbe3ee; border-radius: 14px; color: #94a3b8; text-align: center; }
-.inspect-selected-stall-drawer .issd-full-main .issd-empty-box p { margin: 0; color: #64748b; font-size: 0.9375rem; font-weight: 500; }
+.inspect-selected-stall-drawer .issd-full-main .issd-empty-box { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 36px 20px; background: var(--bg-ffffff); border: 1px dashed var(--bd-dbe3ee); border-radius: 14px; color: var(--tx-94a3b8); text-align: center; }
+.inspect-selected-stall-drawer .issd-full-main .issd-empty-box p { margin: 0; color: var(--tx-64748b); font-size: 0.9375rem; font-weight: 500; }
 
 /* ตัวเลข/รหัสในรายการต้องดำเนินการ แสดงเป็นป้ายแยก ไม่ปนอยู่ในประโยค */
-.issd-aac-meta { flex: 0 0 auto; padding: 2px 10px; border: 1px solid rgba(15, 23, 42, 0.1); border-radius: 8px; background: rgba(255, 255, 255, 0.75); color: #475569; font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
+.issd-aac-meta { flex: 0 0 auto; padding: 2px 10px; border: 1px solid var(--bd-rgba-15-23-42-0p1); border-radius: 8px; background: var(--bg-rgba-255-255-255-0p75); color: var(--tx-475569); font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
 
 /* ===== Drawer readability pass: larger type, roomier spacing, no redundant blocks ===== */
 .inspect-selected-stall-drawer .issd-title-group strong { font-size: 1.0625rem; }
@@ -14551,7 +15283,7 @@ button.market-map-kpi:hover {
 .inspect-selected-stall-drawer .issd-body { gap: 16px; padding: 18px 20px; }
 .inspect-selected-stall-drawer .issd-body-full { gap: 16px; padding: 18px 22px 22px; }
 
-.inspect-selected-stall-drawer .issd-available-line { display: flex; align-items: center; gap: 10px; color: #15803d; }
+.inspect-selected-stall-drawer .issd-available-line { display: flex; align-items: center; gap: 10px; color: var(--tx-15803d); }
 .inspect-selected-stall-drawer .issd-available-line strong { font-size: 1.0625rem; font-weight: 700; }
 
 .inspect-selected-stall-drawer .issd-kpi-grid { gap: 14px; }
@@ -14560,6 +15292,72 @@ button.market-map-kpi:hover {
 .inspect-selected-stall-drawer .issd-kpi-card span,
 .inspect-selected-stall-drawer .issd-kpi-card em { font-size: 0.875rem; }
 .inspect-selected-stall-drawer .issd-kpi-card strong { font-size: 1.25rem; }
+.inspect-selected-stall-drawer .issd-full-main .issd-kpi-grid.is-primary-stats { gap: 12px; }
+.inspect-selected-stall-drawer .issd-full-main .issd-kpi-grid.is-primary-stats .issd-kpi-card {
+  min-height: 104px;
+  align-content: center;
+  padding: 14px 18px;
+  border-color: var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .025);
+}
+.inspect-selected-stall-drawer .issd-full-main .issd-kpi-grid.is-primary-stats .issd-kpi-card span { color: var(--tx-64748b); font-size: .8125rem; font-weight: 600; }
+.inspect-selected-stall-drawer .issd-full-main .issd-kpi-grid.is-primary-stats .issd-kpi-card strong { margin-top: 2px; font-size: 1.375rem; line-height: 1.25; }
+.inspect-selected-stall-drawer .issd-full-main .issd-kpi-grid.is-primary-stats .issd-kpi-card em { color: var(--tx-64748b); font-size: .8125rem; }
+
+.inspect-selected-stall-drawer .issd-stall-detail-card {
+  overflow: hidden;
+  border: 1px solid var(--bd-e2e8f0);
+  border-radius: 14px;
+  background: var(--bg-ffffff);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .03);
+}
+.inspect-selected-stall-drawer .issd-stall-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--bd-eef2f6);
+}
+.inspect-selected-stall-drawer .issd-stall-detail-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border: 1px solid var(--bd-dbeafe);
+  border-radius: 9px;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+}
+.inspect-selected-stall-drawer .issd-stall-detail-icon svg { width: 18px; height: 18px; }
+.inspect-selected-stall-drawer .issd-stall-detail-head strong { color: var(--tx-1e293b); font-size: 1rem; font-weight: 700; }
+.inspect-selected-stall-drawer .issd-stall-facts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  background: var(--bg-eef2f6);
+}
+.inspect-selected-stall-drawer .issd-stall-fact {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+  min-height: 78px;
+  padding: 13px 16px;
+  background: var(--bg-ffffff);
+}
+.inspect-selected-stall-drawer .issd-stall-fact.is-wide,
+.inspect-selected-stall-drawer .issd-stall-fact:only-child,
+.inspect-selected-stall-drawer .issd-stall-fact:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+.inspect-selected-stall-drawer .issd-stall-fact dt { color: var(--tx-64748b); font-size: .8125rem; font-weight: 600; }
+.inspect-selected-stall-drawer .issd-stall-fact dd { margin: 0; color: var(--tx-1e293b); font-size: .9375rem; font-weight: 700; line-height: 1.45; overflow-wrap: anywhere; }
+.inspect-selected-stall-drawer .issd-stall-fact dd small { display: block; margin-top: 2px; color: var(--tx-94a3b8); font-size: .8125rem; font-weight: 500; }
 .inspect-selected-stall-drawer .issd-section-title { font-size: 1.0625rem; }
 .inspect-selected-stall-drawer .issd-fact-grid { gap: 12px; }
 .inspect-selected-stall-drawer .issd-fact-cell { padding: 13px 16px; border-radius: 12px; }
@@ -14614,6 +15412,9 @@ button.market-map-kpi:hover {
 @media (max-width: 768px) {
   .inspect-selected-stall-drawer .issd-full-sidebar { width: 100%; }
   .inspect-selected-stall-drawer .issd-kpi-grid.is-three { grid-template-columns: repeat(2, 1fr); }
+  .inspect-selected-stall-drawer .issd-kpi-grid.is-primary-stats .issd-kpi-card:last-child { grid-column: 1 / -1; }
+  .inspect-selected-stall-drawer .issd-stall-facts-grid { grid-template-columns: minmax(0, 1fr); }
+  .inspect-selected-stall-drawer .issd-stall-fact.is-wide { grid-column: auto; }
 }
 
 /* ===== Fit pass: no clipped text, wider mini drawer, readable tab internals ===== */
@@ -14684,8 +15485,28 @@ button.market-map-kpi:hover {
 .inspect-selected-stall-drawer .issd-subtenant-card * { overflow-wrap: anywhere; }
 
 /* ===== Unified tab theme: one card language for contracts / subtenants / payments / maintenance / bookings ===== */
-.inspect-selected-stall-drawer .issd-body-full .issd-tab-header-row { margin: 0 0 4px; }
-.inspect-selected-stall-drawer .issd-body-full .issd-tab-title { font-size: 1.0625rem; font-weight: 700; color: #0f172a; }
+.inspect-selected-stall-drawer .issd-body-full .issd-tab-header-row {
+  margin: 0 0 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--bd-e2e8f0);
+}
+.inspect-selected-stall-drawer .issd-body-full .issd-tab-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--tx-0f172a);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.inspect-selected-stall-drawer .issd-body-full .issd-tab-title::before {
+  width: 4px;
+  height: 22px;
+  border-radius: 2px;
+  background: #2563eb;
+  content: '';
+  flex: 0 0 auto;
+}
 
 .inspect-selected-stall-drawer .issd-contract-list,
 .inspect-selected-stall-drawer .issd-subtenant-list,
@@ -14698,93 +15519,144 @@ button.market-map-kpi:hover {
 .inspect-selected-stall-drawer .issd-payment-card,
 .inspect-selected-stall-drawer .issd-maintenance-card,
 .inspect-selected-stall-drawer .issd-booking-card {
-  background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px;
+  background: var(--bg-ffffff); border: 1px solid var(--bd-e2e8f0); border-radius: 14px;
   padding: 16px 18px; display: flex; flex-direction: column; gap: 12px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
-.inspect-selected-stall-drawer .issd-contract-card.is-current { border-color: #bbf7d0; background: #f7fef9; }
+.inspect-selected-stall-drawer .issd-contract-card.is-current { border-color: var(--bd-bbf7d0); background: var(--bg-f7fef9); }
 
 .inspect-selected-stall-drawer .issd-card-top-row,
 .inspect-selected-stall-drawer .issd-booking-card-header {
   display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
 }
-.inspect-selected-stall-drawer .issd-card-title { font-size: 1rem; font-weight: 700; color: #0f172a; }
-.inspect-selected-stall-drawer .issd-contract-num { font-size: 0.9375rem; font-weight: 700; color: #1e293b; }
+.inspect-selected-stall-drawer .issd-card-title { font-size: 1rem; font-weight: 700; color: var(--tx-0f172a); }
+.inspect-selected-stall-drawer .issd-contract-num { font-size: 0.9375rem; font-weight: 700; color: var(--tx-1e293b); }
 
 /* label above value grid */
 .inspect-selected-stall-drawer .issd-contract-details-grid {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px;
-  padding-top: 12px; border-top: 1px solid #f1f5f9;
+  padding-top: 12px; border-top: 1px solid var(--bd-f1f5f9);
 }
 .inspect-selected-stall-drawer .issd-contract-detail-item { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .inspect-selected-stall-drawer .issd-contract-detail-item.is-wide { grid-column: 1 / -1; }
-.inspect-selected-stall-drawer .issd-contract-detail-item .detail-label { font-size: 0.8125rem; color: #64748b; font-weight: 500; }
-.inspect-selected-stall-drawer .issd-contract-detail-item .detail-value { font-size: 0.9375rem; color: #1e293b; font-weight: 600; }
-.inspect-selected-stall-drawer .issd-contract-detail-item .detail-value.is-rent { color: #15803d; }
-.inspect-selected-stall-drawer .detail-sub { font-style: normal; font-weight: 500; color: #2563eb; }
+.inspect-selected-stall-drawer .issd-contract-detail-item .detail-label { font-size: 0.8125rem; color: var(--tx-64748b); font-weight: 500; }
+.inspect-selected-stall-drawer .issd-contract-detail-item .detail-value { font-size: 0.9375rem; color: var(--tx-1e293b); font-weight: 600; }
+.inspect-selected-stall-drawer .issd-contract-detail-item .detail-value.is-rent { color: var(--tx-15803d); }
+.inspect-selected-stall-drawer .detail-sub { font-style: normal; font-weight: 500; color: var(--tx-2563eb); }
 
 .inspect-selected-stall-drawer .issd-subtenant-details,
 .inspect-selected-stall-drawer .issd-card-meta-row {
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px;
-  font-size: 0.875rem; color: #475569;
+  font-size: 0.875rem; color: var(--tx-475569);
 }
-.inspect-selected-stall-drawer .issd-card-meta-row { justify-content: space-between; padding-top: 10px; border-top: 1px solid #f1f5f9; }
+.inspect-selected-stall-drawer .issd-card-meta-row { justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--bd-f1f5f9); }
 .inspect-selected-stall-drawer .issd-card-meta-row .is-rent,
-.inspect-selected-stall-drawer .issd-pay-amount-row .is-rent { color: #15803d; font-weight: 700; }
+.inspect-selected-stall-drawer .issd-pay-amount-row .is-rent { color: var(--tx-15803d); font-weight: 700; }
 .inspect-selected-stall-drawer .issd-pay-period { display: flex; flex-direction: column; gap: 2px; }
-.inspect-selected-stall-drawer .issd-pay-period strong { font-size: 1rem; color: #0f172a; }
+.inspect-selected-stall-drawer .issd-pay-period strong { font-size: 1rem; color: var(--tx-0f172a); }
 .inspect-selected-stall-drawer .issd-pay-amount-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .inspect-selected-stall-drawer .issd-pay-amount-row strong { font-size: 1.125rem; }
-.inspect-selected-stall-drawer .issd-maintenance-meta-grid { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.875rem; color: #64748b; }
-.inspect-selected-stall-drawer .issd-maintenance-meta-grid strong { color: #1e293b; font-weight: 600; }
+.inspect-selected-stall-drawer .issd-maintenance-meta-grid { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.875rem; color: var(--tx-64748b); }
+.inspect-selected-stall-drawer .issd-maintenance-meta-grid strong { color: var(--tx-1e293b); font-weight: 600; }
 .inspect-selected-stall-drawer .issd-finance-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.inspect-selected-stall-drawer .issd-finance-summary > div { padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; display: flex; flex-direction: column; gap: 2px; }
-.inspect-selected-stall-drawer .issd-finance-summary span { font-size: 0.8125rem; color: #64748b; }
-.inspect-selected-stall-drawer .issd-finance-summary strong { font-size: 1.0625rem; color: #0f172a; }
-.inspect-selected-stall-drawer .issd-finance-summary strong.is-success { color: #15803d; }
-.inspect-selected-stall-drawer .issd-finance-summary strong.is-alert { color: #dc2626; }
+.inspect-selected-stall-drawer .issd-finance-summary > div { padding: 12px 14px; border: 1px solid var(--bd-e2e8f0); border-radius: 12px; background: var(--bg-ffffff); display: flex; flex-direction: column; gap: 2px; }
+.inspect-selected-stall-drawer .issd-finance-summary span { font-size: 0.8125rem; color: var(--tx-64748b); }
+.inspect-selected-stall-drawer .issd-finance-summary strong { font-size: 1.0625rem; color: var(--tx-0f172a); }
+.inspect-selected-stall-drawer .issd-finance-summary strong.is-success { color: var(--tx-15803d); }
+.inspect-selected-stall-drawer .issd-finance-summary strong.is-alert { color: var(--tx-dc2626); }
 
 /* one shared action row + button style */
 .inspect-selected-stall-drawer .issd-card-actions-row { display: flex; gap: 8px; justify-content: flex-end; padding-top: 4px; }
 .inspect-selected-stall-drawer .issd-mini-action-btn {
-  padding: 7px 14px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff;
-  color: #334155; font-family: inherit; font-weight: 600; cursor: pointer; transition: all .15s ease;
+  padding: 7px 14px; border-radius: 8px; border: 1px solid var(--bd-e2e8f0); background: var(--bg-ffffff);
+  color: var(--tx-334155); font-family: inherit; font-weight: 600; cursor: pointer; transition: all .15s ease;
 }
-.inspect-selected-stall-drawer .issd-mini-action-btn:hover { background: #f8fafc; }
-.inspect-selected-stall-drawer .issd-mini-action-btn.is-primary { border-color: #93c5fd; color: #2563eb; }
-.inspect-selected-stall-drawer .issd-mini-action-btn.is-primary:hover { background: #eff6ff; }
-.inspect-selected-stall-drawer .issd-mini-action-btn.is-success { border-color: #86efac; color: #15803d; }
-.inspect-selected-stall-drawer .issd-mini-action-btn.is-success:hover { background: #f0fdf4; }
-.inspect-selected-stall-drawer .issd-mini-action-btn.is-danger { border-color: #fca5a5; color: #ef4444; }
-.inspect-selected-stall-drawer .issd-mini-action-btn.is-danger:hover { background: #fef2f2; }
+.inspect-selected-stall-drawer .issd-mini-action-btn:hover { background: var(--bg-f8fafc); }
+.inspect-selected-stall-drawer .issd-mini-action-btn.is-primary { border-color: var(--bd-93c5fd); color: var(--tx-2563eb); }
+.inspect-selected-stall-drawer .issd-mini-action-btn.is-primary:hover { background: var(--bg-eff6ff); }
+.inspect-selected-stall-drawer .issd-mini-action-btn.is-success { border-color: var(--bd-86efac); color: var(--tx-15803d); }
+.inspect-selected-stall-drawer .issd-mini-action-btn.is-success:hover { background: var(--bg-f0fdf4); }
+.inspect-selected-stall-drawer .issd-mini-action-btn.is-danger { border-color: var(--bd-fca5a5); color: var(--tx-ef4444); }
+.inspect-selected-stall-drawer .issd-mini-action-btn.is-danger:hover { background: var(--bg-fef2f2); }
 
 /* sub-filters share the same segmented look */
-.inspect-selected-stall-drawer .issd-source-filter { display: inline-flex; gap: 4px; padding: 4px; background: #f1f5f9; border-radius: 10px; align-self: flex-start; }
+.inspect-selected-stall-drawer .issd-source-filter { display: inline-flex; gap: 4px; padding: 4px; background: var(--bg-f1f5f9); border-radius: 10px; align-self: flex-start; }
 .inspect-selected-stall-drawer .issd-source-filter button {
-  padding: 7px 14px; border: none; border-radius: 8px; background: transparent; color: #64748b;
+  padding: 7px 14px; border: none; border-radius: 8px; background: transparent; color: var(--tx-64748b);
   font-family: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer;
 }
-.inspect-selected-stall-drawer .issd-source-filter button.active { background: #fff; color: #2563eb; box-shadow: 0 1px 3px rgba(15,23,42,.08); }
+.inspect-selected-stall-drawer .issd-source-filter button.active { background: var(--bg-ffffff); color: var(--tx-2563eb); box-shadow: 0 1px 3px rgba(15,23,42,.08); }
 
-.inspect-selected-stall-drawer .issd-empty-box { padding: 36px 16px; border: 1px dashed #cbd5e1; border-radius: 14px; background: #f8fafc; display: flex; flex-direction: column; align-items: center; gap: 10px; color: #64748b; }
+.inspect-selected-stall-drawer .issd-empty-box { padding: 36px 16px; border: 1px dashed var(--bd-cbd5e1); border-radius: 14px; background: var(--bg-f8fafc); display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--tx-64748b); }
 .inspect-selected-stall-drawer .issd-empty-box p { margin: 0; font-size: 0.9375rem; }
+
+/* Framed empty state is intentionally limited to the stall-detail sidebar tabs. */
+.inspect-selected-stall-drawer .issd-tab-empty-state.app-empty-state {
+  min-height: 0;
+  margin-top: 4px;
+  padding: 22px 16px;
+  border: 1px dashed var(--bd-d5e0ed);
+  border-radius: 16px;
+  background: var(--bg-ffffff);
+}
 
 /* bookings */
 .inspect-selected-stall-drawer .issd-booking-applicant-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.inspect-selected-stall-drawer .issd-booking-footer-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid #f1f5f9; font-size: 0.875rem; color: #475569; }
+.inspect-selected-stall-drawer .issd-booking-footer-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--bd-f1f5f9); font-size: 0.875rem; color: var(--tx-475569); }
 
 /* Prevent flex children of the drawer body from collapsing into thin lines */
 .inspect-selected-stall-drawer .issd-body > *,
 .inspect-selected-stall-drawer .issd-body-full > * { flex-shrink: 0; }
 .inspect-selected-stall-drawer .issd-mini-alert-card { flex-shrink: 0; min-height: min-content; }
 
-/* Compact contract card: 3 columns + period row, no nested grey box */
-.inspect-selected-stall-drawer .issd-contract-card { padding: 14px 16px; gap: 10px; }
-.inspect-selected-stall-drawer .issd-contract-details-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 14px;
-  background: transparent; padding: 10px 0 0; border: none; border-top: 1px solid #f1f5f9; border-radius: 0;
+/* Contract card: shared system card language with distinct header, content and action footer. */
+.inspect-selected-stall-drawer .issd-contract-card {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--bd-e2e8f0);
+  border-radius: 14px;
+  background: var(--bg-ffffff);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .03);
 }
-.inspect-selected-stall-drawer .issd-contract-card .issd-card-actions-row { padding: 0; margin-top: -2px; }
+.inspect-selected-stall-drawer .issd-contract-card.is-current { border-color: var(--bd-bbf7d0); background: var(--bg-ffffff); box-shadow: inset 3px 0 0 #22c55e, 0 1px 3px rgba(15, 23, 42, .03); }
+.inspect-selected-stall-drawer .issd-contract-card .issd-card-top-row {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--bd-eef2f6);
+  background: var(--bg-ffffff);
+}
+.inspect-selected-stall-drawer .issd-contract-top-left { gap: 10px; }
+.inspect-selected-stall-drawer .issd-contract-icon {
+  box-sizing: content-box;
+  width: 18px;
+  height: 18px;
+  padding: 8px;
+  flex: 0 0 18px;
+  border: 1px solid var(--bd-dbeafe);
+  border-radius: 9px;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+}
+.inspect-selected-stall-drawer .issd-contract-num { font-size: 1rem; font-weight: 700; color: var(--tx-1e293b); overflow-wrap: anywhere; }
+.inspect-selected-stall-drawer .issd-contract-details-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px 20px;
+  padding: 14px 16px;
+  border: 0;
+  background: var(--bg-ffffff);
+}
+.inspect-selected-stall-drawer .issd-contract-detail-item { gap: 4px; }
+.inspect-selected-stall-drawer .issd-contract-detail-item.is-wide { grid-column: 1 / -1; padding-top: 12px; border-top: 1px solid var(--bd-f1f5f9); }
+.inspect-selected-stall-drawer .issd-contract-detail-item .detail-label { color: var(--tx-64748b); font-size: .8125rem; font-weight: 600; }
+.inspect-selected-stall-drawer .issd-contract-detail-item .detail-value { color: var(--tx-1e293b); font-size: .9375rem; font-weight: 700; line-height: 1.45; }
+.inspect-selected-stall-drawer .issd-contract-card .issd-card-actions-row {
+  gap: 8px;
+  justify-content: flex-end;
+  margin: 0;
+  padding: 11px 16px;
+  border-top: 1px solid var(--bd-eef2f6);
+  background: var(--bg-f8fafc);
+}
 .inspect-selected-stall-drawer .issd-subtenant-card,
 .inspect-selected-stall-drawer .issd-payment-card,
 .inspect-selected-stall-drawer .issd-maintenance-card,
@@ -14794,44 +15666,713 @@ button.market-map-kpi:hover {
 .inspect-selected-stall-drawer .issd-payment-list,
 .inspect-selected-stall-drawer .issd-maintenance-list,
 .inspect-selected-stall-drawer .issd-booking-list { gap: 10px; }
-.inspect-selected-stall-drawer .issd-body-full { gap: 12px; padding: 14px 20px 16px; }
+.inspect-selected-stall-drawer .issd-body-full { gap: 12px; padding: 12px 20px 16px; }
 @media (max-width: 768px) {
   .inspect-selected-stall-drawer .issd-contract-details-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-.inspect-selected-stall-drawer .issd-sidebar-tab-count.is-action { background: #fef3c7; color: #b45309; }
-.inspect-selected-stall-drawer .issd-sidebar-tab-count.is-action.is-danger { background: #fee2e2; color: #dc2626; }
+.inspect-selected-stall-drawer .issd-sidebar-tab-count.is-action { background: var(--bg-fef3c7); color: var(--tx-b45309); }
+.inspect-selected-stall-drawer .issd-sidebar-tab-count.is-action.is-danger { background: var(--bg-fee2e2); color: var(--tx-dc2626); }
 .inspect-selected-stall-drawer .issd-sidebar-tab.active .issd-sidebar-tab-count.is-action { background: #d97706; color: #fff; }
 .inspect-selected-stall-drawer .issd-sidebar-tab.active .issd-sidebar-tab-count.is-action.is-danger { background: #dc2626; color: #fff; }
 
 /* Mini alert rows: chip + title on one line, divided rows (same look as full-drawer list) */
-.inspect-selected-stall-drawer .issd-mini-alert-list { padding: 0; gap: 0; border-top: 1px solid #fde68a; background: #fff; }
+.inspect-selected-stall-drawer .issd-mini-alert-list { padding: 0; gap: 0; border-top: 1px solid var(--bd-fde68a); background: var(--bg-ffffff); }
 .inspect-selected-stall-drawer .issd-mini-alert-row {
   flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px;
-  padding: 11px 14px; background: #fff; border: none; border-radius: 0; box-shadow: none; transform: none;
-  border-top: 1px solid #f1f5f9; cursor: pointer;
+  padding: 11px 14px; background: var(--bg-ffffff); border: none; border-radius: 0; box-shadow: none; transform: none;
+  border-top: 1px solid var(--bd-f1f5f9); cursor: pointer;
 }
 .inspect-selected-stall-drawer .issd-mini-alert-row:first-child { border-top: none; }
-.inspect-selected-stall-drawer .issd-mini-alert-row.is-danger { background: #fff1f1; }
-.inspect-selected-stall-drawer .issd-mini-alert-row:hover { background: #fffbeb; transform: none; box-shadow: none; }
-.inspect-selected-stall-drawer .issd-mini-alert-row.is-danger:hover { background: #ffe4e4; }
-.inspect-selected-stall-drawer .issd-mini-alert-title { font-size: 0.9375rem; font-weight: 600; color: #1e293b; line-height: 1.35; min-width: 0; overflow-wrap: anywhere; }
+.inspect-selected-stall-drawer .issd-mini-alert-row.is-danger { background: var(--bg-fff1f1); }
+.inspect-selected-stall-drawer .issd-mini-alert-row:hover { background: var(--bg-fffbeb); transform: none; box-shadow: none; }
+.inspect-selected-stall-drawer .issd-mini-alert-row.is-danger:hover { background: var(--bg-ffe4e4); }
+.inspect-selected-stall-drawer .issd-mini-alert-title { font-size: 0.9375rem; font-weight: 600; color: var(--tx-1e293b); line-height: 1.35; min-width: 0; overflow-wrap: anywhere; }
 .inspect-selected-stall-drawer .issd-mini-alert-row .issd-aac-tag { flex-shrink: 0; }
 
 /* Mini banner header = same look as full drawer (icon box + title + count pill + chevron) */
 .inspect-selected-stall-drawer .issd-mini-alert-head { gap: 10px; flex-wrap: wrap; }
-.inspect-selected-stall-drawer .issd-mini-alert-head strong { font-size: 1rem; color: #92400e; }
+.inspect-selected-stall-drawer .issd-mini-alert-head strong { font-size: 1rem; color: var(--tx-92400e); }
 .inspect-selected-stall-drawer .issd-mini-alert-card .issd-aac-toggle-btn { pointer-events: none; }
+
+/* Maintenance card: use the same header / content / footer anatomy as system cards. */
+.inspect-selected-stall-drawer .issd-maintenance-card {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--bd-e2e8f0);
+  border-radius: 14px;
+  background: var(--bg-ffffff);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .03);
+}
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-card-top-row {
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--bd-eef2f6);
+  background: var(--bg-ffffff);
+}
+.inspect-selected-stall-drawer .issd-maintenance-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+.inspect-selected-stall-drawer .issd-maintenance-icon {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border: 1px solid var(--bd-dbeafe);
+  border-radius: 10px;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+}
+.inspect-selected-stall-drawer .issd-maintenance-icon svg { width: 20px; height: 20px; }
+.inspect-selected-stall-drawer .issd-maintenance-heading-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  min-width: 0;
+}
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-card-title {
+  color: var(--tx-1e293b);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-type-pill,
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-status-pill {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: .8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-status-pill { flex: 0 0 auto; }
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px 20px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 0;
+  background: var(--bg-ffffff);
+}
+.inspect-selected-stall-drawer .issd-maintenance-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.inspect-selected-stall-drawer .issd-maintenance-meta-item span {
+  color: var(--tx-64748b);
+  font-size: .8125rem;
+  font-weight: 600;
+}
+.inspect-selected-stall-drawer .issd-maintenance-meta-item strong {
+  color: var(--tx-1e293b);
+  font-size: .9375rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+.inspect-selected-stall-drawer .issd-maintenance-meta-item strong.is-rent { color: var(--tx-15803d); }
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-card-actions-row {
+  gap: 8px;
+  justify-content: flex-end;
+  margin: 0;
+  padding: 11px 16px;
+  border-top: 1px solid var(--bd-eef2f6);
+  background: var(--bg-f8fafc);
+}
+@media (max-width: 560px) {
+  .inspect-selected-stall-drawer .issd-maintenance-card .issd-card-top-row { align-items: stretch; }
+  .inspect-selected-stall-drawer .issd-maintenance-card .issd-status-pill { align-self: flex-start; margin-left: 48px; }
+}
+
+/* Booking card: compact two-row layout without nested containers. */
+.inspect-selected-stall-drawer .issd-booking-card {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--bd-e2e8f0);
+  border-radius: 14px;
+  background: var(--bg-ffffff);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .03);
+}
+.inspect-selected-stall-drawer .issd-booking-card-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--bd-eef2f6);
+  background: var(--bg-ffffff);
+}
+.inspect-selected-stall-drawer .issd-booking-type-group { gap: 10px; }
+.inspect-selected-stall-drawer .issd-booking-ref-code {
+  color: var(--tx-1e293b);
+  font-size: .9375rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.inspect-selected-stall-drawer .issd-booking-card .issd-card-type-tag,
+.inspect-selected-stall-drawer .issd-booking-card .issd-status-pill {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: .8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.inspect-selected-stall-drawer .issd-booking-compact-body {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(180px, auto) auto;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 12px 14px;
+}
+.inspect-selected-stall-drawer .issd-booking-avatar {
+  width: 36px;
+  height: 36px;
+  border-color: var(--bd-dbeafe);
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+}
+.inspect-selected-stall-drawer .issd-booking-applicant-info { gap: 2px; }
+.inspect-selected-stall-drawer .issd-booking-role-label {
+  color: var(--tx-64748b);
+  font-size: .8125rem;
+  font-weight: 500;
+}
+.inspect-selected-stall-drawer .issd-booking-applicant-info .issd-card-title {
+  color: var(--tx-1e293b);
+  font-size: .9375rem;
+  line-height: 1.35;
+}
+.inspect-selected-stall-drawer .issd-booking-compact-body .issd-phone-link,
+.inspect-selected-stall-drawer .issd-booking-compact-body .issd-booking-info-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  color: var(--tx-475569);
+  font-size: .875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.inspect-selected-stall-drawer .issd-booking-compact-body .issd-phone-link {
+  padding: 0 10px;
+  border: 1px solid var(--bd-dbeafe);
+  border-radius: 8px;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  text-decoration: none;
+}
+.inspect-selected-stall-drawer .issd-booking-compact-body .issd-phone-link:hover { background: var(--bg-dbeafe); }
+.inspect-selected-stall-drawer .issd-booking-detail-btn { justify-self: end; }
+@media (max-width: 980px) {
+  .inspect-selected-stall-drawer .issd-booking-compact-body {
+    grid-template-columns: minmax(180px, 1fr) auto;
+  }
+  .inspect-selected-stall-drawer .issd-booking-detail-btn { justify-self: end; }
+}
+@media (max-width: 560px) {
+  .inspect-selected-stall-drawer .issd-booking-card-header { align-items: flex-start; }
+  .inspect-selected-stall-drawer .issd-booking-card-header > .issd-status-pill { margin-left: 0; }
+  .inspect-selected-stall-drawer .issd-booking-compact-body { grid-template-columns: 1fr; }
+  .inspect-selected-stall-drawer .issd-booking-compact-body .issd-phone-link,
+  .inspect-selected-stall-drawer .issd-booking-detail-btn { justify-self: stretch; }
+  .inspect-selected-stall-drawer .issd-booking-detail-btn { width: 100%; }
+}
+
+/* Compact operational cards: simple header and one flexible content row. */
+.inspect-selected-stall-drawer .issd-contract-card,
+.inspect-selected-stall-drawer .issd-maintenance-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+}
+.inspect-selected-stall-drawer .issd-contract-card > .issd-card-top-row,
+.inspect-selected-stall-drawer .issd-maintenance-card > .issd-card-top-row {
+  align-items: center;
+  min-height: 54px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--bd-eef2f6);
+}
+.inspect-selected-stall-drawer .issd-contract-card .issd-contract-top-left,
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-heading { align-items: center; gap: 10px; }
+.inspect-selected-stall-drawer .issd-contract-card .issd-contract-icon,
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-icon {
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 9px;
+}
+.inspect-selected-stall-drawer .issd-contract-card .issd-contract-icon { padding: 7px; }
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-icon { padding: 0; }
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-icon svg { width: 18px; height: 18px; }
+.inspect-selected-stall-drawer .issd-maintenance-heading-copy {
+  flex-direction: row;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-card-title { order: -1; }
+.inspect-selected-stall-drawer .issd-compact-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 14px;
+}
+.inspect-selected-stall-drawer .issd-contract-card .issd-contract-details-grid,
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.inspect-selected-stall-drawer .issd-contract-detail-item,
+.inspect-selected-stall-drawer .issd-maintenance-meta-item {
+  flex: 1 1 130px;
+  min-width: 110px;
+  padding: 0 14px;
+  border-left: 1px solid var(--bd-eef2f6);
+}
+.inspect-selected-stall-drawer .issd-contract-detail-item:first-child,
+.inspect-selected-stall-drawer .issd-maintenance-meta-item:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+.inspect-selected-stall-drawer .issd-contract-detail-item:nth-child(odd),
+.inspect-selected-stall-drawer .issd-maintenance-meta-item:nth-child(odd) {
+  padding-left: 0;
+  border-left: 0;
+}
+.inspect-selected-stall-drawer .issd-contract-detail-item.is-wide {
+  grid-column: auto;
+  flex-basis: 250px;
+  padding-top: 0;
+  border-top: 0;
+}
+.inspect-selected-stall-drawer .issd-contract-detail-item .detail-label,
+.inspect-selected-stall-drawer .issd-maintenance-meta-item span {
+  font-size: .8125rem;
+  line-height: 1.3;
+}
+.inspect-selected-stall-drawer .issd-contract-detail-item .detail-value,
+.inspect-selected-stall-drawer .issd-maintenance-meta-item strong {
+  font-size: .875rem;
+  line-height: 1.4;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.inspect-selected-stall-drawer .issd-compact-card-body > .issd-card-actions-row {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+@media (max-width: 1200px) {
+  .inspect-selected-stall-drawer .issd-compact-card-body { align-items: stretch; flex-direction: column; }
+  .inspect-selected-stall-drawer .issd-contract-card .issd-contract-details-grid,
+  .inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+  }
+  .inspect-selected-stall-drawer .issd-contract-detail-item,
+  .inspect-selected-stall-drawer .issd-maintenance-meta-item {
+    min-width: 0;
+    padding: 7px 14px;
+    border-left: 1px solid var(--bd-eef2f6);
+  }
+  .inspect-selected-stall-drawer .issd-contract-detail-item:nth-child(odd),
+  .inspect-selected-stall-drawer .issd-maintenance-meta-item:nth-child(odd) {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .inspect-selected-stall-drawer .issd-contract-detail-item .detail-value,
+  .inspect-selected-stall-drawer .issd-maintenance-meta-item strong {
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  .inspect-selected-stall-drawer .issd-compact-card-body > .issd-card-actions-row { justify-content: flex-end; padding-left: 0; }
+}
+@media (max-width: 560px) {
+  .inspect-selected-stall-drawer .issd-contract-card > .issd-card-top-row,
+  .inspect-selected-stall-drawer .issd-maintenance-card > .issd-card-top-row { align-items: flex-start; }
+  .inspect-selected-stall-drawer .issd-maintenance-card .issd-status-pill { margin-left: 0; }
+  .inspect-selected-stall-drawer .issd-contract-card .issd-contract-details-grid,
+  .inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .inspect-selected-stall-drawer .issd-contract-detail-item,
+  .inspect-selected-stall-drawer .issd-maintenance-meta-item {
+    flex-basis: auto;
+    min-width: 0;
+    padding: 8px 0 0;
+    border-top: 1px solid var(--bd-eef2f6);
+    border-left: 0;
+  }
+  .inspect-selected-stall-drawer .issd-contract-detail-item:first-child,
+  .inspect-selected-stall-drawer .issd-maintenance-meta-item:first-child { padding-top: 0; border-top: 0; }
+  .inspect-selected-stall-drawer .issd-contract-detail-item:nth-child(even),
+  .inspect-selected-stall-drawer .issd-maintenance-meta-item:nth-child(even) { padding-left: 0; border-left: 0; }
+}
+
+/* Booking card pattern: status/ref, prominent schedule, applicant/action. */
+.inspect-selected-stall-drawer .issd-booking-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 12px 14px;
+  overflow: visible;
+}
+.inspect-selected-stall-drawer .issd-booking-card-header {
+  align-items: center;
+  padding: 0;
+  border: 0;
+}
+.inspect-selected-stall-drawer .issd-booking-kind {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--tx-0369a1);
+}
+.inspect-selected-stall-drawer .issd-booking-kind.is-application { color: var(--tx-6d28d9); }
+.inspect-selected-stall-drawer .issd-booking-kind-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 10px;
+  background: var(--bg-e0f2fe);
+}
+.inspect-selected-stall-drawer .issd-booking-kind.is-application .issd-booking-kind-icon { background: var(--bg-f3e8ff); }
+.inspect-selected-stall-drawer .issd-booking-kind-icon svg { width: 21px; height: 21px; }
+.inspect-selected-stall-drawer .issd-booking-kind-copy { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.inspect-selected-stall-drawer .issd-booking-kind-copy strong {
+  color: currentColor;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.inspect-selected-stall-drawer .issd-booking-kind-copy small {
+  color: var(--tx-64748b);
+  font-family: inherit;
+  font-size: .8125rem;
+  font-weight: 700;
+  letter-spacing: .015em;
+}
+.inspect-selected-stall-drawer .issd-booking-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+.inspect-selected-stall-drawer .issd-booking-status-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 999px;
+  background: currentColor;
+}
+.inspect-selected-stall-drawer .issd-booking-ref-code {
+  color: var(--tx-64748b);
+  font-family: inherit;
+  font-size: .875rem;
+  font-weight: 700;
+  letter-spacing: .015em;
+}
+.inspect-selected-stall-drawer .issd-booking-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 3px 0 5px;
+}
+.inspect-selected-stall-drawer .issd-booking-date-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.inspect-selected-stall-drawer .issd-booking-date-line > strong {
+  color: var(--tx-0f172a);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.inspect-selected-stall-drawer .issd-booking-countdown {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-475569);
+  font-size: .8125rem;
+  font-weight: 600;
+}
+.inspect-selected-stall-drawer .issd-booking-countdown.is-application { background: var(--bg-fff7ed); color: var(--tx-9a3412); }
+.inspect-selected-stall-drawer .issd-booking-schedule p {
+  margin: 0;
+  color: var(--tx-475569);
+  font-size: .875rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.inspect-selected-stall-drawer .issd-booking-person-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 7px;
+  border-top: 1px solid var(--bd-eef2f6);
+}
+.inspect-selected-stall-drawer .issd-booking-person-row > .issd-phone-link,
+.inspect-selected-stall-drawer .issd-booking-person-row > .issd-booking-info-item { display: none; }
+.inspect-selected-stall-drawer .issd-booking-person-row .issd-booking-avatar {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-334155);
+  font-size: 1rem;
+  font-weight: 700;
+}
+.inspect-selected-stall-drawer .issd-booking-person-row .issd-booking-applicant-info { gap: 1px; }
+.inspect-selected-stall-drawer .issd-booking-person-row .issd-card-title {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.inspect-selected-stall-drawer .issd-booking-phone {
+  color: var(--tx-2563eb);
+  font-size: .875rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+.inspect-selected-stall-drawer .issd-booking-phone:hover { text-decoration: underline; }
+.inspect-selected-stall-drawer .issd-booking-person-row .issd-booking-detail-btn { margin-left: auto; }
+.inspect-selected-stall-drawer .issd-application-source {
+  margin-top: 10px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  background: var(--bg-f8fafc);
+  color: var(--tx-475569);
+  font-size: .8125rem;
+  font-weight: 500;
+}
+@media (max-width: 560px) {
+  .inspect-selected-stall-drawer .issd-booking-card-header { align-items: flex-start; flex-direction: column; }
+  .inspect-selected-stall-drawer .issd-booking-person-row { align-items: flex-start; flex-wrap: wrap; }
+  .inspect-selected-stall-drawer .issd-booking-person-row .issd-booking-detail-btn { width: 100%; margin-left: 0; }
+}
+
+/* Contract card pattern: status, tenant, timeline, finance summary and actions. */
+.inspect-selected-stall-drawer .issd-contract-card,
+.inspect-selected-stall-drawer .issd-contract-card.is-current {
+  gap: 0;
+  padding: 14px 16px;
+  border-color: var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .03);
+}
+.inspect-selected-stall-drawer .issd-contract-card > .issd-card-top-row {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+}
+.inspect-selected-stall-drawer .issd-contract-status,
+.inspect-selected-stall-drawer .issd-maintenance-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border-radius: 999px;
+}
+.inspect-selected-stall-drawer .issd-contract-status-dot,
+.inspect-selected-stall-drawer .issd-maintenance-status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 999px;
+  background: currentColor;
+}
+.inspect-selected-stall-drawer .issd-contract-card .issd-contract-num {
+  color: var(--tx-64748b);
+  font-family: inherit;
+  font-size: .8125rem;
+  font-weight: 700;
+  letter-spacing: .015em;
+}
+.inspect-selected-stall-drawer .issd-contract-card > .issd-compact-card-body {
+  gap: 12px;
+  padding: 12px 0 0;
+}
+.inspect-selected-stall-drawer .issd-contract-overview { display: flex; flex-direction: column; gap: 10px; }
+.inspect-selected-stall-drawer .issd-contract-identity { display: flex; flex-direction: column; gap: 3px; }
+.inspect-selected-stall-drawer .issd-contract-identity strong { color: var(--tx-0f172a); font-size: 1rem; font-weight: 800; }
+.inspect-selected-stall-drawer .issd-contract-identity span,
+.inspect-selected-stall-drawer .issd-contract-period-row { color: var(--tx-475569); font-size: .875rem; font-weight: 500; }
+.inspect-selected-stall-drawer .issd-contract-period-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.inspect-selected-stall-drawer .issd-contract-period-row strong { color: var(--tx-334155); font-size: .8125rem; white-space: nowrap; }
+.inspect-selected-stall-drawer .issd-contract-progress { height: 6px; overflow: hidden; border-radius: 999px; background: var(--bg-e2e8f0); }
+.inspect-selected-stall-drawer .issd-contract-progress span { display: block; height: 100%; border-radius: inherit; background: #16a34a; }
+.inspect-selected-stall-drawer .issd-contract-money-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg-f8fafc);
+}
+.inspect-selected-stall-drawer .issd-contract-money-summary > div { display: flex; flex-direction: column; gap: 3px; }
+.inspect-selected-stall-drawer .issd-contract-money-summary span { color: var(--tx-64748b); font-size: .8125rem; font-weight: 500; }
+.inspect-selected-stall-drawer .issd-contract-money-summary strong { color: var(--tx-0f172a); font-size: .9375rem; font-weight: 800; }
+.inspect-selected-stall-drawer .issd-contract-money-summary small { color: var(--tx-64748b); font-size: .8125rem; font-weight: 500; }
+.inspect-selected-stall-drawer .issd-contract-money-summary small.is-paid { color: var(--tx-15803d); }
+.inspect-selected-stall-drawer .issd-contract-card .issd-card-actions-row { justify-content: flex-end; padding: 0; border: 0; background: transparent; }
+
+/* Maintenance card pattern: status/type, issue context, summary and actions. */
+.inspect-selected-stall-drawer .issd-maintenance-card {
+  gap: 0;
+  padding: 8px 12px;
+  border-color: var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
+}
+.inspect-selected-stall-drawer .issd-maintenance-card > .issd-card-top-row {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  flex: 0 0 auto;
+}
+.inspect-selected-stall-drawer .issd-maintenance-type-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--tx-475569);
+  font-size: .8125rem;
+  font-weight: 600;
+}
+.inspect-selected-stall-drawer .issd-maintenance-type-label > span { display: grid; place-items: center; }
+.inspect-selected-stall-drawer .issd-maintenance-type-label svg { width: 16px; height: 16px; }
+.inspect-selected-stall-drawer .issd-maintenance-identity {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-height: 0;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+.inspect-selected-stall-drawer .issd-maintenance-identity strong { color: var(--tx-0f172a); font-size: 1rem; font-weight: 800; line-height: 1.35; }
+.inspect-selected-stall-drawer .issd-maintenance-identity span { color: var(--tx-475569); font-size: .875rem; font-weight: 500; }
+.inspect-selected-stall-drawer .issd-maintenance-card > .issd-compact-card-body {
+  flex: 0 0 auto;
+  min-height: 0;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+}
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 2px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--bg-f8fafc);
+}
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-meta-item {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-meta-item span { color: var(--tx-64748b); font-size: .8125rem; font-weight: 500; }
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-meta-item strong { color: var(--tx-1e293b); font-size: .875rem; font-weight: 700; }
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-meta-item strong.is-waiting { color: var(--tx-c2410c); }
+.inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-meta-item strong.is-success { color: var(--tx-15803d); }
+.inspect-selected-stall-drawer .issd-maintenance-footer-row { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.inspect-selected-stall-drawer .issd-maintenance-footer-row .issd-card-actions-row { padding: 0; border: 0; background: transparent; }
+.inspect-selected-stall-drawer .issd-maintenance-assignment-note {
+  display: flex;
+  align-items: center;
+  gap: 6px 14px;
+  flex-wrap: wrap;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: var(--bg-f8fafc);
+  color: var(--tx-64748b);
+  font-size: .8125rem;
+  font-weight: 500;
+}
+.inspect-selected-stall-drawer .issd-maintenance-assignment-note strong { color: var(--tx-334155); font-weight: 700; }
+.inspect-selected-stall-drawer .issd-maintenance-assignment-note p { width: 100%; margin: 0; color: var(--tx-475569); line-height: 1.5; }
+.inspect-selected-stall-drawer .issd-maintenance-result { display: flex; flex-direction: column; gap: 8px; }
+.inspect-selected-stall-drawer .issd-maintenance-photo-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.inspect-selected-stall-drawer .issd-maintenance-photo-compare figure { min-width: 0; margin: 0; }
+.inspect-selected-stall-drawer .issd-maintenance-photo-frame {
+  display: grid;
+  place-items: center;
+  height: 112px;
+  overflow: hidden;
+  border: 1px dashed var(--bd-cbd5e1);
+  border-radius: 10px;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
+  font-size: .8125rem;
+}
+.inspect-selected-stall-drawer .issd-maintenance-photo-frame.is-after { border-color: var(--bd-86efac); background: var(--bg-f0fdf4); color: var(--tx-15803d); }
+.inspect-selected-stall-drawer .issd-maintenance-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
+.inspect-selected-stall-drawer .issd-maintenance-photo-compare figcaption { margin-top: 5px; color: var(--tx-64748b); font-size: .75rem; font-weight: 500; }
+.inspect-selected-stall-drawer .issd-maintenance-result p,
+.inspect-selected-stall-drawer .issd-maintenance-rejection-summary {
+  margin: 0;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: var(--bg-f8fafc);
+  color: var(--tx-475569);
+  font-size: .8125rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.inspect-selected-stall-drawer .issd-maintenance-rejection-summary { display: flex; gap: 5px; flex-wrap: wrap; }
+.inspect-selected-stall-drawer .issd-maintenance-rejection-summary strong { color: var(--tx-334155); }
+@media (max-width: 560px) {
+  .inspect-selected-stall-drawer .issd-contract-period-row,
+  .inspect-selected-stall-drawer .issd-maintenance-footer-row { align-items: flex-start; flex-direction: column; }
+  .inspect-selected-stall-drawer .issd-contract-money-summary,
+  .inspect-selected-stall-drawer .issd-maintenance-card .issd-maintenance-meta-grid,
+  .inspect-selected-stall-drawer .issd-maintenance-photo-compare { grid-template-columns: 1fr; }
+  .inspect-selected-stall-drawer .issd-maintenance-footer-row .issd-card-actions-row { width: 100%; justify-content: flex-end; }
+}
 
 /* Photo editor in GIS edit drawer */
 .inspect-selected-stall-drawer .issd-photo-editor { display: flex; flex-direction: column; gap: 8px; }
-.inspect-selected-stall-drawer .issd-photo-editor-head { display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; font-weight: 600; color: #1e293b; }
-.inspect-selected-stall-drawer .issd-photo-editor-head small { font-size: 0.8125rem; color: #64748b; font-weight: 500; }
+.inspect-selected-stall-drawer .issd-photo-editor-head { display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; font-weight: 600; color: var(--tx-1e293b); }
+.inspect-selected-stall-drawer .issd-photo-editor-head small { font-size: 0.8125rem; color: var(--tx-64748b); font-weight: 500; }
 .inspect-selected-stall-drawer .issd-photo-editor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.inspect-selected-stall-drawer .issd-photo-thumb { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; background: #f1f5f9; }
+.inspect-selected-stall-drawer .issd-photo-thumb { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; border: 1px solid var(--bd-e2e8f0); background: var(--bg-f1f5f9); }
 .inspect-selected-stall-drawer .issd-photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .inspect-selected-stall-drawer .issd-photo-remove { position: absolute; top: 5px; right: 5px; width: 24px; height: 24px; border-radius: 999px; border: none; background: rgba(15,23,42,.72); color: #fff; display: grid; place-items: center; cursor: pointer; }
 .inspect-selected-stall-drawer .issd-photo-remove:hover { background: #dc2626; }
-.inspect-selected-stall-drawer .issd-photo-add { aspect-ratio: 4 / 3; border: 1.5px dashed #93c5fd; border-radius: 10px; background: #f8fbff; color: #2563eb; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; transition: background .15s ease; }
-.inspect-selected-stall-drawer .issd-photo-add:hover { background: #eff6ff; }
+.inspect-selected-stall-drawer .issd-photo-add { aspect-ratio: 4 / 3; border: 1.5px dashed var(--bd-93c5fd); border-radius: 10px; background: var(--bg-f8fbff); color: var(--tx-2563eb); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; transition: background .15s ease; }
+.inspect-selected-stall-drawer .issd-photo-add:hover { background: var(--bg-eff6ff); }
 </style>

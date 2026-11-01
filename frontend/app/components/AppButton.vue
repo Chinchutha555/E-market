@@ -209,15 +209,15 @@ const handleClick = (e: MouseEvent) => {
 
 /* 2. Secondary (Neutral Outlined/Ghost for Close & Cancel) */
 .app-btn-secondary {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #334155;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
+  color: var(--tx-334155);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 .app-btn-secondary:hover:not(.is-disabled) {
-  background: #f8fafc;
-  border-color: #94a3b8;
-  color: #0f172a;
+  background: var(--bg-f8fafc);
+  border-color: var(--bd-94a3b8);
+  color: var(--tx-0f172a);
 }
 
 /* 3. Success (Solid Green) */
@@ -248,14 +248,14 @@ const handleClick = (e: MouseEvent) => {
 
 /* 5. Danger Outline */
 .app-btn-danger-outline {
-  background: #ffffff;
-  border: 1px solid #fca5a5;
-  color: #ef4444;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-fca5a5);
+  color: var(--tx-ef4444);
 }
 .app-btn-danger-outline:hover:not(.is-disabled) {
-  background: #fef2f2;
-  border-color: #f87171;
-  color: #dc2626;
+  background: var(--bg-fef2f2);
+  border-color: var(--bd-f87171);
+  color: var(--tx-dc2626);
 }
 
 /* 6. Purple (Solid Purple) */
@@ -273,25 +273,25 @@ const handleClick = (e: MouseEvent) => {
 
 /* 7. Outline */
 .app-btn-outline {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #334155;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-334155);
 }
 .app-btn-outline:hover:not(.is-disabled) {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #0f172a;
+  background: var(--bg-f8fafc);
+  border-color: var(--bd-cbd5e1);
+  color: var(--tx-0f172a);
 }
 
 /* 8. Ghost */
 .app-btn-ghost {
   background: transparent;
   border: 1px solid transparent;
-  color: #475569;
+  color: var(--tx-475569);
 }
 .app-btn-ghost:hover:not(.is-disabled) {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-0f172a);
 }
 
 /* ============================================================

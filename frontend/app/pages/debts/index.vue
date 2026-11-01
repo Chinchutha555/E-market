@@ -61,7 +61,7 @@
         <form @submit.prevent="saveDebt" class="form-grid">
           <div class="form-group">
             <label class="form-label" for="tenant-id-input">
-              รหัสผู้เช่า (Tenant ID) <span class="required-star">*</span>
+              รหัสผู้เช่า (Tenant ID) <span class="req-star" aria-hidden="true">*</span>
             </label>
             <input
               id="tenant-id-input"
@@ -76,7 +76,7 @@
 
           <div class="form-group">
             <label class="form-label" for="market-id-input">
-              รหัสตลาด (Market ID) <span class="required-star">*</span>
+              รหัสตลาด (Market ID) <span class="req-star" aria-hidden="true">*</span>
             </label>
             <input
               id="market-id-input"
@@ -91,7 +91,7 @@
 
           <div class="form-group">
             <label class="form-label" for="amount-input">
-              ยอดหนี้ (บาท) <span class="required-star">*</span>
+              ยอดหนี้ (บาท) <span class="req-star" aria-hidden="true">*</span>
             </label>
             <div class="input-with-suffix">
               <input
@@ -108,7 +108,7 @@
 
           <div class="form-group wide">
             <label class="form-label" for="desc-input">
-              รายละเอียดหนี้ <span class="required-star">*</span>
+              รายละเอียดหนี้ <span class="req-star" aria-hidden="true">*</span>
             </label>
             <input
               id="desc-input"
@@ -177,32 +177,7 @@
         </div>
 
         <!-- Filter Tabs -->
-        <div class="table-nav-tabs">
-          <button
-            type="button"
-            class="table-nav-tab"
-            :class="{ active: statusFilter === '' }"
-            @click="statusFilter = ''"
-          >
-            ทั้งหมด ({{ debts.length }})
-          </button>
-          <button
-            type="button"
-            class="table-nav-tab"
-            :class="{ active: statusFilter === 'outstanding' }"
-            @click="statusFilter = 'outstanding'"
-          >
-            ค้างชำระ ({{ countOutstanding }})
-          </button>
-          <button
-            type="button"
-            class="table-nav-tab"
-            :class="{ active: statusFilter === 'paid' }"
-            @click="statusFilter = 'paid'"
-          >
-            ชำระแล้ว ({{ countPaid }})
-          </button>
-        </div>
+        <AppSecondaryTabs v-model="statusFilter" :options="debtStatusTabs" aria-label="กรองสถานะหนี้" />
 
         <!-- Loading State Skeleton -->
         <div v-if="loading" class="skeleton-wrap" aria-label="กำลังโหลดข้อมูล">
@@ -248,14 +223,12 @@
               </tr>
               <tr v-if="!filtered.length">
                 <td colspan="7" class="empty-cell">
-                  <div class="empty-state">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-icon">
-                      <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-                      <line x1="2" y1="10" x2="22" y2="10"></line>
-                    </svg>
-                    <div class="empty-title">ไม่พบรายการหนี้ค้างชำระ</div>
-                    <div class="empty-desc">ยังไม่มีประวัติหนี้ค้างที่ตรงตามเงื่อนไขการค้นหา</div>
-                  </div>
+                  <AppEmptyState
+                    variant="table"
+                    icon="document"
+                    title="ไม่พบรายการหนี้ค้างชำระ"
+                    description="ลองเปลี่ยนคำค้นหาหรือตัวกรองเพื่อดูรายการอื่น"
+                  />
                 </td>
               </tr>
             </tbody>
@@ -299,6 +272,11 @@ const form = reactive({
 
 const countOutstanding = computed(() => debts.value.filter(d => d.status === 'outstanding').length)
 const countPaid = computed(() => debts.value.filter(d => d.status === 'paid').length)
+const debtStatusTabs = computed(() => [
+  { value: '', label: 'ทั้งหมด', count: debts.value.length },
+  { value: 'outstanding', label: 'ค้างชำระ', count: countOutstanding.value },
+  { value: 'paid', label: 'ชำระแล้ว', count: countPaid.value }
+])
 
 const filtered = computed(() => {
   return debts.value.filter(item => {
@@ -427,8 +405,8 @@ onMounted(loadDebts)
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  color: #2563eb;
+  background: linear-gradient(135deg, var(--bg-eff6ff) 0%, var(--bg-dbeafe) 100%);
+  color: var(--tx-2563eb);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -439,21 +417,21 @@ onMounted(loadDebts)
 .page-title {
   font-size: 1.375rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
   line-height: 1.3;
 }
 
 .page-subtitle {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin: 4px 0 0;
 }
 
 /* Card Container Standards */
 .debt-card {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   padding: 24px 28px;
@@ -481,8 +459,8 @@ onMounted(loadDebts)
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -491,13 +469,13 @@ onMounted(loadDebts)
 .section-card-title {
   font-size: 1.0625rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
 }
 
 .section-card-desc {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin: 2px 0 0;
 }
 
@@ -520,22 +498,22 @@ onMounted(loadDebts)
 .form-label {
   font-size: 0.84375rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--tx-334155);
 }
 
 .required-star {
-  color: #ef4444;
+  color: var(--tx-ef4444);
 }
 
 .form-input {
   height: 40px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
   padding: 0 12px;
   font-family: inherit;
   font-size: 0.875rem;
-  color: #1e293b;
-  background: #ffffff;
+  color: var(--tx-1e293b);
+  background: var(--bg-ffffff);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   width: 100%;
   box-sizing: border-box;
@@ -561,7 +539,7 @@ onMounted(loadDebts)
   position: absolute;
   right: 12px;
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   pointer-events: none;
 }
@@ -584,13 +562,13 @@ onMounted(loadDebts)
 .table-card-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
 }
 
 .table-card-subtitle {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin: 3px 0 0;
 }
 
@@ -610,7 +588,7 @@ onMounted(loadDebts)
 .search-icon {
   position: absolute;
   left: 12px;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   display: flex;
   align-items: center;
   pointer-events: none;
@@ -619,13 +597,13 @@ onMounted(loadDebts)
 .search-input {
   width: 100%;
   height: 38px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
   padding: 0 32px 0 36px;
   font-family: inherit;
   font-size: 0.84375rem;
-  color: #1e293b;
-  background: #ffffff;
+  color: var(--tx-1e293b);
+  background: var(--bg-ffffff);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   box-sizing: border-box;
 }
@@ -641,7 +619,7 @@ onMounted(loadDebts)
   right: 10px;
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   cursor: pointer;
   padding: 2px;
   display: flex;
@@ -651,14 +629,14 @@ onMounted(loadDebts)
 }
 
 .clear-search-btn:hover {
-  color: #475569;
+  color: var(--tx-475569);
 }
 
 /* Filter Tabs */
 .table-nav-tabs {
   display: flex;
   gap: 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   margin-bottom: 16px;
 }
 
@@ -668,7 +646,7 @@ onMounted(loadDebts)
   padding: 10px 4px;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
   cursor: pointer;
   position: relative;
   transition: color 0.15s ease;
@@ -676,11 +654,11 @@ onMounted(loadDebts)
 }
 
 .table-nav-tab:hover {
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .table-nav-tab.active {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 600;
 }
 
@@ -711,40 +689,40 @@ onMounted(loadDebts)
   background: transparent;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
   padding: 14px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   white-space: nowrap;
 }
 
 .debt-table tbody td {
   font-size: 0.875rem;
-  color: #334155;
+  color: var(--tx-334155);
   padding: 16px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   vertical-align: middle;
 }
 
 .debt-table tbody tr:hover {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .col-num {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-size: 0.8125rem;
 }
 
 .tenant-id-pill {
   font-weight: 600;
-  color: #1e293b;
-  background: #f1f5f9;
+  color: var(--tx-1e293b);
+  background: var(--bg-f1f5f9);
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 0.8125rem;
 }
 
 .market-id-pill {
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.84375rem;
   font-weight: 500;
 }
@@ -752,18 +730,18 @@ onMounted(loadDebts)
 .col-desc {
   max-width: 320px;
   word-break: break-word;
-  color: #334155;
+  color: var(--tx-334155);
 }
 
 .col-date {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8125rem;
   white-space: nowrap;
 }
 
 .col-amount {
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   text-align: right;
   white-space: nowrap;
   font-size: 0.9375rem;
@@ -772,7 +750,7 @@ onMounted(loadDebts)
 .currency-unit {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 /* Status Soft Pills */
@@ -786,13 +764,13 @@ onMounted(loadDebts)
 }
 
 .status-outstanding {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
 }
 
 .status-paid {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 
 /* Empty State */
@@ -809,19 +787,19 @@ onMounted(loadDebts)
 }
 
 .empty-icon {
-  color: #cbd5e1;
+  color: var(--tx-cbd5e1);
   margin-bottom: 4px;
 }
 
 .empty-title {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--tx-475569);
 }
 
 .empty-desc {
   font-size: 0.8125rem;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
 }
 
 /* Skeleton Loading */
@@ -833,7 +811,7 @@ onMounted(loadDebts)
   height: 48px;
   margin: 10px 0;
   border-radius: 8px;
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background: linear-gradient(90deg, var(--bg-f1f5f9) 25%, var(--bg-e2e8f0) 50%, var(--bg-f1f5f9) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }

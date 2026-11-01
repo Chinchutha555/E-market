@@ -353,31 +353,31 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   cursor: pointer;
   transition: all 0.18s ease;
   box-sizing: border-box;
 }
 
 .time-picker-trigger:hover:not(.is-disabled) {
-  border-color: #93c5fd;
-  background: #f8fafc;
+  border-color: var(--bd-93c5fd);
+  background: var(--bg-f8fafc);
 }
 
 .time-picker-trigger.is-focused {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .time-picker-trigger.is-disabled {
-  background: #f1f5f9;
-  color: #94a3b8;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-94a3b8);
   cursor: not-allowed;
-  border-color: #e2e8f0;
+  border-color: var(--bd-e2e8f0);
 }
 
 /* Sizing */
@@ -408,23 +408,23 @@ onBeforeUnmount(() => {
 .time-picker-icon {
   display: inline-flex;
   align-items: center;
-  color: #64748b;
+  color: var(--tx-64748b);
   flex-shrink: 0;
 }
 
 .time-picker-trigger.is-focused .time-picker-icon {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .time-picker-display {
   flex: 1;
   text-align: center;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-variant-numeric: tabular-nums;
 }
 
 .time-picker-display.placeholder-text {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-weight: 400;
 }
 
@@ -434,7 +434,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   padding: 2px;
   border-radius: 4px;
   cursor: pointer;
@@ -442,8 +442,8 @@ onBeforeUnmount(() => {
 }
 
 .time-picker-clear:hover {
-  color: #ef4444;
-  background: #fee2e2;
+  color: var(--tx-ef4444);
+  background: var(--bg-fee2e2);
 }
 
 /* Popover Panel */
@@ -453,8 +453,8 @@ onBeforeUnmount(() => {
   left: 0;
   z-index: 100;
   width: 250px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.16), 0 4px 10px -2px rgba(15, 23, 42, 0.08);
   padding: 12px;
@@ -467,7 +467,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   padding-bottom: 10px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
 }
 
 .header-time-preview {
@@ -475,23 +475,23 @@ onBeforeUnmount(() => {
   align-items: baseline;
   gap: 3px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .preview-number {
   font-size: 1.25rem;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-variant-numeric: tabular-nums;
 }
 
 .preview-colon {
   font-size: 1.1rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .preview-unit {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-left: 2px;
   font-weight: 500;
 }
@@ -504,15 +504,15 @@ onBeforeUnmount(() => {
   height: 26px;
   border-radius: 6px;
   border: none;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .close-popover-btn:hover {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-0f172a);
 }
 
 /* Presets */
@@ -522,26 +522,26 @@ onBeforeUnmount(() => {
   gap: 5px;
   margin-top: 10px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
 }
 
 .preset-chip {
   padding: 4px 2px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 6px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--tx-475569);
   cursor: pointer;
   text-align: center;
   transition: all 0.15s ease;
 }
 
 .preset-chip:hover {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  border-color: var(--bd-93c5fd);
+  color: var(--tx-2563eb);
 }
 
 .preset-chip.active {
@@ -564,9 +564,9 @@ onBeforeUnmount(() => {
 }
 
 .column-title {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   text-align: center;
   padding-bottom: 4px;
 }
@@ -574,7 +574,7 @@ onBeforeUnmount(() => {
 .column-scroll {
   max-height: 140px;
   overflow-y: auto;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--bd-f1f5f9);
   border-radius: 8px;
   padding: 4px;
   display: flex;
@@ -592,15 +592,15 @@ onBeforeUnmount(() => {
   border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 500;
-  color: #334155;
+  color: var(--tx-334155);
   cursor: pointer;
   transition: all 0.12s ease;
   font-variant-numeric: tabular-nums;
 }
 
 .time-item:hover {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
 }
 
 .time-item.active {
@@ -616,13 +616,13 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   margin-top: 10px;
   padding-top: 8px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 
 .btn-time-now {
   background: transparent;
   border: none;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -632,7 +632,7 @@ onBeforeUnmount(() => {
 }
 
 .btn-time-now:hover {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
 }
 
 .btn-time-confirm {

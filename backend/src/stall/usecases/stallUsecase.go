@@ -98,9 +98,18 @@ func (u *useCase) GetStalls(filter requests.StallFilter) ([]responses.StallRespo
 	}
 
 	res := make([]responses.StallResponse, len(stalls))
+	waitlistsByStall := make(map[string][]models.Waitlist)
+	if waitlists, waitlistErr := u.repo.GetActiveWaitlists(filter); waitlistErr == nil {
+		for _, item := range waitlists {
+			key := strings.ToUpper(strings.TrimSpace(item.StallIdent))
+			if key != "" {
+				waitlistsByStall[key] = append(waitlistsByStall[key], item)
+			}
+		}
+	}
 	for i, s := range stalls {
 		resp := toStallResponse(&s)
-		if waitlist, err := u.repo.GetActiveWaitlistByStall(s.Ident); err == nil && len(waitlist) > 0 {
+		if waitlist := waitlistsByStall[strings.ToUpper(strings.TrimSpace(s.Ident))]; len(waitlist) > 0 {
 			resp.WaitlistCount = len(waitlist)
 			if waitlist[0].Status == "offered" && waitlist[0].ExpiresAt != nil && waitlist[0].ExpiresAt.After(time.Now()) {
 				resp.OfferedToTenantID = waitlist[0].TenantID

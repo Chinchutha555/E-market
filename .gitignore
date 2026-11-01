@@ -41,3 +41,6 @@ emarket.db
 .vscode/
 *.swp
 *.swo
+
+*.db-wal
+*.db-shm

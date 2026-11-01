@@ -37,9 +37,9 @@ onBeforeUnmount(() => { document.removeEventListener('pointerdown', dismiss); do
 </script>
 <style scoped>
 .more-root { display: inline-flex; }
-.more-menu { position: fixed; z-index: 1500; width: 230px; padding: 5px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; box-shadow: 0 8px 24px rgba(15,23,42,.14); }
-.more-menu button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 8px 10px; border: 0; border-radius: 7px; background: transparent; color: #334155; font: inherit; font-size: .875rem; text-align: left; cursor: pointer; }
-.more-menu button:hover, .more-menu button:focus-visible { background: #f1f5f9; outline: none; }
-.more-menu button.danger { color: #dc2626; } .more-menu button.danger:hover { background: #fef2f2; }
-.more-menu svg { width: 16px; height: 16px; flex: 0 0 16px; } .more-divider { height: 1px; margin: 4px 0; background: #f1f5f9; }
+.more-menu { position: fixed; z-index: 1500; width: 230px; padding: 5px; border: 1px solid var(--bd-e2e8f0); border-radius: 10px; background: var(--bg-ffffff); box-shadow: 0 8px 24px rgba(15,23,42,.14); }
+.more-menu button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 8px 10px; border: 0; border-radius: 7px; background: transparent; color: var(--tx-334155); font: inherit; font-size: .875rem; text-align: left; cursor: pointer; }
+.more-menu button:hover, .more-menu button:focus-visible { background: var(--bg-f1f5f9); outline: none; }
+.more-menu button.danger { color: var(--tx-dc2626); } .more-menu button.danger:hover { background: var(--bg-fef2f2); }
+.more-menu svg { width: 16px; height: 16px; flex: 0 0 16px; } .more-divider { height: 1px; margin: 4px 0; background: var(--bg-f1f5f9); }
 </style>

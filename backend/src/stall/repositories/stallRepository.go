@@ -130,6 +130,55 @@ func (r *repository) FindAll(filter requests.StallFilter) ([]models.Stall, error
 		stallIndexes[ident] = len(stalls) - 1
 	}
 
+	// An active lease is the strongest source of truth for availability. Some
+	// GIS stalls do not have a persisted stall row (their geometry lives in the
+	// market layout), so merge contracts into the public stall-status response
+	// just like bookings. This prevents the booking map from presenting an
+	// actively leased stall as available.
+	var activeContracts []models.Contract
+	contractQuery := r.conn.Model(&models.Contract{}).
+		Where("status = 'A' AND contract_state = 'active'")
+	if resolvedMarketID > 0 {
+		contractQuery = contractQuery.Where("market_id = ?", resolvedMarketID)
+	} else if marketKey != "" {
+		// A market slug/name has normally been resolved to an ID above. If it
+		// cannot be resolved, do not leak statuses from another market.
+		contractQuery = contractQuery.Where("1 = 0")
+	}
+	if err := contractQuery.Order("id ASC").Find(&activeContracts).Error; err != nil {
+		return nil, err
+	}
+	for _, contract := range activeContracts {
+		for _, rawIdent := range strings.Split(contract.StallIdent, ",") {
+			ident := strings.TrimSpace(rawIdent)
+			if ident == "" {
+				continue
+			}
+			if index, exists := stallIndexes[ident]; exists {
+				stalls[index].StallStatus = "occupied"
+				continue
+			}
+			if filter.ZoneID > 0 || (filter.Search != "" && !strings.Contains(strings.ToLower(ident), strings.ToLower(filter.Search))) {
+				continue
+			}
+
+			marketID := resolvedMarketID
+			if contract.MarketID != nil {
+				marketID = *contract.MarketID
+			}
+			stalls = append(stalls, models.Stall{
+				MarketID:    marketID,
+				MarketSlug:  resolvedMarketSlug,
+				MarketName:  resolvedMarketName,
+				Ident:       ident,
+				Name:        "แผงค้า " + ident,
+				StallStatus: "occupied",
+				Status:      "A",
+			})
+			stallIndexes[ident] = len(stalls) - 1
+		}
+	}
+
 	// Merge active waitlist offers ('offered' and not expired) so stalls in the
 	// 48-hour waitlist offer window report StallStatus = 'offered'
 	var activeOffers []models.Waitlist
@@ -271,6 +320,28 @@ func (r *repository) GetActiveWaitlistByStall(stallIdent string) ([]models.Waitl
 	var items []models.Waitlist
 	err := r.conn.Where("stall_ident = ? AND status IN ('offered', 'waiting')", strings.TrimSpace(stallIdent)).
 		Order("CASE WHEN status = 'offered' THEN 0 ELSE 1 END ASC, position ASC, id ASC").
+		Find(&items).Error
+	return items, err
+}
+
+// GetActiveWaitlists returns the queue for a market in one query. The list page
+// must not call GetActiveWaitlistByStall once per stall because that turns a
+// 500-stall market into 500+ database round trips during every map refresh.
+func (r *repository) GetActiveWaitlists(filter requests.StallFilter) ([]models.Waitlist, error) {
+	now := time.Now()
+	expireQuery := r.conn.Model(&models.Waitlist{}).
+		Where("status = 'offered' AND expires_at IS NOT NULL AND expires_at <= ?", now)
+	query := r.conn.Model(&models.Waitlist{}).
+		Where("status IN ('offered', 'waiting')")
+	if filter.MarketID > 0 {
+		expireQuery = expireQuery.Where("market_id = ?", filter.MarketID)
+		query = query.Where("market_id = ?", filter.MarketID)
+	}
+	_ = expireQuery.Updates(map[string]interface{}{"status": "expired", "updated_at": now}).Error
+
+	var items []models.Waitlist
+	err := query.
+		Order("stall_ident ASC, CASE WHEN status = 'offered' THEN 0 ELSE 1 END ASC, position ASC, id ASC").
 		Find(&items).Error
 	return items, err
 }

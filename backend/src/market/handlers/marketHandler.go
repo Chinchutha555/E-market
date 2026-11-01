@@ -21,6 +21,10 @@ func (h *Handler) GetGISConfig(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
+	// Published GIS payloads are large but immutable until the matching PUT.
+	// Let the browser reuse the compressed response on a refresh instead of
+	// downloading and parsing the same multi-megabyte JSON again immediately.
+	c.Header("Cache-Control", "private, max-age=300, stale-while-revalidate=60")
 	c.JSON(http.StatusOK, responses.SuccessResponse(res, http.StatusOK))
 }
 
@@ -40,6 +44,29 @@ func (h *Handler) SaveGISConfig(c *gin.Context) {
 		return
 	}
 	res, err := h.useCase.SaveGISConfig(c.Param("id"), middlewares.GetUserID(c), req)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, responses.SuccessResponse(res, http.StatusOK))
+}
+
+func (h *Handler) GetUtilitySettings(c *gin.Context) {
+	res, err := h.useCase.GetUtilitySettings(c.Param("id"))
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, responses.SuccessResponse(res, http.StatusOK))
+}
+
+func (h *Handler) SaveUtilitySettings(c *gin.Context) {
+	var req requests.UpdateMarketUtilitySettingsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondError(c, err)
+		return
+	}
+	res, err := h.useCase.SaveUtilitySettings(c.Param("id"), middlewares.GetUserID(c), req)
 	if err != nil {
 		respondError(c, err)
 		return

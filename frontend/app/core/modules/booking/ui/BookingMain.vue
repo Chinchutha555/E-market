@@ -30,21 +30,10 @@
           </div>
         </div>
 
-        <nav class="tenant-booking-sections" aria-label="หมวดรายการจอง">
-          <button type="button" :class="{ active: tenantBookingSection === 'bookings' }" @click="tenantBookingSection = 'bookings'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            <span>การจองของฉัน</span>
-            <span class="tab-count-badge">{{ countAll }}</span>
-          </button>
-          <button type="button" :class="{ active: tenantBookingSection === 'interests' }" @click="tenantBookingSection = 'interests'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-            <span>แผงที่สนใจ</span>
-            <span class="tab-count-badge">{{ tenantVisibleWaitlistItems.length }}</span>
-          </button>
-        </nav>
+        <AppPrimaryTabs v-model="tenantBookingSection" :options="tenantPrimaryTabs" aria-label="หมวดรายการจอง" />
 
         <!-- Main Content Card -->
-        <div v-show="tenantBookingSection === 'bookings'" class="main-white-card">
+        <div v-show="tenantBookingSection === 'bookings'" class="main-white-card primary-tab-content-card">
           <!-- Header Row: Title & Subtitle on Left, Search + Filter on Right -->
           <div class="card-header-row">
             <div class="header-left">
@@ -408,46 +397,42 @@
           <AppBookingListSkeleton v-else-if="loading" :count="2" />
 
           <!-- Empty State -->
-          <div v-else-if="filteredTenantBookings.length === 0" class="empty-state-box">
-            <div class="empty-icon">
-              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-            </div>
-
-            <!-- Case A: Current tab has 0, but user has bookings in other tabs -->
-            <template v-if="countAll > 0 && tenantStatusTab !== 'all'">
-              <div class="empty-title">ไม่มีรายการในแท็บ "{{ getTenantTabName(tenantStatusTab) }}"</div>
-              
-            </template>
-
-            <!-- Case B: Sub-filter in pending has 0 items -->
-            <template v-else-if="tenantStatusTab === 'pending' && tenantSubFilter !== 'all'">
-              <div class="empty-title">ไม่มีรายการในขั้นตอนนี้</div>
-            </template>
-
-            <!-- Case C: Filtered by search query -->
-            <template v-else-if="tenantSearchQuery">
-              <div class="empty-title">ไม่พบรายการที่ตรงกับ "{{ tenantSearchQuery }}"</div>
-              <div class="empty-desc">ลองตรวจสอบคำค้นหา หรือล้างคำค้นหาเพื่อดูรายการทั้งหมด</div>
-              <button
-                type="button"
-                class="btn btn-outline-primary btn-sm"
-                @click="tenantSearchQuery = ''; currentPage = 1"
-                style="margin-top: 14px;"
-              >
-                ล้างคำค้นหา
-              </button>
-            </template>
-
-            <!-- Case D: Truly zero bookings in system -->
-            <template v-else>
-              <div class="empty-title">ยังไม่มีประวัติการจองแผงค้า</div>
-              <div class="empty-desc">คุณยังไม่มีรายการจองแผงค้าในระบบ สามารถเลือกตลาดและยื่นขอนัดดูแผงได้ทันที</div>
-              <NuxtLink to="/" class="btn btn-primary btn-sm" style="margin-top: 14px; display: inline-flex; align-items: center; gap: 6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                <span>ไปยังหน้าเลือกตลาดเพื่อจองแผง</span>
-              </NuxtLink>
-            </template>
-          </div>
+          <template v-else-if="filteredTenantBookings.length === 0">
+            <AppEmptyState
+              v-if="countAll > 0 && tenantStatusTab !== 'all'"
+              variant="table"
+              icon="inbox"
+              :title="`ไม่มีรายการ${getTenantTabName(tenantStatusTab)}`"
+              description="เลือกรายการสถานะอื่นเพื่อดูการจองของคุณ"
+            />
+            <AppEmptyState
+              v-else-if="tenantStatusTab === 'pending' && tenantSubFilter !== 'all'"
+              variant="table"
+              icon="inbox"
+              title="ไม่มีรายการในขั้นตอนนี้"
+              description="ลองเลือกขั้นตอนอื่นในสถานะรอดำเนินการ"
+            />
+            <AppEmptyState
+              v-else-if="tenantSearchQuery"
+              variant="table"
+              icon="search"
+              :title="`ไม่พบรายการที่ตรงกับ “${tenantSearchQuery}”`"
+              description="ลองเปลี่ยนคำค้นหาหรือล้างคำค้นหา"
+              action-label="ล้างคำค้นหา"
+              @action="tenantSearchQuery = ''; currentPage = 1"
+            />
+            <AppEmptyState
+              v-else
+              variant="card"
+              icon="calendar"
+              title="ยังไม่มีประวัติการจองแผงค้า"
+              description="เลือกตลาดและยื่นขอนัดดูแผงเพื่อเริ่มรายการแรก"
+            >
+              <template #actions>
+                <AppButton to="/" variant="primary" size="sm">เลือกตลาด</AppButton>
+              </template>
+            </AppEmptyState>
+          </template>
 
           <div v-else-if="tenantViewMode === 'table'" class="officer-table-container" role="region" aria-label="ตารางการจองของฉัน" tabindex="0">
             <table class="officer-custom-table">
@@ -734,7 +719,7 @@
                           v-for="sub in getBookingStallItems(b)"
                           :key="`${b.id}-${sub.id}-${sub.stall_number}`"
                           class="msa-stall-item"
-                          :style="isStallTerminal(sub.status) ? 'opacity: 0.65; background: #f8fafc;' : ''"
+                          :style="isStallTerminal(sub.status) ? 'opacity: 0.65; background: var(--bg-f8fafc);' : ''"
                         >
                           <div class="msa-stall-info">
                             <span class="msa-stall-code">แผง {{ sub.stall_number }}</span>
@@ -1058,7 +1043,7 @@
           />
         </div>
 
-        <section v-show="tenantBookingSection === 'interests'" class="main-white-card waitlist-card">
+        <section v-show="tenantBookingSection === 'interests'" class="main-white-card waitlist-card primary-tab-content-card">
           <div class="card-header-row">
             <div class="header-left">
               <h2 class="section-title">แผงที่สนใจ</h2>
@@ -1070,7 +1055,7 @@
               v-for="item in tenantVisibleWaitlistItems"
               :key="item.id"
               class="waitlist-item"
-              :style="item.status === 'offered' ? 'border-color: #60a5fa; background: #eff6ff;' : (item.status === 'cancelled' || item.status === 'expired' ? 'border-color: #e2e8f0; background: #f8fafc;' : '')"
+              :style="item.status === 'offered' ? 'border-color: #60a5fa; background: var(--bg-eff6ff);' : (item.status === 'cancelled' || item.status === 'expired' ? 'border-color: var(--bd-e2e8f0); background: var(--bg-f8fafc);' : '')"
             >
               <div>
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -1103,35 +1088,28 @@
                   >
                     ยกเลิกการรอคิว
                   </span>
-                  <span
-                    v-else
-                    class="status-pill-badge pill-amber"
-                    style="font-size: 0.75rem; padding: 2px 10px;"
-                  >
-                    ลำดับคิวที่ {{ item.position }}
-                  </span>
                 </div>
                 <p>
                   {{ item.market_name || 'ตลาดนัดจตุจักร' }}
                   <span v-if="item.project_name"> · {{ item.project_name }}</span>
                   <span v-if="item.created_at"> · เข้าคิวเมื่อ {{ formatSubmissionTimestamp(item.created_at) }}</span>
                 </p>
-                <p v-if="item.status === 'offered'" style="color: #1d4ed8; font-weight: 600; margin-top: 4px;">
+                <p v-if="item.status === 'offered'" style="color: var(--tx-1d4ed8); font-weight: 600; margin-top: 4px;">
                   กรุณากด “ยื่นคำร้องขอดูแผง” ภายใน {{ formatOfferExpiresAtText(item) }}
                 </p>
-                <p v-else-if="item.status === 'cancelled'" style="color: #b91c1c; margin-top: 4px; font-size: 0.8125rem;">
+                <p v-else-if="item.status === 'cancelled'" style="color: var(--tx-b91c1c); margin-top: 4px; font-size: 0.8125rem;">
                   {{ item.dismiss_reason || 'แผงนี้มีผู้ทำสัญญาเช่าเรียบร้อยแล้ว สิ้นสุดการรอคิว' }}
                 </p>
-                <p v-else-if="item.status === 'expired'" style="color: #64748b; margin-top: 4px; font-size: 0.8125rem;">
+                <p v-else-if="item.status === 'expired'" style="color: var(--tx-64748b); margin-top: 4px; font-size: 0.8125rem;">
                   {{ item.dismiss_reason || 'เลยกำหนดเวลายื่นคำร้องขอดูแผง สิ้นสุดการเสนอสิทธิ์' }}
                 </p>
-                <p v-else-if="item.status === 'withdrawn'" style="color: #64748b; margin-top: 4px; font-size: 0.8125rem;">
+                <p v-else-if="item.status === 'withdrawn'" style="color: var(--tx-64748b); margin-top: 4px; font-size: 0.8125rem;">
                   {{ item.dismiss_reason || 'ยกเลิกการรอคิวแผงนี้แล้ว' }}
                 </p>
               </div>
               <div
                 class="waitlist-position"
-                :style="item.status === 'offered' ? 'background: #dbeafe; color: #1d4ed8;' : (item.status === 'cancelled' ? 'background: #fee2e2; color: #dc2626;' : (item.status === 'expired' || item.status === 'withdrawn' ? 'background: #f1f5f9; color: #64748b;' : ''))"
+                :style="item.status === 'offered' ? 'background: var(--bg-dbeafe); color: var(--tx-1d4ed8);' : (item.status === 'cancelled' ? 'background: var(--bg-fee2e2); color: var(--tx-dc2626);' : (item.status === 'expired' || item.status === 'withdrawn' ? 'background: var(--bg-f1f5f9); color: var(--tx-64748b);' : ''))"
               >
                 <span v-if="item.status === 'offered'">ถึงสิทธิ์ • เหลือ {{ formatRemainingOfferTime(item) }}</span>
                 <span v-else-if="item.status === 'cancelled'">มีผู้เช่าแล้ว</span>
@@ -1171,15 +1149,13 @@
               </div>
             </article>
           </div>
-          <div v-else class="empty-state-box">
-            <div class="empty-state-panel">
-              <div class="empty-icon" aria-hidden="true">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-              </div>
-              <div class="empty-title">ยังไม่มีแผงที่สนใจ</div>
-              <div class="empty-desc">เลือกแผงที่ติดจองจากผัง แล้วกด “รอคิวแผงนี้” เพื่อบันทึกไว้ติดตาม</div>
-            </div>
-          </div>
+          <AppEmptyState
+            v-else
+            variant="card"
+            icon="heart"
+            title="ยังไม่มีแผงที่สนใจ"
+            description="เลือกแผงที่ติดจองจากผัง แล้วกด “รอคิวแผงนี้” เพื่อบันทึกไว้ติดตาม"
+          />
         </section>
       </div>
 
@@ -1218,21 +1194,10 @@
         </div>
 
         <!-- Officer Section Switcher (โครงสร้างและดีไซน์แบบเดียวกับผู้เช่า) -->
-        <nav class="tenant-booking-sections" aria-label="หมวดการจัดการของเจ้าหน้าที่">
-          <button type="button" :class="{ active: officerSection === 'bookings' }" @click="officerSection = 'bookings'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            <span>การจองทั้งหมด</span>
-            <span class="tab-count-badge">{{ officerDirectBookingsCount }}</span>
-          </button>
-          <button type="button" :class="{ active: officerSection === 'waiting' }" @click="officerSection = 'waiting'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            <span>คิวรอแผงค้า</span>
-            <span class="tab-count-badge">{{ officerCountWaiting }}</span>
-          </button>
-        </nav>
+        <AppPrimaryTabs v-model="officerSection" :options="officerPrimaryTabs" aria-label="หมวดการจัดการของเจ้าหน้าที่" />
 
         <!-- Main Content Card: SECTION 2A: OFFICER BOOKINGS -->
-        <div v-show="officerSection === 'bookings'" class="main-white-card">
+        <div v-show="officerSection === 'bookings'" class="main-white-card primary-tab-content-card">
           <!-- Header Row: Title & Subtitle on Left, Search + Actions on Right (โครงเดียวกับผู้เช่า) -->
           <div class="card-header-row">
             <div class="header-left">
@@ -1458,43 +1423,35 @@
           <AppBookingListSkeleton v-if="loading" :count="2" />
 
           <!-- Empty State in Officer View -->
-          <div v-else-if="filteredOfficerBookings.length === 0" class="empty-state-box officer-empty-state">
-            <div class="empty-state-panel">
-            <div class="empty-icon" aria-hidden="true">
-              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-            </div>
-
-            <template v-if="officerMarketBookings.length > 0 && officerActiveTab !== 'all'">
-              <div class="empty-eyebrow">สถานะที่เลือก</div>
-              <div class="empty-title">ยังไม่มีรายการ{{ getOfficerTabName(officerActiveTab) }}</div>
-              <button
-                v-if="officerActiveTab === 'pending' && officerSubFilter !== 'all'"
-                type="button"
-                class="btn btn-outline-primary btn-sm"
-                @click="officerSubFilter = 'all'"
-                style="margin-top: 14px;"
-              >
-                แสดงทั้งหมดในรอดำเนินการ
-              </button>
-            </template>
-            <template v-else-if="officerSearchQuery">
-              <div class="empty-title">ไม่พบรายการที่ตรงกับ "{{ officerSearchQuery }}"</div>
-              <div class="empty-desc">ลองตรวจสอบคำค้นหา หรือล้างคำค้นหาเพื่อดูรายการทั้งหมด</div>
-              <button
-                type="button"
-                class="btn btn-outline-primary btn-sm"
-                @click="officerSearchQuery = ''; officerCurrentPage = 1"
-                style="margin-top: 14px;"
-              >
-                ล้างคำค้นหา
-              </button>
-            </template>
-            <template v-else>
-              <div class="empty-title">ยังไม่มีรายการจองในตลาดนี้</div>
-              <div class="empty-desc">ยังไม่มีผู้เช่ายื่นขอนัดหมายหรือจองแผงค้าในตลาดนี้</div>
-            </template>
-            </div>
-          </div>
+          <template v-else-if="filteredOfficerBookings.length === 0">
+            <AppEmptyState
+              v-if="officerMarketBookings.length > 0 && officerActiveTab !== 'all'"
+              variant="table"
+              icon="inbox"
+              :title="`ยังไม่มีรายการ${getOfficerTabName(officerActiveTab)}`"
+              description="ลองเลือกสถานะอื่นเพื่อดูรายการในตลาดนี้"
+            >
+              <template v-if="officerActiveTab === 'pending' && officerSubFilter !== 'all'" #actions>
+                <AppButton variant="outline" size="sm" @click="officerSubFilter = 'all'">แสดงรายการรอดำเนินการทั้งหมด</AppButton>
+              </template>
+            </AppEmptyState>
+            <AppEmptyState
+              v-else-if="officerSearchQuery"
+              variant="table"
+              icon="search"
+              :title="`ไม่พบรายการที่ตรงกับ “${officerSearchQuery}”`"
+              description="ลองเปลี่ยนคำค้นหาหรือล้างคำค้นหา"
+              action-label="ล้างคำค้นหา"
+              @action="officerSearchQuery = ''; officerCurrentPage = 1"
+            />
+            <AppEmptyState
+              v-else
+              variant="table"
+              icon="calendar"
+              title="ยังไม่มีรายการจองในตลาดนี้"
+              description="รายการจะปรากฏเมื่อผู้เช่ายื่นขอนัดหมายหรือจองแผงค้า"
+            />
+          </template>
 
           <!-- OFFICER VIEW MODE 1: แบ่งตามโครงการ → 1 การ์ดต่อ 1 ใบจอง -->
           <div v-else-if="officerViewMode === 'project'" class="officer-groups-wrapper">
@@ -1524,7 +1481,7 @@
                 class="market-accordion-body officer-cards-list in-project"
               >
                 <div
-                  v-for="b in project.bookings"
+                  v-for="b in visibleProjectBookings(project)"
                   :key="b.id"
                   :data-booking-id="String(b.id)"
                   class="booking-item-card"
@@ -1592,7 +1549,7 @@
                         v-if="getBookingStallItems(b).length <= 1 && getStallQueueCount(b.stall_number) > 0"
                         type="button"
                         class="msa-btn"
-                        style="background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; display: inline-flex; align-items: center; gap: 5px; font-weight: 700; padding: 2px 9px; font-size: 0.78rem; margin-left: 4px; cursor: pointer;"
+                        style="background: var(--bg-eff6ff); color: var(--tx-1d4ed8); border: 1px solid var(--bd-93c5fd); display: inline-flex; align-items: center; gap: 5px; font-weight: 700; padding: 2px 9px; font-size: 0.78rem; margin-left: 4px; cursor: pointer;"
                         @click.stop="openStallQueueModal(b.stall_number, b.market_name)"
                         :title="`คลิกดูรายชื่อผู้จองและผู้รอคิวแผง ${b.stall_number} (${getStallQueueCount(b.stall_number)} ราย)`"
                       >
@@ -1634,7 +1591,7 @@
                         v-for="sub in getBookingStallItems(b)"
                         :key="`${b.id}-${sub.id}-${sub.stall_number}`"
                         class="msa-stall-item"
-                        :style="isStallTerminal(sub.status) ? 'opacity: 0.65; background: #f8fafc;' : ''"
+                        :style="isStallTerminal(sub.status) ? 'opacity: 0.65; background: var(--bg-f8fafc);' : ''"
                       >
                         <div class="msa-stall-info">
                           <span class="msa-stall-code">แผง {{ sub.stall_number }}</span>
@@ -1652,7 +1609,7 @@
                             v-if="getStallQueueCount(sub.stall_number) > 0"
                             type="button"
                             class="msa-btn"
-                            style="background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; display: inline-flex; align-items: center; gap: 5px; font-weight: 700; cursor: pointer;"
+                            style="background: var(--bg-eff6ff); color: var(--tx-1d4ed8); border: 1px solid var(--bd-93c5fd); display: inline-flex; align-items: center; gap: 5px; font-weight: 700; cursor: pointer;"
                             @click.stop="openStallQueueModal(sub.stall_number, sub.market_name || b.market_name)"
                             :title="`คลิกดูรายชื่อผู้จองและผู้รอคิวแผง ${sub.stall_number} (${getStallQueueCount(sub.stall_number)} ราย)`"
                           >
@@ -2044,6 +2001,11 @@
                   </div>
                 </div>
               </div>
+                <div v-if="hiddenProjectBookingCount(project) > 0" class="project-show-more">
+                  <AppButton variant="outline" size="md" @click="showMoreProjectBookings(project)">
+                    แสดงเพิ่ม ({{ hiddenProjectBookingCount(project) }} รายการที่เหลือ)
+                  </AppButton>
+                </div>
               </div>
             </div>
           </div>
@@ -2105,7 +2067,7 @@
 
                   <template v-if="isProjectGroupOpen(project.key)">
                     <tr
-                      v-for="b in project.bookings"
+                      v-for="b in visibleProjectBookings(project)"
                       :key="b.id"
                       class="hierarchy-booking-row"
                       :data-booking-id="String(b.id)"
@@ -2126,9 +2088,9 @@
                         <div class="cell-sub-date" style="margin-top: 2px;">{{ b.market_name || 'ตลาดนัดจตุจักร' }} · {{ getBookingProjectName(b) }}</div>
                       </td>
                       <td>
-                        <div style="font-weight: 700; color: #1e293b;">
+                        <div style="font-weight: 700; color: var(--tx-1e293b);">
                           แผง {{ b.stall_number }}
-                          <span style="font-weight: 500; color: #64748b; font-size: 0.8rem;">
+                          <span style="font-weight: 500; color: var(--tx-64748b); font-size: 0.8rem;">
                             ({{ getBookingStallCountLabel(b) }})
                           </span>
                         </div>
@@ -2138,7 +2100,7 @@
                             :key="sub.stall_number"
                             type="button"
                             class="msa-btn"
-                            style="background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 0.75rem;"
+                            style="background: var(--bg-eff6ff); color: var(--tx-1d4ed8); border: 1px solid var(--bd-93c5fd); display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 0.75rem;"
                             @click.stop="openStallQueueModal(sub.stall_number, sub.market_name || b.market_name)"
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -2147,7 +2109,7 @@
                         </div>
                       </td>
                       <td>
-                        <div style="font-weight: 700; color: #1e293b;">฿{{ getBookingTotalMonthlyRent(b).toLocaleString() }}/เดือน</div>
+                        <div style="font-weight: 700; color: var(--tx-1e293b);">฿{{ getBookingTotalMonthlyRent(b).toLocaleString() }}/เดือน</div>
                         <div class="cell-sub-date">มัดจำ ฿{{ getBookingTotalDeposit(b).toLocaleString() }}</div>
                       </td>
                       <td>
@@ -2182,6 +2144,15 @@
                         </div>
                       </td>
                     </tr>
+                    <tr v-if="hiddenProjectBookingCount(project) > 0" class="project-show-more-row">
+                      <td colspan="7">
+                        <div class="project-show-more">
+                          <AppButton variant="outline" size="md" @click="showMoreProjectBookings(project)">
+                            แสดงเพิ่ม ({{ hiddenProjectBookingCount(project) }} รายการที่เหลือ)
+                          </AppButton>
+                        </div>
+                      </td>
+                    </tr>
                   </template>
                 </template>
               </tbody>
@@ -2199,13 +2170,13 @@
         </div>
 
         <!-- Main Content Card: SECTION 2B: OFFICER WAITING LIST (คิวรอแผงค้า) -->
-        <div v-show="officerSection === 'waiting'" class="main-white-card">
+        <div v-show="officerSection === 'waiting'" class="main-white-card primary-tab-content-card">
           <!-- Header Row: Title & Subtitle on Left, Search on Right -->
           <div class="card-header-row">
             <div class="header-left">
               <h2 class="section-title">คิวรอแผงค้า</h2>
               <div class="item-count-subtitle">
-                {{ officerWaitlistSubTab === 'active' ? `${officerWaitlistStallGroups.length} แผง (รวม ${officerCountWaiting} คิวรอ)` : `${officerMarketWaitlistHistoryItems.length} รายการตัดสิทธิ์/สิ้นสุดคิว` }}
+                {{ officerWaitlistSubTab === 'active' ? `${officerCountWaiting} คิว` : `${officerMarketWaitlistHistoryItems.length} คิว` }}
               </div>
             </div>
 
@@ -2227,40 +2198,23 @@
           </div>
 
           <!-- Sub-tabs: Active vs History -->
-          <div class="status-tabs-row" style="margin-bottom: 20px;">
-            <button
-              type="button"
-              class="tab-item"
-              :class="{ active: officerWaitlistSubTab === 'active' }"
-              @click="officerWaitlistSubTab = 'active'"
-            >
-              <span>คิวที่กำลังรอ</span>
-              <span class="tab-badge">{{ officerCountWaiting }}</span>
-            </button>
-            <button
-              type="button"
-              class="tab-item"
-              :class="{ active: officerWaitlistSubTab === 'history' }"
-              @click="officerWaitlistSubTab = 'history'"
-            >
-              <span>คิวที่สิ้นสุด / ตัดสิทธิ์</span>
-              <span class="tab-badge">{{ officerMarketWaitlistHistoryItems.length }}</span>
-            </button>
-          </div>
+          <AppSecondaryTabs
+            v-model="officerWaitlistSubTab"
+            :options="officerWaitlistSecondaryTabs"
+            aria-label="เลือกสถานะคิวรอแผงค้า"
+            style="margin-bottom: 20px;"
+          />
 
           <!-- SUB-VIEW 1: ACTIVE WAITING LIST -->
           <template v-if="officerWaitlistSubTab === 'active'">
             <!-- Empty State in Waiting List View -->
-            <div v-if="officerWaitlistStallGroups.length === 0" class="empty-state-box officer-empty-state">
-              <div class="empty-state-panel">
-                <div class="empty-icon" aria-hidden="true">
-                  <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                </div>
-                <div class="empty-eyebrow">คิวรอแผงค้า</div>
-                <div class="empty-title">ยังไม่มีผู้รอคิวในตลาดนี้</div>
-                <div class="empty-desc">เมื่อผู้เช่ากด “รอคิวแผงนี้” บนแผงที่ติดจอง รายชื่อคิวจะแสดงแยกตามรายแผงที่นี่</div>
-              </div>
-            </div>
+            <AppEmptyState
+              v-if="officerWaitlistStallGroups.length === 0"
+              variant="table"
+              icon="users"
+              title="ยังไม่มีผู้รอคิวในตลาดนี้"
+              description="รายชื่อจะแสดงเมื่อผู้เช่ากดรอคิวบนแผงที่ติดจอง"
+            />
 
             <!-- Groups Accordion by Project and Stall -->
             <div v-else class="officer-groups-wrapper">
@@ -2289,16 +2243,12 @@
                   <article
                     v-for="wg in project.stalls"
                     :key="wg.stallNumber"
-                    class="waitlist-item"
-                    :style="wg.offeredItem ? 'border-color: #60a5fa; background: #f8fbff;' : ''"
+                    class="waitlist-item officer-queue-card"
+                    :style="wg.offeredItem ? 'border-color: #60a5fa; background: var(--bg-f8fbff);' : ''"
                   >
-                    <div>
+                    <div class="officer-queue-card-header">
                       <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <strong>แผง {{ wg.stallNumber }}</strong>
-                        <span class="in-card-queue-pill is-waiting-pill" style="cursor: pointer;" @click="openStallQueueModal(wg.stallNumber, wg.marketName, 'active')">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                          <span>{{ wg.queues.length }}</span>
-                        </span>
                         <span v-if="wg.offeredItem" class="status-pill-badge pill-blue" style="font-size: 0.75rem; padding: 2px 8px;">
                           กำลังเสนอสิทธิ์ให้ {{ wg.offeredItem.tenant_name }} (เหลือ {{ formatRemainingOfferTime(wg.offeredItem) }} • หมดเขต {{ formatOfferExpiresAtText(wg.offeredItem) }})
                         </span>
@@ -2315,18 +2265,21 @@
                           มีประวัติสิ้นสุดคิว {{ getStallWaitlistHistory(wg.stallNumber).length }} ราย
                         </span>
                       </div>
-                      <p>
-                        {{ wg.marketName }}
-                        <span v-if="wg.projectName"> · {{ wg.projectName }}</span>
-                        <span> · คิวลำดับแรก: {{ wg.queues[0]?.tenant_name }} ({{ wg.queues[0]?.tenant_phone || '-' }})</span>
-                      </p>
                     </div>
-                    <div class="waitlist-position">
+                    <div class="waitlist-position officer-queue-card-status">
                       <span>รอคิว {{ wg.queues.length }} ราย</span>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <div class="officer-queue-card-divider" aria-hidden="true"></div>
+                    <div class="officer-queue-card-details">
+                      <p>
+                        {{ wg.marketName }}
+                        <span> · คิวแรก: {{ wg.queues[0]?.tenant_name }} ({{ wg.queues[0]?.tenant_phone || '-' }})</span>
+                      </p>
+                    </div>
+                    <div class="officer-queue-card-actions">
                       <AppButton
                         v-if="wg.offeredItem || !wg.activeHolder"
+                        class="officer-queue-action-btn"
                         variant="primary"
                         size="sm"
                         @click="handleAdvanceStallWaitlist(wg.stallNumber)"
@@ -2334,11 +2287,12 @@
                         เลื่อนคิวถัดไป
                       </AppButton>
                       <AppButton
+                        class="officer-queue-action-btn"
                         variant="secondary"
                         size="sm"
                         @click="openStallQueueModal(wg.stallNumber, wg.marketName, 'active')"
                       >
-                        ดูรายชื่อคิว ({{ wg.queues.length }})
+                        ดูรายชื่อคิว
                       </AppButton>
                     </div>
                   </article>
@@ -2349,23 +2303,20 @@
 
           <!-- SUB-VIEW 2: HISTORY WAITING LIST (ประวัติคิวที่สิ้นสุด / ตัดสิทธิ์แล้ว) -->
           <template v-else>
-            <div v-if="officerMarketWaitlistHistoryItems.length === 0" class="empty-state-box officer-empty-state">
-              <div class="empty-state-panel">
-                <div class="empty-icon" aria-hidden="true">
-                  <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 8 8 12 12 16"></polyline><line x1="16" y1="12" x2="8" y2="12"></line></svg>
-                </div>
-                <div class="empty-eyebrow">ประวัติคิวแผงค้า (Queue History & Audit Trail)</div>
-                <div class="empty-title">ยังไม่มีประวัติการตัดสิทธิ์หรือสิ้นสุดคิว</div>
-                <div class="empty-desc">เมื่อผู้จองหลักยื่นคำร้องหรือทำสัญญาเช่าสำเร็จ คิวที่รออยู่จะถูกตัดสิทธิ์และบันทึกประวัติไว้ที่นี่โดยอัตโนมัติ</div>
-              </div>
-            </div>
+            <AppEmptyState
+              v-if="officerMarketWaitlistHistoryItems.length === 0"
+              variant="table"
+              icon="history"
+              title="ยังไม่มีประวัติคิวที่สิ้นสุด"
+              description="ประวัติจะถูกบันทึกเมื่อคิวสิ้นสุด ถูกยกเลิก หรือตัดสิทธิ์"
+            />
 
             <div v-else class="waitlist-list">
               <article
                 v-for="item in officerMarketWaitlistHistoryItems"
                 :key="item.id"
                 class="waitlist-item"
-                style="border-color: #e2e8f0; background: #ffffff;"
+                style="border-color: var(--bd-e2e8f0); background: var(--bg-ffffff);"
               >
                 <div>
                   <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -2377,9 +2328,9 @@
                     >
                       {{ item.status === 'cancelled' ? 'ตัดสิทธิ์ (มีผู้เช่าแล้ว)' : (item.status === 'expired' ? 'หมดเวลา (สละสิทธิ์)' : 'ยกเลิกการรอคิว') }}
                     </span>
-                    <span style="font-size: 0.8125rem; color: #334155; font-weight: 600;">
+                    <span style="font-size: 0.8125rem; color: var(--tx-334155); font-weight: 600;">
                       {{ item.tenant_name }}
-                      <span v-if="item.tenant_phone" style="color: #64748b; font-weight: 500;"> ({{ item.tenant_phone }})</span>
+                      <span v-if="item.tenant_phone" style="color: var(--tx-64748b); font-weight: 500;"> ({{ item.tenant_phone }})</span>
                     </span>
                   </div>
                   <div class="waitlist-history-meta">
@@ -2387,7 +2338,7 @@
                     <span v-if="item.created_at">เข้าคิว {{ formatSubmissionTimestamp(item.created_at) }}</span>
                     <span v-if="item.updated_at">สิ้นสุด {{ formatSubmissionTimestamp(item.updated_at) }}</span>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.8125rem; color: #b91c1c; background: #fef2f2; padding: 4px 10px; border-radius: 6px; width: fit-content; border: 1px solid #fee2e2;">
+                  <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.8125rem; color: var(--tx-b91c1c); background: var(--bg-fef2f2); padding: 4px 10px; border-radius: 6px; width: fit-content; border: 1px solid var(--bd-fee2e2);">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                     <span>เหตุผล: {{ item.dismiss_reason || 'ตัดสิทธิ์เนื่องจากผู้จองหลักทำสัญญาเช่าแผงสำเร็จ' }}</span>
                   </div>
@@ -2415,14 +2366,9 @@
     <!-- 1. Officer Approve Modal -->
     <div v-if="showApproveModal && targetBooking" class="modal-overlay" @click.self="showApproveModal = false">
       <div class="modal-content" style="max-width: 540px;">
-        <div class="modal-header">
-          <h3 style="font-size: 1.1rem; font-weight: 700;">อนุมัตินัดหมายเข้าดูแผง ({{ targetBooking.booking_number }})</h3>
-          <button class="btn-logout" @click="showApproveModal = false" aria-label="ปิด">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
+        <AppModalHeader title="อนุมัตินัดหมายเข้าดูแผง" :subtitle="`เลขที่การจอง ${targetBooking.booking_number}`" icon="calendar" @close="showApproveModal = false" />
         <div class="modal-body">
-          <p style="font-size: 0.9rem; color: #475569; margin-bottom: 14px;">
+          <p style="font-size: 0.9rem; color: var(--tx-475569); margin-bottom: 14px;">
             อนุมัตินัดหมายให้คุณ <strong>{{ targetBooking.tenant_name }}</strong> เข้าดูแผง
             ({{ targetBooking.market_name }}) วันที่ {{ targetBooking.visit_date }} ({{ targetBooking.visit_time_slot }})
           </p>
@@ -2431,13 +2377,13 @@
           <div v-if="approveModalActiveStalls.length > 1" class="form-group" style="margin-bottom: 14px;">
             <label class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
               <span>เลือกแผงค้าที่อนุมัติให้เข้าชม ({{ approvedApproveStallNumbers.length }}/{{ approveModalActiveStalls.length }} แผง)</span>
-              <span style="font-size: 0.78rem; font-weight: 500; color: #64748b;">ติ๊กออกเพื่อปฏิเสธบางแผง</span>
+              <span style="font-size: 0.78rem; font-weight: 500; color: var(--tx-64748b);">ติ๊กออกเพื่อปฏิเสธบางแผง</span>
             </label>
-            <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc;">
+            <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1px solid var(--bd-e2e8f0); border-radius: 10px; background: var(--bg-f8fafc);">
               <div
                 v-for="sub in approveModalActiveStalls"
                 :key="sub.stall_number"
-                style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 8px; background: #ffffff; border: 1px solid #e2e8f0;"
+                style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--bg-ffffff); border: 1px solid var(--bd-e2e8f0);"
               >
                 <AppCheckbox
                   v-model="approvedApproveStallNumbers"
@@ -2453,26 +2399,28 @@
                 </span>
               </div>
             </div>
+            <p v-if="approveStallsError" class="form-field-error">{{ approveStallsError }}</p>
           </div>
 
-          <div v-if="rejectedApproveStallNumbers.length > 0" class="form-group" style="margin-bottom: 12px; padding: 10px 12px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px;">
-            <label class="form-label" style="color: #be123c;">
-              เหตุผลที่ปฏิเสธแผง {{ rejectedApproveStallNumbers.join(', ') }} *
+          <div v-if="rejectedApproveStallNumbers.length > 0" class="form-group" style="margin-bottom: 12px; padding: 10px 12px; background: var(--bg-fff1f2); border: 1px solid var(--bd-fecdd3); border-radius: 10px;">
+            <label class="form-label" style="color: var(--tx-be123c);">
+              เหตุผลที่ปฏิเสธแผง {{ rejectedApproveStallNumbers.join(', ') }} <span class="req-star" aria-hidden="true">*</span>
             </label>
             <AppSelect
               v-model="approveRejectReason"
               :options="rejectReasonOptions"
               placeholder="เลือกเหตุผลที่ปฏิเสธบางแผง"
+              :error="approveRejectReasonError"
             />
           </div>
 
           <div class="form-group" style="margin-bottom: 12px;">
-            <label class="form-label">จุดนัดพบหน้างาน *</label>
-            <input type="text" v-model="approveMeetingPoint" class="form-input" />
+            <label class="form-label">จุดนัดพบหน้างาน <span class="req-star" aria-hidden="true">*</span></label>
+            <AppInput v-model="approveMeetingPoint" required :error="approveMeetingPointError" />
           </div>
           <div class="form-group" style="margin-bottom: 12px;">
-            <label class="form-label">เจ้าหน้าที่ผู้พาชม *</label>
-            <input type="text" v-model="approveEscortOfficer" class="form-input" />
+            <label class="form-label">เจ้าหน้าที่ผู้พาชม <span class="req-star" aria-hidden="true">*</span></label>
+            <AppInput v-model="approveEscortOfficer" required :error="approveEscortOfficerError" />
           </div>
           <div class="form-group">
             <label class="form-label">คำแนะนำเพิ่มเติมสำหรับผู้เช่า</label>
@@ -2481,7 +2429,7 @@
         </div>
         <div class="modal-footer">
           <AppButton variant="secondary" size="md" @click="showApproveModal = false">ยกเลิก</AppButton>
-          <AppButton variant="primary" size="md" :disabled="approvedApproveStallNumbers.length === 0" @click="confirmApprove">
+          <AppButton variant="primary" size="md" @click="confirmApprove">
             {{ rejectedApproveStallNumbers.length > 0 ? `ยืนยันอนุมัติ (${approvedApproveStallNumbers.length} แผง • ปฏิเสธ ${rejectedApproveStallNumbers.length} แผง)` : 'ยืนยันการอนุมัตินัดหมาย' }}
           </AppButton>
         </div>
@@ -2491,19 +2439,14 @@
     <!-- 2. Officer Reject Modal -->
     <div v-if="showRejectModal && targetBooking" class="modal-overlay" @click.self="showRejectModal = false">
       <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">
-          <h3 style="font-size: 1.1rem; color: #e11d48; font-weight: 700;">ยกเลิกนัดหมายดูแผง ({{ targetBooking.booking_number }})</h3>
-          <button class="btn-logout" @click="showRejectModal = false" aria-label="ปิด">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
+        <AppModalHeader title="ยกเลิกนัดหมายดูแผง" :subtitle="`เลขที่การจอง ${targetBooking.booking_number}`" icon="warning" tone="danger" @close="showRejectModal = false" />
         <div class="modal-body">
-          <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; color: #9f1239; margin-bottom: 14px; display: flex; align-items: flex-start; gap: 8px;">
+          <div style="background: var(--bg-fff1f2); border: 1px solid var(--bd-fecdd3); border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; color: var(--tx-9f1239); margin-bottom: 14px; display: flex; align-items: flex-start; gap: 8px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             <span>ตามกฎของระบบ เมื่อเจ้าหน้าที่ยกเลิกการจอง สิทธิ์การถือแผงจะถูกปล่อย และเลื่อนคิวที่ 1 ขึ้นมาทันที</span>
           </div>
           <div class="form-group" style="margin-bottom: 12px;">
-            <label class="form-label">ระบุเหตุผลในการยกเลิก (บังคับเลือก) *</label>
+            <label class="form-label">ระบุเหตุผลในการยกเลิก (บังคับเลือก) <span class="req-star" aria-hidden="true">*</span></label>
             <AppSelect
               v-model="rejectReasonDropdown"
               :options="rejectReasonOptions"
@@ -2525,18 +2468,10 @@
     <!-- 3. Select Slot Modal -->
     <div v-if="showSelectSlotModal && targetBooking" class="modal-overlay" @click.self="showSelectSlotModal = false">
       <div class="modal-content" style="max-width: 480px;">
-        <div class="modal-header">
-          <h3 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            <span>เลือกวันและเวลานัดชมแผง {{ targetBooking.stall_number }}</span>
-          </h3>
-          <button class="btn-logout" @click="showSelectSlotModal = false" aria-label="ปิด">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
+        <AppModalHeader title="เลือกวันและเวลานัดชมแผง" :subtitle="`แผง ${targetBooking.stall_number}`" icon="calendar" @close="showSelectSlotModal = false" />
         <div class="modal-body">
           <div class="form-group" style="margin-bottom: 14px;">
-            <label class="form-label">เลือกวันที่เปิดให้เข้าชมแผง *</label>
+            <label class="form-label">เลือกวันที่เปิดให้เข้าชมแผง <span class="req-star" aria-hidden="true">*</span></label>
             <AppSelect
               v-model="slotDate"
               :options="slotDateOptions"
@@ -2544,7 +2479,7 @@
             />
           </div>
           <div class="form-group">
-            <label class="form-label">เลือกช่วงเวลานัดชม (เฉพาะรอบที่ยังว่าง) *</label>
+            <label class="form-label">เลือกช่วงเวลานัดชม (เฉพาะรอบที่ยังว่าง) <span class="req-star" aria-hidden="true">*</span></label>
             <AppSelect
               v-model="slotTime"
               :options="slotTimeOptions"
@@ -2586,45 +2521,15 @@
     <!-- 6. Stall Queue Chain Modal (Officer View Only - ผังคิวการจองแผงค้า) -->
     <div v-if="showStallQueueModal" class="modal-overlay" @click.self="showStallQueueModal = false">
       <div class="modal-content modal-queue-chain" @click.stop>
-        <div class="modal-header">
-          <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
-            <div class="modal-title-icon-box">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-            </div>
-            <div style="min-width: 0;">
-              <div class="modal-title-with-badge">
-                <h3 style="margin: 0; font-size: 1.125rem; font-weight: 700; color: #0f172a;">ผู้จองและคิวรอแผงค้า {{ selectedStallNumber }}</h3>
-                <span class="badge-stall-chain">คิวรอ {{ getStallQueueCount(selectedStallNumber) }} ราย</span>
-                <span v-if="getStallWaitlistHistory(selectedStallNumber).length > 0" class="badge-stall-chain" style="background: #f1f5f9; color: #475569; border-color: #e2e8f0;">
-                  ประวัติคิว {{ getStallWaitlistHistory(selectedStallNumber).length }} ราย
-                </span>
-              </div>
-              <p class="modal-subtitle" style="margin: 2px 0 0 0; color: #64748b; font-size: 0.8125rem; font-weight: 500;">{{ selectedStallMarketName }}</p>
-            </div>
-          </div>
-          <button class="btn-logout" @click="showStallQueueModal = false" aria-label="ปิด">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
+        <AppModalHeader :title="`คิวแผงค้า ${selectedStallNumber}`" :subtitle="selectedStallMarketName" icon="grid" @close="showStallQueueModal = false" />
 
         <!-- Modal Sub-Tabs: Active vs History -->
         <div class="modal-subtabs-row">
-          <button
-            type="button"
-            class="modal-subtab-btn"
-            :class="{ active: stallQueueModalTab === 'active' }"
-            @click="stallQueueModalTab = 'active'"
-          >
-            <span>คิวที่กำลังรอ ({{ getStallWaitingQueues(selectedStallNumber).length }})</span>
-          </button>
-          <button
-            type="button"
-            class="modal-subtab-btn"
-            :class="{ active: stallQueueModalTab === 'history' }"
-            @click="stallQueueModalTab = 'history'"
-          >
-            <span>คิวที่สิ้นสุด / ตัดสิทธิ์ ({{ getStallWaitlistHistory(selectedStallNumber).length }})</span>
-          </button>
+          <AppSecondaryTabs
+            v-model="stallQueueModalTab"
+            :options="stallQueueSecondaryTabs"
+            aria-label="เลือกข้อมูลคิวแผงค้า"
+          />
         </div>
 
         <div class="modal-body queue-chain-body">
@@ -2635,27 +2540,32 @@
               <div class="queue-section-header">
                 <span class="queue-section-badge badge-primary-holder" style="display: inline-flex; align-items: center; gap: 6px;">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                  <span>ผู้จองหลัก (ถือสิทธิ์แผงค้าปัจจุบัน)</span>
+                  <span>ผู้ถือสิทธิ์ปัจจุบัน</span>
                 </span>
               </div>
-              <div v-if="getStallActiveHolder(selectedStallNumber)" class="queue-holder-card is-active-holder">
-                <div class="queue-holder-left">
-                  <div class="queue-item-name-row">
-                    <strong class="queue-user-name">{{ getStallActiveHolder(selectedStallNumber).tenant_name }}</strong>
-                    <span class="queue-user-phone">({{ getStallActiveHolder(selectedStallNumber).tenant_phone }})</span>
-                    <span
-                      class="status-pill-badge"
-                      :class="getStatusPillClass(getStallActiveHolder(selectedStallNumber).status)"
-                      style="font-size: 0.75rem; padding: 3px 10px;"
-                    >
-                      {{ getStatusBadgeLabel(getStallActiveHolder(selectedStallNumber).status) }}
-                    </span>
+              <div v-if="getStallActiveHolder(selectedStallNumber)" class="queue-holder-card queue-person-card is-active-holder">
+                <div class="queue-item-left">
+                  <div class="queue-card-leading queue-card-leading--holder" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
                   </div>
-                  <div class="queue-card-meta-row">
-                    <span>หมายเลขการจอง: <strong>{{ formatBookingNumber(getStallActiveHolder(selectedStallNumber).booking_number) }}</strong></span>
-                    <span v-if="getStallActiveHolder(selectedStallNumber).visit_date" style="margin-left: 6px;">
-                      • นัดชม: {{ formatThaiVisitDate(getStallActiveHolder(selectedStallNumber).visit_date, getStallActiveHolder(selectedStallNumber)) }}
-                    </span>
+                  <div class="queue-holder-left">
+                    <div class="queue-item-name-row">
+                      <strong class="queue-user-name">{{ getStallActiveHolder(selectedStallNumber).tenant_name }}</strong>
+                      <span class="queue-user-phone">{{ getStallActiveHolder(selectedStallNumber).tenant_phone }}</span>
+                      <span
+                        class="status-pill-badge"
+                        :class="getStatusPillClass(getStallActiveHolder(selectedStallNumber).status)"
+                        style="font-size: 0.75rem; padding: 3px 10px;"
+                      >
+                        {{ getStatusBadgeLabel(getStallActiveHolder(selectedStallNumber).status) }}
+                      </span>
+                    </div>
+                    <div class="queue-card-meta-row">
+                      <span><strong>{{ formatBookingNumber(getStallActiveHolder(selectedStallNumber).booking_number) }}</strong></span>
+                      <span v-if="getStallActiveHolder(selectedStallNumber).visit_date" class="queue-meta-separator">
+                        นัดชม {{ formatThaiVisitDate(getStallActiveHolder(selectedStallNumber).visit_date, getStallActiveHolder(selectedStallNumber)) }}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div class="queue-item-actions">
@@ -2671,9 +2581,13 @@
                   </AppButton>
                 </div>
               </div>
-              <div v-else class="queue-empty-box">
-                <span>ไม่มีผู้จองหลักในขณะนี้ (กำลังเสนอสิทธิ์ให้ผู้รอคิวลำดับแรก หรือแผงค้าว่าง)</span>
-              </div>
+              <AppEmptyState
+                v-else
+                variant="compact"
+                icon="users"
+                title="ยังไม่มีผู้ถือสิทธิ์"
+                description="ระบบจะเสนอสิทธิ์ให้ผู้รอคิวลำดับแรกโดยอัตโนมัติ"
+              />
             </div>
 
             <!-- 2. Waiting Queue Section -->
@@ -2681,7 +2595,7 @@
               <div class="queue-section-header" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
                 <span class="queue-section-badge badge-waiting-queue" style="display: inline-flex; align-items: center; gap: 6px;">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  <span>รายชื่อผู้รอคิว ({{ getStallWaitingQueues(selectedStallNumber).length }} ราย)</span>
+                  <span>ผู้รอคิว {{ getStallWaitingQueues(selectedStallNumber).length }} ราย</span>
                 </span>
                 <AppButton
                   v-if="hasOfferedWaitlist(selectedStallNumber)"
@@ -2696,8 +2610,8 @@
                 <div
                   v-for="(q, qIdx) in getStallWaitingQueues(selectedStallNumber)"
                   :key="q.id"
-                  class="queue-item-row queue-history-item"
-                  :style="q.status === 'offered' ? 'border-color: #6ee7b7; background: #f0fdf4;' : ''"
+                  class="queue-item-row queue-history-item queue-person-card"
+                  :style="q.status === 'offered' ? 'border-color: #6ee7b7; background: var(--bg-f0fdf4);' : ''"
                 >
                   <div class="queue-item-left">
                     <div class="queue-num-badge" :style="q.status === 'offered' ? 'background: #10b981; color: #ffffff;' : ''">
@@ -2706,20 +2620,20 @@
                     <div class="queue-item-info">
                       <div class="queue-item-name-row">
                         <strong>{{ q.tenant_name }}</strong>
-                        <span v-if="q.tenant_phone" class="queue-user-phone">({{ q.tenant_phone }})</span>
+                        <span v-if="q.tenant_phone" class="queue-user-phone">{{ q.tenant_phone }}</span>
                         <span
-                          class="status-pill-badge"
-                          :class="q.status === 'offered' ? 'pill-green' : 'pill-sky'"
+                          v-if="q.status === 'offered'"
+                          class="status-pill-badge pill-green"
                           style="font-size: 0.75rem; padding: 2px 8px;"
                         >
-                          {{ q.status === 'offered' ? 'กำลังได้รับสิทธิ์ (รอตอบรับ)' : `ลำดับคิวที่ ${q.position || q.queue_position || (Number(qIdx) + 1)}` }}
+                          รอตอบรับสิทธิ์
                         </span>
                       </div>
                       <div class="queue-item-sub">
-                        <span>เข้าคิวเมื่อ: {{ formatSubmissionTimestamp(q.created_at) }}</span>
+                        <span>เข้าคิว {{ formatSubmissionTimestamp(q.created_at) }}</span>
                         <template v-if="q.status === 'offered'">
-                          <span style="margin: 0 4px; color: #cbd5e1;">•</span>
-                          <span style="color: #047857; font-weight: 700;">เหลือเวลาตอบรับ: {{ formatRemainingOfferTime(q) }} (หมดเขต {{ formatOfferExpiresAtText(q) }})</span>
+                          <span style="margin: 0 4px; color: var(--tx-cbd5e1);">•</span>
+                          <span style="color: var(--tx-047857); font-weight: 700;">ตอบรับภายใน {{ formatRemainingOfferTime(q) }} · หมดเขต {{ formatOfferExpiresAtText(q) }}</span>
                         </template>
                       </div>
                     </div>
@@ -2736,15 +2650,13 @@
                   </div>
                 </div>
               </div>
-              <div v-else class="queue-empty-box">
-                <span>ไม่มีผู้รอคิวสำหรับแผงค้านี้</span>
-              </div>
+              <AppEmptyState v-else variant="compact" icon="users" title="ยังไม่มีผู้รอคิว" description="รายชื่อผู้รอคิวของแผงนี้จะแสดงที่นี่" />
             </div>
 
             <!-- 3. Explanatory System Notice -->
             <div class="queue-system-notice">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              <span>เมื่อแผงหลุดจากผู้จองหลัก ระบบจะแจ้งเตือนและเสนอสิทธิ์ให้คิวลำดับที่ 1 ทันที หากหมดเวลาหรือสละสิทธิ์ ระบบจะเลื่อนไปยังคิวถัดไป หรือปล่อยแผงว่างหากไม่มีคิวรอ</span>
+              <span>เมื่อสิทธิ์ว่าง ระบบจะแจ้งคิวแรก หากไม่ตอบรับภายในเวลา ระบบจะเลื่อนไปยังคิวถัดไปอัตโนมัติ</span>
             </div>
           </template>
 
@@ -2756,15 +2668,16 @@
                   v-for="q in getStallWaitlistHistory(selectedStallNumber)"
                   :key="q.id"
                   class="queue-item-row"
-                  style="background: #fafafa; border-color: #e2e8f0;"
+                  style="background: var(--bg-fafafa); border-color: var(--bd-e2e8f0);"
                 >
                   <div class="queue-item-left">
-                    <div class="queue-num-badge" style="background: #f1f5f9; color: #64748b;">
+                    <div class="queue-num-badge" style="background: var(--bg-f1f5f9); color: var(--tx-64748b);">
                       #{{ q.position || q.queue_position || '-' }}
                     </div>
                     <div class="queue-item-info">
                       <div class="queue-item-name-row">
-                        <strong>แผง {{ selectedStallNumber }}</strong>
+                        <strong>{{ q.tenant_name }}</strong>
+                        <span v-if="q.tenant_phone" class="queue-user-phone">({{ q.tenant_phone }})</span>
                         <span
                           class="status-pill-badge"
                           :class="q.status === 'cancelled' ? 'pill-red' : (q.status === 'expired' ? 'pill-amber' : 'pill-gray')"
@@ -2772,15 +2685,13 @@
                         >
                           {{ q.status === 'cancelled' ? 'ตัดสิทธิ์ (มีผู้เช่าแล้ว)' : (q.status === 'expired' ? 'หมดเวลาตอบรับ (สละสิทธิ์)' : 'ยกเลิกการรอคิว') }}
                         </span>
-                        <strong>{{ q.tenant_name }}</strong>
-                        <span v-if="q.tenant_phone" class="queue-user-phone">({{ q.tenant_phone }})</span>
                       </div>
                       <div class="queue-item-sub">
-                        <span>เข้าคิวเมื่อ: {{ formatSubmissionTimestamp(q.created_at) }}</span>
-                        <span style="margin: 0 4px; color: #cbd5e1;">•</span>
-                        <span class="queue-history-ended-at">สิ้นสุด/ตัดสิทธิ์: {{ formatSubmissionTimestamp(q.updated_at) }}</span>
+                        <span>เข้าคิว {{ formatSubmissionTimestamp(q.created_at) }}</span>
+                        <span style="margin: 0 4px; color: var(--tx-cbd5e1);">•</span>
+                        <span class="queue-history-ended-at">สิ้นสุด {{ formatSubmissionTimestamp(q.updated_at) }}</span>
                       </div>
-                      <div style="margin-top: 6px; font-size: 0.78rem; color: #b91c1c; display: flex; align-items: center; gap: 6px; background: #fef2f2; padding: 4px 8px; border-radius: 6px; width: fit-content; border: 1px solid #fee2e2;">
+                      <div style="margin-top: 6px; font-size: 0.78rem; color: var(--tx-b91c1c); display: flex; align-items: center; gap: 6px; background: var(--bg-fef2f2); padding: 4px 8px; border-radius: 6px; width: fit-content; border: 1px solid var(--bd-fee2e2);">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                         <span>{{ q.dismiss_reason || 'ตัดสิทธิ์เนื่องจากผู้จองหลักทำสัญญาเช่าแผงสำเร็จ' }}</span>
                       </div>
@@ -2788,20 +2699,18 @@
                   </div>
                 </div>
               </div>
-              <div v-else class="queue-empty-box">
-                <span>ไม่มีประวัติการสิ้นสุดคิวหรือตัดสิทธิ์ของแผงค้านี้</span>
-              </div>
+              <AppEmptyState v-else variant="compact" icon="history" title="ยังไม่มีประวัติคิว" description="คิวที่สิ้นสุดหรือถูกตัดสิทธิ์จะแสดงที่นี่" />
             </div>
 
             <!-- Explanatory System Notice for History -->
             <div class="queue-system-notice">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              <span>บันทึกประวัติการตัดสิทธิ์เพื่อความโปร่งใสและการตรวจสอบ (Audit Trail) โดยบันทึกวันเวลาและสาเหตุของการสิ้นสุดสิทธิ์ไว้เป็นหลักฐาน</span>
+              <span>ระบบเก็บวันเวลาและสาเหตุของการสิ้นสุดคิวไว้สำหรับตรวจสอบย้อนหลัง</span>
             </div>
           </template>
         </div>
 
-        <div class="modal-footer" style="display: flex; justify-content: flex-end; padding: 14px 24px; border-top: 1px solid #f1f5f9;">
+        <div class="modal-footer" style="display: flex; justify-content: flex-end; padding: 14px 24px; border-top: 1px solid var(--bd-f1f5f9);">
           <AppButton variant="secondary" size="md" @click="showStallQueueModal = false">ปิด</AppButton>
         </div>
       </div>
@@ -2810,44 +2719,32 @@
     <!-- 7. Policy Settings Modal (ตั้งค่าระยะเวลายื่นคำร้องและตอบรับคิวรอ) -->
     <div v-if="showPolicySettingsModal" class="modal-overlay" @click.self="showPolicySettingsModal = false">
       <div class="modal-content" style="max-width: 520px;" @click.stop>
-        <div class="modal-header">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div class="modal-title-icon-box">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            </div>
-            <div>
-              <h3 style="margin: 0; font-size: 1.125rem; font-weight: 700; color: #0f172a;">ตั้งค่าระยะเวลา</h3>
-            </div>
-          </div>
-          <button class="btn-logout" @click="showPolicySettingsModal = false" aria-label="ปิด">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
+        <AppModalHeader title="ตั้งค่าระยะเวลา" subtitle="กำหนดเวลายื่นคำร้องและตอบรับสิทธิ์คิวรอ" icon="clock" @close="showPolicySettingsModal = false" />
         <div class="modal-body">
           <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label" style="font-weight: 700; color: #1e293b;">
-              1. ระยะเวลายื่นคำร้องขอเช่า <span class="required-marker">*</span>
+            <label class="form-label" style="font-weight: 700; color: var(--tx-1e293b);">
+              1. ระยะเวลายื่นคำร้องขอเช่า <span class="req-star" aria-hidden="true">*</span>
             </label>
             <AppSelect
               v-model="policyLeaseDeadlineDays"
               :options="leaseDeadlineDayOptions"
               placeholder="เลือกระยะเวลายื่นคำร้องขอเช่า"
             />
-            <p style="margin: 6px 0 0; font-size: 0.78rem; color: #64748b; line-height: 1.45;">
+            <p style="margin: 6px 0 0; font-size: 0.78rem; color: var(--tx-64748b); line-height: 1.45;">
               กำหนดจำนวนวันที่ผู้เช่าต้องส่งคำร้อง หลังเจ้าหน้าที่อนุมัติการเช่า
             </p>
           </div>
 
           <div class="form-group" style="margin-bottom: 8px;">
-            <label class="form-label" style="font-weight: 700; color: #1e293b;">
-              2. ระยะเวลาตอบรับคิวรอ <span class="required-marker">*</span>
+            <label class="form-label" style="font-weight: 700; color: var(--tx-1e293b);">
+              2. ระยะเวลาตอบรับคิวรอ <span class="req-star" aria-hidden="true">*</span>
             </label>
             <AppSelect
               v-model="policyWaitlistOfferHours"
               :options="waitlistOfferHourOptions"
               placeholder="เลือกระยะเวลาตอบรับคิวรอ"
             />
-            <p style="margin: 6px 0 0; font-size: 0.78rem; color: #64748b; line-height: 1.45;">
+            <p style="margin: 6px 0 0; font-size: 0.78rem; color: var(--tx-64748b); line-height: 1.45;">
               กำหนดเวลาที่ผู้เช่าต้องตอบรับ เมื่อแผงว่างและถึงคิวของตนเอง
             </p>
           </div>
@@ -3367,6 +3264,10 @@ const approveEscortOfficer = ref('นายธนากร สมบูรณ์
 const officerNotes = ref('อนุมัตินัดหมาย ให้เตรียมบัตรประชาชนมาแสดงก่อนเข้าชม')
 const approvedApproveStallNumbers = ref<string[]>([])
 const approveRejectReason = ref('แผงปิดปรับปรุงระบบสาธารณูปโภค')
+const approveStallsError = ref('')
+const approveRejectReasonError = ref('')
+const approveMeetingPointError = ref('')
+const approveEscortOfficerError = ref('')
 
 const approveModalActiveStalls = computed(() => {
   if (!targetBooking.value) return []
@@ -3378,6 +3279,10 @@ const rejectedApproveStallNumbers = computed(() => {
     .map(s => String(s.stall_number || '').trim())
     .filter(sNum => sNum && !approvedApproveStallNumbers.value.includes(sNum))
 })
+watch(approvedApproveStallNumbers, value => { if (value.length) approveStallsError.value = '' }, { deep: true })
+watch(approveRejectReason, value => { if (value) approveRejectReasonError.value = '' })
+watch(approveMeetingPoint, value => { if (value.trim()) approveMeetingPointError.value = '' })
+watch(approveEscortOfficer, value => { if (value.trim()) approveEscortOfficerError.value = '' })
 
 const rejectReasonDropdown = ref('แผงปิดปรับปรุงระบบสาธารณูปโภค')
 const rejectionReasonText = ref('')
@@ -3521,6 +3426,10 @@ const tenantGroupedBookings = computed(() => {
 })
 
 const countAll = computed(() => tenantGroupedBookings.value.length)
+const tenantPrimaryTabs = computed(() => [
+  { value: 'bookings', label: 'การจองของฉัน', icon: 'calendar' as const, count: countAll.value },
+  { value: 'interests', label: 'แผงที่สนใจ', icon: 'heart' as const, count: tenantVisibleWaitlistItems.value.length }
+])
 
 // 2. รอดำเนินการ (pending, pending_approval, approved, pending_slot, interested, waiting_queue)
 const countPending = computed(() => {
@@ -3941,6 +3850,14 @@ const officerCountWaiting = computed(() => {
   if (wlCount > 0) return wlCount
   return officerMarketBookings.value.filter(b => isQueueBooking(b)).length
 })
+const officerWaitlistSecondaryTabs = computed(() => [
+  { value: 'active', label: 'คิวที่กำลังรอ', count: officerCountWaiting.value },
+  { value: 'history', label: 'คิวที่สิ้นสุด / ตัดสิทธิ์', count: officerMarketWaitlistHistoryItems.value.length }
+])
+const stallQueueSecondaryTabs = computed(() => [
+  { value: 'active', label: 'กำลังรอ', count: getStallWaitingQueues(selectedStallNumber.value).length },
+  { value: 'history', label: 'สิ้นสุด', count: getStallWaitlistHistory(selectedStallNumber.value).length }
+])
 
 const officerWaitlistStallGroups = computed(() => {
   const searchQuery = officerSearchQuery.value.trim().toLowerCase().replace('#', '')
@@ -4025,6 +3942,10 @@ const officerCountCancelled = computed(() => {
 const officerDirectBookingsCount = computed(() => {
   return officerMarketBookings.value.filter(b => !isQueueBooking(b)).length
 })
+const officerPrimaryTabs = computed(() => [
+  { value: 'bookings', label: 'การจองทั้งหมด', icon: 'calendar' as const, count: officerDirectBookingsCount.value },
+  { value: 'waiting', label: 'คิวรอแผงค้า', icon: 'clock' as const, count: officerCountWaiting.value }
+])
 
 const officerCountPendingCombined = computed(() => {
   return officerCountPending.value + officerCountApproved.value + officerCountInterested.value
@@ -4170,6 +4091,28 @@ const isProjectGroupOpen = (projectKey: string) => {
 
 const toggleProjectGroup = (projectKey: string) => {
   openProjectGroups.value[projectKey] = !isProjectGroupOpen(projectKey)
+}
+
+// A project can hold hundreds of bookings; rendering every card made the page build ~30k DOM nodes.
+// Show the newest ones first and reveal the rest on demand.
+const PROJECT_BOOKING_PAGE_SIZE = 20
+const projectBookingLimits = ref<Record<string, number>>({})
+const projectBookingLimit = (projectKey: string) => projectBookingLimits.value[projectKey] ?? PROJECT_BOOKING_PAGE_SIZE
+const visibleProjectBookings = (project: { key: string; bookings: any[] }) =>
+  project.bookings.slice(0, projectBookingLimit(project.key))
+const hiddenProjectBookingCount = (project: { key: string; bookings: any[] }) =>
+  Math.max(0, project.bookings.length - projectBookingLimit(project.key))
+const showMoreProjectBookings = (project: { key: string }) => {
+  projectBookingLimits.value[project.key] = projectBookingLimit(project.key) + PROJECT_BOOKING_PAGE_SIZE
+}
+// Make sure a specific booking (e.g. when returning from its detail page) is rendered.
+const revealProjectBooking = (bookingId: string | number) => {
+  for (const project of officerProjectGroups.value) {
+    const index = project.bookings.findIndex((b: any) => String(b.id) === String(bookingId))
+    if (index >= 0 && index >= projectBookingLimit(project.key)) {
+      projectBookingLimits.value[project.key] = index + 1
+    }
+  }
 }
 
 const officerStallGroups = computed<OfficerStallGroup[]>(() => {
@@ -5088,16 +5031,25 @@ const openApproveModal = (b: any) => {
     .map(s => String(s.stall_number || '').trim())
     .filter(Boolean)
   approveRejectReason.value = 'แผงปิดปรับปรุงระบบสาธารณูปโภค'
+  approveStallsError.value = ''
+  approveRejectReasonError.value = ''
+  approveMeetingPointError.value = ''
+  approveEscortOfficerError.value = ''
   showApproveModal.value = true
 }
 
 const confirmApprove = async () => {
   if (!targetBooking.value) return
-  if (approveModalActiveStalls.value.length > 0 && approvedApproveStallNumbers.value.length === 0) {
-    await showWarning('กรุณาเลือกแผงค้าที่ต้องการอนุมัติอย่างน้อย 1 แผง (หากต้องการปฏิเสธทุกแผง กรุณากดปุ่ม "ยกเลิกทั้งใบ")', 'ยังไม่ได้เลือกแผงค้า')
-    return
-  }
   const rejectedStalls = [...rejectedApproveStallNumbers.value]
+  approveStallsError.value = approveModalActiveStalls.value.length > 0 && approvedApproveStallNumbers.value.length === 0
+    ? 'กรุณาเลือกแผงค้าที่ต้องการอนุมัติอย่างน้อย 1 แผง หากต้องการปฏิเสธทั้งหมดให้ใช้เมนูยกเลิกทั้งใบ'
+    : ''
+  approveRejectReasonError.value = rejectedStalls.length > 0 && !approveRejectReason.value
+    ? 'กรุณาเลือกเหตุผลที่ปฏิเสธแผง'
+    : ''
+  approveMeetingPointError.value = approveMeetingPoint.value.trim() ? '' : 'กรุณาระบุจุดนัดพบหน้างาน'
+  approveEscortOfficerError.value = approveEscortOfficer.value.trim() ? '' : 'กรุณาระบุเจ้าหน้าที่ผู้พาชม'
+  if (approveStallsError.value || approveRejectReasonError.value || approveMeetingPointError.value || approveEscortOfficerError.value) return
   try {
     for (const stallIdent of rejectedStalls) {
       await post(`/bookings/${targetBooking.value.id}/reject`, {
@@ -5489,6 +5441,7 @@ const restoreBookingReturnContext = async () => {
     await nextTick()
     currentPage.value = savedTenantPage
     officerCurrentPage.value = savedOfficerPage
+    revealProjectBooking(context.bookingId)
     await nextTick()
     await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
 
@@ -5602,117 +5555,141 @@ onMounted(async () => {
 
 <style scoped>
 .booking-tracking-page {
-  background-color: #f8fafc;
+  background-color: var(--bg-f8fafc);
   min-height: 100vh;
   padding-bottom: 60px;
 }
 
-/* Modern Segmented Capsule Tabs (หมวดรายการจอง) */
-.tenant-booking-sections {
-  display: inline-flex;
+.waitlist-list { display: grid; gap: 16px; }
+.waitlist-item { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "details position" "details actions"; column-gap: 24px; row-gap: 12px; align-items: center; padding: 20px 22px; border: 1px solid var(--bd-e2e8f0); border-left: 3px solid var(--bd-94a3b8); border-radius: 14px; background: var(--bg-ffffff); box-shadow: 0 2px 8px rgba(15,23,42,.04); }
+.waitlist-item:hover { border-color: var(--bd-bfdbfe); box-shadow: 0 4px 14px rgba(37,99,235,.08); }
+.waitlist-item > div:first-child { grid-area: details; min-width: 0; }
+.waitlist-item > .waitlist-position { grid-area: position; justify-self: end; }
+.waitlist-item > div:last-child { grid-area: actions; align-self: end; justify-self: end; margin-bottom: 2px; }
+.waitlist-item strong { font-size: 1rem; color: var(--tx-1e293b); }
+.waitlist-item p { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--bd-eef2f6); color: var(--tx-64748b); font-size: 0.875rem; line-height: 1.6; }
+.waitlist-item > div:first-child > div:last-child { margin-top: 12px !important; }
+.waitlist-position { padding: 6px 12px; border-radius: 999px; background: var(--bg-fff7ed); color: var(--tx-c2410c); font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
+.waitlist-history-meta { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 12px; padding-top: 12px; color: var(--tx-64748b); font-size: 0.8125rem; line-height: 1.6; }
+.waitlist-history-meta span { display: inline-flex; align-items: center; }
+.waitlist-history-meta span + span { padding-left: 18px; border-left: 1px solid var(--bd-cbd5e1); }
+.officer-queue-card {
+  grid-template-columns: minmax(0, 1fr) clamp(190px, 17vw, 230px);
+  grid-template-areas:
+    "queue-header queue-status"
+    "queue-divider queue-divider"
+    "queue-details queue-actions";
+  gap: 0;
+  padding: 0;
+  align-items: stretch;
+  overflow: hidden;
+}
+.waitlist-item.officer-queue-card > div.officer-queue-card-header {
+  grid-area: queue-header !important;
+  min-width: 0;
+  padding: 18px 22px 15px;
+  display: flex;
   align-items: center;
-  gap: 4px;
-  background: #f1f5f9;
-  padding: 4px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  margin: 0 0 20px;
+  align-self: stretch;
+  justify-self: stretch;
 }
-
-.tenant-booking-sections button {
-  display: inline-flex;
+.waitlist-item.officer-queue-card > div.officer-queue-card-header > div {
+  margin-top: 0 !important;
+}
+.waitlist-item.officer-queue-card > div.officer-queue-card-status {
+  grid-area: queue-status !important;
+  justify-self: stretch;
+  align-self: stretch;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  border: none;
-  background: transparent;
-  color: #64748b;
-  padding: 8px 16px;
-  border-radius: 9px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  line-height: 1.4;
-  outline: none;
+  justify-content: center;
+  margin: 0;
+  padding: 14px 18px;
+  border-radius: 0;
+  background: var(--bg-ffffff);
+  color: inherit;
 }
-
-.tenant-booking-sections button:hover:not(.active) {
-  color: #1e293b;
-  background: rgba(255, 255, 255, 0.6);
-}
-
-.tenant-booking-sections button.active {
-  background: #ffffff;
-  color: #2563eb;
-  font-weight: 700;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
-}
-
-.tenant-booking-sections button svg {
-  color: currentColor;
-  transition: transform 0.18s ease;
-}
-
-.tenant-booking-sections button.active svg {
-  color: #2563eb;
-}
-
-.tenant-booking-sections .tab-count-badge {
+.waitlist-item.officer-queue-card > div.officer-queue-card-status > span {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  min-height: 30px;
+  padding: 5px 13px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  background: var(--bg-fff7ed);
+  color: var(--tx-c2410c);
+  font-size: 0.8125rem;
   font-weight: 700;
-  background: #e2e8f0;
-  color: #64748b;
-  transition: all 0.18s ease;
+  line-height: 1.35;
+  white-space: nowrap;
 }
-
-.tenant-booking-sections button.active .tab-count-badge {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #dbeafe;
+.waitlist-item.officer-queue-card > div.officer-queue-card-divider {
+  grid-area: queue-divider !important;
+  width: auto;
+  height: 1px;
+  margin: 0 22px;
+  background: var(--bg-eef2f6);
 }
-
-@media (max-width: 640px) {
-  .tenant-booking-sections {
-    display: flex;
-    width: 100%;
-  }
-  .tenant-booking-sections button {
-    flex: 1;
-    justify-content: center;
-    padding: 8px 10px;
-    font-size: 0.8125rem;
-  }
+.waitlist-item.officer-queue-card > div.officer-queue-card-details {
+  grid-area: queue-details !important;
+  min-width: 0;
+  align-self: stretch;
+  justify-self: stretch;
+  padding: 15px 22px 18px;
 }
-
-.waitlist-list { display: grid; gap: 16px; }
-.waitlist-item { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 22px; align-items: center; padding: 24px 22px 20px; border: 1px solid #e2e8f0; border-left: 3px solid #94a3b8; border-radius: 14px; background: #fff; box-shadow: 0 2px 8px rgba(15,23,42,.04); }
-.waitlist-item::after { content: ''; position: absolute; top: 58px; left: 22px; right: 22px; height: 1px; background: #eef2f6; }
-.waitlist-item:hover { border-color: #bfdbfe; box-shadow: 0 4px 14px rgba(37,99,235,.08); }
-.waitlist-item > div:last-child { align-self: end; margin-bottom: 2px; }
-.waitlist-item strong { font-size: 1rem; color: #1e293b; }
-.waitlist-item p { margin: 18px 0 0; padding-top: 12px; color: #64748b; font-size: 0.8125rem; line-height: 1.65; }
-.waitlist-item > div:first-child > div:last-child { margin-top: 12px !important; }
-.waitlist-position { padding: 6px 12px; border-radius: 999px; background: #fff7ed; color: #c2410c; font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
-.waitlist-history-meta { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 12px; padding-top: 12px; color: #64748b; font-size: 0.8125rem; line-height: 1.6; }
-.waitlist-history-meta span { display: inline-flex; align-items: center; }
-.waitlist-history-meta span + span { padding-left: 18px; border-left: 1px solid #cbd5e1; }
+.waitlist-item.officer-queue-card > div.officer-queue-card-details p {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.waitlist-item.officer-queue-card > div.officer-queue-card-actions {
+  grid-area: queue-actions !important;
+  align-self: stretch;
+  justify-self: stretch;
+  margin: 0;
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  background: var(--bg-ffffff);
+}
+.officer-queue-card-actions :deep(.officer-queue-action-btn) {
+  width: 100%;
+}
 .queue-history-item { padding: 16px 18px; border-radius: 12px; }
-.queue-history-item .queue-item-name-row { gap: 10px; }
-.queue-history-item .queue-item-sub { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin-top: 12px; padding-top: 12px; border-top: 1px solid #cbd5e1 !important; }
-.queue-history-item .queue-history-ended-at { margin-left: 14px; padding-left: 14px; border-left: 1px solid #cbd5e1; }
+.queue-history-item .queue-item-name-row { gap: 8px; }
+.queue-history-item .queue-item-sub { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin-top: 5px; padding-top: 0; border-top: 0 !important; }
+.queue-history-item .queue-history-ended-at { margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--bd-cbd5e1); }
 @media (max-width: 640px) {
-  .waitlist-item { grid-template-columns: 1fr; gap: 8px; align-items: start; }
+  .waitlist-item { grid-template-columns: 1fr; grid-template-areas: "details" "position" "actions"; gap: 10px; align-items: start; }
+  .waitlist-item > .waitlist-position,
+  .waitlist-item > div:last-child { justify-self: start; }
+  .officer-queue-card {
+    grid-template-columns: 1fr;
+    grid-template-areas: "queue-header" "queue-status" "queue-divider" "queue-details" "queue-actions";
+    gap: 0;
+  }
+  .waitlist-item.officer-queue-card > div.officer-queue-card-status,
+  .waitlist-item.officer-queue-card > div.officer-queue-card-actions {
+    border-left: 0;
+  }
+  .waitlist-item.officer-queue-card > div.officer-queue-card-status {
+    justify-content: flex-start;
+  }
+  .waitlist-item.officer-queue-card > div.officer-queue-card-divider {
+    margin: 0 18px;
+  }
 }
 
 .tracking-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
   padding: 24px 32px 48px;
+  box-sizing: border-box;
   flex: 1;
 }
 
@@ -5746,18 +5723,18 @@ onMounted(async () => {
 .main-page-title {
   font-size: 1.55rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   letter-spacing: -0.01em;
 }
 
 .page-subtitle {
   margin: 4px 0 0;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.875rem;
   font-weight: 500;
 }
 
-.required-marker { color: #dc2626; font-weight: 700; }
+.required-marker { color: var(--tx-dc2626); font-weight: 700; }
 
 .page-header-actions {
   display: inline-flex;
@@ -5768,11 +5745,15 @@ onMounted(async () => {
 
 /* Main White Card Container */
 .main-white-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 16px;
   padding: 24px 28px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.main-white-card.primary-tab-content-card {
+  border-top-left-radius: 0;
 }
 
 /* Header Row */
@@ -5788,13 +5769,13 @@ onMounted(async () => {
 .header-left .section-title {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   margin: 0;
 }
 
 .header-left .item-count-subtitle {
   font-size: 0.82rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 4px;
 }
 
@@ -5815,7 +5796,7 @@ onMounted(async () => {
 .search-icon {
   position: absolute;
   left: 12px;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   pointer-events: none;
 }
 
@@ -5823,11 +5804,11 @@ onMounted(async () => {
   width: 280px;
   height: 38px;
   padding: 0 12px 0 36px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   font-size: 0.85rem;
-  color: #1e293b;
-  background: #ffffff;
+  color: var(--tx-1e293b);
+  background: var(--bg-ffffff);
   outline: none;
   transition: all 0.2s ease;
 }
@@ -5842,7 +5823,7 @@ onMounted(async () => {
   right: 10px;
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-size: 0.75rem;
   cursor: pointer;
 }
@@ -5853,10 +5834,10 @@ onMounted(async () => {
   gap: 7px;
   height: 38px;
   padding: 0 12px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
-  background: #ffffff;
-  color: #334155;
+  background: var(--bg-ffffff);
+  color: var(--tx-334155);
   font-family: inherit;
   font-size: 0.84rem;
   font-weight: 600;
@@ -5867,9 +5848,9 @@ onMounted(async () => {
 }
 
 .sort-toggle-btn:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-  color: #0f172a;
+  background: var(--bg-f8fafc);
+  border-color: var(--bd-94a3b8);
+  color: var(--tx-0f172a);
 }
 
 .sort-toggle-btn:active {
@@ -5877,13 +5858,13 @@ onMounted(async () => {
 }
 
 .sort-toggle-icon {
-  color: #475569;
+  color: var(--tx-475569);
   flex-shrink: 0;
   transition: color 0.15s ease;
 }
 
 .sort-toggle-btn:hover .sort-toggle-icon {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 /* Filter Button & Popup Panel (เหมือนหน้าจอง step 1) */
@@ -5897,10 +5878,10 @@ onMounted(async () => {
   gap: 6px;
   height: 38px;
   padding: 6px 14px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
-  background: #ffffff;
-  color: #475569;
+  background: var(--bg-ffffff);
+  color: var(--tx-475569);
   font-family: inherit;
   font-size: 0.84rem;
   font-weight: 600;
@@ -5911,9 +5892,9 @@ onMounted(async () => {
 
 .map-advanced-filter-btn:hover,
 .map-advanced-filter-btn.active {
-  border-color: #93c5fd;
-  background: #eff6ff;
-  color: #1d4ed8;
+  border-color: var(--bd-93c5fd);
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
 }
 
 .map-advanced-count {
@@ -5944,9 +5925,9 @@ onMounted(async () => {
   z-index: 50;
   width: min(340px, calc(100vw - 48px));
   padding: 18px;
-  border: 1px solid #dbe5f2;
+  border: 1px solid var(--bd-dbe5f2);
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16), 0 4px 12px rgba(15, 23, 42, 0.05);
 }
 
@@ -5956,8 +5937,8 @@ onMounted(async () => {
   justify-content: space-between;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #0f172a;
+  border-bottom: 1px solid var(--bd-f1f5f9);
+  color: var(--tx-0f172a);
   font-size: 0.9rem;
   font-weight: 700;
 }
@@ -5971,14 +5952,14 @@ onMounted(async () => {
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #64748b;
+  color: var(--tx-64748b);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .map-filter-panel-head button:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-0f172a);
 }
 
 .filter-field-group {
@@ -5988,7 +5969,7 @@ onMounted(async () => {
 .filter-field-label {
   display: block;
   margin-bottom: 6px;
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.78rem;
   font-weight: 600;
 }
@@ -6015,9 +5996,9 @@ onMounted(async () => {
 .filter-subchip {
   padding: 5px 10px;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #64748b;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
@@ -6025,15 +6006,15 @@ onMounted(async () => {
 }
 
 .filter-subchip:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
-  color: #1e293b;
+  border-color: var(--bd-cbd5e1);
+  background: var(--bg-f8fafc);
+  color: var(--tx-1e293b);
 }
 
 .filter-subchip.active {
   border-color: #2563eb;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   font-weight: 700;
 }
 
@@ -6045,7 +6026,7 @@ onMounted(async () => {
   gap: 10px;
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 
 .mfp-result-summary {
@@ -6054,20 +6035,20 @@ onMounted(async () => {
   justify-content: center;
   gap: 6px;
   font-size: 0.78rem;
-  color: #64748b;
-  background: #f8fafc;
+  color: var(--tx-64748b);
+  background: var(--bg-f8fafc);
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
 }
 
 .mfp-result-label {
-  color: #94a3b8;
-  font-size: 0.74rem;
+  color: var(--tx-94a3b8);
+  font-size: 0.75rem;
 }
 
 .mfp-result-val strong {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 700;
 }
 
@@ -6085,10 +6066,10 @@ onMounted(async () => {
   gap: 6px;
   height: 36px;
   padding: 0 12px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
-  background: #ffffff;
-  color: #64748b;
+  background: var(--bg-ffffff);
+  color: var(--tx-64748b);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -6097,8 +6078,8 @@ onMounted(async () => {
 
 .btn-filter-reset:hover:not(:disabled) {
   border-color: #ef4444;
-  color: #ef4444;
-  background: #fef2f2;
+  color: var(--tx-ef4444);
+  background: var(--bg-fef2f2);
 }
 
 .btn-filter-reset:disabled {
@@ -6135,25 +6116,25 @@ onMounted(async () => {
   justify-content: center;
   width: 38px;
   height: 38px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
-  background: #ffffff;
-  color: #64748b;
+  background: var(--bg-ffffff);
+  color: var(--tx-64748b);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .filter-toggle-btn:hover {
-  background: #f8fafc;
-  color: #2563eb;
-  border-color: #cbd5e1;
+  background: var(--bg-f8fafc);
+  color: var(--tx-2563eb);
+  border-color: var(--bd-cbd5e1);
 }
 
 /* Status Tabs Row */
 .status-tabs-row {
   display: flex;
   gap: 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   margin-bottom: 24px;
   overflow-x: auto;
 }
@@ -6165,7 +6146,7 @@ onMounted(async () => {
   padding: 10px 4px 12px 4px;
   font-size: 0.9rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -6176,11 +6157,11 @@ onMounted(async () => {
 }
 
 .tab-item:hover {
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .tab-item.active {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 700;
   border-bottom-color: #2563eb;
 }
@@ -6190,8 +6171,8 @@ onMounted(async () => {
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 12px;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
 }
 
 .tab-item.active .tab-badge {
@@ -6203,7 +6184,7 @@ onMounted(async () => {
 .empty-state-box {
   text-align: center;
   padding: 32px 20px;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .empty-state-panel {
@@ -6230,28 +6211,28 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   margin-bottom: 12px;
-  border: 1px solid #dbeafe;
+  border: 1px solid var(--bd-dbeafe);
   border-radius: 16px;
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
 }
 
 .empty-eyebrow {
   margin-bottom: 6px;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8125rem;
   font-weight: 600;
 }
 
 .empty-title {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 1.125rem;
 }
 
 .empty-desc {
   font-size: 0.9375rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 6px;
   line-height: 1.6;
 }
@@ -6283,10 +6264,10 @@ onMounted(async () => {
 }
 
 .market-accordion-card {
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 12px;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .market-accordion-header {
@@ -6295,7 +6276,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border: none;
   cursor: pointer;
   text-align: left;
@@ -6303,7 +6284,7 @@ onMounted(async () => {
 }
 
 .market-accordion-header:hover {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .header-left-content {
@@ -6313,7 +6294,7 @@ onMounted(async () => {
 }
 
 .chevron-indicator {
-  color: #64748b;
+  color: var(--tx-64748b);
   transition: transform 0.25s ease;
 }
 
@@ -6325,21 +6306,21 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   flex-shrink: 0;
 }
 
 .market-title {
   font-size: 1rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .market-count-pill {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #64748b;
-  background: #f1f5f9;
+  color: var(--tx-64748b);
+  background: var(--bg-f1f5f9);
   padding: 3px 10px;
   border-radius: 12px;
 }
@@ -6375,8 +6356,8 @@ onMounted(async () => {
 /* Accordion Body */
 .market-accordion-body {
   padding: 14px 18px 18px 18px;
-  background: #f8fafc;
-  border-top: 1px solid #eef2f6;
+  background: var(--bg-f8fafc);
+  border-top: 1px solid var(--bd-eef2f6);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -6389,10 +6370,19 @@ onMounted(async () => {
 }
 
 /* Booking Item Card */
+.project-show-more {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 4px;
+}
+.project-show-more-row td {
+  padding: 8px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
 .booking-item-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-left: 4px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
+  border-left: 4px solid var(--bd-cbd5e1);
   border-radius: 12px;
   padding: 20px 22px;
   transition: all 0.2s ease;
@@ -6424,7 +6414,7 @@ onMounted(async () => {
 }
 
 .booking-item-card.border-status-muted {
-  border-left: 4px solid #94a3b8;
+  border-left: 4px solid var(--bd-94a3b8);
 }
 
 @keyframes cardFlashGlow {
@@ -6446,7 +6436,7 @@ onMounted(async () => {
 }
 
 .booking-item-card.is-latest-card {
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  background: linear-gradient(180deg, var(--bg-ffffff) 0%, var(--bg-fbfdff) 100%);
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
@@ -6455,9 +6445,9 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   padding: 4px 11px;
-  background: #eff6ff;
-  color: #1e40af;
-  border: 1px solid #dbeafe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1e40af);
+  border: 1px solid var(--bd-dbeafe);
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 600;
@@ -6467,18 +6457,18 @@ onMounted(async () => {
 }
 
 .in-card-stall-pill svg {
-  color: #3b82f6;
+  color: var(--tx-3b82f6);
   flex-shrink: 0;
 }
 
 .in-card-stall-pill .stall-label {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 500;
   font-size: 0.76rem;
 }
 
 .in-card-stall-pill strong {
-  color: #1e3a8a;
+  color: var(--tx-1e3a8a);
   font-weight: 800;
 }
 
@@ -6488,9 +6478,9 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   padding: 4px 11px;
-  background: #f8fafc;
-  color: #334155;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  color: var(--tx-334155);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 600;
@@ -6501,20 +6491,20 @@ onMounted(async () => {
 
 .in-card-project-pill svg,
 .in-card-market-pill svg {
-  color: #64748b;
+  color: var(--tx-64748b);
   flex-shrink: 0;
 }
 
 .in-card-project-pill .project-label,
 .in-card-market-pill .market-label {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   font-size: 0.76rem;
 }
 
 .in-card-project-pill strong,
 .in-card-market-pill strong {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 700;
 }
 
@@ -6525,9 +6515,9 @@ onMounted(async () => {
   box-sizing: border-box;
   height: 24px;
   padding: 0 8px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
+  color: var(--tx-1d4ed8);
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 1;
@@ -6572,7 +6562,7 @@ onMounted(async () => {
 .compact-officer-meta,
 .compact-tenant-meta {
   gap: 12px;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .compact-meta-item {
@@ -6587,30 +6577,30 @@ onMounted(async () => {
 
 .compact-meta-item + .compact-meta-item {
   padding-left: 12px;
-  border-left: 1px solid #e2e8f0;
+  border-left: 1px solid var(--bd-e2e8f0);
 }
 
 .compact-meta-item svg {
   flex-shrink: 0;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
 }
 
 .compact-meta-item strong {
-  color: #334155;
+  color: var(--tx-334155);
   font-weight: 650;
 }
 
 .compact-meta-stall strong {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
 }
 
 .compact-meta-item a {
-  color: #64748b;
+  color: var(--tx-64748b);
   text-decoration: none;
 }
 
 .compact-meta-item a:hover {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   text-decoration: underline;
 }
 
@@ -6621,8 +6611,8 @@ onMounted(async () => {
   gap: 10px;
   margin-top: 12px;
   padding-top: 11px;
-  border-top: 1px solid #f1f5f9;
-  color: #475569;
+  border-top: 1px solid var(--bd-f1f5f9);
+  color: var(--tx-475569);
   font-size: 0.8125rem;
   line-height: 1.45;
 }
@@ -6641,12 +6631,12 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   font-size: 0.82rem;
   font-weight: 500;
-  color: #334155;
+  color: var(--tx-334155);
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
@@ -6654,9 +6644,9 @@ onMounted(async () => {
 }
 
 .btn-collapsed-details:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-  color: #0f172a;
+  background: var(--bg-f8fafc);
+  border-color: var(--bd-94a3b8);
+  color: var(--tx-0f172a);
 }
 
 .collapsed-actions-group {
@@ -6695,21 +6685,21 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
-  background: #ffffff;
-  border: 1px solid #fecaca;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-fecaca);
   border-radius: 8px;
   font-size: 0.82rem;
   font-weight: 500;
-  color: #dc2626;
+  color: var(--tx-dc2626);
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
 }
 
 .btn-collapsed-danger:hover {
-  background: #fef2f2;
-  border-color: #fca5a5;
-  color: #b91c1c;
+  background: var(--bg-fef2f2);
+  border-color: var(--bd-fca5a5);
+  color: var(--tx-b91c1c);
 }
 
 .btn-collapsed-purple {
@@ -6765,12 +6755,12 @@ onMounted(async () => {
   align-items: center;
   gap: 5px;
   padding: 4px 10px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 6px;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   cursor: pointer;
   text-decoration: none;
   transition: all 0.15s ease;
@@ -6778,9 +6768,9 @@ onMounted(async () => {
 }
 
 .btn-collapsed-ghost-action:hover {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  border-color: var(--bd-93c5fd);
+  color: var(--tx-1d4ed8);
 }
 
 .btn-purple-prominent {
@@ -6817,7 +6807,7 @@ onMounted(async () => {
 }
 
 .collapsed-next-step-label {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -6830,13 +6820,13 @@ onMounted(async () => {
 }
 
 .collapsed-next-step.tone-waiting,
-.footer-left-status.tone-waiting { color: #d97706; }
+.footer-left-status.tone-waiting { color: var(--tx-d97706); }
 .collapsed-next-step.tone-success,
-.footer-left-status.tone-success { color: #15803d; }
+.footer-left-status.tone-success { color: var(--tx-15803d); }
 .collapsed-next-step.tone-action,
-.footer-left-status.tone-action { color: #2563eb; }
+.footer-left-status.tone-action { color: var(--tx-2563eb); }
 .collapsed-next-step.tone-muted,
-.footer-left-status.tone-muted { color: #64748b; }
+.footer-left-status.tone-muted { color: var(--tx-64748b); }
 
 .top-row-left {
   display: flex;
@@ -6857,9 +6847,9 @@ onMounted(async () => {
 }
 
 .circle-status-icon.blue-circle {
-  background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, var(--bg-eff6ff) 0%, var(--bg-e0e7ff) 100%);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-bfdbfe);
   box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08);
 }
 
@@ -6879,7 +6869,7 @@ onMounted(async () => {
 
 .booking-number-block .booking-label {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1.2;
@@ -6888,7 +6878,7 @@ onMounted(async () => {
 .booking-number-block .booking-id-text {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
@@ -6899,7 +6889,7 @@ onMounted(async () => {
   align-items: center;
   gap: 5px;
   margin-top: 5px;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-size: 0.76rem;
   font-weight: 500;
   line-height: 1.3;
@@ -6914,7 +6904,7 @@ onMounted(async () => {
 .collapsed-visit-cue {
   margin-left: 8px;
   font-weight: 500;
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.8rem;
 }
 
@@ -6939,53 +6929,52 @@ onMounted(async () => {
 }
 
 .pill-green {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
   border: none;
 }
 
 .pill-amber {
-  background: #fef3c7;
-  color: #d97706;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
   border: none;
 }
 
 .pill-blue {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   border: none;
 }
 
 .pill-purple {
-  background: #f5f3ff;
-  color: #7c3aed;
+  background: var(--bg-f5f3ff);
+  color: var(--tx-7c3aed);
   border: none;
 }
 
 .pill-sky {
-  background: #f0f9ff;
-  color: #0284c7;
+  background: var(--bg-f0f9ff);
+  color: var(--tx-0284c7);
   border: none;
 }
 
 .pill-gray {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
   border: none;
 }
 
 .pill-red {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
   border: none;
 }
 
 .modal-subtabs-row {
   display: flex;
-  gap: 8px;
-  padding: 10px 24px 0 24px;
-  border-bottom: 1px solid #f1f5f9;
-  background: #f8fafc;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--bd-f1f5f9);
+  background: var(--bg-ffffff);
 }
 
 .modal-subtab-btn {
@@ -6995,7 +6984,7 @@ onMounted(async () => {
   padding: 8px 14px;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
@@ -7005,11 +6994,11 @@ onMounted(async () => {
 }
 
 .modal-subtab-btn:hover {
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .modal-subtab-btn.active {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 700;
   border-bottom-color: #2563eb;
 }
@@ -7017,7 +7006,7 @@ onMounted(async () => {
 .card-collapse-btn {
   background: transparent;
   border: none;
-  color: #64748b;
+  color: var(--tx-64748b);
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -7037,9 +7026,9 @@ onMounted(async () => {
 .booking-stepper-container {
   margin: 18px 0 16px 0;
   padding: 12px 16px;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
   border-radius: 10px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--bd-f1f5f9);
 }
 
 .stepper-track {
@@ -7064,8 +7053,8 @@ onMounted(async () => {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #e2e8f0;
-  color: #64748b;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 700;
   display: flex;
@@ -7077,7 +7066,7 @@ onMounted(async () => {
 .step-label-text {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
   white-space: nowrap;
 }
 
@@ -7087,7 +7076,7 @@ onMounted(async () => {
 }
 
 .stepper-step.completed .step-label-text {
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .stepper-step.active .step-circle {
@@ -7097,14 +7086,14 @@ onMounted(async () => {
 }
 
 .stepper-step.active .step-label-text {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 700;
 }
 
 .stepper-connector {
   flex: 1;
   height: 3px;
-  background: #e2e8f0;
+  background: var(--bg-e2e8f0);
   margin: -18px 8px 0 8px;
   z-index: 1;
   transition: background 0.25s ease;
@@ -7120,7 +7109,7 @@ onMounted(async () => {
   grid-template-columns: 1.3fr 1fr 1fr;
   gap: 16px;
   padding: 14px 0 8px 0;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 
 .tenant-columns-grid {
@@ -7155,8 +7144,8 @@ onMounted(async () => {
 }
 
 .info-tile {
-  background: #f8fafc;
-  border: 1px solid #eef2f6;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 10px;
   padding: 12px 14px;
   display: flex;
@@ -7166,16 +7155,16 @@ onMounted(async () => {
 }
 
 .info-tile:hover {
-  background: #f1f5f9;
-  border-color: #e2e8f0;
+  background: var(--bg-f1f5f9);
+  border-color: var(--bd-e2e8f0);
 }
 
 .info-label {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.74rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
@@ -7189,17 +7178,17 @@ onMounted(async () => {
 .info-value-text {
   font-size: 0.92rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .days-remaining-pill {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
   padding: 2px 8px;
   border-radius: 12px;
-  border: 1px solid #dbeafe;
+  border: 1px solid var(--bd-dbeafe);
 }
 
 .stall-count-pill {
@@ -7208,18 +7197,18 @@ onMounted(async () => {
   gap: 6px;
   font-size: 0.82rem;
   font-weight: 700;
-  color: #1e293b;
-  background: #f8fafc;
+  color: var(--tx-1e293b);
+  background: var(--bg-f8fafc);
   padding: 3px 10px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 .stall-count-badge {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #1d4ed8;
-  background: #dbeafe;
+  color: var(--tx-1d4ed8);
+  background: var(--bg-dbeafe);
   padding: 1px 7px;
   border-radius: 6px;
   white-space: nowrap;
@@ -7227,14 +7216,14 @@ onMounted(async () => {
 
 .tile-sub-text {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 2px;
 }
 
 .tile-sub-price {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #059669;
+  color: var(--tx-059669);
   margin-top: 2px;
 }
 
@@ -7245,7 +7234,7 @@ onMounted(async () => {
   align-items: center;
   padding-top: 14px;
   margin-top: 10px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -7289,45 +7278,45 @@ onMounted(async () => {
 }
 
 .cue-pending {
-  background: #fffbeb;
-  color: #b45309;
-  border: 1px solid #fef3c7;
+  background: var(--bg-fffbeb);
+  color: var(--tx-b45309);
+  border: 1px solid var(--bd-fef3c7);
 }
 .cue-pending .cue-dot {
   background: #f59e0b;
 }
 
 .cue-approved {
-  background: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #dcfce7;
+  background: var(--bg-f0fdf4);
+  color: var(--tx-15803d);
+  border: 1px solid var(--bd-dcfce7);
 }
 .cue-approved .cue-dot {
   background: #10b981;
 }
 
 .cue-ready {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #dbeafe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
+  border: 1px solid var(--bd-dbeafe);
 }
 .cue-ready .cue-dot {
   background: #2563eb;
 }
 
 .cue-applied {
-  background: #f5f3ff;
-  color: #6d28d9;
-  border: 1px solid #ede9fe;
+  background: var(--bg-f5f3ff);
+  color: var(--tx-6d28d9);
+  border: 1px solid var(--bd-ede9fe);
 }
 .cue-applied .cue-dot {
   background: #8b5cf6;
 }
 
 .cue-muted {
-  background: #f8fafc;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  color: var(--tx-64748b);
+  border: 1px solid var(--bd-e2e8f0);
 }
 .cue-muted .cue-dot {
   background: #94a3b8;
@@ -7345,39 +7334,39 @@ onMounted(async () => {
 }
 
 .status-hint-chip.hint-pending {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--bg-fef3c7);
+  color: var(--tx-b45309);
 }
 
 .status-hint-chip.hint-approved {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
 }
 
 .status-hint-chip.hint-ready {
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--bg-ecfdf5);
+  color: var(--tx-047857);
   font-weight: 600;
 }
 
 .status-hint-chip.hint-info {
-  background: #f0fdf4;
-  color: #15803d;
+  background: var(--bg-f0fdf4);
+  color: var(--tx-15803d);
 }
 
 .status-hint-chip.hint-warning {
-  background: #fffbeb;
-  color: #d97706;
+  background: var(--bg-fffbeb);
+  color: var(--tx-d97706);
 }
 
 .status-hint-chip.hint-muted {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
 }
 
 .status-hint-chip.hint-default {
-  background: #f8fafc;
-  color: #475569;
+  background: var(--bg-f8fafc);
+  color: var(--tx-475569);
 }
 
 /* Footer Right Actions with High Visual Hierarchy */
@@ -7437,9 +7426,9 @@ onMounted(async () => {
 }
 
 .btn-action-ghost {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #334155;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
+  color: var(--tx-334155);
   font-size: 0.82rem;
   font-weight: 500;
   padding: 7px 14px;
@@ -7453,15 +7442,15 @@ onMounted(async () => {
 }
 
 .btn-action-ghost:hover {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #94a3b8;
+  background: var(--bg-f8fafc);
+  color: var(--tx-0f172a);
+  border-color: var(--bd-94a3b8);
 }
 
 .btn-action-danger-ghost {
-  background: #ffffff;
-  border: 1px solid #fecaca;
-  color: #dc2626;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-fecaca);
+  color: var(--tx-dc2626);
   font-size: 0.82rem;
   font-weight: 500;
   padding: 7px 14px;
@@ -7474,8 +7463,8 @@ onMounted(async () => {
 }
 
 .btn-action-danger-ghost:hover {
-  background: #fef2f2;
-  border-color: #fca5a5;
+  background: var(--bg-fef2f2);
+  border-color: var(--bd-fca5a5);
 }
 
 .btn-pulse-blue {
@@ -7498,9 +7487,9 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #334155;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
+  color: var(--tx-334155);
   font-size: 0.82rem;
   font-weight: 600;
   padding: 7px 16px;
@@ -7510,9 +7499,9 @@ onMounted(async () => {
 }
 
 .btn-details-arrow:hover {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #94a3b8;
+  background: var(--bg-f8fafc);
+  color: var(--tx-0f172a);
+  border-color: var(--bd-94a3b8);
 }
 
 /* Pagination Footer Row */
@@ -7522,7 +7511,7 @@ onMounted(async () => {
   align-items: center;
   padding-top: 22px;
   margin-top: 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
   flex-wrap: wrap;
   gap: 16px;
 }
@@ -7532,15 +7521,15 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .page-select-dropdown {
   padding: 4px 8px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 6px;
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--bg-ffffff);
+  color: var(--tx-0f172a);
   font-size: 0.85rem;
   font-weight: 600;
   outline: none;
@@ -7560,9 +7549,9 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #475569;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
+  color: var(--tx-475569);
   border-radius: 6px;
   font-size: 0.82rem;
   font-weight: 500;
@@ -7572,9 +7561,9 @@ onMounted(async () => {
 
 .page-nav-btn:hover:not(:disabled),
 .page-num-btn:hover:not(.active):not(:disabled) {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #cbd5e1;
+  background: var(--bg-f8fafc);
+  color: var(--tx-0f172a);
+  border-color: var(--bd-cbd5e1);
 }
 
 .page-num-btn.active {
@@ -7613,8 +7602,8 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.74rem;
-  color: #38bdf8;
+  font-size: 0.75rem;
+  color: var(--tx-38bdf8);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -7639,12 +7628,12 @@ onMounted(async () => {
 
 .officer-sub-info {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   margin-top: 6px;
 }
 
 .market-quick-select {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-rgba-255-255-255-0p1);
   padding: 10px 14px;
   border-radius: 12px;
   display: flex;
@@ -7653,14 +7642,14 @@ onMounted(async () => {
 }
 
 .mq-label {
-  font-size: 0.72rem;
-  color: #cbd5e1;
+  font-size: 0.75rem;
+  color: var(--tx-cbd5e1);
 }
 
 .mq-select {
   background: #0f172a;
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--bd-rgba-255-255-255-0p2);
   padding: 6px 12px;
   border-radius: 8px;
   font-size: 0.85rem;
@@ -7676,14 +7665,14 @@ onMounted(async () => {
   flex-wrap: wrap;
   padding: 10px 12px;
   margin-bottom: 20px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .officer-work-filter-label {
   padding: 0 4px;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -7694,10 +7683,10 @@ onMounted(async () => {
   gap: 7px;
   min-height: 32px;
   padding: 0 10px;
-  border: 1px solid #dbe3ee;
+  border: 1px solid var(--bd-dbe3ee);
   border-radius: 8px;
-  background: #ffffff;
-  color: #475569;
+  background: var(--bg-ffffff);
+  color: var(--tx-475569);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 600;
@@ -7713,21 +7702,21 @@ onMounted(async () => {
   height: 19px;
   padding: 0 5px;
   border-radius: 999px;
-  background: #f1f5f9;
-  color: #475569;
-  font-size: 0.72rem;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-475569);
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
 .officer-work-filter:hover {
-  border-color: #93c5fd;
-  color: #1d4ed8;
+  border-color: var(--bd-93c5fd);
+  color: var(--tx-1d4ed8);
 }
 
 .officer-work-filter.active {
-  border-color: #93c5fd;
-  background: #eff6ff;
-  color: #1d4ed8;
+  border-color: var(--bd-93c5fd);
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
 }
 
 .officer-work-filter.active strong {
@@ -7736,14 +7725,14 @@ onMounted(async () => {
 }
 
 .officer-work-filter.is-muted {
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .officer-work-filter-divider {
   width: 1px;
   height: 22px;
   margin: 0 2px;
-  background: #dbe3ee;
+  background: var(--bg-dbe3ee);
 }
 
 .officer-kpi-ribbon {
@@ -7776,8 +7765,8 @@ onMounted(async () => {
 }
 
 .kpi-ribbon-card {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 14px;
   padding: 14px 16px;
   display: flex;
@@ -7815,7 +7804,7 @@ onMounted(async () => {
 
 .kpi-title {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   line-height: 1.2;
   margin-bottom: 4px;
@@ -7831,7 +7820,7 @@ onMounted(async () => {
 .kpi-count {
   font-size: 1.45rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   line-height: 1;
 }
 
@@ -7845,113 +7834,113 @@ onMounted(async () => {
 
 /* 1. รายการทั้งหมด (Blue Theme) */
 .kpi-all .kpi-icon-box {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #dbeafe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-dbeafe);
 }
 .kpi-all .kpi-unit-pill {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
 }
 .kpi-all.active {
   border-color: #2563eb;
-  background: #f8faff;
+  background: var(--bg-f8faff);
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
 }
 
 /* 2. รออนุมัติ (Amber / Orange Theme) */
 .kpi-pending .kpi-icon-box {
-  background: #fffbeb;
-  color: #d97706;
-  border: 1px solid #fef3c7;
+  background: var(--bg-fffbeb);
+  color: var(--tx-d97706);
+  border: 1px solid var(--bd-fef3c7);
 }
 .kpi-pending .kpi-unit-pill {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--bg-fef3c7);
+  color: var(--tx-b45309);
 }
 .kpi-pending.active {
   border-color: #f59e0b;
-  background: #fffdf7;
+  background: var(--bg-fffdf7);
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
 }
 
 /* 3. นัดหมายสำเร็จ (Emerald Green Theme) */
 .kpi-upcoming .kpi-icon-box {
-  background: #ecfdf5;
-  color: #059669;
-  border: 1px solid #d1fae5;
+  background: var(--bg-ecfdf5);
+  color: var(--tx-059669);
+  border: 1px solid var(--bd-d1fae5);
 }
 .kpi-upcoming .kpi-unit-pill {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 .kpi-upcoming.active {
   border-color: #10b981;
-  background: #f0fdf4;
+  background: var(--bg-f0fdf4);
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
 /* 4. รอผู้เช่ายื่นคำร้อง (Blue Theme) */
 .kpi-interested .kpi-icon-box {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #dbeafe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-dbeafe);
 }
 .kpi-interested .kpi-unit-pill {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--bg-dbeafe);
+  color: var(--tx-1d4ed8);
 }
 .kpi-interested.active {
   border-color: #2563eb;
-  background: #f8faff;
+  background: var(--bg-f8faff);
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 /* 3. รอคิว (Waiting List Theme - Sky Blue) */
 .kpi-waiting .kpi-icon-box {
-  background: #f0f9ff;
-  color: #0284c7;
-  border: 1px solid #e0f2fe;
+  background: var(--bg-f0f9ff);
+  color: var(--tx-0284c7);
+  border: 1px solid var(--bd-e0f2fe);
 }
 .kpi-waiting .kpi-unit-pill {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--bg-e0f2fe);
+  color: var(--tx-0369a1);
 }
 .kpi-waiting.active {
   border-color: #0284c7;
-  background: #f8fcff;
+  background: var(--bg-f8fcff);
   box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
 }
 
 /* 4. ยื่นคำร้องสำเร็จ (Purple Theme) */
 .kpi-applied .kpi-icon-box {
-  background: #f5f3ff;
-  color: #7c3aed;
-  border: 1px solid #ede9fe;
+  background: var(--bg-f5f3ff);
+  color: var(--tx-7c3aed);
+  border: 1px solid var(--bd-ede9fe);
 }
 .kpi-applied .kpi-unit-pill {
-  background: #ede9fe;
-  color: #6d28d9;
+  background: var(--bg-ede9fe);
+  color: var(--tx-6d28d9);
 }
 .kpi-applied.active {
   border-color: #8b5cf6;
-  background: #faf5ff;
+  background: var(--bg-faf5ff);
   box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
 /* 5. ยกเลิก (Soft Gray Theme) */
 .kpi-cancelled .kpi-icon-box {
-  background: #f1f5f9;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
+  border: 1px solid var(--bd-e2e8f0);
 }
 .kpi-cancelled .kpi-unit-pill {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
 }
 .kpi-cancelled.active {
-  border-color: #94a3b8;
-  background: #f8fafc;
+  border-color: var(--bd-94a3b8);
+  background: var(--bg-f8fafc);
   box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.18);
 }
 
@@ -7979,9 +7968,9 @@ onMounted(async () => {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-64748b);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7991,9 +7980,9 @@ onMounted(async () => {
 }
 
 .kpi-info-btn:hover {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  border-color: var(--bd-93c5fd);
+  color: var(--tx-2563eb);
   transform: scale(1.08);
 }
 
@@ -8002,8 +7991,8 @@ onMounted(async () => {
   top: calc(100% + 6px);
   right: -4px;
   width: 250px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
   padding: 12px;
@@ -8015,12 +8004,12 @@ onMounted(async () => {
 .kpi-popover-header {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   display: flex;
   align-items: center;
   gap: 6px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   margin-bottom: 8px;
 }
 
@@ -8037,19 +8026,19 @@ onMounted(async () => {
   padding: 6px 8px;
   border-radius: 8px;
   font-size: 0.8rem;
-  color: #334155;
+  color: var(--tx-334155);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .kpi-popover-item:hover {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .kpi-popover-item.is-selected {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   font-weight: 600;
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .kpi-status-dot {
@@ -8071,7 +8060,7 @@ onMounted(async () => {
 
 .kpi-status-val {
   font-weight: 700;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
   padding: 2px 7px;
   border-radius: 6px;
   font-size: 0.75rem;
@@ -8080,10 +8069,10 @@ onMounted(async () => {
 .kpi-popover-reset {
   margin-top: 8px;
   padding-top: 6px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
   text-align: center;
-  font-size: 0.74rem;
-  color: #2563eb;
+  font-size: 0.75rem;
+  color: var(--tx-2563eb);
   font-weight: 600;
   cursor: pointer;
 }
@@ -8099,8 +8088,8 @@ onMounted(async () => {
   gap: 8px;
   flex-wrap: wrap;
   padding: 6px 10px;
-  background: #ffffff;
-  border: 1px solid #eef2f6;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
   margin-top: -12px;
@@ -8148,122 +8137,122 @@ onMounted(async () => {
 
 /* 1. All chip (Slate / Neutral) */
 .subfilter-chip.chip-all {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #475569;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-475569);
 }
 .subfilter-chip.chip-all .subfilter-badge {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-475569);
 }
 .subfilter-chip.chip-all:hover:not(.active) {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #1e293b;
+  background: var(--bg-f1f5f9);
+  border-color: var(--bd-cbd5e1);
+  color: var(--tx-1e293b);
 }
 .subfilter-chip.chip-all.active {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   border: 1.5px solid #3b82f6;
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(37, 99, 235, 0.12);
 }
 .subfilter-chip.chip-all.active .subfilter-badge {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--bg-dbeafe);
+  color: var(--tx-1d4ed8);
   font-weight: 700;
 }
 
 /* 2. Amber chip (รอเจ้าหน้าที่อนุมัติ) */
 .subfilter-chip.chip-amber {
-  background: #fffbeb;
-  border: 1px solid #fef3c7;
-  color: #92400e;
+  background: var(--bg-fffbeb);
+  border: 1px solid var(--bd-fef3c7);
+  color: var(--tx-92400e);
 }
 .subfilter-chip.chip-amber .subfilter-dot {
   background: #f59e0b;
 }
 .subfilter-chip.chip-amber .subfilter-badge {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--bg-fef3c7);
+  color: var(--tx-b45309);
 }
 .subfilter-chip.chip-amber:hover:not(.active) {
-  background: #fef3c7;
-  border-color: #fde68a;
-  color: #78350f;
+  background: var(--bg-fef3c7);
+  border-color: var(--bd-fde68a);
+  color: var(--tx-78350f);
 }
 .subfilter-chip.chip-amber.active {
-  background: #fef3c7;
+  background: var(--bg-fef3c7);
   border: 1.5px solid #f59e0b;
-  color: #78350f;
+  color: var(--tx-78350f);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(245, 158, 11, 0.15);
 }
 .subfilter-chip.chip-amber.active .subfilter-badge {
   background: #fde68a;
-  color: #78350f;
+  color: var(--tx-78350f);
   font-weight: 700;
 }
 
 /* 3. Green chip (นัดหมายสำเร็จ) */
 .subfilter-chip.chip-green {
-  background: #f0fdf4;
-  border: 1px solid #dcfce7;
-  color: #166534;
+  background: var(--bg-f0fdf4);
+  border: 1px solid var(--bd-dcfce7);
+  color: var(--tx-166534);
 }
 .subfilter-chip.chip-green .subfilter-dot {
   background: #10b981;
 }
 .subfilter-chip.chip-green .subfilter-badge {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 .subfilter-chip.chip-green:hover:not(.active) {
-  background: #dcfce7;
-  border-color: #bbf7d0;
-  color: #14532d;
+  background: var(--bg-dcfce7);
+  border-color: var(--bd-bbf7d0);
+  color: var(--tx-14532d);
 }
 .subfilter-chip.chip-green.active {
-  background: #dcfce7;
+  background: var(--bg-dcfce7);
   border: 1.5px solid #10b981;
-  color: #14532d;
+  color: var(--tx-14532d);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(16, 185, 129, 0.15);
 }
 .subfilter-chip.chip-green.active .subfilter-badge {
-  background: #bbf7d0;
-  color: #14532d;
+  background: var(--bg-bbf7d0);
+  color: var(--tx-14532d);
   font-weight: 700;
 }
 
 /* 4. Blue chip (รอผู้เช่ายื่นคำร้อง) */
 .subfilter-chip.chip-blue {
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  color: #1e40af;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-dbeafe);
+  color: var(--tx-1e40af);
 }
 .subfilter-chip.chip-blue .subfilter-dot {
   background: #3b82f6;
 }
 .subfilter-chip.chip-blue .subfilter-badge {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--bg-dbeafe);
+  color: var(--tx-1d4ed8);
 }
 .subfilter-chip.chip-blue:hover:not(.active) {
-  background: #dbeafe;
-  border-color: #bfdbfe;
-  color: #1e3a8a;
+  background: var(--bg-dbeafe);
+  border-color: var(--bd-bfdbfe);
+  color: var(--tx-1e3a8a);
 }
 .subfilter-chip.chip-blue.active {
-  background: #dbeafe;
+  background: var(--bg-dbeafe);
   border: 1.5px solid #3b82f6;
-  color: #1e3a8a;
+  color: var(--tx-1e3a8a);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(59, 130, 246, 0.15);
 }
 .subfilter-chip.chip-blue.active .subfilter-badge {
-  background: #bfdbfe;
-  color: #1e3a8a;
+  background: var(--bg-bfdbfe);
+  color: var(--tx-1e3a8a);
   font-weight: 700;
 }
 
@@ -8284,7 +8273,7 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   padding-bottom: 16px;
   margin-bottom: 20px;
   flex-wrap: wrap;
@@ -8306,7 +8295,7 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
   padding: 5px 12px;
   border-radius: 20px;
   font-size: 0.8rem;
@@ -8316,9 +8305,9 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: #ffffff;
-  border: 1px solid #fca5a5;
-  color: #b91c1c;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-fca5a5);
+  color: var(--tx-b91c1c);
   padding: 5px 12px;
   border-radius: 20px;
   font-size: 0.78rem;
@@ -8328,7 +8317,7 @@ onMounted(async () => {
 }
 
 .today-toggle-pill-btn:hover {
-  background: #fef2f2;
+  background: var(--bg-fef2f2);
 }
 
 .today-toggle-pill-btn.active {
@@ -8338,7 +8327,7 @@ onMounted(async () => {
 }
 
 .today-toggle-pill-btn.active .pulse-red-dot {
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .pulse-red-dot {
@@ -8348,9 +8337,9 @@ onMounted(async () => {
   background: #ef4444;
 }
 
-.chip-label { color: #64748b; }
-.chip-value { font-weight: 700; color: #0f172a; }
-.chip-count { color: #2563eb; font-weight: 700; }
+.chip-label { color: var(--tx-64748b); }
+.chip-value { font-weight: 700; color: var(--tx-0f172a); }
+.chip-count { color: var(--tx-2563eb); font-weight: 700; }
 
 .toolbar-right {
   display: flex;
@@ -8370,30 +8359,30 @@ onMounted(async () => {
 }
 
 .cell-sub-meeting-point {
-  font-size: 0.74rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
   margin-top: 3px;
 }
 
 .cell-sub-rate {
-  font-size: 0.74rem;
-  color: #059669;
+  font-size: 0.75rem;
+  color: var(--tx-059669);
   font-weight: 600;
   margin-top: 3px;
 }
 
 .stall-zone-pill {
-  font-size: 0.74rem;
-  color: #475569;
-  background: #f1f5f9;
+  font-size: 0.75rem;
+  color: var(--tx-475569);
+  background: var(--bg-f1f5f9);
   padding: 2px 8px;
   border-radius: 8px;
   font-weight: 500;
 }
 
 .cell-sub-business {
-  font-size: 0.74rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
   margin-top: 3px;
 }
 
@@ -8405,8 +8394,8 @@ onMounted(async () => {
 }
 
 .officer-work-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   padding: 18px 20px;
   display: flex;
@@ -8417,7 +8406,7 @@ onMounted(async () => {
 }
 
 .officer-work-card:hover {
-  border-color: #cbd5e1;
+  border-color: var(--bd-cbd5e1);
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
 }
 
@@ -8438,21 +8427,21 @@ onMounted(async () => {
 .stall-num {
   font-size: 1.05rem;
   font-weight: 800;
-  color: #0f172a;
-  background: #f1f5f9;
+  color: var(--tx-0f172a);
+  background: var(--bg-f1f5f9);
   padding: 4px 10px;
   border-radius: 8px;
 }
 
 .stall-zone {
   font-size: 0.78rem;
-  color: #475569;
+  color: var(--tx-475569);
   font-weight: 500;
 }
 
 .stall-rate {
   font-size: 0.78rem;
-  color: #059669;
+  color: var(--tx-059669);
   font-weight: 700;
 }
 
@@ -8463,7 +8452,7 @@ onMounted(async () => {
 }
 
 .owc-info-row {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
   padding: 10px 12px;
   border-radius: 8px;
   display: flex;
@@ -8478,9 +8467,9 @@ onMounted(async () => {
   font-size: 0.82rem;
 }
 
-.owc-lbl { color: #64748b; }
-.owc-val { color: #1e293b; font-weight: 600; }
-.highlight-time { color: #2563eb; }
+.owc-lbl { color: var(--tx-64748b); }
+.owc-val { color: var(--tx-1e293b); font-weight: 600; }
+.highlight-time { color: var(--tx-2563eb); }
 
 .owc-tenant-box {
   border-left: 3px solid #3b82f6;
@@ -8497,15 +8486,15 @@ onMounted(async () => {
 .tenant-name {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .phone-call-btn {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   padding: 3px 8px;
   border-radius: 6px;
   font-size: 0.78rem;
@@ -8521,7 +8510,7 @@ onMounted(async () => {
 
 .tenant-business {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 3px;
 }
 
@@ -8543,8 +8532,8 @@ onMounted(async () => {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #e2e8f0;
-  color: #64748b;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 700;
   display: flex;
@@ -8554,7 +8543,7 @@ onMounted(async () => {
 
 .mini-text {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
@@ -8569,14 +8558,14 @@ onMounted(async () => {
 }
 
 .mini-step.active .mini-text {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 700;
 }
 
 .mini-line {
   flex: 1;
   height: 2px;
-  background: #e2e8f0;
+  background: var(--bg-e2e8f0);
   margin: 0 6px;
 }
 
@@ -8591,14 +8580,14 @@ onMounted(async () => {
   align-items: center;
   padding-top: 14px;
   margin-top: 14px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
   flex-wrap: wrap;
   gap: 10px;
 }
 
 .owc-booking-num {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .owc-actions-group {
@@ -8619,8 +8608,8 @@ onMounted(async () => {
 .officer-waiting-tag {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #059669;
-  background: #ecfdf5;
+  color: var(--tx-059669);
+  background: var(--bg-ecfdf5);
   padding: 4px 10px;
   border-radius: 8px;
 }
@@ -8641,49 +8630,49 @@ onMounted(async () => {
 }
 
 .officer-custom-table thead tr {
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  border-top: 1px solid var(--bd-e2e8f0);
+  border-bottom: 1px solid var(--bd-e2e8f0);
 }
 
 .officer-custom-table th {
   background: transparent !important;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   font-size: 0.825rem;
   padding: 16px 20px;
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  border-top: 1px solid var(--bd-e2e8f0);
+  border-bottom: 1px solid var(--bd-e2e8f0);
   text-align: left;
   white-space: nowrap;
 }
 
 .officer-custom-table td {
   padding: 14px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   vertical-align: middle;
-  color: #334155;
+  color: var(--tx-334155);
 }
 
 .officer-custom-table tr:hover td {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .officer-custom-table .hierarchy-project-row td {
   padding: 15px 20px;
-  background: #ffffff;
-  border-bottom: 1px solid #f1f5f9;
+  background: var(--bg-ffffff);
+  border-bottom: 1px solid var(--bd-f1f5f9);
   position: relative;
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .officer-custom-table .hierarchy-project-row:hover td {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .officer-custom-table .hierarchy-project-row.open td {
-  background: #ffffff;
-  border-bottom: 1px solid #f1f5f9;
+  background: var(--bg-ffffff);
+  border-bottom: 1px solid var(--bd-f1f5f9);
 }
 
 .hierarchy-row-content {
@@ -8716,9 +8705,9 @@ onMounted(async () => {
   justify-content: center;
   flex-shrink: 0;
   border-radius: 8px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-64748b);
 }
 
 .hierarchy-project-title-group {
@@ -8730,20 +8719,20 @@ onMounted(async () => {
 }
 
 .hierarchy-project-name {
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .hierarchy-market-pill {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8125rem;
   font-weight: 500;
   padding: 3px 9px;
   border-radius: 6px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 .hierarchy-summary-pill {
@@ -8752,27 +8741,27 @@ onMounted(async () => {
   gap: 7px;
   padding: 4px 12px;
   border-radius: 999px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-64748b);
   font-size: 0.825rem;
   font-weight: 500;
 }
 
 .hierarchy-summary-pill strong {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 600;
 }
 
 .summary-separator {
-  color: #cbd5e1;
+  color: var(--tx-cbd5e1);
 }
 
 /* Stall Row (Clean Neutral Style in Table) */
 .officer-custom-table .hierarchy-stall-row td {
   padding: 16px 20px 16px 36px;
-  background: #ffffff;
-  border-bottom: 1px solid #f1f5f9;
+  background: var(--bg-ffffff);
+  border-bottom: 1px solid var(--bd-f1f5f9);
   position: relative;
   overflow: visible;
   cursor: pointer;
@@ -8780,11 +8769,11 @@ onMounted(async () => {
 }
 
 .officer-custom-table .hierarchy-stall-row:hover td {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .officer-custom-table .hierarchy-stall-row.open td {
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .officer-custom-table .hierarchy-stall-row td::before {
@@ -8813,14 +8802,14 @@ onMounted(async () => {
 .hierarchy-stall-left .stall-group-simple-title {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   letter-spacing: 0.01em;
 }
 
 .hierarchy-stall-left .officer-booking-count-pill {
   padding: 4px 12px;
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   gap: 6px;
 }
 
@@ -8837,24 +8826,24 @@ onMounted(async () => {
   gap: 6px;
   padding: 4px 11px;
   border-radius: 6px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #1e293b;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-1e293b);
   font-size: 0.85rem;
 }
 
 .hierarchy-stall-badge svg {
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .hierarchy-stall-badge .stall-badge-label {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8rem;
   font-weight: 500;
 }
 
 .hierarchy-stall-badge strong {
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-weight: 700;
 }
 
@@ -8864,15 +8853,15 @@ onMounted(async () => {
   gap: 5px;
   padding: 4px 11px;
   border-radius: 999px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-64748b);
   font-size: 0.8125rem;
   font-weight: 500;
 }
 
 .hierarchy-stall-count-badge svg {
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .hierarchy-queue-chain-btn {
@@ -8881,9 +8870,9 @@ onMounted(async () => {
   gap: 4px;
   padding: 2px 8px;
   border-radius: 6px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #475569;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
+  color: var(--tx-475569);
   font-size: 0.775rem;
   font-weight: 500;
   cursor: pointer;
@@ -8892,9 +8881,9 @@ onMounted(async () => {
 }
 
 .hierarchy-queue-chain-btn:hover {
-  background: #f8fafc;
-  color: #0f172a;
-  border-color: #94a3b8;
+  background: var(--bg-f8fafc);
+  color: var(--tx-0f172a);
+  border-color: var(--bd-94a3b8);
 }
 
 .hierarchy-booking-row td:first-child {
@@ -8925,8 +8914,8 @@ onMounted(async () => {
 .hierarchy-branch {
   width: 12px;
   height: 12px;
-  border-left: 1px solid #cbd5e1;
-  border-bottom: 1px solid #cbd5e1;
+  border-left: 1px solid var(--bd-cbd5e1);
+  border-bottom: 1px solid var(--bd-cbd5e1);
   border-bottom-left-radius: 4px;
   flex-shrink: 0;
 }
@@ -8940,7 +8929,7 @@ onMounted(async () => {
 }
 
 .clickable-id {
-  color: #2563eb !important;
+  color: var(--tx-2563eb) !important;
   font-weight: 700 !important;
   font-size: 0.95rem !important;
   cursor: pointer;
@@ -8955,28 +8944,28 @@ onMounted(async () => {
 }
 
 .cell-sub-date {
-  font-size: 0.72rem;
-  color: #94a3b8;
+  font-size: 0.75rem;
+  color: var(--tx-94a3b8);
   margin-top: 2px;
 }
 
 .table-visit-date {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   white-space: nowrap;
 }
 
 .table-visit-slot {
   font-size: 0.78rem;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 600;
   margin-top: 1px;
   white-space: nowrap;
 }
 
 .table-meeting-point {
-  font-size: 0.74rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
   margin-top: 3px;
   line-height: 1.35;
 }
@@ -8991,25 +8980,25 @@ onMounted(async () => {
 
 .cell-zone-text {
   font-size: 0.76rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 2px;
 }
 
 .cell-rate-text {
   font-size: 0.82rem;
-  color: #059669;
+  color: var(--tx-059669);
   font-weight: 700;
   margin-top: 2px;
 }
 
 .table-tenant-name {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .table-phone-link {
   font-size: 0.78rem;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   text-decoration: none;
   font-weight: 600;
   display: inline-flex;
@@ -9019,8 +9008,8 @@ onMounted(async () => {
 }
 
 .cell-business-text {
-  font-size: 0.74rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
   margin-top: 3px;
 }
 
@@ -9225,24 +9214,24 @@ onMounted(async () => {
 }
 
 .in-card-queue-pill.has-queue-pill {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
+  border: 1px solid var(--bd-bfdbfe);
 }
 .in-card-queue-pill.has-queue-pill:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
+  background: var(--bg-dbeafe);
+  border-color: var(--bd-93c5fd);
   transform: translateY(-1px);
 }
 
 .in-card-queue-pill.is-waiting-pill {
-  background: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  background: var(--bg-f0fdf4);
+  color: var(--tx-15803d);
+  border: 1px solid var(--bd-bbf7d0);
 }
 .in-card-queue-pill.is-waiting-pill:hover {
-  background: #dcfce7;
-  border-color: #86efac;
+  background: var(--bg-dcfce7);
+  border-color: var(--bd-86efac);
   transform: translateY(-1px);
 }
 
@@ -9259,33 +9248,39 @@ onMounted(async () => {
   white-space: nowrap;
 }
 .table-queue-pill.has-queue {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
+  border: 1px solid var(--bd-bfdbfe);
 }
 .table-queue-pill.has-queue:hover {
-  background: #dbeafe;
+  background: var(--bg-dbeafe);
 }
 .table-queue-pill.is-waiting {
-  background: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  background: var(--bg-f0fdf4);
+  color: var(--tx-15803d);
+  border: 1px solid var(--bd-bbf7d0);
 }
 .table-queue-pill.is-waiting:hover {
-  background: #dcfce7;
+  background: var(--bg-dcfce7);
 }
 
 /* Modal Queue Chain */
 .modal-queue-chain {
   max-width: 620px;
   width: 92%;
-  max-height: 85vh;
+  height: min(720px, 85vh);
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border-radius: 16px;
   box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.18);
   overflow: hidden;
+}
+
+.modal-queue-chain > .modal-header,
+.modal-queue-chain > .modal-subtabs-row,
+.modal-queue-chain > .modal-footer {
+  flex-shrink: 0;
 }
 
 .modal-title-with-badge {
@@ -9299,8 +9294,8 @@ onMounted(async () => {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9308,8 +9303,8 @@ onMounted(async () => {
 }
 
 .badge-stall-chain {
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-475569);
   font-size: 0.8rem;
   font-weight: 600;
   padding: 3px 10px;
@@ -9317,6 +9312,8 @@ onMounted(async () => {
 }
 
 .queue-chain-body {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 20px 24px;
   display: flex;
@@ -9343,26 +9340,61 @@ onMounted(async () => {
   border-radius: 6px;
 }
 .queue-section-badge.badge-primary-holder {
-  background: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  background: var(--bg-f0fdf4);
+  color: var(--tx-15803d);
+  border: 1px solid var(--bd-bbf7d0);
 }
 .queue-section-badge.badge-waiting-queue {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
+  border: 1px solid var(--bd-bfdbfe);
 }
 
 .queue-holder-card {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-left: 4px solid #10b981;
-  border-radius: 10px;
-  padding: 12px 14px;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-dbe4ee);
+  border-radius: 14px;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
+}
+
+.queue-person-card {
+  min-height: 92px;
+  border: 1px solid var(--bd-e2e8f0);
+  border-radius: 14px;
+  background: var(--bg-ffffff);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.queue-person-card.is-active-holder {
+  border-color: var(--bd-bbf7d0);
+  background: linear-gradient(90deg, var(--bg-f7fef9) 0%, var(--bg-ffffff) 36%);
+}
+
+.queue-person-card:hover {
+  border-color: var(--bd-bfdbfe);
+  background: var(--bg-ffffff);
+  box-shadow: 0 5px 16px rgba(15, 23, 42, 0.07);
+}
+
+.queue-card-leading,
+.queue-num-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.queue-card-leading--holder {
+  color: var(--tx-15803d);
+  background: var(--bg-dcfce7);
+  border: 1px solid var(--bd-bbf7d0);
 }
 
 .queue-holder-left {
@@ -9374,28 +9406,42 @@ onMounted(async () => {
 
 .queue-user-name {
   font-size: 0.9375rem;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 700;
 }
 .queue-user-phone {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
+}
+.queue-user-phone::before {
+  content: '•';
+  margin-right: 6px;
+  color: var(--tx-cbd5e1);
 }
 
 .queue-card-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 .queue-card-meta-row strong {
-  color: #334155;
+  color: var(--tx-334155);
+}
+.queue-meta-separator::before {
+  content: '•';
+  margin-right: 8px;
+  color: var(--tx-cbd5e1);
 }
 
 .queue-empty-box {
   padding: 14px 16px;
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
+  background: var(--bg-f8fafc);
+  border: 1px dashed var(--bd-cbd5e1);
   border-radius: 10px;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.825rem;
   text-align: center;
 }
@@ -9411,56 +9457,68 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 10px;
   gap: 12px;
   transition: all 0.15s ease;
 }
 .queue-item-row:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--bd-cbd5e1);
+  background: var(--bg-f8fafc);
 }
 
 .queue-item-left {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .queue-num-badge {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   font-weight: 800;
-  font-size: 0.85rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid #bfdbfe;
+  font-size: 0.875rem;
+  border: 1px solid var(--bd-bfdbfe);
 }
 
 .queue-item-name-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
-  font-size: 0.9rem;
-  color: #1e293b;
+  font-size: 0.9375rem;
+  color: var(--tx-1e293b);
 }
 
 .queue-item-sub {
-  font-size: 0.775rem;
-  color: #64748b;
-  margin-top: 2px;
+  font-size: 0.8125rem;
+  color: var(--tx-64748b);
+  margin-top: 5px;
 }
 
 .queue-item-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .queue-person-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .queue-person-card .queue-item-left {
+    width: 100%;
+  }
+
+  .queue-person-card .queue-item-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 .queue-system-notice {
@@ -9468,16 +9526,16 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   font-size: 0.775rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   line-height: 1.4;
 }
 .queue-system-notice svg {
   flex-shrink: 0;
-  color: #3b82f6;
+  color: var(--tx-3b82f6);
 }
 
 /* ============================================================ */
@@ -9490,10 +9548,10 @@ onMounted(async () => {
 }
 
 .project-stall-entry {
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 12px;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .officer-project-header {
@@ -9503,9 +9561,9 @@ onMounted(async () => {
   justify-content: space-between;
   gap: 16px;
   padding: 14px 20px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border: none;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   cursor: pointer;
   text-align: left;
   font-family: inherit;
@@ -9513,11 +9571,11 @@ onMounted(async () => {
 }
 
 .officer-project-header:hover {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .officer-project-header.open {
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .officer-project-header-left {
@@ -9535,9 +9593,9 @@ onMounted(async () => {
   justify-content: center;
   flex-shrink: 0;
   border-radius: 10px;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-dbeafe);
+  color: var(--tx-2563eb);
 }
 
 .officer-project-identity {
@@ -9549,7 +9607,7 @@ onMounted(async () => {
 
 .officer-project-title {
   min-width: 0;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 0.95rem;
   font-weight: 700;
   white-space: nowrap;
@@ -9562,7 +9620,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0;
   flex-shrink: 0;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -9572,16 +9630,16 @@ onMounted(async () => {
 }
 
 .officer-project-summary > span + span {
-  border-left: 1px solid #e2e8f0;
+  border-left: 1px solid var(--bd-e2e8f0);
 }
 
 .officer-project-summary strong {
-  color: #334155;
+  color: var(--tx-334155);
   font-weight: 750;
 }
 
 .officer-project-market {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 500;
 }
@@ -9594,7 +9652,7 @@ onMounted(async () => {
 }
 
 .officer-project-header-right .chevron-indicator {
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .officer-stall-summary-bar {
@@ -9602,8 +9660,8 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 10px 18px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
   margin-bottom: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
@@ -9614,16 +9672,16 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: #475569;
+  color: var(--tx-475569);
 }
 
 .summary-bar-left svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   flex-shrink: 0;
 }
 
 .summary-bar-left strong {
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .btn-toggle-all-stalls {
@@ -9631,9 +9689,9 @@ onMounted(async () => {
   padding: 4px 14px;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #334155;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
+  color: var(--tx-334155);
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -9641,13 +9699,13 @@ onMounted(async () => {
 }
 
 .btn-toggle-all-stalls:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-0f172a);
 }
 
 .officer-stall-group-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   margin-bottom: 18px;
@@ -9678,8 +9736,8 @@ onMounted(async () => {
   left: -22px;
   width: 16px;
   height: 27px;
-  border-left: 1px solid #cbd5e1;
-  border-bottom: 1px solid #cbd5e1;
+  border-left: 1px solid var(--bd-cbd5e1);
+  border-bottom: 1px solid var(--bd-cbd5e1);
   border-bottom-left-radius: 7px;
   pointer-events: none;
 }
@@ -9697,7 +9755,7 @@ onMounted(async () => {
 }
 
 .officer-stall-group-card:hover {
-  border-color: #cbd5e1;
+  border-color: var(--bd-cbd5e1);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
 }
 
@@ -9706,7 +9764,7 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border-bottom: 1px solid transparent;
   cursor: pointer;
   transition: background 0.18s ease, border-color 0.18s ease;
@@ -9714,12 +9772,12 @@ onMounted(async () => {
 }
 
 .stall-group-header:hover {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .stall-group-header.open {
-  border-bottom-color: #e2e8f0;
-  background: #ffffff;
+  border-bottom-color: var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
 }
 
 .stall-group-header-left {
@@ -9733,7 +9791,7 @@ onMounted(async () => {
   min-width: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -9745,10 +9803,10 @@ onMounted(async () => {
   gap: 5px;
   flex-shrink: 0;
   padding: 5px 11px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 999px;
-  background: #f8fafc;
-  color: #475569;
+  background: var(--bg-f8fafc);
+  color: var(--tx-475569);
   font-size: 0.8rem;
   font-weight: 600;
   line-height: 1;
@@ -9759,7 +9817,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .queue-holder-context {
@@ -9767,20 +9825,20 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   padding: 9px 12px;
-  border: 1px solid #dbeafe;
+  border: 1px solid var(--bd-dbeafe);
   border-radius: 10px;
-  background: #eff6ff;
-  color: #475569;
+  background: var(--bg-eff6ff);
+  color: var(--tx-475569);
   font-size: 0.8125rem;
 }
 
 .queue-holder-context strong {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 700;
 }
 
 .queue-holder-context-status {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 600;
 }
 
@@ -9797,15 +9855,15 @@ onMounted(async () => {
 }
 
 .in-card-role-pill.is-holder {
-  background: #ecfdf5;
-  color: #15803d;
-  border: 1px solid #a7f3d0;
+  background: var(--bg-ecfdf5);
+  color: var(--tx-15803d);
+  border: 1px solid var(--bd-a7f3d0);
 }
 
 .in-card-role-pill.is-queue {
-  background: #fffbeb;
-  color: #b45309;
-  border: 1px solid #fde68a;
+  background: var(--bg-fffbeb);
+  color: var(--tx-b45309);
+  border: 1px solid var(--bd-fde68a);
 }
 
 @media (max-width: 768px) {
@@ -9836,8 +9894,8 @@ onMounted(async () => {
 .multi-stall-appointment-box {
   margin-top: 12px;
   padding: 12px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 10px;
 }
 
@@ -9849,7 +9907,7 @@ onMounted(async () => {
   gap: 8px;
   margin-bottom: 10px;
   padding-bottom: 8px;
-  border-bottom: 1px dashed #e2e8f0;
+  border-bottom: 1px dashed var(--bd-e2e8f0);
 }
 
 .msa-title {
@@ -9858,13 +9916,13 @@ onMounted(async () => {
   gap: 6px;
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .msa-hint {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .msa-grid {
@@ -9879,8 +9937,8 @@ onMounted(async () => {
   justify-content: space-between;
   gap: 10px;
   padding: 8px 12px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
 }
 
@@ -9895,14 +9953,14 @@ onMounted(async () => {
 .msa-stall-code {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .msa-stall-zone {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #64748b;
-  background: #f1f5f9;
+  color: var(--tx-64748b);
+  background: var(--bg-f1f5f9);
   padding: 2px 7px;
   border-radius: 5px;
 }
@@ -9910,7 +9968,7 @@ onMounted(async () => {
 .msa-stall-rate {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .msa-stall-actions {
@@ -9934,32 +9992,33 @@ onMounted(async () => {
 }
 
 .msa-btn-primary {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #93c5fd;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-93c5fd);
 }
 
 .msa-btn-primary:hover {
-  background: #dbeafe;
+  background: var(--bg-dbeafe);
   border-color: #60a5fa;
 }
 
 .msa-btn-danger {
-  background: #ffffff;
-  color: #dc2626;
-  border: 1px solid #fca5a5;
+  background: var(--bg-ffffff);
+  color: var(--tx-dc2626);
+  border: 1px solid var(--bd-fca5a5);
 }
 
 .msa-btn-danger:hover {
-  background: #fef2f2;
-  border-color: #f87171;
+  background: var(--bg-fef2f2);
+  border-color: var(--bd-f87171);
 }
 
 .tenant-view-section { min-width: 0; max-width: 100%; }
-.tenant-table-amount { color: #1e293b; font-weight: 700; white-space: nowrap; }
+.tenant-table-amount { color: var(--tx-1e293b); font-weight: 700; white-space: nowrap; }
 .tenant-table-skeleton { overflow: hidden; }
-.tenant-table-skeleton-row { display: grid; grid-template-columns: repeat(7, minmax(100px, 1fr)); gap: 24px; padding: 24px 16px; border-bottom: 1px solid #f1f5f9; }
-.tenant-table-skeleton-row span { height: 18px; border-radius: 6px; background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: tenant-table-shimmer 1.5s infinite; }
+.tenant-table-skeleton-row { display: grid; grid-template-columns: repeat(7, minmax(100px, 1fr)); gap: 24px; padding: 24px 16px; border-bottom: 1px solid var(--bd-f1f5f9); }
+.tenant-table-skeleton-row span { height: 18px; border-radius: 6px; background: linear-gradient(90deg, var(--bg-f1f5f9) 25%, var(--bg-e2e8f0) 50%, var(--bg-f1f5f9) 75%); background-size: 200% 100%; animation: tenant-table-shimmer 1.5s infinite; }
+.form-field-error { margin: 6px 0 0; color: var(--tx-dc2626); font-size: .8125rem; font-weight: 500; line-height: 1.35; }
 @keyframes tenant-table-shimmer { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .tenant-table-skeleton-row span { animation: none; } }
 

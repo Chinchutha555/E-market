@@ -81,10 +81,6 @@
         [
           100.477048,
           13.7214659
-        ],
-        [
-          100.477008,
-          13.7214586
         ]
       ],
       "floors": [
@@ -2071,10 +2067,6 @@
         [
           100.4770004,
           13.7212019
-        ],
-        [
-          100.4769685,
-          13.7211938
         ]
       ],
       "floors": [
@@ -2801,10 +2793,6 @@
         [
           100.4769765,
           13.7213263
-        ],
-        [
-          100.4769446,
-          13.7213182
         ]
       ],
       "floors": [
@@ -3527,10 +3515,6 @@
         [
           100.4769526,
           13.7214507
-        ],
-        [
-          100.4769207,
-          13.7214425
         ]
       ],
       "floors": [
@@ -4253,10 +4237,6 @@
         [
           100.4771115,
           13.7214803
-        ],
-        [
-          100.4770716,
-          13.7214702
         ]
       ],
       "floors": [
@@ -4995,10 +4975,6 @@
         [
           100.4771354,
           13.721356
-        ],
-        [
-          100.4770955,
-          13.7213459
         ]
       ],
       "floors": [
@@ -5737,10 +5713,6 @@
         [
           100.4771593,
           13.7212316
-        ],
-        [
-          100.4771194,
-          13.7212215
         ]
       ],
       "floors": [
@@ -6471,10 +6443,6 @@
         [
           100.4770243,
           13.7210776
-        ],
-        [
-          100.4769924,
-          13.7210694
         ]
       ],
       "floors": [
@@ -7107,10 +7075,6 @@
         [
           100.4769309,
           13.7214633
-        ],
-        [
-          100.4769172,
-          13.7214607
         ]
       ],
       "floors": [
@@ -7700,25 +7664,17 @@
       "sectionNumber": "10",
       "category": "อาหารปรุงสำเร็จ สตรีทฟู้ด และเครื่องดื่ม",
       "color": "#ea580c",
-      "stallsAvailable": 9,
-      "totalStalls": 9,
-      "realAreaSqm": 1878.54,
+      "stallsAvailable": 4,
+      "totalStalls": 4,
+      "realAreaSqm": 399.16,
       "centroid": [
-        100.47712302,
-        13.721174569999999
+        100.4772968375,
+        13.7202941875
       ],
       "coordinates": [
         [
-          100.4767585,
-          13.722172
-        ],
-        [
-          100.4768317,
-          13.7217974
-        ],
-        [
-          100.4771117,
-          13.7203995
+          100.4771472,
+          13.7202777
         ],
         [
           100.4771726,
@@ -7737,20 +7693,16 @@
           13.720211
         ],
         [
-          100.4771618,
-          13.7221605
+          100.4773875,
+          13.7203942
         ],
         [
-          100.4771437,
-          13.7222428
+          100.4773723,
+          13.7204741
         ],
         [
-          100.4770447,
-          13.7222249
-        ],
-        [
-          100.4767585,
-          13.722172
+          100.4772896,
+          13.7204589
         ]
       ],
       "floors": [
@@ -7762,159 +7714,6 @@
         }
       ],
       "stalls": [
-        {
-          "code": "RDP-10-001",
-          "projectId": "rat-10",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 24.86,
-          "widthM": 2.0,
-          "depthM": 12.4,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.4771069,
-              13.720425
-            ],
-            [
-              100.4771873,
-              13.72044
-            ],
-            [
-              100.4771927,
-              13.7204161
-            ],
-            [
-              100.4771117,
-              13.7203995
-            ],
-            [
-              100.4771069,
-              13.720425
-            ]
-          ],
-          "center": [
-            100.47714965,
-            13.72042015
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 136,
-            "name": "ซักล้าง",
-            "zone": "-",
-            "number": 1
-          }
-        },
-        {
-          "code": "RDP-10-001-D02",
-          "projectId": "rat-10",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "แผงค้ามาตรฐาน",
-          "size": 8.1,
-          "widthM": 2.0,
-          "depthM": 4.0,
-          "entryFee": 27000,
-          "monthlyRent": 1800,
-          "commonFee": 400,
-          "depositFee": 1800,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.4772324,
-              13.7204485
-            ],
-            [
-              100.4772597,
-              13.7204535
-            ],
-            [
-              100.4772643,
-              13.7204293
-            ],
-            [
-              100.4772371,
-              13.7204245
-            ],
-            [
-              100.4772324,
-              13.7204485
-            ]
-          ],
-          "center": [
-            100.47724837500002,
-            13.72043895
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 138,
-            "name": "เก็บของ",
-            "zone": "-",
-            "number": 1
-          }
-        },
-        {
-          "code": "RDP-10-002",
-          "projectId": "rat-10",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "แผงค้ามาตรฐาน",
-          "size": 8.8,
-          "widthM": 2.0,
-          "depthM": 4.4,
-          "entryFee": 27000,
-          "monthlyRent": 1800,
-          "commonFee": 400,
-          "depositFee": 1800,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.4772597,
-              13.7204535
-            ],
-            [
-              100.4772896,
-              13.7204589
-            ],
-            [
-              100.4772944,
-              13.7204358
-            ],
-            [
-              100.4772643,
-              13.7204293
-            ],
-            [
-              100.4772597,
-              13.7204535
-            ]
-          ],
-          "center": [
-            100.477277,
-            13.720444375000001
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 139,
-            "name": "เก็บของ",
-            "zone": "-",
-            "number": 2
-          }
-        },
         {
           "code": "RDP-10-001-D03",
           "projectId": "rat-10",
@@ -8118,22 +7917,162 @@
             "zone": "-",
             "number": 1
           }
-        },
-        {
-          "code": "RDP-10-001-D07",
-          "projectId": "rat-10",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 1335.39,
-          "widthM": 2.0,
-          "depthM": 667.7,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+        }
+      ]
+    }
+  ],
+  "siteFeatures": [],
+  "facilities": [
+    {
+      "id": "ratchadaphisek-facility-001",
+      "name": "ซักล้าง",
+      "type": "sanitation",
+      "coordinates": [
+        100.47714965,
+        13.72042015
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.4771069,
+              13.720425
+            ],
+            [
+              100.4771873,
+              13.72044
+            ],
+            [
+              100.4771927,
+              13.7204161
+            ],
+            [
+              100.4771117,
+              13.7203995
+            ],
+            [
+              100.4771069,
+              13.720425
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 136,
+        "name": "ซักล้าง",
+        "zone": "-",
+        "number": 1
+      },
+      "projectId": "rat-10"
+    },
+    {
+      "id": "ratchadaphisek-facility-002",
+      "name": "เก็บของ",
+      "type": "service",
+      "coordinates": [
+        100.47724837500002,
+        13.72043895
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.4772324,
+              13.7204485
+            ],
+            [
+              100.4772597,
+              13.7204535
+            ],
+            [
+              100.4772643,
+              13.7204293
+            ],
+            [
+              100.4772371,
+              13.7204245
+            ],
+            [
+              100.4772324,
+              13.7204485
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 138,
+        "name": "เก็บของ",
+        "zone": "-",
+        "number": 1
+      },
+      "projectId": "rat-10"
+    },
+    {
+      "id": "ratchadaphisek-facility-003",
+      "name": "เก็บของ",
+      "type": "service",
+      "coordinates": [
+        100.477277,
+        13.720444375000001
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.4772597,
+              13.7204535
+            ],
+            [
+              100.4772896,
+              13.7204589
+            ],
+            [
+              100.4772944,
+              13.7204358
+            ],
+            [
+              100.4772643,
+              13.7204293
+            ],
+            [
+              100.4772597,
+              13.7204535
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 2,
+      "sourceProperties": {
+        "FID": 139,
+        "name": "เก็บของ",
+        "zone": "-",
+        "number": 2
+      },
+      "projectId": "rat-10"
+    },
+    {
+      "id": "ratchadaphisek-facility-004",
+      "name": "สนามกีฬา",
+      "type": "common-area",
+      "coordinates": [
+        100.4769389,
+        13.722011275
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.4767585,
               13.722172
@@ -8154,37 +8093,32 @@
               100.4767585,
               13.722172
             ]
-          ],
-          "center": [
-            100.4769389,
-            13.722011275
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 144,
-            "name": "สนามกีฬา",
-            "zone": "-",
-            "number": 1
-          }
-        },
-        {
-          "code": "RDP-10-001-D08",
-          "projectId": "rat-10",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 102.23,
-          "widthM": 2.0,
-          "depthM": 51.1,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 144,
+        "name": "สนามกีฬา",
+        "zone": "-",
+        "number": 1
+      },
+      "projectId": "rat-10"
+    },
+    {
+      "id": "ratchadaphisek-facility-005",
+      "name": "ท่าเรือ",
+      "type": "access",
+      "coordinates": [
+        100.477102925,
+        13.722192549999999
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.4770447,
               13.7222249
@@ -8205,34 +8139,28 @@
               100.4770447,
               13.7222249
             ]
-          ],
-          "center": [
-            100.477102925,
-            13.722192549999999
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 145,
-            "name": "ท่าเรือ",
-            "zone": "-",
-            "number": 1
-          }
-        }
-      ]
-    }
-  ],
-  "siteFeatures": [
-    {
-      "type": "Feature",
-      "properties": {
-        "FID": 8,
-        "name": "สถานธนานุบาลกรุงเทพมหานคร",
-        "zone": "H",
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 145,
+        "name": "ท่าเรือ",
+        "zone": "-",
         "number": 1
       },
+      "projectId": "rat-10"
+    },
+    {
+      "id": "ratchadaphisek-facility-006",
+      "name": "สถานธนานุบาลกรุงเทพมหานคร",
+      "type": "building",
+      "coordinates": [
+        100.47694520909091,
+        13.721595827272724
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -8287,16 +8215,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "H",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 8,
+        "name": "สถานธนานุบาลกรุงเทพมหานคร",
+        "zone": "H",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 134,
-        "name": "บันได",
-        "zone": "G",
-        "number": 1
-      },
+      "id": "ratchadaphisek-facility-007",
+      "name": "บันได",
+      "type": "access",
+      "coordinates": [
+        100.47702667499999,
+        13.721009075
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -8323,16 +8260,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "G",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 134,
+        "name": "บันได",
+        "zone": "G",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 135,
-        "name": "บันได",
-        "zone": "G",
-        "number": 2
-      },
+      "id": "ratchadaphisek-facility-008",
+      "name": "บันได",
+      "type": "access",
+      "coordinates": [
+        100.477214575,
+        13.721042500000001
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -8359,16 +8305,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "G",
+      "number": 2,
+      "sourceProperties": {
+        "FID": 135,
+        "name": "บันได",
+        "zone": "G",
+        "number": 2
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 137,
-        "name": "สุขา",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "ratchadaphisek-facility-009",
+      "name": "สุขา",
+      "type": "sanitation",
+      "coordinates": [
+        100.4772157,
+        13.720432975000001
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -8395,16 +8350,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 137,
+        "name": "สุขา",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 146,
-        "name": "บันได",
-        "zone": "-",
-        "number": 3
-      },
+      "id": "ratchadaphisek-facility-010",
+      "name": "บันได",
+      "type": "access",
+      "coordinates": [
+        100.477144175,
+        13.720286075
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -8431,16 +8395,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 3,
+      "sourceProperties": {
+        "FID": 146,
+        "name": "บันได",
+        "zone": "-",
+        "number": 3
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 147,
-        "name": "บันได",
-        "zone": "-",
-        "number": 4
-      },
+      "id": "ratchadaphisek-facility-011",
+      "name": "บันได",
+      "type": "access",
+      "coordinates": [
+        100.47738857499999,
+        13.720330675
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -8467,6 +8440,15 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 4,
+      "sourceProperties": {
+        "FID": 147,
+        "name": "บันได",
+        "zone": "-",
+        "number": 4
       }
     }
   ]

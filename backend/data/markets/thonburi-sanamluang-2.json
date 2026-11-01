@@ -141,10 +141,6 @@
         [
           100.351328,
           13.7467749
-        ],
-        [
-          100.351328,
-          13.7467742
         ]
       ],
       "floors": [
@@ -49699,10 +49695,6 @@
         [
           100.3518082,
           13.7475003
-        ],
-        [
-          100.3518082,
-          13.7474996
         ]
       ],
       "floors": [
@@ -87677,10 +87669,6 @@
         [
           100.3525702,
           13.7475323
-        ],
-        [
-          100.3525339,
-          13.7475312
         ]
       ],
       "floors": [
@@ -125003,10 +124991,6 @@
         [
           100.3510257,
           13.7478355
-        ],
-        [
-          100.3510257,
-          13.7478349
         ]
       ],
       "floors": [
@@ -156313,10 +156297,6 @@
         [
           100.3521928,
           13.7475904
-        ],
-        [
-          100.3521928,
-          13.7475897
         ]
       ],
       "floors": [
@@ -184251,10 +184231,6 @@
         [
           100.3531919,
           13.7478737
-        ],
-        [
-          100.3525266,
-          13.7478504
         ]
       ],
       "floors": [
@@ -204289,10 +204265,6 @@
         [
           100.3528656,
           13.7483666
-        ],
-        [
-          100.3528656,
-          13.7483659
         ]
       ],
       "floors": [
@@ -219491,10 +219463,6 @@
         [
           100.3525173,
           13.7482771
-        ],
-        [
-          100.352481,
-          13.7482752
         ]
       ],
       "floors": [
@@ -233194,12 +233162,12 @@
       "sectionNumber": "09",
       "category": "อาหารปรุงสำเร็จ สตรีทฟู้ด และเครื่องดื่ม",
       "color": "#ea580c",
-      "stallsAvailable": 207,
-      "totalStalls": 207,
-      "realAreaSqm": 4141.7,
+      "stallsAvailable": 202,
+      "totalStalls": 202,
+      "realAreaSqm": 543.7,
       "centroid": [
-        100.35261974285713,
-        13.746693557142857
+        100.35156815263157,
+        13.747380799999997
       ],
       "coordinates": [
         [
@@ -233223,32 +233191,52 @@
           13.7463983
         ],
         [
-          100.353555,
-          13.7457271
+          100.3510847,
+          13.7463983
         ],
         [
-          100.3542942,
-          13.7456054
+          100.3511203,
+          13.7463995
         ],
         [
-          100.354627,
-          13.7456115
+          100.351121,
+          13.7463996
         ],
         [
-          100.3547417,
-          13.7457287
+          100.352069,
+          13.7478438
         ],
         [
-          100.3547382,
-          13.7459094
+          100.3520652,
+          13.7479613
         ],
         [
-          100.3533153,
-          13.7483788
+          100.3520644,
+          13.7479857
         ],
         [
-          100.3532228,
-          13.7483771
+          100.3520594,
+          13.7481374
+        ],
+        [
+          100.352059,
+          13.7481492
+        ],
+        [
+          100.3520391,
+          13.7481486
+        ],
+        [
+          100.3520035,
+          13.7481475
+        ],
+        [
+          100.3520003,
+          13.7481474
+        ],
+        [
+          100.3519268,
+          13.7481451
         ],
         [
           100.3517547,
@@ -233257,10 +233245,6 @@
         [
           100.3510655,
           13.7468571
-        ],
-        [
-          100.3510655,
-          13.7468564
         ]
       ],
       "floors": [
@@ -233272,58 +233256,6 @@
         }
       ],
       "stalls": [
-        {
-          "code": "THO-09-001",
-          "projectId": "tho-09",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 50.0,
-          "widthM": 2.0,
-          "depthM": 25.0,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.3532228,
-              13.7483771
-            ],
-            [
-              100.3533153,
-              13.7483788
-            ],
-            [
-              100.3533162,
-              13.7483336
-            ],
-            [
-              100.3532237,
-              13.7483319
-            ],
-            [
-              100.3532228,
-              13.7483771
-            ]
-          ],
-          "center": [
-            100.3532695,
-            13.74835535
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 3031,
-            "name": "โรงน้ำแข็ง",
-            "zone": "-",
-            "row": "-",
-            "Number": "1"
-          }
-        },
         {
           "code": "THO-09-014",
           "projectId": "tho-09",
@@ -241333,226 +241265,6 @@
           }
         },
         {
-          "code": "THO-09-001-D08",
-          "projectId": "tho-09",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 800.0,
-          "widthM": 2.0,
-          "depthM": 400.0,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.3545163,
-              13.7459053
-            ],
-            [
-              100.3547382,
-              13.7459094
-            ],
-            [
-              100.3547417,
-              13.7457287
-            ],
-            [
-              100.3543718,
-              13.7457219
-            ],
-            [
-              100.3543684,
-              13.7459026
-            ],
-            [
-              100.3544423,
-              13.745904
-            ],
-            [
-              100.3545163,
-              13.7459053
-            ]
-          ],
-          "center": [
-            100.35452978333332,
-            13.745845316666665
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 7221,
-            "name": "JEN",
-            "zone": "-",
-            "row": "-",
-            "Number": "1"
-          }
-        },
-        {
-          "code": "THO-09-001-D09",
-          "projectId": "tho-09",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 288.0,
-          "widthM": 2.0,
-          "depthM": 144.0,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.3542928,
-              13.7456777
-            ],
-            [
-              100.3543156,
-              13.7456781
-            ],
-            [
-              100.3546256,
-              13.7456838
-            ],
-            [
-              100.354627,
-              13.7456115
-            ],
-            [
-              100.3542942,
-              13.7456054
-            ],
-            [
-              100.3542928,
-              13.7456777
-            ]
-          ],
-          "center": [
-            100.35443104000001,
-            13.7456513
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 7222,
-            "name": "คลังโยธา",
-            "zone": "-",
-            "row": "-",
-            "Number": "1"
-          }
-        },
-        {
-          "code": "THO-09-001-D10",
-          "projectId": "tho-09",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 2400.0,
-          "widthM": 2.0,
-          "depthM": 1200.0,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.3537053,
-              13.7460915
-            ],
-            [
-              100.35426,
-              13.7461017
-            ],
-            [
-              100.354267,
-              13.7457402
-            ],
-            [
-              100.3537122,
-              13.74573
-            ],
-            [
-              100.3537053,
-              13.7460915
-            ]
-          ],
-          "center": [
-            100.353986125,
-            13.745915850000001
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 7223,
-            "name": "อาคารกองอำนวยการ",
-            "zone": "-",
-            "row": "-",
-            "Number": "1"
-          }
-        },
-        {
-          "code": "THO-09-001-D11",
-          "projectId": "tho-09",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 60.0,
-          "widthM": 2.0,
-          "depthM": 30.0,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.3535894,
-              13.7458634
-            ],
-            [
-              100.353592,
-              13.7457278
-            ],
-            [
-              100.353555,
-              13.7457271
-            ],
-            [
-              100.3535524,
-              13.7458627
-            ],
-            [
-              100.3535894,
-              13.7458634
-            ]
-          ],
-          "center": [
-            100.3535722,
-            13.74579525
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 7225,
-            "name": "บ้านพัก",
-            "zone": "-",
-            "row": "-",
-            "Number": "1"
-          }
-        },
-        {
           "code": "THO-09-002-D07",
           "projectId": "tho-09",
           "zone": "โซนหลัก (ชั้น 1)",
@@ -244515,10 +244227,6 @@
         [
           100.3530006,
           13.7474602
-        ],
-        [
-          100.3530006,
-          13.7474595
         ]
       ],
       "floors": [
@@ -254337,10 +254045,6 @@
         [
           100.3521528,
           13.7481863
-        ],
-        [
-          100.3521521,
-          13.7481862
         ]
       ],
       "floors": [
@@ -264031,10 +263735,6 @@
         [
           100.3515844,
           13.7481021
-        ],
-        [
-          100.3515844,
-          13.7481012
         ]
       ],
       "floors": [
@@ -266849,10 +266549,6 @@
         [
           100.3532848,
           13.7467975
-        ],
-        [
-          100.3532848,
-          13.7467966
         ]
       ],
       "floors": [
@@ -269331,16 +269027,263 @@
       ]
     }
   ],
-  "siteFeatures": [
+  "siteFeatures": [],
+  "facilities": [
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 1213,
-        "name": "ศาลา",
+      "id": "thonburi-sanamluang-2-facility-001",
+      "name": "โรงน้ำแข็ง",
+      "type": "building",
+      "coordinates": [
+        100.3532695,
+        13.74835535
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.3532228,
+              13.7483771
+            ],
+            [
+              100.3533153,
+              13.7483788
+            ],
+            [
+              100.3533162,
+              13.7483336
+            ],
+            [
+              100.3532237,
+              13.7483319
+            ],
+            [
+              100.3532228,
+              13.7483771
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": null,
+      "sourceProperties": {
+        "FID": 3031,
+        "name": "โรงน้ำแข็ง",
         "zone": "-",
         "row": "-",
         "Number": "1"
       },
+      "projectId": "tho-09"
+    },
+    {
+      "id": "thonburi-sanamluang-2-facility-002",
+      "name": "JEN",
+      "type": "building",
+      "coordinates": [
+        100.35452978333332,
+        13.745845316666665
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.3545163,
+              13.7459053
+            ],
+            [
+              100.3547382,
+              13.7459094
+            ],
+            [
+              100.3547417,
+              13.7457287
+            ],
+            [
+              100.3543718,
+              13.7457219
+            ],
+            [
+              100.3543684,
+              13.7459026
+            ],
+            [
+              100.3544423,
+              13.745904
+            ],
+            [
+              100.3545163,
+              13.7459053
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": null,
+      "sourceProperties": {
+        "FID": 7221,
+        "name": "JEN",
+        "zone": "-",
+        "row": "-",
+        "Number": "1"
+      },
+      "projectId": "tho-09"
+    },
+    {
+      "id": "thonburi-sanamluang-2-facility-003",
+      "name": "คลังโยธา",
+      "type": "service",
+      "coordinates": [
+        100.35443104000001,
+        13.7456513
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.3542928,
+              13.7456777
+            ],
+            [
+              100.3543156,
+              13.7456781
+            ],
+            [
+              100.3546256,
+              13.7456838
+            ],
+            [
+              100.354627,
+              13.7456115
+            ],
+            [
+              100.3542942,
+              13.7456054
+            ],
+            [
+              100.3542928,
+              13.7456777
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": null,
+      "sourceProperties": {
+        "FID": 7222,
+        "name": "คลังโยธา",
+        "zone": "-",
+        "row": "-",
+        "Number": "1"
+      },
+      "projectId": "tho-09"
+    },
+    {
+      "id": "thonburi-sanamluang-2-facility-004",
+      "name": "อาคารกองอำนวยการ",
+      "type": "building",
+      "coordinates": [
+        100.353986125,
+        13.745915850000001
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.3537053,
+              13.7460915
+            ],
+            [
+              100.35426,
+              13.7461017
+            ],
+            [
+              100.354267,
+              13.7457402
+            ],
+            [
+              100.3537122,
+              13.74573
+            ],
+            [
+              100.3537053,
+              13.7460915
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": null,
+      "sourceProperties": {
+        "FID": 7223,
+        "name": "อาคารกองอำนวยการ",
+        "zone": "-",
+        "row": "-",
+        "Number": "1"
+      },
+      "projectId": "tho-09"
+    },
+    {
+      "id": "thonburi-sanamluang-2-facility-005",
+      "name": "บ้านพัก",
+      "type": "building",
+      "coordinates": [
+        100.3535722,
+        13.74579525
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.3535894,
+              13.7458634
+            ],
+            [
+              100.353592,
+              13.7457278
+            ],
+            [
+              100.353555,
+              13.7457271
+            ],
+            [
+              100.3535524,
+              13.7458627
+            ],
+            [
+              100.3535894,
+              13.7458634
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": null,
+      "sourceProperties": {
+        "FID": 7225,
+        "name": "บ้านพัก",
+        "zone": "-",
+        "row": "-",
+        "Number": "1"
+      },
+      "projectId": "tho-09"
+    },
+    {
+      "id": "thonburi-sanamluang-2-facility-006",
+      "name": "ศาลา",
+      "type": "common-area",
+      "coordinates": [
+        100.35361482500001,
+        13.745892399999999
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -269367,17 +269310,26 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": 1213,
+        "name": "ศาลา",
+        "zone": "-",
+        "row": "-",
+        "Number": "1"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 3283,
-        "name": "ห้องน้ำ",
-        "zone": "-",
-        "row": "-",
-        "Number": "2"
-      },
+      "id": "thonburi-sanamluang-2-facility-007",
+      "name": "ห้องน้ำ",
+      "type": "sanitation",
+      "coordinates": [
+        100.35328705,
+        13.74804075
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -269404,17 +269356,26 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "FID": 3284,
-        "name": "แท้งค์น้ำ",
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "2",
+      "sourceProperties": {
+        "FID": 3283,
+        "name": "ห้องน้ำ",
         "zone": "-",
         "row": "-",
         "Number": "2"
-      },
+      }
+    },
+    {
+      "id": "thonburi-sanamluang-2-facility-008",
+      "name": "แท้งค์น้ำ",
+      "type": "sanitation",
+      "coordinates": [
+        100.353285375,
+        13.7481375
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -269441,17 +269402,26 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "FID": 4146,
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "2",
+      "sourceProperties": {
+        "FID": 3284,
         "name": "แท้งค์น้ำ",
         "zone": "-",
         "row": "-",
-        "Number": "1"
-      },
+        "Number": "2"
+      }
+    },
+    {
+      "id": "thonburi-sanamluang-2-facility-009",
+      "name": "แท้งค์น้ำ",
+      "type": "sanitation",
+      "coordinates": [
+        100.3511191,
+        13.74788425
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -269478,17 +269448,26 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "FID": 4147,
-        "name": "ห้องน้ำ",
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": 4146,
+        "name": "แท้งค์น้ำ",
         "zone": "-",
         "row": "-",
         "Number": "1"
-      },
+      }
+    },
+    {
+      "id": "thonburi-sanamluang-2-facility-010",
+      "name": "ห้องน้ำ",
+      "type": "sanitation",
+      "coordinates": [
+        100.351317775,
+        13.747962800000002
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -269515,17 +269494,26 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "FID": 7224,
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": 4147,
         "name": "ห้องน้ำ",
         "zone": "-",
         "row": "-",
-        "Number": "3"
-      },
+        "Number": "1"
+      }
+    },
+    {
+      "id": "thonburi-sanamluang-2-facility-011",
+      "name": "ห้องน้ำ",
+      "type": "sanitation",
+      "coordinates": [
+        100.35365519999999,
+        13.74564535
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -269552,17 +269540,26 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "3",
+      "sourceProperties": {
+        "FID": 7224,
+        "name": "ห้องน้ำ",
+        "zone": "-",
+        "row": "-",
+        "Number": "3"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 7226,
-        "name": "พระพรหม",
-        "zone": "-",
-        "row": "-",
-        "Number": "1"
-      },
+      "id": "thonburi-sanamluang-2-facility-012",
+      "name": "พระพรหม",
+      "type": "common-area",
+      "coordinates": [
+        100.35355167499999,
+        13.746007474999999
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -269589,17 +269586,26 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "FID": 7231,
-        "name": "ลานจอดรถ JEN",
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": 7226,
+        "name": "พระพรหม",
         "zone": "-",
         "row": "-",
         "Number": "1"
-      },
+      }
+    },
+    {
+      "id": "thonburi-sanamluang-2-facility-013",
+      "name": "ลานจอดรถ JEN",
+      "type": "access",
+      "coordinates": [
+        100.354589575,
+        13.7460318
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -269626,6 +269632,16 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": 7231,
+        "name": "ลานจอดรถ JEN",
+        "zone": "-",
+        "row": "-",
+        "Number": "1"
       }
     }
   ]

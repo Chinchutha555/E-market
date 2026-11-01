@@ -609,6 +609,9 @@ func SeedAll(db *gorm.DB) error {
 		}
 		log.Println("Seeded default contracts successfully")
 	}
+	if err := seedFullTenantProject16(db); err != nil {
+		return err
+	}
 
 	// 12. Seed Tenant Debt
 	var debtCount int64
@@ -650,7 +653,12 @@ func SeedAll(db *gorm.DB) error {
 				ApplicationState: "approved", Status: "A", Subject: "ขอเช่าพื้นที่แผงค้าใหม่",
 			},
 		}
-		_ = db.Create(&extraApps).Error
+		for i := range extraApps {
+			app := &extraApps[i]
+			if err := db.Where("application_no = ?", app.ApplicationNo).FirstOrCreate(app).Error; err != nil {
+				return err
+			}
+		}
 	}
 
 	var totalBookings int64
@@ -674,8 +682,255 @@ func SeedAll(db *gorm.DB) error {
 				VisitDate: "2026-11-03", VisitTime: "11:00 - 12:00", BookingStatus: "lease_applied", Status: "A",
 			},
 		}
-		_ = db.Create(&extraBookings).Error
+		for i := range extraBookings {
+			booking := &extraBookings[i]
+			if err := db.Where("booking_no = ?", booking.BookingNo).FirstOrCreate(booking).Error; err != nil {
+				return err
+			}
+		}
 	}
 
+	// Reconcile the demo lifecycle so every screen reads the same source of truth:
+	// booking -> lease application -> contract -> stall status.
+	// This is idempotent and also repairs databases created by older seed versions.
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		var unlinkedApplications []models.Application
+		if err := tx.Where("status = 'A' AND booking_id IS NULL AND application_type IN ('', 'stall_lease') AND stall_ident <> ''").
+			Find(&unlinkedApplications).Error; err != nil {
+			return err
+		}
+		for i := range unlinkedApplications {
+			app := &unlinkedApplications[i]
+			var booking models.Booking
+			query := tx.Where("status = 'A' AND stall_ident = ?", app.StallIdent)
+			if app.MarketID != nil {
+				query = query.Where("market_id = ?", *app.MarketID)
+			}
+			if app.ApplicantPhone != "" {
+				query = query.Where("applicant_phone = ?", app.ApplicantPhone)
+			}
+			if err := query.Order("id DESC").First(&booking).Error; err == nil {
+				if err := tx.Model(app).Update("booking_id", booking.ID).Error; err != nil {
+					return err
+				}
+				if app.ApplicationState != "rejected" && app.ApplicationState != "cancelled" && app.ApplicationState != "completed" {
+					if err := tx.Model(&booking).Update("booking_status", "lease_applied").Error; err != nil {
+						return err
+					}
+				}
+			} else if err != gorm.ErrRecordNotFound {
+				return err
+			}
+		}
+
+		// สัญญาตัวอย่างรุ่นเก่าถูก seed มาโดยไม่มี booking/application ต้นทาง
+		// เติมสายประวัติให้ครบเพื่อให้ทดลองไล่ การจอง -> คำร้อง -> สัญญา -> จดมิเตอร์ ได้จริง
+		var legacyContracts []models.Contract
+		if err := tx.Where("status = 'A' AND contract_state = 'active' AND application_id IS NULL").
+			Find(&legacyContracts).Error; err != nil {
+			return err
+		}
+		for i := range legacyContracts {
+			contract := &legacyContracts[i]
+			bookingNo := "BK-" + contract.ContractNumber
+			booking := models.Booking{
+				BookingNo:      bookingNo,
+				StallID:        contract.StallID,
+				StallIdent:     contract.StallIdent,
+				MarketID:       contract.MarketID,
+				ApplicantName:  contract.TenantName,
+				ApplicantPhone: contract.TenantPhone,
+				BusinessType:   contract.ShopName,
+				VisitDate:      contract.StartDate,
+				VisitTime:      "09:00 - 10:00",
+				BookingStatus:  "completed",
+				Status:         "A",
+				CreatedBy:      contract.CreatedBy,
+				UpdatedBy:      contract.UpdatedBy,
+			}
+			if err := tx.Where("booking_no = ?", bookingNo).FirstOrCreate(&booking).Error; err != nil {
+				return err
+			}
+
+			applicationNo := "APP-" + contract.ContractNumber
+			bookingID := booking.ID
+			application := models.Application{
+				ApplicationNo:      applicationNo,
+				ApplicationType:    "stall_lease",
+				Subject:            "ขอเช่าพื้นที่แผงค้า",
+				BookingID:          &bookingID,
+				StallID:            contract.StallID,
+				StallIdent:         contract.StallIdent,
+				MarketID:           contract.MarketID,
+				ApplicantName:      contract.TenantName,
+				ApplicantPhone:     contract.TenantPhone,
+				ApplicantIDCard:    contract.TenantIDCard,
+				ShopName:           contract.ShopName,
+				LeaseTermMonths:    12,
+				MonthlyRate:        contract.MonthlyRental,
+				ProposedRentType:   "monthly",
+				RequestedStartDate: contract.StartDate,
+				ApplicationState:   "completed",
+				Status:             "A",
+				CreatedBy:          contract.CreatedBy,
+				UpdatedBy:          contract.UpdatedBy,
+			}
+			if err := tx.Where("application_no = ?", applicationNo).FirstOrCreate(&application).Error; err != nil {
+				return err
+			}
+			if err := tx.Model(contract).Update("application_id", application.ID).Error; err != nil {
+				return err
+			}
+		}
+
+		// การจองและคำร้องที่ยังดำเนินการอยู่กันแผงไว้ แต่ยังไม่นับเป็นผู้เช่า
+		var activeApplications []models.Application
+		if err := tx.Where("status = 'A' AND application_type IN ('', 'stall_lease') AND application_state NOT IN ('rejected', 'cancelled', 'terminated', 'closed', 'completed') AND stall_ident <> ''").
+			Find(&activeApplications).Error; err != nil {
+			return err
+		}
+		for i := range activeApplications {
+			if err := tx.Model(&models.Stall{}).Where("ident = ?", activeApplications[i].StallIdent).
+				Update("stall_status", "reserved").Error; err != nil {
+				return err
+			}
+		}
+		var activeReservations []models.Booking
+		if err := tx.Where("status = 'A' AND booking_status NOT IN ('waiting_queue', 'rejected', 'not_interested', 'cancelled', 'no_show', 'completed', 'terminated', 'closed') AND stall_ident <> ''").
+			Find(&activeReservations).Error; err != nil {
+			return err
+		}
+		for i := range activeReservations {
+			if err := tx.Model(&models.Stall{}).Where("ident = ?", activeReservations[i].StallIdent).
+				Update("stall_status", "reserved").Error; err != nil {
+				return err
+			}
+		}
+
+		// Contract has the highest precedence. Only an effective contract makes a stall occupied.
+		var contracts []models.Contract
+		if err := tx.Where("status = 'A'").Order("id ASC").Find(&contracts).Error; err != nil {
+			return err
+		}
+		for i := range contracts {
+			contract := &contracts[i]
+			stallStatus := ""
+			switch contract.ContractState {
+			case "active", "approved", "effective", "signed":
+				stallStatus = "occupied"
+			case "pending", "draft", "contract_pending":
+				stallStatus = "reserved"
+			}
+			if stallStatus == "" || contract.StallIdent == "" {
+				continue
+			}
+			if err := tx.Model(&models.Stall{}).Where("ident = ?", contract.StallIdent).
+				Update("stall_status", stallStatus).Error; err != nil {
+				return err
+			}
+			if stallStatus == "occupied" {
+				if err := tx.Model(&models.Booking{}).
+					Where("status = 'A' AND stall_ident = ? AND booking_status NOT IN ('rejected', 'cancelled', 'terminated')", contract.StallIdent).
+					Update("booking_status", "completed").Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// seedFullTenantProject16 เติมสัญญาตัวอย่างให้โครงการ 16 ครบทุกแผงสำหรับ local development
+// เปิดใช้ด้วย SEED_FULL_PROJECT_TENANTS=true เท่านั้น เพื่อไม่ให้ข้อมูลตัวอย่างถูกเติมใน production
+func seedFullTenantProject16(db *gorm.DB) error {
+	if os.Getenv("SEED_FULL_PROJECT_TENANTS") != "true" {
+		return nil
+	}
+
+	paths := []string{
+		filepath.Join("data", "markets", "chatuchak.json"),
+		filepath.Join("backend", "data", "markets", "chatuchak.json"),
+		filepath.Join("..", "data", "markets", "chatuchak.json"),
+	}
+	var raw []byte
+	for _, path := range paths {
+		contents, err := os.ReadFile(path)
+		if err == nil {
+			raw = contents
+			break
+		}
+	}
+	if len(raw) == 0 {
+		return fmt.Errorf("full tenant seed: chatuchak GIS file not found")
+	}
+
+	var gis struct {
+		Projects []struct {
+			ID     string `json:"id"`
+			Stalls []struct {
+				Code string `json:"code"`
+			} `json:"stalls"`
+		} `json:"projects"`
+	}
+	if err := json.Unmarshal(raw, &gis); err != nil {
+		return fmt.Errorf("full tenant seed: invalid chatuchak GIS file: %w", err)
+	}
+
+	var project *struct {
+		ID     string `json:"id"`
+		Stalls []struct {
+			Code string `json:"code"`
+		} `json:"stalls"`
+	}
+	for i := range gis.Projects {
+		if gis.Projects[i].ID == "proj-16" {
+			project = &gis.Projects[i]
+			break
+		}
+	}
+	if project == nil {
+		return fmt.Errorf("full tenant seed: project 16 not found")
+	}
+
+	marketID := 1
+	created := 0
+	for _, stall := range project.Stalls {
+		if stall.Code == "" {
+			continue
+		}
+		var existing int64
+		db.Model(&models.Contract{}).
+			Where("stall_ident = ? AND market_id = ? AND contract_state = ? AND status = ?", stall.Code, marketID, "active", "A").
+			Count(&existing)
+		if existing > 0 {
+			continue
+		}
+		contract := models.Contract{
+			ContractNumber:  "CNT-2026-" + stall.Code + "-01",
+			StallIdent:      stall.Code,
+			MarketID:        &marketID,
+			TenantName:      "ผู้เช่าตัวอย่าง แผง " + stall.Code,
+			TenantPhone:     "089-000-0000",
+			ShopName:        "ร้านค้าตัวอย่าง",
+			StartDate:       "2026-01-01",
+			EndDate:         "2026-12-31",
+			MonthlyRental:   1600,
+			SecurityDeposit: 3200,
+			ContractState:   "active",
+			Status:          "A",
+		}
+		if err := db.Create(&contract).Error; err != nil {
+			return fmt.Errorf("full tenant seed: create contract for %s: %w", stall.Code, err)
+		}
+		created++
+	}
+	if created > 0 {
+		log.Printf("Seeded full tenant project 16: %d contracts", created)
+	}
 	return nil
 }

@@ -198,7 +198,7 @@ const handleLogin = async () => {
   min-height: 100vh;
 }
 .req-star {
-  color: #ef4444;
+  color: var(--tx-ef4444);
   font-weight: 700;
 }
 .login-wrapper {
@@ -209,7 +209,7 @@ const handleLogin = async () => {
   padding: 32px 16px;
   background: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.08) 0%, transparent 40%),
               radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
-              #f8fafc;
+              var(--bg-f8fafc);
 }
 
 .login-box {
@@ -217,9 +217,9 @@ const handleLogin = async () => {
   max-width: 440px;
   padding: 36px 32px;
   border-radius: var(--radius-2xl);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.1), 0 4px 14px rgba(15, 23, 42, 0.04);
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .login-header {
@@ -242,12 +242,12 @@ const handleLogin = async () => {
 
 .bma-header-pill {
   display: inline-block;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-dbeafe);
+  color: var(--tx-1d4ed8);
   padding: 3px 12px;
   border-radius: 20px;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 700;
   margin-bottom: 8px;
 }
@@ -256,20 +256,20 @@ const handleLogin = async () => {
   font-size: 1.55rem;
   font-weight: 800;
   margin-bottom: 6px;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   letter-spacing: -0.02em;
 }
 
 .login-header p {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.86rem;
   line-height: 1.5;
 }
 
 .alert-error {
-  background: #fff1f2;
-  border: 1px solid #fecdd3;
-  color: #e11d48;
+  background: var(--bg-fff1f2);
+  border: 1px solid var(--bd-fecdd3);
+  color: var(--tx-e11d48);
   padding: 10px 14px;
   border-radius: 10px;
   margin-bottom: 18px;
@@ -316,12 +316,12 @@ const handleLogin = async () => {
 .quick-credentials {
   margin-top: 26px;
   padding-top: 20px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 
 .quick-title {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-bottom: 10px;
   text-align: center;
   font-weight: 700;
@@ -334,8 +334,8 @@ const handleLogin = async () => {
 }
 
 .btn-quick {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   padding: 8px 12px;
   border-radius: 10px;
   display: flex;
@@ -346,8 +346,8 @@ const handleLogin = async () => {
 }
 
 .btn-quick:hover {
-  background: #eff6ff;
-  border-color: #bfdbfe;
+  background: var(--bg-eff6ff);
+  border-color: var(--bd-bfdbfe);
   transform: translateY(-1px);
 }
 
@@ -359,37 +359,37 @@ const handleLogin = async () => {
 }
 
 .badge-tenant {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  background: var(--bg-ecfdf5);
+  color: var(--tx-047857);
+  border: 1px solid var(--bd-a7f3d0);
 }
 
 .badge-admin {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
+  border: 1px solid var(--bd-bfdbfe);
 }
 
 .badge-staff {
-  background: #faf5ff;
-  color: #7e22ce;
-  border: 1px solid #e9d5ff;
+  background: var(--bg-faf5ff);
+  color: var(--tx-7e22ce);
+  border: 1px solid var(--bd-e9d5ff);
 }
 
 .quick-user-info {
   font-size: 0.78rem;
-  color: #475569;
+  color: var(--tx-475569);
 }
 
 .quick-user-info strong {
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .staff-demo-accounts {
   padding: 12px;
-  border: 1px solid #eadcff;
+  border: 1px solid var(--bd-eadcff);
   border-radius: 12px;
-  background: #fcfaff;
+  background: var(--bg-fcfaff);
 }
 
 .staff-demo-heading {
@@ -398,13 +398,13 @@ const handleLogin = async () => {
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 10px;
-  color: #6b21a8;
+  color: var(--tx-6b21a8);
   font-size: 0.8125rem;
   font-weight: 700;
 }
 
 .staff-demo-heading small {
-  color: #7c3aed;
+  color: var(--tx-7c3aed);
   font-size: 0.75rem;
   font-weight: 500;
 }

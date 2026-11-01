@@ -185,7 +185,7 @@ const onPageSizeSelect = (val: string | number) => {
   justify-content: space-between;
   padding-top: 18px;
   margin-top: 20px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
   flex-wrap: wrap;
   gap: 14px;
   font-family: inherit;
@@ -195,7 +195,7 @@ const onPageSizeSelect = (val: string | number) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.875rem;
   font-weight: 500;
   flex-wrap: wrap;
@@ -207,7 +207,7 @@ const onPageSizeSelect = (val: string | number) => {
 }
 
 .pagination-total-items {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-size: 0.8125rem;
   font-weight: 500;
   margin-left: 2px;
@@ -225,13 +225,13 @@ const onPageSizeSelect = (val: string | number) => {
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #1e293b;
-  border-color: #cbd5e1;
-  background: #ffffff;
+  color: var(--tx-1e293b);
+  border-color: var(--bd-cbd5e1);
+  background: var(--bg-ffffff);
 }
 
 .pagination-select-wrap :deep(.app-select-trigger:hover) {
-  border-color: #94a3b8;
+  border-color: var(--bd-94a3b8);
 }
 
 .pagination-select-wrap :deep(.app-select-trigger.is-focused) {
@@ -240,7 +240,7 @@ const onPageSizeSelect = (val: string | number) => {
 }
 
 .pagination-select-wrap :deep(.app-select-arrow) {
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .pagination-select-wrap :deep(.app-select-menu) {
@@ -273,26 +273,26 @@ const onPageSizeSelect = (val: string | number) => {
   justify-content: center;
   width: 34px;
   height: 34px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
-  background: #ffffff;
-  color: #64748b;
+  background: var(--bg-ffffff);
+  color: var(--tx-64748b);
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
 }
 
 .page-nav-btn:hover:not(:disabled) {
-  border-color: #93c5fd;
-  color: #2563eb;
-  background: #eff6ff;
+  border-color: var(--bd-93c5fd);
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
 }
 
 .page-nav-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-  border-color: #eef2f6;
-  background: #f8fafc;
+  border-color: var(--bd-eef2f6);
+  background: var(--bg-f8fafc);
 }
 
 .page-num-btn {
@@ -302,10 +302,10 @@ const onPageSizeSelect = (val: string | number) => {
   min-width: 34px;
   height: 34px;
   padding: 0 6px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
-  background: #ffffff;
-  color: #334155;
+  background: var(--bg-ffffff);
+  color: var(--tx-334155);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -314,9 +314,9 @@ const onPageSizeSelect = (val: string | number) => {
 }
 
 .page-num-btn:hover:not(:disabled):not(.active) {
-  border-color: #cbd5e1;
-  background: #f8fafc;
-  color: #0f172a;
+  border-color: var(--bd-cbd5e1);
+  background: var(--bg-f8fafc);
+  color: var(--tx-0f172a);
 }
 
 .page-num-btn.active {
@@ -332,7 +332,7 @@ const onPageSizeSelect = (val: string | number) => {
   border-color: transparent;
   background: transparent;
   cursor: default;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   padding: 0 2px;
   min-width: 24px;
 }

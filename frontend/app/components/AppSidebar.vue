@@ -2,7 +2,7 @@
   <aside class="sidebar" :class="{ 'expanded': isExpanded }">
     <!-- Brand Header -->
     <div class="sidebar-brand-wrapper">
-      <NuxtLink to="/" class="sidebar-brand" title="e-Market สำนักงานตลาดกรุงเทพมหานคร">
+      <div class="sidebar-brand" title="e-Market สำนักงานตลาดกรุงเทพมหานคร">
         <div class="brand-icon-box">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
@@ -14,7 +14,7 @@
           <span class="brand-title">e-Market</span>
           <span class="brand-subtitle">สำนักงานตลาด กทม.</span>
         </div>
-      </NuxtLink>
+      </div>
     </div>
 
     <!-- Nav Items -->
@@ -214,6 +214,36 @@
             </span>
             <span v-if="isExpanded" class="nav-label">จัดการวันหยุด</span>
           </NuxtLink>
+
+          <NuxtLink
+            :to="staffUtilityLink()"
+            class="nav-icon-link staff-nav-submenu-link"
+            :class="{ active: route.path === '/stalls/utility-settings' && route.query.section !== 'meters' }"
+            :title="isExpanded ? '' : 'อัตราค่าน้ำ-ไฟ'"
+          >
+            <span class="nav-icon-wrap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2.7s6 6.3 6 10.8a6 6 0 0 1-12 0c0-4.5 6-10.8 6-10.8z"></path>
+              </svg>
+            </span>
+            <span v-if="isExpanded" class="nav-label">อัตราค่าน้ำ-ไฟ</span>
+          </NuxtLink>
+
+          <NuxtLink
+            :to="staffUtilityLink('meters')"
+            class="nav-icon-link staff-nav-submenu-link"
+            :class="{ active: route.path === '/stalls/utility-settings' && route.query.section === 'meters' }"
+            :title="isExpanded ? '' : 'จัดการมิเตอร์'"
+          >
+            <span class="nav-icon-wrap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 12l4-4"></path>
+                <path d="M7.5 15.5h.01M12 6.5v.01M16.5 15.5h.01"></path>
+              </svg>
+            </span>
+            <span v-if="isExpanded" class="nav-label">จัดการมิเตอร์</span>
+          </NuxtLink>
         </div>
       </template>
 
@@ -290,10 +320,13 @@ const staffLayoutLink = computed(() =>
 const staffVisitManagementLink = computed(() =>
   staffMarketId.value ? `/stalls/visit-schedule?market=${staffMarketId.value}` : '/staff'
 )
+const staffUtilityLink = (section?: string) =>
+  staffMarketId.value ? `/stalls/utility-settings?market=${staffMarketId.value}${section ? `&section=${section}` : ''}` : '/staff'
 const isMarketManagementRoute = computed(() =>
   route.path === '/stalls' ||
   (route.path === '/stalls/manage' && route.query.mode !== 'inspect') ||
-  route.path.startsWith('/stalls/visit-schedule')
+  route.path.startsWith('/stalls/visit-schedule') ||
+  route.path.startsWith('/stalls/utility-settings')
 )
 const isMarketManagementExpanded = ref(isMarketManagementRoute.value)
 const toggleMarketManagement = () => {
@@ -412,7 +445,7 @@ watch(() => route.fullPath, () => {
 
 <style scoped>
 .sidebar {
-  border-right: 1px solid rgba(226, 232, 240, 0.85);
+  border-right: 1px solid var(--bd-rgba-226-232-240-0p85);
   box-shadow: 2px 0 16px rgba(15, 23, 42, 0.03);
 }
 
@@ -446,8 +479,8 @@ watch(() => route.fullPath, () => {
   min-width: 17px;
   height: 17px;
   padding: 0 4px;
-  font-size: 0.6875rem;
-  border: 2px solid #ffffff;
+  font-size: 0.75rem;
+  border: 2px solid var(--bd-ffffff);
 }
 
 .brand-icon-box:hover {
@@ -461,14 +494,14 @@ watch(() => route.fullPath, () => {
 }
 
 .nav-icon-link:hover {
-  background: #f8fafc;
-  color: #2563eb;
+  background: var(--bg-f8fafc);
+  color: var(--tx-2563eb);
   transform: translateX(2px);
 }
 
 .nav-icon-link.active {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   box-shadow: inset 0 0 0 1px rgba(191, 219, 254, 0.5);
 }
 
@@ -479,15 +512,15 @@ watch(() => route.fullPath, () => {
   border: 0;
   background: transparent;
   font-family: inherit;
-  color: #475569;
+  color: var(--tx-475569);
   font-weight: 600;
   cursor: pointer;
   text-align: inherit;
 }
 
 .staff-nav-group-toggle:hover {
-  background: #f8fafc;
-  color: #2563eb;
+  background: var(--bg-f8fafc);
+  color: var(--tx-2563eb);
   transform: none;
 }
 
@@ -509,7 +542,7 @@ watch(() => route.fullPath, () => {
   gap: 2px;
   margin: -1px 0 9px 23px;
   padding-left: 8px;
-  border-left: 1px solid #e2e8f0;
+  border-left: 1px solid var(--bd-e2e8f0);
 }
 
 .sidebar.expanded .staff-nav-submenu .staff-nav-submenu-link {
@@ -530,7 +563,7 @@ watch(() => route.fullPath, () => {
 .sidebar.expanded .staff-nav-submenu .staff-nav-submenu-link.active {
   background: transparent;
   box-shadow: none;
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .sidebar.expanded .staff-nav-submenu .staff-nav-submenu-link.active::before {
@@ -538,7 +571,7 @@ watch(() => route.fullPath, () => {
 }
 
 .sidebar.expanded .staff-nav-submenu .staff-nav-submenu-link.active .nav-label {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 600;
 }
 

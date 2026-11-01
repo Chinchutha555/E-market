@@ -2,7 +2,7 @@
   <aside class="sidebar" :class="{ 'expanded': isExpanded }">
     <!-- Brand Header -->
     <div class="sidebar-brand-wrapper">
-      <NuxtLink to="/" class="sidebar-brand" title="e-Market สำนักงานตลาดกรุงเทพมหานคร">
+      <div class="sidebar-brand" title="e-Market สำนักงานตลาดกรุงเทพมหานคร">
         <div class="brand-icon-box">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
@@ -14,7 +14,7 @@
           <span class="brand-title">e-Market</span>
           <span class="brand-subtitle">สำนักงานตลาด กทม.</span>
         </div>
-      </NuxtLink>
+      </div>
     </div>
 
     <!-- Nav Items -->
@@ -118,7 +118,7 @@
             <line x1="21" y1="12" x2="9" y2="12"></line>
           </svg>
         </span>
-        <span v-if="isExpanded" class="nav-label" style="color: #ef4444;">ออกจากระบบ</span>
+        <span v-if="isExpanded" class="nav-label" style="color: var(--tx-ef4444);">ออกจากระบบ</span>
       </button>
     </div>
   </aside>

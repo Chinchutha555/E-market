@@ -7,6 +7,7 @@ import StallManageMain from '~/core/modules/stall/ui/StallManageMain.vue'
 import { useAuthStore } from '~/core/modules/auth/store/AuthStore'
 
 definePageMeta({
+  keepalive: true,
   middleware: (to) => {
     const authStore = useAuthStore()
     authStore.hydrate()

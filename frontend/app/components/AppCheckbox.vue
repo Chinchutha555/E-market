@@ -181,8 +181,8 @@ const handleChange = (e: Event) => {
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  background: #ffffff;
-  border: 1.5px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  border: 1.5px solid var(--bd-cbd5e1);
   color: #ffffff;
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   box-sizing: border-box;
@@ -190,8 +190,8 @@ const handleChange = (e: Event) => {
 
 /* Hover state */
 .app-checkbox-wrapper:hover:not(.is-disabled) .app-checkbox-box {
-  border-color: #93c5fd;
-  background: #f8fafc;
+  border-color: var(--bd-93c5fd);
+  background: var(--bg-f8fafc);
 }
 
 /* Checked or Indeterminate state */
@@ -271,7 +271,7 @@ const handleChange = (e: Event) => {
 /* Label text */
 .app-checkbox-label {
   font-size: 0.88rem;
-  color: #334155;
+  color: var(--tx-334155);
   font-weight: 500;
   cursor: inherit;
 }

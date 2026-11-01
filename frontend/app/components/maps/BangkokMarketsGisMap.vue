@@ -30,15 +30,15 @@
 
     <!-- Map Legend Bar -->
     <div class="bma-gis-legend">
-      <div style="font-weight: 700; color: #0f172a; margin-bottom: 6px; font-size: 0.8rem;">สัญลักษณ์แผนที่:</div>
+      <div style="font-weight: 700; color: var(--tx-0f172a); margin-bottom: 6px; font-size: 0.8rem;">สัญลักษณ์แผนที่:</div>
       <div style="display: flex; gap: 14px; font-size: 0.78rem;">
         <span style="display: flex; align-items: center; gap: 6px;">
           <span style="width: 12px; height: 12px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
-          <span style="color: #334155;">เปิดรับจองแผง (มีแผงว่าง)</span>
+          <span style="color: var(--tx-334155);">เปิดรับจองแผง (มีแผงว่าง)</span>
         </span>
         <span style="display: flex; align-items: center; gap: 6px;">
           <span style="width: 12px; height: 12px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
-          <span style="color: #334155;">แผงเต็มแล้ว (ลงชื่อสำรอง)</span>
+          <span style="color: var(--tx-334155);">แผงเต็มแล้ว (ลงชื่อสำรอง)</span>
         </span>
       </div>
     </div>
@@ -48,10 +48,13 @@
 <script setup lang="ts">
 import { addStandardMapControls } from '~/utils/mapControls'
 const { showWarning } = useAppAlert()
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   markets: any[]
   selectedMarketId?: number | null
-}>()
+  active?: boolean
+}>(), {
+  active: true
+})
 
 const emit = defineEmits<{
   (e: 'selectMarket', market: any): void
@@ -61,6 +64,11 @@ let maplibregl: any = null
 let map: any = null
 const markers: any[] = []
 const currentMode = ref<'street' | 'satellite'>('street')
+let markerRenderFrame: number | null = null
+let renderedMarketsKey = ''
+let componentRun = 0
+let isUnmounted = false
+let mapModulePromise: Promise<any> | null = null
 
 // Central Bangkok coordinates in [lng, lat] for MapLibre
 const bmaCenter: [number, number] = [100.5250, 13.7563]
@@ -160,9 +168,22 @@ const saveMapState = (overrideMarketKey?: string | null) => {
   } catch {}
 }
 
-onMounted(async () => {
+const ensureMap = async () => {
+  if (map || isUnmounted || !props.active) return
+  const run = componentRun
+  mapModulePromise ||= import('maplibre-gl')
+  const ml = await mapModulePromise
+  if (isUnmounted || run !== componentRun || !props.active) return
+  maplibregl = ml.default || ml
+  await nextTick()
+  initMap()
+}
+
+onMounted(() => {
   if (process.client) {
-    (window as any).$navigateToMarket = (marketId: number | string, action: 'book' | 'stalls') => {
+    isUnmounted = false
+    componentRun += 1
+    ;(window as any).$navigateToMarket = (marketId: number | string, action: 'book' | 'stalls') => {
       saveMapState(String(marketId))
       if (action === 'book') {
         navigateTo(isOfficer.value ? `/stalls/manage?market=${marketId}` : `/stalls/book?market=${marketId}`)
@@ -171,13 +192,17 @@ onMounted(async () => {
       }
     }
 
-    const ml = await import('maplibre-gl')
-    maplibregl = ml.default || ml
-    initMap()
+    if (props.active) void ensureMap()
   }
 })
 
 onBeforeUnmount(() => {
+  isUnmounted = true
+  componentRun += 1
+  if (markerRenderFrame !== null) {
+    cancelAnimationFrame(markerRenderFrame)
+    markerRenderFrame = null
+  }
   if (map) {
     saveMapState()
     const mapInstance = map
@@ -190,9 +215,31 @@ onBeforeUnmount(() => {
 
 watch(() => props.markets, () => {
   if (map && maplibregl) {
-    renderMarkers()
+    scheduleRenderMarkers()
   }
-}, { deep: true })
+})
+
+watch(() => props.active, async (active) => {
+  if (!active) {
+    saveMapState()
+    return
+  }
+  await ensureMap()
+  if (!map) return
+  await nextTick()
+  requestAnimationFrame(() => {
+    map?.resize()
+    scheduleRenderMarkers()
+  })
+})
+
+onActivated(() => {
+  requestAnimationFrame(() => map?.resize())
+})
+
+onDeactivated(() => {
+  saveMapState()
+})
 
 watch(() => props.selectedMarketId, (newId) => {
   if (map && newId && props.markets) {
@@ -243,7 +290,7 @@ const initMap = () => {
   })
 
   map.on('load', () => {
-    renderMarkers()
+    renderMarkers(true)
   })
 }
 
@@ -253,7 +300,7 @@ const setMapMode = (mode: 'street' | 'satellite') => {
   saveMapState()
   map.setStyle(mode === 'satellite' ? satelliteStyle : streetStyle)
   map.once('style.load', () => {
-    renderMarkers()
+    renderMarkers(true)
   })
 }
 
@@ -271,8 +318,31 @@ const recenterMap = () => {
   }
 }
 
-const renderMarkers = () => {
+const getMarketsRenderKey = () => props.markets.map((market: any) => [
+  market.id,
+  market.slug,
+  market.lat,
+  market.lng,
+  market.status,
+  market.available_stalls,
+  market.total_stalls,
+  market.name
+].join(':')).join('|')
+
+const scheduleRenderMarkers = (force = false) => {
+  if (markerRenderFrame !== null) cancelAnimationFrame(markerRenderFrame)
+  markerRenderFrame = requestAnimationFrame(() => {
+    markerRenderFrame = null
+    renderMarkers(force)
+  })
+}
+
+const renderMarkers = (force = false) => {
   if (!map || !maplibregl || !props.markets) return
+
+  const nextKey = getMarketsRenderKey()
+  if (!force && nextKey === renderedMarketsKey) return
+  renderedMarketsKey = nextKey
 
   const targetPopupKey = activePopupMarketKey.value
 
@@ -389,7 +459,7 @@ const renderMarkers = () => {
 
 <style scoped>
 .bma-gis-wrapper {
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border: 1px solid var(--border-card);
 }
 
@@ -407,11 +477,11 @@ const renderMarkers = () => {
 .map-floating-style-switcher {
   display: inline-flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-rgba-255-255-255-0p95);
   backdrop-filter: blur(8px);
   padding: 3px;
   border-radius: 9999px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--bd-rgba-226-232-240-0p9);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
 }
 
@@ -423,19 +493,19 @@ const renderMarkers = () => {
   font-family: inherit;
   font-size: 0.84rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
   cursor: pointer;
   transition: all 0.18s ease;
   line-height: 1.2;
 }
 
 .map-floating-style-switcher .map-mode-tab:hover {
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .map-floating-style-switcher .map-mode-tab.active {
-  background: #ffffff;
-  color: #2563eb;
+  background: var(--bg-ffffff);
+  color: var(--tx-2563eb);
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
 }
@@ -444,28 +514,28 @@ const renderMarkers = () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-rgba-255-255-255-0p95);
   backdrop-filter: blur(8px);
   padding: 6px 14px;
   border-radius: 9999px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--bd-rgba-226-232-240-0p9);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
   font-family: inherit;
   font-size: 0.84rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--tx-334155);
   cursor: pointer;
   transition: all 0.18s ease;
   line-height: 1.2;
 }
 
 .map-floating-recenter-btn svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .map-floating-recenter-btn:hover {
-  background: #ffffff;
-  color: #1e293b;
+  background: var(--bg-ffffff);
+  color: var(--tx-1e293b);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.16);
   transform: translateY(-1px);
 }
@@ -485,7 +555,7 @@ const renderMarkers = () => {
   bottom: 16px;
   left: 16px;
   z-index: 10;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-rgba-255-255-255-0p95);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
@@ -501,12 +571,12 @@ const renderMarkers = () => {
   padding: 12px;
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 :deep(.maplibregl-popup-close-button) {
   font-size: 16px;
-  color: #64748b;
+  color: var(--tx-64748b);
   padding: 4px 8px;
 }
 
@@ -514,7 +584,7 @@ const renderMarkers = () => {
   .bma-gis-overlay {
     position: static;
     padding: 10px 12px;
-    background: #ffffff;
+    background: var(--bg-ffffff);
     border-bottom: 1px solid var(--border-subtle);
   }
   .bma-gis-controls {
@@ -536,7 +606,7 @@ const renderMarkers = () => {
   .bma-gis-legend {
     position: static;
     margin: 10px 12px;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
   }
 }
 </style>

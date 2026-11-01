@@ -401,3 +401,20 @@ func (r *repository) Reject(contractID int, userID int, reason string) error {
 		return nil
 	})
 }
+
+// UpdateWorkflow บันทึกสถานะติดตามสัญญา (ต่อสัญญา / ส่งคืนแผง / คดี) เฉพาะสัญญาที่ยังไม่ถูกลบ
+func (r *repository) UpdateWorkflow(contractID int, userID int, updates map[string]interface{}) (*models.Contract, error) {
+	var contract models.Contract
+	if err := r.conn.Where("id = ? AND status = 'A'", contractID).First(&contract).Error; err != nil {
+		return nil, err
+	}
+	updates["updated_by"] = userID
+	updates["updated_at"] = time.Now()
+	if err := r.conn.Model(&contract).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+	if err := r.conn.Where("id = ?", contractID).First(&contract).Error; err != nil {
+		return nil, err
+	}
+	return &contract, nil
+}
