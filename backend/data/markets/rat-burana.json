@@ -41,10 +41,6 @@
         [
           100.5061362,
           13.6814038
-        ],
-        [
-          100.5060085,
-          13.6810092
         ]
       ],
       "floors": [
@@ -109,14 +105,16 @@
       ]
     }
   ],
-  "siteFeatures": [
+  "siteFeatures": [],
+  "facilities": [
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 2,
-        "name": "ศูนย์บริการสาธารณสุข 39",
-        "number": 1
-      },
+      "id": "rat-burana-facility-001",
+      "name": "ศูนย์บริการสาธารณสุข 39",
+      "type": "service",
+      "coordinates": [
+        100.50685700000001,
+        13.68100025
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -143,15 +141,24 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 2,
+        "name": "ศูนย์บริการสาธารณสุข 39",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 3,
-        "name": "สำนักงานเขตราษฎร์บูรณะ",
-        "number": 1
-      },
+      "id": "rat-burana-facility-002",
+      "name": "สำนักงานเขตราษฎร์บูรณะ",
+      "type": "service",
+      "coordinates": [
+        100.5058128,
+        13.68202845
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -178,15 +185,24 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 3,
+        "name": "สำนักงานเขตราษฎร์บูรณะ",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 4,
-        "name": "สถานีดับเพลิงและกู้ภัยราษฎร์บูรณะ",
-        "number": 1
-      },
+      "id": "rat-burana-facility-003",
+      "name": "สถานีดับเพลิงและกู้ภัยราษฎร์บูรณะ",
+      "type": "service",
+      "coordinates": [
+        100.50593195,
+        13.681328325
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -213,6 +229,14 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 4,
+        "name": "สถานีดับเพลิงและกู้ภัยราษฎร์บูรณะ",
+        "number": 1
       }
     }
   ]

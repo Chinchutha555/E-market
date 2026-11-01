@@ -3,9 +3,10 @@
     <div class="navbar-left">
       <!-- Hamburger Button (Expand / Collapse Sidebar) -->
       <button
+        type="button"
         class="btn-icon-square hamburger-toggle-btn"
         :class="{ active: isExpanded }"
-        @click="toggleSidebar"
+        @click.stop="toggleSidebar"
         :title="isExpanded ? 'ย่อแถบเมนู (Collapse Sidebar)' : 'ขยายแถบเมนู (Expand Sidebar)'"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -16,14 +17,14 @@
       </button>
 
       <!-- System Brand Title -->
-      <NuxtLink :to="homeLink" class="navbar-brand-tag" title="ระบบบริหารจัดการแผงเช่า สำนักงานตลาดกรุงเทพมหานคร">
+      <div class="navbar-brand-tag" title="ระบบบริหารจัดการแผงเช่า สำนักงานตลาดกรุงเทพมหานคร">
         <span class="brand-title-text">e-Market</span>
         <span class="bma-pill-badge">
           <span class="bma-dot"></span>
           <span class="bma-text-full">ระบบบริหารจัดการแผงเช่า สำนักงานตลาดกรุงเทพมหานคร</span>
           <span class="bma-text-short">ระบบบริหารจัดการแผงเช่า กทม.</span>
         </span>
-      </NuxtLink>
+      </div>
     </div>
 
     <div class="navbar-right" ref="headerRightRef">
@@ -53,7 +54,7 @@
         </div>
         <div class="user-info-text">
           <span class="user-name-text">{{ user?.full_name || (user?.role === 'tenant' ? 'สมชาย ใจดี' : 'ผู้ดูแลระบบ') }}</span>
-          <span class="user-role-text" :style="user?.role === 'tenant' ? 'color: #059669; font-weight: 700;' : 'color: #2563eb; font-weight: 700;'">
+          <span class="user-role-text" :style="user?.role === 'tenant' ? 'color: var(--tx-059669); font-weight: 700;' : 'color: var(--tx-2563eb); font-weight: 700;'">
             {{ roleLabel }}
           </span>
         </div>
@@ -64,11 +65,11 @@
         <!-- Dropdown Menu -->
         <div v-if="showDropdown" class="profile-dropdown-card" @click.stop>
           <div class="dropdown-header">
-            <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">บัญชีผู้ใช้งาน</div>
-            <div style="font-weight: 700; font-size: 0.88rem; color: #0f172a; margin-top: 2px;">
+            <div style="font-size: 0.75rem; color: var(--tx-64748b); font-weight: 600;">บัญชีผู้ใช้งาน</div>
+            <div style="font-weight: 700; font-size: 0.88rem; color: var(--tx-0f172a); margin-top: 2px;">
               {{ user?.full_name || (user?.role === 'tenant' ? 'สมชาย ใจดี' : 'ผู้ดูแลระบบ') }}
             </div>
-            <div style="font-size: 0.75rem; color: #64748b;">
+            <div style="font-size: 0.75rem; color: var(--tx-64748b);">
               {{ user?.email || (user?.role === 'tenant' ? 'somchai@tenant.com' : 'admin@emarket.com') }}
             </div>
           </div>
@@ -164,7 +165,7 @@ const handleLogout = async () => {
 .brand-title-text {
   font-size: 1.15rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   letter-spacing: -0.02em;
   line-height: 1;
 }
@@ -173,9 +174,9 @@ const handleLogout = async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  color: #1e40af;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-dbeafe);
+  color: var(--tx-1e40af);
   padding: 4px 11px;
   border-radius: 9999px;
   font-size: 0.78rem;
@@ -209,7 +210,7 @@ const handleLogout = async () => {
 }
 
 .user-dropdown-arrow {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   margin-left: 2px;
   transition: transform 0.2s ease;
 }
@@ -223,8 +224,8 @@ const handleLogout = async () => {
   top: 115%;
   right: 0;
   min-width: 230px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
   z-index: 50;
@@ -234,8 +235,8 @@ const handleLogout = async () => {
 
 .dropdown-header {
   padding: 12px 14px;
-  background: #f8fafc;
-  border-bottom: 1px solid #f1f5f9;
+  background: var(--bg-f8fafc);
+  border-bottom: 1px solid var(--bd-f1f5f9);
 }
 
 .dropdown-item {
@@ -248,7 +249,7 @@ const handleLogout = async () => {
   gap: 10px;
   font-size: 0.84rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--tx-334155);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -256,17 +257,17 @@ const handleLogout = async () => {
 }
 
 .dropdown-item:hover {
-  background: #f1f5f9;
-  color: #2563eb;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-2563eb);
 }
 
 .dropdown-item.logout-action {
-  color: #ef4444;
+  color: var(--tx-ef4444);
 }
 
 .dropdown-item.logout-action:hover {
-  background: #fff1f2;
-  color: #dc2626;
+  background: var(--bg-fff1f2);
+  color: var(--tx-dc2626);
 }
 
 .theme-toggle-btn {
@@ -276,22 +277,39 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 50%;
-  background: #ffffff;
-  color: #475569;
+  background: var(--bg-ffffff);
+  color: var(--tx-475569);
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
-.theme-toggle-btn:hover { background: #f8fafc; color: #0f172a; }
-.theme-toggle-btn:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+.theme-toggle-btn:hover { background: var(--bg-f8fafc); color: var(--tx-0f172a); }
+.theme-toggle-btn:focus-visible { outline: 3px solid var(--bd-93c5fd); outline-offset: 2px; }
+
+.hamburger-toggle-btn {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.hamburger-toggle-btn:hover {
+  transform: none !important;
+}
+
+.hamburger-toggle-btn.active {
+  background: var(--bg-eff6ff) !important;
+  border-color: var(--bd-bfdbfe) !important;
+  color: var(--primary) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
 
 @media (max-width: 768px) {
   .top-navbar {
     position: sticky !important;
     top: 0 !important;
     z-index: 35 !important;
-    background: #ffffff !important;
+    background: var(--bg-ffffff) !important;
   }
 }
 </style>

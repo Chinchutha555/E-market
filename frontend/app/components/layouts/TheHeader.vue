@@ -3,9 +3,10 @@
     <div class="navbar-left">
       <!-- Hamburger Button (Expand / Collapse Sidebar) -->
       <button
+        type="button"
         class="btn-icon-square hamburger-toggle-btn"
         :class="{ active: isExpanded }"
-        @click="toggleSidebar"
+        @click.stop="toggleSidebar"
         :title="isExpanded ? 'ย่อแถบเมนู (Collapse Sidebar)' : 'ขยายแถบเมนู (Expand Sidebar)'"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -38,20 +39,20 @@
         </div>
         <div class="user-info-text">
           <span class="user-name-text">{{ user?.full_name || (user?.role === 'tenant' ? 'สมชาย ใจดี' : 'ผู้ดูแลระบบ') }}</span>
-          <span class="user-role-text" :style="user?.role === 'tenant' ? 'color: #059669; font-weight: 700;' : 'color: #2563eb; font-weight: 700;'">
+          <span class="user-role-text" :style="user?.role === 'tenant' ? 'color: var(--tx-059669); font-weight: 700;' : 'color: var(--tx-2563eb); font-weight: 700;'">
             {{ roleLabel }}
           </span>
         </div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #94a3b8; margin-left: 2px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--tx-94a3b8); margin-left: 2px;">
           <polyline points="6 9 12 15 18 9"></polyline>
         </svg>
 
         <!-- Dropdown Menu -->
         <div v-if="showDropdown" class="card" style="position: absolute; top: 110%; right: 0; min-width: 190px; padding: 8px; z-index: 50; box-shadow: var(--shadow-lg);">
-          <div style="padding: 6px 10px; font-size: 0.76rem; color: #64748b; border-bottom: 1px solid #f1f5f9; margin-bottom: 4px;">
+          <div style="padding: 6px 10px; font-size: 0.76rem; color: var(--tx-64748b); border-bottom: 1px solid var(--bd-f1f5f9); margin-bottom: 4px;">
             บทบาทปัจจุบัน: <strong>{{ roleLabel }}</strong>
           </div>
-          <button class="btn btn-sm btn-outline" style="width: 100%; border: none; justify-content: flex-start; color: #ef4444; display: flex; align-items: center; gap: 8px;" @click="handleLogout">
+          <button class="btn btn-sm btn-outline" style="width: 100%; border: none; justify-content: flex-start; color: var(--tx-ef4444); display: flex; align-items: center; gap: 8px;" @click="handleLogout">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
@@ -100,7 +101,7 @@ const handleLogout = async () => {
 <style scoped>
 .navbar-subtitle-text {
   font-size: 0.86rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   margin-left: 6px;
 }

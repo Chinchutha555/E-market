@@ -329,14 +329,14 @@ func (r *repository) Create(app *models.Application) error {
 				}
 			}
 
-			// 4. Upsert stall to occupied
+			// 4. คำร้องยังไม่ใช่สิทธิการเช่าที่มีผล จึงกันแผงไว้จนกว่าสัญญาจะ active
 			var stallCount int64
 			tx.Model(&models.Stall{}).Where("ident = ?", app.StallIdent).Count(&stallCount)
 			if stallCount == 0 {
 				newStall := models.Stall{
 					Ident:       app.StallIdent,
 					Name:        "แผงค้า " + app.StallIdent,
-					StallStatus: "occupied",
+					StallStatus: "reserved",
 					Floor:       "1",
 					Status:      "A",
 				}
@@ -347,7 +347,7 @@ func (r *repository) Create(app *models.Application) error {
 			} else {
 				_ = tx.Model(&models.Stall{}).
 					Where("ident = ?", app.StallIdent).
-					Update("stall_status", "occupied").Error
+					Update("stall_status", "reserved").Error
 			}
 		}
 		return nil
@@ -411,7 +411,8 @@ func (r *repository) Update(app *models.Application) error {
 				})
 				tlBytes, _ := json.Marshal(tl)
 				_ = tx.Model(&models.Booking{}).Where("id = ?", bk.ID).Updates(map[string]interface{}{
-					"booking_status": "completed",
+					// ปิดการจองเป็น completed เฉพาะเมื่อสัญญามีผล
+					"booking_status": "lease_applied",
 					"timeline":       string(tlBytes),
 					"updated_at":     now,
 				}).Error

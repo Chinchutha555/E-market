@@ -73,10 +73,6 @@
         [
           100.3833683,
           13.6866015
-        ],
-        [
-          100.3833347,
-          13.6865864
         ]
       ],
       "floors": [
@@ -8039,10 +8035,6 @@
         [
           100.383116,
           13.6864888
-        ],
-        [
-          100.3830824,
-          13.6864737
         ]
       ],
       "floors": [
@@ -13985,10 +13977,6 @@
         [
           100.3832918,
           13.6861996
-        ],
-        [
-          100.3832246,
-          13.6861695
         ]
       ],
       "floors": [
@@ -19335,10 +19323,6 @@
         [
           100.383772,
           13.6867818
-        ],
-        [
-          100.3836879,
-          13.6867442
         ]
       ],
       "floors": [
@@ -24513,10 +24497,6 @@
         [
           100.3839477,
           13.6864926
-        ],
-        [
-          100.38383,
-          13.68644
         ]
       ],
       "floors": [
@@ -29627,10 +29607,6 @@
         [
           100.3835441,
           13.6863123
-        ],
-        [
-          100.3834768,
-          13.6862822
         ]
       ],
       "floors": [
@@ -34769,16 +34745,16 @@
       ]
     }
   ],
-  "siteFeatures": [
+  "siteFeatures": [],
+  "facilities": [
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 285,
-        "name": "ห้องควบคุมไฟฟ้า",
-        "zone": "6 เนื้อสัตว์ อาหารทะเล",
-        "number": 13,
-        "row": "4"
-      },
+      "id": "bang-khae-phirom-facility-001",
+      "name": "ห้องควบคุมไฟฟ้า",
+      "type": "service",
+      "coordinates": [
+        100.38388628,
+        13.686823659999998
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -34809,17 +34785,26 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "6 เนื้อสัตว์ อาหารทะเล",
+      "number": 13,
+      "sourceProperties": {
+        "FID": 285,
+        "name": "ห้องควบคุมไฟฟ้า",
+        "zone": "6 เนื้อสัตว์ อาหารทะเล",
+        "number": 13,
+        "row": "4"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 287,
-        "name": "ห้องควบคุมไฟฟ้า",
-        "zone": "6 เนื้อสัตว์ อาหารทะเล",
-        "number": 1,
-        "row": "4"
-      },
+      "id": "bang-khae-phirom-facility-002",
+      "name": "ห้องควบคุมไฟฟ้า",
+      "type": "service",
+      "coordinates": [
+        100.383894525,
+        13.686802199999999
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -34846,17 +34831,26 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "6 เนื้อสัตว์ อาหารทะเล",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 287,
+        "name": "ห้องควบคุมไฟฟ้า",
+        "zone": "6 เนื้อสัตว์ อาหารทะเล",
+        "number": 1,
+        "row": "4"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 541,
-        "name": "ห้องควบคุมไฟฟ้า",
-        "zone": "1 ผัก-ผลไม้",
-        "number": 13,
-        "row": "4"
-      },
+      "id": "bang-khae-phirom-facility-003",
+      "name": "ห้องควบคุมไฟฟ้า",
+      "type": "service",
+      "coordinates": [
+        100.384027825,
+        13.6865169
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -34883,17 +34877,26 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "1 ผัก-ผลไม้",
+      "number": 13,
+      "sourceProperties": {
+        "FID": 541,
+        "name": "ห้องควบคุมไฟฟ้า",
+        "zone": "1 ผัก-ผลไม้",
+        "number": 13,
+        "row": "4"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 543,
-        "name": "ห้องควบคุมไฟฟ้า",
-        "zone": "1 ผัก-ผลไม้",
-        "number": 1,
-        "row": "4"
-      },
+      "id": "bang-khae-phirom-facility-004",
+      "name": "ห้องควบคุมไฟฟ้า",
+      "type": "service",
+      "coordinates": [
+        100.384036675,
+        13.686498
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -34920,17 +34923,26 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "1 ผัก-ผลไม้",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 543,
+        "name": "ห้องควบคุมไฟฟ้า",
+        "zone": "1 ผัก-ผลไม้",
+        "number": 1,
+        "row": "4"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "ที่จอดรถยนต์",
-        "zone": "-",
-        "number": 1,
-        "row": "-"
-      },
+      "id": "bang-khae-phirom-facility-005",
+      "name": "ที่จอดรถยนต์",
+      "type": "access",
+      "coordinates": [
+        100.38279697499999,
+        13.686231999999999
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -34957,17 +34969,26 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
         "FID": null,
-        "name": "ที่จอดรถจักรยานยนต์",
+        "name": "ที่จอดรถยนต์",
         "zone": "-",
         "number": 1,
         "row": "-"
-      },
+      }
+    },
+    {
+      "id": "bang-khae-phirom-facility-006",
+      "name": "ที่จอดรถจักรยานยนต์",
+      "type": "access",
+      "coordinates": [
+        100.38282652499998,
+        13.685909249999998
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -34994,17 +35015,26 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": null,
+        "name": "ที่จอดรถจักรยานยนต์",
+        "zone": "-",
+        "number": 1,
+        "row": "-"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "ที่จอดรถยนต์",
-        "zone": "-",
-        "number": 2,
-        "row": "-"
-      },
+      "id": "bang-khae-phirom-facility-007",
+      "name": "ที่จอดรถยนต์",
+      "type": "access",
+      "coordinates": [
+        100.38293685000001,
+        13.685949475
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -35031,17 +35061,26 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 2,
+      "sourceProperties": {
         "FID": null,
         "name": "ที่จอดรถยนต์",
         "zone": "-",
-        "number": 3,
+        "number": 2,
         "row": "-"
-      },
+      }
+    },
+    {
+      "id": "bang-khae-phirom-facility-008",
+      "name": "ที่จอดรถยนต์",
+      "type": "access",
+      "coordinates": [
+        100.383023125,
+        13.6863043
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -35068,17 +35107,26 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 3,
+      "sourceProperties": {
         "FID": null,
         "name": "ที่จอดรถยนต์",
         "zone": "-",
-        "number": 4,
+        "number": 3,
         "row": "-"
-      },
+      }
+    },
+    {
+      "id": "bang-khae-phirom-facility-009",
+      "name": "ที่จอดรถยนต์",
+      "type": "access",
+      "coordinates": [
+        100.38315914999998,
+        13.686004825000001
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -35105,6 +35153,16 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 4,
+      "sourceProperties": {
+        "FID": null,
+        "name": "ที่จอดรถยนต์",
+        "zone": "-",
+        "number": 4,
+        "row": "-"
       }
     }
   ]

@@ -14,6 +14,7 @@ type UseCase interface {
 	ApproveContract(id int, userID int) (*responses.ContractResponse, error)
 	RejectContract(id int, userID int, reason string) error
 	TerminateContract(id int, userID int) error
+	UpdateContractWorkflow(id int, userID int, req requests.UpdateContractWorkflowRequest) (*responses.ContractResponse, error)
 }
 
 var ErrApplicationNotApproved = errors.New("application is not approved for this stall")
@@ -26,4 +27,5 @@ type Repository interface {
 	Reject(contractID int, userID int, reason string) error
 	UpdateStallStatus(stallIdent string, status string) error
 	Terminate(contractID int) error
+	UpdateWorkflow(contractID int, userID int, updates map[string]interface{}) (*models.Contract, error)
 }

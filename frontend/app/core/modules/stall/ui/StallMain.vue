@@ -4,7 +4,14 @@
     <AppHeader />
 
     <div class="content-body market-detail-page">
-      <header class="md-page-heading">
+      <div v-if="!isOfficer" class="md-breadcrumb-row">
+        <AppBreadcrumb
+          :current="currentMarket.name || 'รายละเอียดตลาด'"
+          back-to="/"
+        />
+      </div>
+
+      <header v-if="isOfficer" class="md-page-heading">
         <div>
           <h2>รายละเอียดตลาด</h2>
           <p>ตรวจสอบข้อมูลสำคัญและอัปเดตรายละเอียดตลาดเมื่อมีการเปลี่ยนแปลง</p>
@@ -448,7 +455,7 @@ import { getMarketStallSummary, type MarketStallSummary, type StallStatus } from
 import { getMarketGisConfig } from '../data/markets_registry'
 
 const route = useRoute()
-const { get } = useApi()
+const { apiFetch } = useApi()
 const { role } = useAuth()
 const { applyMarketOverride, getMarketOverride } = useMarketOverrides()
 const { resetTestData } = useResetTestData()
@@ -489,6 +496,9 @@ const currentMapMode = ref<'street' | 'satellite'>('street')
 let maplibregl: any = null
 let map: any = null
 let marker: any = null
+let marketRequestController: AbortController | null = null
+let marketLoadRun = 0
+let isUnmounted = false
 
 const marketHeroImage = computed(() => {
   if (currentMarket.value?.image_url) return currentMarket.value.image_url
@@ -582,7 +592,7 @@ const setMapMode = (mode: 'street' | 'satellite') => {
 }
 
 const initMap = () => {
-  if (!maplibregl || !document.getElementById('market-overview-map')) return
+  if (!maplibregl || map || !document.getElementById('market-overview-map')) return
 
   const lng = currentMarket.value.lng || 100.5501
   const lat = currentMarket.value.lat || 13.7998
@@ -600,11 +610,19 @@ const initMap = () => {
     notify: showWarning
   })
 
-  // Create custom marker pin
+  renderMarketMarker()
+}
+
+const renderMarketMarker = () => {
+  if (!map || !maplibregl) return
+  marker?.remove()
+
+  const lng = currentMarket.value.lng || 100.5501
+  const lat = currentMarket.value.lat || 13.7998
   const el = document.createElement('div')
   el.className = 'market-overview-pin'
   el.innerHTML = `
-    <div style="background: #2563eb; color: #fff; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 11px; box-shadow: 0 4px 12px rgba(37,99,235,0.4); border: 2px solid #ffffff; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+    <div style="background: #2563eb; color: #fff; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(37,99,235,0.4); border: 2px solid #ffffff; display: flex; align-items: center; gap: 5px; cursor: pointer;">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
       <span>${currentMarket.value.name}</span>
     </div>
@@ -627,6 +645,14 @@ const initMap = () => {
 
   // Open popup by default
   popup.addTo(map)
+}
+
+const syncMarketMap = () => {
+  if (!map) return
+  const lng = currentMarket.value.lng || 100.5501
+  const lat = currentMarket.value.lat || 13.7998
+  renderMarketMarker()
+  map.easeTo({ center: [lng, lat], zoom: 15, duration: 350, essential: true })
 }
 
 // ---------- Display helpers (หน้ารายละเอียดตลาด) ----------
@@ -707,10 +733,31 @@ const availBarWidth = computed(() => {
 })
 
 const loadMarketDetailData = async (marketQueryRaw?: any) => {
+  const run = ++marketLoadRun
+  marketRequestController?.abort()
+  marketRequestController = new AbortController()
+  const signal = marketRequestController.signal
   const marketQuery = marketQueryRaw ?? route.query.market ?? '1'
   currentMarket.value = buildInitialMarket(marketQuery)
-  try {
-    const response = await get('/markets')
+  const marketParam = String(marketQuery || currentMarket.value.slug || currentMarket.value.id || '1')
+
+  const marketsPromise = apiFetch('/markets', { method: 'GET', signal })
+  const stallsPromise = apiFetch('/stalls', {
+    method: 'GET',
+    query: { market: marketParam },
+    signal
+  })
+  const gisPromise = loadMarketGisJson(marketParam, false, signal)
+
+  const [marketsResult, stallsResult, gisResult] = await Promise.allSettled([
+    marketsPromise,
+    stallsPromise,
+    gisPromise
+  ])
+  if (run !== marketLoadRun || isUnmounted || signal.aborted) return
+
+  if (marketsResult.status === 'fulfilled') {
+    const response: any = marketsResult.value
     const markets = Array.isArray(response) ? response : (response?.data || [])
     const lookup = String(marketQuery || currentMarket.value.id || '1')
     const found = markets.find((m: any) => String(m.id) === lookup || m.slug === lookup)
@@ -720,23 +767,20 @@ const loadMarketDetailData = async (marketQueryRaw?: any) => {
         || (hasAvailableCount && Number(found.available_stalls) === 0)
       currentMarket.value = applyMarketOverride(found)
     }
-  } catch (e) {
-    console.warn('Could not fetch market details:', e)
+  } else if ((marketsResult.reason as any)?.name !== 'AbortError') {
+    console.warn('Could not fetch market details:', marketsResult.reason)
   }
 
   let backendStalls: any[] = []
-  try {
-    const marketParam = String(marketQuery || currentMarket.value.slug || currentMarket.value.id || '1')
-    const response = await get(`/stalls?market=${encodeURIComponent(marketParam)}`)
+  if (stallsResult.status === 'fulfilled') {
+    const response: any = stallsResult.value
     backendStalls = Array.isArray(response) ? response : (response?.data || [])
-  } catch (err) {
-    console.error('Error fetching stalls:', err)
+  } else if ((stallsResult.reason as any)?.name !== 'AbortError') {
+    console.error('Error fetching stalls:', stallsResult.reason)
   }
 
-  try {
-    const gisMarket = await loadMarketGisJson(
-      String(marketQuery || currentMarket.value.slug || currentMarket.value.id || '1')
-    )
+  if (gisResult.status === 'fulfilled') {
+    const gisMarket = gisResult.value
     const statusOverrides: Record<string, StallStatus> = {}
     backendStalls.forEach((stall: any) => {
       const ident = String(stall.ident || stall.stall_ident || stall.stall_number || '').trim()
@@ -747,36 +791,32 @@ const loadMarketDetailData = async (marketQueryRaw?: any) => {
       statusOverrides[ident] = stallStatus as StallStatus
     })
     gisStallSummary.value = getMarketStallSummary(gisMarket.projects, statusOverrides, marketFullFromApi.value)
-  } catch (error) {
-    console.warn('Could not calculate GIS stall summary:', error)
+  } else if ((gisResult.reason as any)?.name !== 'AbortError') {
+    console.warn('Could not calculate GIS stall summary:', gisResult.reason)
   }
 
-  if (map) {
-    try { map.remove() } catch {}
-    map = null
-  }
-  if (maplibregl) {
-    initMap()
-  }
+  syncMarketMap()
 }
 
 onMounted(async () => {
-  await loadMarketDetailData(route.query.market)
-
   // Initialize MapLibre GL
   if (process.client) {
-    (window as any).$navigateToMarket = (marketId: number | string, action: 'book' | 'stalls') => {
+    isUnmounted = false
+    ;(window as any).$navigateToMarket = (marketId: number | string, action: 'book' | 'stalls') => {
       if (action === 'book') {
         navigateTo(isOfficer.value ? `/stalls/manage?market=${marketId}` : `/stalls/book?market=${marketId}`)
       } else {
         navigateTo(`/stalls?market=${marketId}`)
       }
     }
+    const dataPromise = loadMarketDetailData(route.query.market)
     const ml = await import('maplibre-gl')
+    if (isUnmounted) return
     maplibregl = ml.default || ml
     if (!map) {
       initMap()
     }
+    await dataPromise
   }
 })
 
@@ -785,6 +825,12 @@ watch(() => route.query.market, (newMarket) => {
 })
 
 onBeforeUnmount(() => {
+  isUnmounted = true
+  marketLoadRun += 1
+  marketRequestController?.abort()
+  marketRequestController = null
+  marker?.remove()
+  marker = null
   if (map) {
     const mapInstance = map
     map = null
@@ -792,6 +838,16 @@ onBeforeUnmount(() => {
       mapInstance.remove()
     } catch {}
   }
+})
+
+onActivated(() => {
+  isUnmounted = false
+  requestAnimationFrame(() => map?.resize())
+})
+
+onDeactivated(() => {
+  marketRequestController?.abort()
+  marketRequestController = null
 })
 </script>
 
@@ -827,7 +883,7 @@ onBeforeUnmount(() => {
 
 .md-page-heading h2 {
   margin: 0;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 1.5rem;
   font-weight: 800;
   line-height: 1.3;
@@ -835,7 +891,7 @@ onBeforeUnmount(() => {
 
 .md-page-heading p {
   margin: 3px 0 0;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.875rem;
   font-weight: 500;
 }
@@ -848,8 +904,8 @@ onBeforeUnmount(() => {
 }
 
 .md-card {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
@@ -857,7 +913,7 @@ onBeforeUnmount(() => {
 .md-card-title {
   font-size: 1rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin-bottom: 14px;
 }
 
@@ -871,7 +927,7 @@ onBeforeUnmount(() => {
   column-gap: clamp(52px, 7vw, 112px);
   padding: 30px 56px;
   background: #0f172a;
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 16px;
   box-shadow: 0 26px 70px -24px rgba(15, 23, 42, 0.24), 0 10px 28px -20px rgba(37, 99, 235, 0.28);
   overflow: hidden;
@@ -907,10 +963,10 @@ onBeforeUnmount(() => {
   inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(248, 251, 255, 0.99) 0%,
-    rgba(248, 251, 255, 0.97) 42%,
-    rgba(239, 246, 255, 0.91) 68%,
-    rgba(239, 246, 255, 0.82) 100%
+    var(--bg-rgba-248-251-255-0p99) 0%,
+    var(--bg-rgba-248-251-255-0p97) 42%,
+    var(--bg-rgba-239-246-255-0p91) 68%,
+    var(--bg-rgba-239-246-255-0p82) 100%
   );
   backdrop-filter: blur(1px);
   pointer-events: none;
@@ -919,9 +975,9 @@ onBeforeUnmount(() => {
 .md-header-overlay-mesh {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 10% 12%, rgba(147, 197, 253, 0.34) 0%, transparent 42%),
+  background: radial-gradient(circle at 10% 12%, var(--bg-rgba-147-197-253-0p34) 0%, transparent 42%),
               radial-gradient(circle at 72% 115%, rgba(37, 99, 235, 0.2) 0%, transparent 42%),
-              linear-gradient(180deg, transparent 58%, rgba(255, 255, 255, 0.68) 100%);
+              linear-gradient(180deg, transparent 58%, var(--bg-rgba-255-255-255-0p68) 100%);
   pointer-events: none;
 }
 
@@ -943,7 +999,7 @@ onBeforeUnmount(() => {
   left: 44%;
   width: 18%;
   height: 180%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
+  background: linear-gradient(90deg, transparent, var(--bg-rgba-255-255-255-0p32), transparent);
   transform: rotate(13deg);
   pointer-events: none;
 }
@@ -981,17 +1037,17 @@ onBeforeUnmount(() => {
   gap: 6px;
   padding: 4px 12px;
   border-radius: 999px;
-  background: rgba(239, 246, 255, 0.95);
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
-  font-size: 0.74rem;
+  background: var(--bg-rgba-239-246-255-0p95);
+  border: 1px solid var(--bd-bfdbfe);
+  color: var(--tx-1d4ed8);
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
 }
 
 .md-eyebrow-pill svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .md-title-wrap {
@@ -1004,7 +1060,7 @@ onBeforeUnmount(() => {
 .md-title {
   font-size: 2.15rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   letter-spacing: -0.02em;
   line-height: 1.2;
   margin: 0;
@@ -1014,7 +1070,7 @@ onBeforeUnmount(() => {
 .md-hero-summary {
   max-width: 680px;
   margin: 0 0 20px;
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.94rem;
   font-weight: 500;
   line-height: 1.7;
@@ -1041,16 +1097,16 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   gap: 24px;
   padding: 16px 28px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   margin: 0 0 16px 0;
   transition: all 0.2s ease;
 }
 
 .md-meta-row:hover {
-  border-color: #cbd5e1;
-  background: #f1f5f9;
+  border-color: var(--bd-cbd5e1);
+  background: var(--bg-f1f5f9);
 }
 
 .md-meta-item {
@@ -1067,16 +1123,16 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #2563eb;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-2563eb);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .md-meta-item:hover .md-meta-icon {
   transform: scale(1.05);
-  border-color: #93c5fd;
+  border-color: var(--bd-93c5fd);
 }
 
 .md-meta-content {
@@ -1086,15 +1142,15 @@ onBeforeUnmount(() => {
 }
 
 .md-meta-label {
-  font-size: 0.68rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
   font-weight: 500;
   letter-spacing: 0.01em;
 }
 
 .md-meta-val {
   font-size: 0.88rem;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-weight: 700;
 }
 
@@ -1102,7 +1158,7 @@ onBeforeUnmount(() => {
   width: 1px;
   height: 24px;
   margin: 0 2px;
-  background: #e2e8f0;
+  background: var(--bg-e2e8f0);
 }
 
 .md-btn-primary {
@@ -1159,14 +1215,14 @@ onBeforeUnmount(() => {
   gap: 8px;
   margin: 0 0 2px;
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(203, 213, 225, 0.58);
+  border-bottom: 1px solid var(--bd-rgba-203-213-225-0p58);
 }
 
 .md-bqc-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   padding: 0;
   background: transparent;
@@ -1177,11 +1233,11 @@ onBeforeUnmount(() => {
 }
 
 .md-bqc-badge.is-available {
-  color: #059669;
+  color: var(--tx-059669);
 }
 
 .md-bqc-badge.is-full {
-  color: #dc2626;
+  color: var(--tx-dc2626);
 }
 
 .md-bqc-dot {
@@ -1204,9 +1260,9 @@ onBeforeUnmount(() => {
   gap: 14px 18px;
   min-height: 0;
   padding: 16px 18px 18px 21px;
-  border: 1px solid rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--bd-rgba-255-255-255-0p88);
   border-radius: 18px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(239, 246, 255, 0.72));
+  background: linear-gradient(145deg, var(--bg-rgba-255-255-255-0p86), var(--bg-rgba-239-246-255-0p72));
   box-shadow: 0 18px 40px -30px rgba(15, 23, 42, 0.66), 0 12px 28px -25px rgba(37, 99, 235, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(14px) saturate(1.14);
   box-sizing: border-box;
@@ -1215,7 +1271,7 @@ onBeforeUnmount(() => {
 
 .md-bqc-simple-summary:hover {
   transform: translateY(-1px);
-  border-color: rgba(147, 197, 253, 0.92);
+  border-color: var(--bd-rgba-147-197-253-0p92);
   box-shadow: 0 24px 50px -28px rgba(15, 23, 42, 0.66), 0 18px 36px -24px rgba(37, 99, 235, 0.72), inset 0 1px 0 #ffffff;
 }
 
@@ -1245,7 +1301,7 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   column-gap: 5px;
   row-gap: 0;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 0.96rem;
   font-weight: 700;
   line-height: 1.3;
@@ -1258,22 +1314,22 @@ onBeforeUnmount(() => {
 }
 
 .md-bqc-copy-title strong.is-ready {
-  color: #059669;
+  color: var(--tx-059669);
 }
 
 .md-bqc-copy-title strong.is-unavailable {
-  color: #dc2626;
+  color: var(--tx-dc2626);
 }
 
 .md-bqc-summary-copy small {
-  color: #718096;
-  font-size: 0.7rem;
+  color: var(--tx-718096);
+  font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .md-bqc-summary-copy small strong {
-  color: #475569;
+  color: var(--tx-475569);
   font: inherit;
   font-weight: 800;
 }
@@ -1298,7 +1354,7 @@ onBeforeUnmount(() => {
   padding-inline: 0.06em;
   margin-inline: -0.06em 0;
   font-variant-numeric: tabular-nums;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   background: linear-gradient(145deg, #1d4ed8 10%, #3b82f6 55%, #4f46e5 100%);
   background-clip: text;
   -webkit-background-clip: text;
@@ -1318,18 +1374,18 @@ onBeforeUnmount(() => {
 
 .md-bqc-summary-count small {
   margin: 0 0 8px 2px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
 .md-bqc-summary-count.color-full {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
 }
 
 .md-bqc-summary-count.color-full strong {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   background: none;
-  -webkit-text-fill-color: #94a3b8;
+  -webkit-text-fill-color: var(--tx-94a3b8);
 }
 
 @keyframes bqc-pulse {
@@ -1348,23 +1404,23 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #1e40af;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
+  color: var(--tx-1e40af);
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-dbeafe);
   padding: 3px 8px;
   border-radius: 6px;
 }
 
 .md-bqc-tag svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 /* Inner Showcase Panel */
 .md-bqc-showcase-panel {
-  background: linear-gradient(145deg, rgba(248, 250, 252, 0.98), rgba(239, 246, 255, 0.78));
-  border: 1px solid #dbeafe;
+  background: linear-gradient(145deg, var(--bg-rgba-248-250-252-0p98), var(--bg-rgba-239-246-255-0p78));
+  border: 1px solid var(--bd-dbeafe);
   border-radius: 18px;
   padding: 17px;
   display: flex;
@@ -1383,12 +1439,12 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 600;
 }
 
 .md-bqc-metric-title svg {
-  color: #3b82f6;
+  color: var(--tx-3b82f6);
 }
 
 .md-bqc-count-wrap {
@@ -1404,23 +1460,23 @@ onBeforeUnmount(() => {
 }
 
 .md-bqc-count.color-available {
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .md-bqc-count.color-full {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
 }
 
 .md-bqc-total {
   font-size: 0.76rem;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-weight: 600;
 }
 
 .md-bqc-progress-track {
   width: 100%;
   height: 8px;
-  background: #e2e8f0;
+  background: var(--bg-e2e8f0);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -1457,28 +1513,28 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: #b45309;
-  background: #fef3c7;
+  color: var(--tx-b45309);
+  background: var(--bg-fef3c7);
   padding: 1px 7px;
   border-radius: 4px;
 }
 
 .md-bqc-urgency-badge svg {
-  color: #d97706;
+  color: var(--tx-d97706);
 }
 
 .md-bqc-ratio-text,
 .md-bqc-full-text {
-  font-size: 0.7rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
 .md-bqc-panel-divider {
   height: 1px;
-  background: #e2e8f0;
+  background: var(--bg-e2e8f0);
   margin: 2px 0;
 }
 
@@ -1496,8 +1552,8 @@ onBeforeUnmount(() => {
 }
 
 .md-bqc-price-label {
-  font-size: 0.68rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
@@ -1510,32 +1566,32 @@ onBeforeUnmount(() => {
 .md-bqc-price-amount strong {
   font-size: 1.22rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   line-height: 1;
 }
 
 .md-bqc-price-amount small {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .md-bqc-trust-seal {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #15803d;
-  background: #dcfce7;
-  border: 1px solid #bbf7d0;
+  color: var(--tx-15803d);
+  background: var(--bg-dcfce7);
+  border: 1px solid var(--bd-bbf7d0);
   padding: 2.5px 8px;
   border-radius: 999px;
   white-space: nowrap;
 }
 
 .md-bqc-trust-seal svg {
-  color: #16a34a;
+  color: var(--tx-16a34a);
 }
 
 /* Full-Width Action Button */
@@ -1564,7 +1620,7 @@ onBeforeUnmount(() => {
   left: -34%;
   width: 22%;
   height: 190%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+  background: linear-gradient(90deg, transparent, var(--bg-rgba-255-255-255-0p42), transparent);
   transform: rotate(18deg);
   animation: bqc-button-sheen 4.8s ease-in-out infinite;
   pointer-events: none;
@@ -1573,7 +1629,7 @@ onBeforeUnmount(() => {
 .md-bqc-action-btn.btn-active {
   background: linear-gradient(105deg, #2563eb 0%, #1d4ed8 58%, #4338ca 100%);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--bd-rgba-255-255-255-0p2);
   box-shadow: 0 14px 26px -12px rgba(37, 99, 235, 0.76), inset 0 1px 0 rgba(255, 255, 255, 0.24);
 }
 
@@ -1592,14 +1648,14 @@ onBeforeUnmount(() => {
 }
 
 .md-bqc-action-btn.btn-full {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-475569);
+  border: 1px solid var(--bd-cbd5e1);
 }
 
 .md-bqc-action-btn.btn-full:hover {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-0f172a);
 }
 
 .md-bqc-btn-label {
@@ -1623,7 +1679,7 @@ onBeforeUnmount(() => {
   height: 30px;
   padding: 7px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-rgba-255-255-255-0p15);
   box-sizing: border-box;
   transition: transform 0.2s ease;
 }
@@ -1654,13 +1710,13 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  font-size: 0.72rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
   text-align: center;
 }
 
 .md-bqc-hint svg {
-  color: #3b82f6;
+  color: var(--tx-3b82f6);
   flex-shrink: 0;
 }
 
@@ -1676,7 +1732,7 @@ onBeforeUnmount(() => {
 .md-section-title {
   font-size: 1.4rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   text-align: center;
 }
 
@@ -1687,7 +1743,7 @@ onBeforeUnmount(() => {
 .md-section-sub {
   margin-top: 14px;
   font-size: 0.88rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   text-align: center;
 }
 
@@ -1721,9 +1777,9 @@ onBeforeUnmount(() => {
   gap: 6px;
   padding: 6px 12px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid #e2e8f0;
-  color: #334155;
+  background: var(--bg-rgba-255-255-255-0p92);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-334155);
   font-size: 0.78rem;
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
@@ -1777,7 +1833,7 @@ onBeforeUnmount(() => {
 }
 
 .md-stat-card:hover {
-  border-color: #dbeafe;
+  border-color: var(--bd-dbeafe);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
   transform: translateY(-2px);
 }
@@ -1795,13 +1851,13 @@ onBeforeUnmount(() => {
 }
 
 /* โทนสีไอคอนแต่ละการ์ด + สีระดับแผงว่าง */
-.tone-green { --tone-bg: #ecfdf5; --tone-fg: #059669; }
-.tone-blue  { --tone-bg: #eff6ff; --tone-fg: #2563eb; }
-.tone-slate { --tone-bg: #f1f5f9; --tone-fg: #475569; }
-.tone-ok    { --tone-bg: #dcfce7; --tone-fg: #15803d; --bar: #22c55e; }
-.tone-mid   { --tone-bg: #fef9c3; --tone-fg: #a16207; --bar: #eab308; }
-.tone-low   { --tone-bg: #ffedd5; --tone-fg: #c2410c; --bar: #f97316; }
-.tone-full  { --tone-bg: #fee2e2; --tone-fg: #dc2626; --bar: #ef4444; }
+.tone-green { --tone-bg: var(--bg-ecfdf5); --tone-fg: var(--tx-059669); }
+.tone-blue  { --tone-bg: var(--bg-eff6ff); --tone-fg: var(--tx-2563eb); }
+.tone-slate { --tone-bg: var(--bg-f1f5f9); --tone-fg: var(--tx-475569); }
+.tone-ok    { --tone-bg: var(--bg-dcfce7); --tone-fg: var(--tx-15803d); --bar: #22c55e; }
+.tone-mid   { --tone-bg: var(--bg-fef9c3); --tone-fg: var(--tx-a16207); --bar: #eab308; }
+.tone-low   { --tone-bg: var(--bg-ffedd5); --tone-fg: var(--tx-c2410c); --bar: #f97316; }
+.tone-full  { --tone-bg: var(--bg-fee2e2); --tone-fg: var(--tx-dc2626); --bar: #ef4444; }
 
 .md-stat-body {
   flex: 1;
@@ -1810,7 +1866,7 @@ onBeforeUnmount(() => {
 
 .md-stat-label {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
@@ -1821,7 +1877,7 @@ onBeforeUnmount(() => {
   gap: 6px;
   font-size: 1.45rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   line-height: 1.25;
   margin-top: 2px;
 }
@@ -1829,7 +1885,7 @@ onBeforeUnmount(() => {
 .md-stat-unit {
   font-size: 0.8rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
   white-space: nowrap;
 }
 
@@ -1841,7 +1897,7 @@ onBeforeUnmount(() => {
   height: 6px;
   margin-top: 8px;
   border-radius: 999px;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
   overflow: hidden;
 }
 
@@ -1870,7 +1926,7 @@ onBeforeUnmount(() => {
 
 .md-detail-text {
   font-size: 0.88rem;
-  color: #475569;
+  color: var(--tx-475569);
   line-height: 1.7;
 }
 
@@ -1882,7 +1938,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 14px;
   padding: 16px 0;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 
 .md-detail-row:first-of-type {
@@ -1897,8 +1953,8 @@ onBeforeUnmount(() => {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1913,7 +1969,7 @@ onBeforeUnmount(() => {
 .md-sub-title {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin-bottom: 4px;
 }
 
@@ -1930,15 +1986,15 @@ onBeforeUnmount(() => {
   gap: 6px;
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  color: #334155;
-  background: #f8fafc;
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-334155);
+  background: var(--bg-f8fafc);
   font-size: 0.82rem;
   font-weight: 500;
 }
 
 .md-travel-chip svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 /* ---------- Media Cards ---------- */
@@ -1953,7 +2009,7 @@ onBeforeUnmount(() => {
   aspect-ratio: 16 / 10;
   border-radius: 12px;
   overflow: hidden;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
 }
 
 .md-media-frame img {
@@ -1971,7 +2027,7 @@ onBeforeUnmount(() => {
 .md-video-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.05) 30%, rgba(15, 23, 42, 0.6) 100%);
+  background: linear-gradient(180deg, var(--bg-rgba-15-23-42-0p05) 30%, rgba(15, 23, 42, 0.6) 100%);
 }
 
 .md-play-btn {
@@ -2032,32 +2088,32 @@ onBeforeUnmount(() => {
   gap: 6px;
   padding: 6px 14px;
   border-radius: 8px;
-  border: 1px solid #93c5fd;
-  background: #ffffff;
+  border: 1px solid var(--bd-93c5fd);
+  background: var(--bg-ffffff);
   font-size: 0.825rem;
   font-weight: 600;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   text-decoration: none;
   transition: background 0.2s ease;
 }
 
 .md-map-external:hover {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
 }
 
 .md-map-frame {
   height: 380px;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 .gis-mini-mode {
   display: inline-flex;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
   border-radius: 8px;
   padding: 2px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 .gis-mini-tab {
@@ -2066,19 +2122,19 @@ onBeforeUnmount(() => {
   font-weight: 600;
   border: none;
   background: transparent;
-  color: #64748b;
+  color: var(--tx-64748b);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .gis-mini-tab:hover {
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .gis-mini-tab.active {
-  background: #ffffff;
-  color: #2563eb;
+  background: var(--bg-ffffff);
+  color: var(--tx-2563eb);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   font-weight: 700;
 }
@@ -2088,9 +2144,9 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #991b1b;
+  background: var(--bg-fef2f2);
+  border: 1px solid var(--bd-fecaca);
+  color: var(--tx-991b1b);
   padding: 12px 18px;
   border-radius: 12px;
   margin: 16px 0 10px;
@@ -2100,7 +2156,7 @@ onBeforeUnmount(() => {
 
 .md-full-market-alert svg {
   flex-shrink: 0;
-  color: #dc2626;
+  color: var(--tx-dc2626);
 }
 
 .md-full-alert-content {
@@ -2113,7 +2169,7 @@ onBeforeUnmount(() => {
 
 .md-full-alert-content strong {
   font-weight: 700;
-  color: #b91c1c;
+  color: var(--tx-b91c1c);
 }
 
 .md-btn-full {
@@ -2196,9 +2252,9 @@ onBeforeUnmount(() => {
   .md-header-overlay-gradient {
     background: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.98) 0%,
-      rgba(255, 255, 255, 0.94) 60%,
-      rgba(255, 255, 255, 0.88) 100%
+      var(--bg-rgba-255-255-255-0p98) 0%,
+      var(--bg-rgba-255-255-255-0p94) 60%,
+      var(--bg-rgba-255-255-255-0p88) 100%
     );
   }
   .md-header-right {
@@ -2270,7 +2326,7 @@ onBeforeUnmount(() => {
 }
 
 .md-lightbox-dialog {
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border-radius: 18px;
   max-width: 1100px;
   width: 100%;
@@ -2279,7 +2335,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 .md-lightbox-header {
@@ -2287,29 +2343,29 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   padding: 16px 22px;
-  border-bottom: 1px solid #f1f5f9;
-  background: #ffffff;
+  border-bottom: 1px solid var(--bd-f1f5f9);
+  background: var(--bg-ffffff);
 }
 
 .md-lightbox-title-wrap {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 1.05rem;
 }
 
 .md-lightbox-title-wrap svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .md-lightbox-close {
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  color: #64748b;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-f8fafc);
+  color: var(--tx-64748b);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2318,15 +2374,15 @@ onBeforeUnmount(() => {
 }
 
 .md-lightbox-close:hover {
-  background: #fee2e2;
-  color: #dc2626;
-  border-color: #fca5a5;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
+  border-color: var(--bd-fca5a5);
 }
 
 .md-lightbox-body {
   padding: 16px;
   overflow: auto;
-  background: #faf8f5;
+  background: var(--bg-faf8f5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2346,8 +2402,8 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   padding: 14px 22px;
-  border-top: 1px solid #f1f5f9;
-  background: #ffffff;
+  border-top: 1px solid var(--bd-f1f5f9);
+  background: var(--bg-ffffff);
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -2357,11 +2413,11 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .md-lightbox-tip svg {
-  color: #3b82f6;
+  color: var(--tx-3b82f6);
 }
 
 .md-lightbox-actions {

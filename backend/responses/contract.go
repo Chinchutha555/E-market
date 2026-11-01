@@ -19,5 +19,8 @@ type ContractResponse struct {
 	MonthlyRental   float64   `json:"monthly_rental"`
 	SecurityDeposit float64   `json:"security_deposit"`
 	Status          string    `json:"status"`
+	RenewalStatus   string    `json:"renewal_status"`
+	ReturnStatus    string    `json:"return_status"`
+	LegalStatus     string    `json:"legal_status"`
 	CreatedAt       time.Time `json:"created_at"`
 }

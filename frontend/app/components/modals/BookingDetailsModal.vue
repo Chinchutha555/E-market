@@ -1,23 +1,12 @@
 <template>
   <div v-if="show && booking" class="modal-overlay" @click.self="$emit('close')">
     <div class="modal-content" style="max-width: 640px;">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
-          <div>
-            <h3 style="font-size: 1.2rem; font-weight: 700;">รายละเอียดการจองดูแผงค้า (Booking Details)</h3>
-            <div style="font-size: 0.8rem; color: var(--primary);">เลขที่การจอง: {{ booking.booking_number }}</div>
-          </div>
-        </div>
-        <button class="btn-logout" @click="$emit('close')" aria-label="ปิด">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
+      <AppModalHeader
+        title="รายละเอียดการจองดูแผงค้า"
+        :subtitle="`เลขที่การจอง ${booking.booking_number}`"
+        icon="calendar"
+        @close="$emit('close')"
+      />
 
       <div class="modal-body">
         <!-- Status Banner -->
@@ -27,17 +16,17 @@
             <div style="font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; margin-top: 2px; flex-wrap: wrap;">
               <span class="badge-dot"></span>
               <span>{{ getStatusLabel(booking.status) }}</span>
-              <span v-if="isQueueBooking(booking)" style="font-size: 0.78rem; padding: 2px 10px; border-radius: 999px; background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-weight: 700;">
+              <span v-if="isQueueBooking(booking)" style="font-size: 0.78rem; padding: 2px 10px; border-radius: 999px; background: var(--bg-fef3c7); color: var(--tx-b45309); border: 1px solid var(--bd-fde68a); font-weight: 700;">
                 คิวสำรองที่ {{ booking.queue_position || booking.queue_number || 1 }}
               </span>
-              <span v-else-if="booking.holding_stall && !['rejected', 'cancelled', 'not_interested', 'no_show', 'lease_applied', 'completed'].includes(booking.status)" style="font-size: 0.78rem; padding: 2px 10px; border-radius: 999px; background: #ecfdf5; color: #15803d; border: 1px solid #a7f3d0; font-weight: 700;">
+              <span v-else-if="booking.holding_stall && !['rejected', 'cancelled', 'not_interested', 'no_show', 'lease_applied', 'completed'].includes(booking.status)" style="font-size: 0.78rem; padding: 2px 10px; border-radius: 999px; background: var(--bg-ecfdf5); color: var(--tx-15803d); border: 1px solid var(--bd-a7f3d0); font-weight: 700;">
                 ผู้จองหลัก (ตัวจริง)
               </span>
             </div>
           </div>
           <div class="modal-status-dates" style="text-align: right; font-size: 0.8rem;">
             <div>ทำรายการเมื่อ: {{ formatThaiDateTime(booking.created_at) }}</div>
-            <div v-if="booking.reviewed_at" style="color: #34d399;">อนุมัติเมื่อ: {{ formatThaiDateTime(booking.reviewed_at) }}</div>
+            <div v-if="booking.reviewed_at" style="color: var(--tx-34d399);">อนุมัติเมื่อ: {{ formatThaiDateTime(booking.reviewed_at) }}</div>
           </div>
         </div>
 
@@ -60,16 +49,16 @@
         </div>
 
         <!-- Waiting Queue Banner if in queue -->
-        <div v-if="isQueueBooking(booking)" class="queue-notice-banner" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div v-if="isQueueBooking(booking)" class="queue-notice-banner" style="background: var(--bg-fffbeb); border: 1px solid var(--bd-fde68a); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
           <div style="display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 260px;">
-            <div style="width: 42px; height: 42px; border-radius: 50%; background: #fef3c7; color: #b45309; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.15rem; flex-shrink: 0; border: 2px solid #fde68a; margin-top: 2px;">
+            <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--bg-fef3c7); color: var(--tx-b45309); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.15rem; flex-shrink: 0; border: 2px solid var(--bd-fde68a); margin-top: 2px;">
               {{ booking.queue_position || booking.queue_number || 1 }}
             </div>
             <div>
-              <div style="font-weight: 700; color: #92400e; font-size: 0.95rem;">
+              <div style="font-weight: 700; color: var(--tx-92400e); font-size: 0.95rem;">
                 คิวสำรองลำดับที่ {{ booking.queue_position || booking.queue_number || 1 }} ของแผง {{ booking.stall_number }}
               </div>
-              <div style="font-size: 0.82rem; color: #b45309; margin-top: 3px; line-height: 1.45;">
+              <div style="font-size: 0.82rem; color: var(--tx-b45309); margin-top: 3px; line-height: 1.45;">
                 <span v-if="(booking.queue_position || booking.queue_number || 1) === 1">
                   แผงนี้มี <strong>ผู้จองหลักถือสิทธิ์อยู่ 1 ราย</strong><span v-if="activeHolder"> ({{ formatQueueHolderName(activeHolder.tenant_name) }})</span> — คิวสำรองที่ 1 จะได้รับสิทธิ์เป็นผู้จองหลักทันทีหากผู้จองหลักสละสิทธิ์
                 </span>
@@ -81,73 +70,73 @@
                   </span>
                 </span>
               </div>
-              <div style="font-size: 0.78rem; color: #78350f; margin-top: 5px; line-height: 1.4;">
+              <div style="font-size: 0.78rem; color: var(--tx-78350f); margin-top: 5px; line-height: 1.4;">
                 * สามารถเข้าชมแผงตามนัดได้ตามปกติ โดยปุ่มยืนยันการเช่าจะเปิดให้กดเมื่อผู้จองคิวหลักสละสิทธิ์
               </div>
             </div>
           </div>
-          <span style="font-size: 0.78rem; background: #ffffff; padding: 4px 12px; border-radius: 20px; border: 1px solid #fde68a; color: #92400e; font-weight: 600; white-space: nowrap;">
+          <span style="font-size: 0.78rem; background: var(--bg-ffffff); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--bd-fde68a); color: var(--tx-92400e); font-weight: 600; white-space: nowrap;">
             ระบบขยับคิวอัตโนมัติ
           </span>
         </div>
 
         <!-- 1. Stall Details -->
-        <div style="background: #f8fafc; border: 1px solid var(--border-subtle); padding: 16px; border-radius: var(--radius-md); margin-bottom: 18px;">
+        <div style="background: var(--bg-f8fafc); border: 1px solid var(--border-subtle); padding: 16px; border-radius: var(--radius-md); margin-bottom: 18px;">
           <h4 style="font-size: 0.88rem; color: var(--primary); font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             <span>ข้อมูลแผงและตลาด</span>
           </h4>
           <div class="modal-info-grid">
-            <div>ตลาด: <strong style="color: #0f172a;">{{ booking.market_name }}</strong></div>
-            <div>โครงการ: <strong style="color: #1e293b;">{{ booking.project_name || 'โครงการ 01' }}</strong></div>
-            <div>เลขที่แผง: <strong style="color: #2563eb; font-size: 1.05rem;">{{ booking.stall_number }} <span v-if="booking.stall_count && booking.stall_count > 1" style="font-size: 0.82rem; font-weight: 600; color: #64748b;">(รวม {{ booking.stall_count }} แผง)</span></strong></div>
-            <div>โซนตลาด: <strong style="color: #334155;">{{ booking.stall_zone_name || '-' }}</strong></div>
-            <div>อัตราค่าเช่า: <strong style="color: #059669;">฿{{ Number(booking.stall_monthly_rate || 0).toLocaleString() }}/เดือน</strong></div>
+            <div>ตลาด: <strong style="color: var(--tx-0f172a);">{{ booking.market_name }}</strong></div>
+            <div>โครงการ: <strong style="color: var(--tx-1e293b);">{{ booking.project_name || 'โครงการ 01' }}</strong></div>
+            <div>เลขที่แผง: <strong style="color: var(--tx-2563eb); font-size: 1.05rem;">{{ booking.stall_number }} <span v-if="booking.stall_count && booking.stall_count > 1" style="font-size: 0.82rem; font-weight: 600; color: var(--tx-64748b);">(รวม {{ booking.stall_count }} แผง)</span></strong></div>
+            <div>โซนตลาด: <strong style="color: var(--tx-334155);">{{ booking.stall_zone_name || '-' }}</strong></div>
+            <div>อัตราค่าเช่า: <strong style="color: var(--tx-059669);">฿{{ Number(booking.stall_monthly_rate || 0).toLocaleString() }}/เดือน</strong></div>
           </div>
         </div>
 
         <!-- 2. Appointment Details -->
-        <div style="background: #f8fafc; border: 1px solid var(--border-subtle); padding: 16px; border-radius: var(--radius-md); margin-bottom: 18px;">
+        <div style="background: var(--bg-f8fafc); border: 1px solid var(--border-subtle); padding: 16px; border-radius: var(--radius-md); margin-bottom: 18px;">
           <h4 style="font-size: 0.88rem; color: var(--primary); font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             <span>ข้อมูลการนัดหมายและการประสานงาน</span>
           </h4>
           <div class="modal-info-grid">
-            <div>วันนัดหมาย: <strong style="color: #0f172a;">{{ formatVisitDate(booking) }}</strong></div>
-            <div>ช่วงเวลา: <strong style="color: #0f172a;">{{ getVisitSlot(booking) }}</strong></div>
-            <div class="grid-col-full">จุดนัดพบ: <strong style="color: #0f172a;">{{ booking.meeting_point || 'หน้ากองอำนวยการตลาด เสาธง 1' }}</strong></div>
-            <div class="grid-col-full">จนท. ผู้พาชม: <strong style="color: #2563eb;">{{ booking.escort_officer || 'เจ้าหน้าที่เวรฝ่ายปฏิบัติการ' }}</strong></div>
-            <div class="grid-col-full">สินค้าที่ต้องการจำหน่าย: <strong style="color: #334155;">{{ booking.intended_business || '-' }}</strong></div>
+            <div>วันนัดหมาย: <strong style="color: var(--tx-0f172a);">{{ formatVisitDate(booking) }}</strong></div>
+            <div>ช่วงเวลา: <strong style="color: var(--tx-0f172a);">{{ getVisitSlot(booking) }}</strong></div>
+            <div class="grid-col-full">จุดนัดพบ: <strong style="color: var(--tx-0f172a);">{{ booking.meeting_point || 'หน้ากองอำนวยการตลาด เสาธง 1' }}</strong></div>
+            <div class="grid-col-full">จนท. ผู้พาชม: <strong style="color: var(--tx-2563eb);">{{ booking.escort_officer || 'เจ้าหน้าที่เวรฝ่ายปฏิบัติการ' }}</strong></div>
+            <div class="grid-col-full">สินค้าที่ต้องการจำหน่าย: <strong style="color: var(--tx-334155);">{{ booking.intended_business || '-' }}</strong></div>
           </div>
-          <div v-if="booking.officer_notes" style="margin-top: 10px; padding: 10px 14px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; font-size: 0.85rem; color: #065f46; display: flex; align-items: flex-start; gap: 8px;">
+          <div v-if="booking.officer_notes" style="margin-top: 10px; padding: 10px 14px; background: var(--bg-ecfdf5); border: 1px solid var(--bd-a7f3d0); border-radius: 8px; font-size: 0.85rem; color: var(--tx-065f46); display: flex; align-items: flex-start; gap: 8px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             <div><strong>บันทึกจากเจ้าหน้าที่:</strong> {{ booking.officer_notes }}</div>
           </div>
-          <div v-if="booking.rejection_reason || booking.cancel_reason" style="margin-top: 10px; padding: 10px 14px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; font-size: 0.85rem; color: #9f1239; display: flex; align-items: flex-start; gap: 8px;">
+          <div v-if="booking.rejection_reason || booking.cancel_reason" style="margin-top: 10px; padding: 10px 14px; background: var(--bg-fff1f2); border: 1px solid var(--bd-fecdd3); border-radius: 8px; font-size: 0.85rem; color: var(--tx-9f1239); display: flex; align-items: flex-start; gap: 8px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
             <div><strong>เหตุผลที่ยกเลิก:</strong> {{ booking.rejection_reason || booking.cancel_reason }}</div>
           </div>
-          <div v-if="booking.not_interested_reason" style="margin-top: 10px; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; color: #475569; display: flex; align-items: flex-start; gap: 8px;">
+          <div v-if="booking.not_interested_reason" style="margin-top: 10px; padding: 10px 14px; background: var(--bg-f8fafc); border: 1px solid var(--bd-e2e8f0); border-radius: 8px; font-size: 0.85rem; color: var(--tx-475569); display: flex; align-items: flex-start; gap: 8px;">
             <div><strong>เหตุผลที่ไม่สนใจเช่า:</strong> {{ booking.not_interested_reason }}</div>
           </div>
         </div>
 
         <!-- 3. Tenant Details -->
-        <div style="background: #f8fafc; border: 1px solid var(--border-subtle); padding: 16px; border-radius: var(--radius-md); margin-bottom: 18px;">
+        <div style="background: var(--bg-f8fafc); border: 1px solid var(--border-subtle); padding: 16px; border-radius: var(--radius-md); margin-bottom: 18px;">
           <h4 style="font-size: 0.88rem; color: var(--primary); font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             <span>ข้อมูลผู้ขอจองเข้าชม</span>
           </h4>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.88rem;">
-            <div>ชื่อ-นามสกุล: <strong style="color: #0f172a;">{{ booking.tenant_name }}</strong></div>
-            <div>เบอร์โทรศัพท์: <strong style="color: #0f172a;">{{ booking.tenant_phone }}</strong></div>
-            <div>อีเมล: <strong style="color: #334155;">{{ booking.tenant_email || '-' }}</strong></div>
-            <div>เลขบัตรประชาชน: <strong style="color: #334155;">{{ booking.tenant_id_card || '-' }}</strong></div>
+            <div>ชื่อ-นามสกุล: <strong style="color: var(--tx-0f172a);">{{ booking.tenant_name }}</strong></div>
+            <div>เบอร์โทรศัพท์: <strong style="color: var(--tx-0f172a);">{{ booking.tenant_phone }}</strong></div>
+            <div>อีเมล: <strong style="color: var(--tx-334155);">{{ booking.tenant_email || '-' }}</strong></div>
+            <div>เลขบัตรประชาชน: <strong style="color: var(--tx-334155);">{{ booking.tenant_id_card || '-' }}</strong></div>
           </div>
         </div>
 
         <!-- 4. Audit Log Timeline (Rule 5: บันทึก log ผู้กระทำ, เวลา, หมายเหตุ ทุกขั้นตอน) -->
-        <div style="background: #ffffff; border: 1px solid var(--border-subtle); padding: 16px; border-radius: var(--radius-md); margin-bottom: 14px;">
+        <div style="background: var(--bg-ffffff); border: 1px solid var(--border-subtle); padding: 16px; border-radius: var(--radius-md); margin-bottom: 14px;">
           <h4 style="font-size: 0.88rem; color: var(--primary); font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <span>ประวัติไทม์ไลน์และบันทึกการดำเนินการ (Audit Logs)</span>
@@ -157,20 +146,20 @@
               <div class="timeline-bullet" :class="getRoleClass(log.actor_role)"></div>
               <div class="timeline-content">
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                  <span style="font-weight: 700; font-size: 0.85rem; color: #0f172a;">{{ log.action }}</span>
-                  <span style="font-size: 0.72rem; color: #64748b;">{{ log.timestamp?.slice(0, 16).replace('T', ' ') }} น.</span>
+                  <span style="font-weight: 700; font-size: 0.85rem; color: var(--tx-0f172a);">{{ log.action }}</span>
+                  <span style="font-size: 0.75rem; color: var(--tx-64748b);">{{ log.timestamp?.slice(0, 16).replace('T', ' ') }} น.</span>
                 </div>
-                <div style="font-size: 0.75rem; color: #475569; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
+                <div style="font-size: 0.75rem; color: var(--tx-475569); margin-top: 2px; display: flex; align-items: center; gap: 6px;">
                   <span class="role-tag" :class="getRoleClass(log.actor_role)">{{ getActorRoleName(log.actor_role) }}</span>
                   <span>{{ log.actor_name }}</span>
                 </div>
-                <div v-if="log.note" style="font-size: 0.78rem; color: #334155; margin-top: 4px; background: #f8fafc; padding: 4px 8px; border-radius: 6px; border: 1px solid #f1f5f9;">
+                <div v-if="log.note" style="font-size: 0.78rem; color: var(--tx-334155); margin-top: 4px; background: var(--bg-f8fafc); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--bd-f1f5f9);">
                   {{ log.note }}
                 </div>
               </div>
             </div>
           </div>
-          <div v-else style="font-size: 0.8rem; color: #94a3b8; text-align: center; padding: 12px;">
+          <div v-else style="font-size: 0.8rem; color: var(--tx-94a3b8); text-align: center; padding: 12px;">
             ไม่มีประวัติเพิ่มเติม
           </div>
         </div>
@@ -429,44 +418,44 @@ const formatThaiDateTime = (dateStr: string) => {
 
 <style scoped>
 .banner-queue {
-  background: #fefce8;
-  border: 1px solid #fef08a;
-  color: #854d0e;
+  background: var(--bg-fefce8);
+  border: 1px solid var(--bd-fef08a);
+  color: var(--tx-854d0e);
 }
 .banner-slot {
-  background: #fdf4ff;
-  border: 1px solid #f5d0fe;
-  color: #86198f;
+  background: var(--bg-fdf4ff);
+  border: 1px solid var(--bd-f5d0fe);
+  color: var(--tx-86198f);
 }
 .banner-pending {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #b45309;
+  background: var(--bg-fffbeb);
+  border: 1px solid var(--bd-fde68a);
+  color: var(--tx-b45309);
 }
 .banner-approved {
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  color: #059669;
+  background: var(--bg-ecfdf5);
+  border: 1px solid var(--bd-a7f3d0);
+  color: var(--tx-059669);
 }
 .banner-decision {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
+  color: var(--tx-1d4ed8);
 }
 .banner-interested {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #15803d;
+  background: var(--bg-f0fdf4);
+  border: 1px solid var(--bd-bbf7d0);
+  color: var(--tx-15803d);
 }
 .banner-applied {
-  background: #f5f3ff;
-  border: 1px solid #ddd6fe;
-  color: #7c3aed;
+  background: var(--bg-f5f3ff);
+  border: 1px solid var(--bd-ddd6fe);
+  color: var(--tx-7c3aed);
 }
 .banner-rejected {
-  background: #fff1f2;
-  border: 1px solid #fecdd3;
-  color: #e11d48;
+  background: var(--bg-fff1f2);
+  border: 1px solid var(--bd-fecdd3);
+  color: var(--tx-e11d48);
 }
 
 /* Audit log timeline styling */
@@ -504,9 +493,9 @@ const formatThaiDateTime = (dateStr: string) => {
   border-radius: 4px;
   font-weight: 700;
 }
-.role-tag.role-tenant { background: #eff6ff; color: #2563eb; }
-.role-tag.role-officer { background: #ecfdf5; color: #059669; }
-.role-tag.role-system { background: #f5f3ff; color: #7c3aed; }
+.role-tag.role-tenant { background: var(--bg-eff6ff); color: var(--tx-2563eb); }
+.role-tag.role-officer { background: var(--bg-ecfdf5); color: var(--tx-059669); }
+.role-tag.role-system { background: var(--bg-f5f3ff); color: var(--tx-7c3aed); }
 
 /* Flow steps timeline */
 .flow-steps {
@@ -528,14 +517,14 @@ const formatThaiDateTime = (dateStr: string) => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.85rem;
   font-weight: 700;
-  border: 2px solid #cbd5e1;
+  border: 2px solid var(--bd-cbd5e1);
   transition: var(--transition);
 }
 
@@ -548,14 +537,14 @@ const formatThaiDateTime = (dateStr: string) => {
 .flow-step.active .step-num {
   border-color: var(--primary);
   color: var(--primary);
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
   transform: scale(1.05);
 }
 
 .step-txt {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
@@ -567,7 +556,7 @@ const formatThaiDateTime = (dateStr: string) => {
 .flow-step-line {
   flex: 1;
   height: 2px;
-  background: #e2e8f0;
+  background: var(--bg-e2e8f0);
   margin: 0 8px -14px;
 }
 

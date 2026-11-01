@@ -56,10 +56,10 @@
             </button>
 
             <!-- Primary Action Button (Officers only) -->
-            <button v-if="!isTenant" type="button" class="btn-table-primary-action" @click="openCreateModal">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              <span>สร้างสัญญาใหม่</span>
-            </button>
+            <AppButton v-if="!isTenant" variant="primary" size="md" @click="openCreateModal">
+              <template #prefix><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></template>
+              สร้างสัญญาใหม่
+            </AppButton>
           </div>
         </div>
 
@@ -167,25 +167,17 @@
         </div>
 
         <!-- Empty State -->
-        <div v-if="filteredContracts.length === 0" class="empty-state-box">
-          <div class="empty-icon" aria-hidden="true">
-            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-          </div>
-          <div class="empty-title">
-            {{ searchQuery ? `ไม่พบสัญญาเช่าที่ตรงกับ "${searchQuery}"` : (selectedStatus ? `ไม่มีรายการในสถานะ "${getStatusLabel(selectedStatus)}"` : 'ยังไม่มีรายการสัญญาเช่าในระบบ') }}
-          </div>
-          <div class="empty-desc">
-            {{ searchQuery ? 'ลองตรวจสอบคำค้นหา หรือล้างคำค้นหาเพื่อดูรายการทั้งหมด' : (isTenant ? 'เมื่อคำร้องขอเช่าแผงได้รับการอนุมัติ คุณสามารถจัดทำสัญญาเช่าได้ที่นี่' : 'คุณสามารถสร้างสัญญาใหม่ได้โดยกดปุ่ม "สร้างสัญญาใหม่" ด้านบน') }}
-          </div>
-          <button
-            v-if="searchQuery || selectedStatus"
-            type="button"
-            class="btn-empty-reset"
-            @click="searchQuery = ''; selectedStatus = ''; filterContracts(); currentPage = 1"
-          >
-            ล้างตัวกรองทั้งหมด
-          </button>
-        </div>
+        <AppEmptyState
+          v-if="filteredContracts.length === 0"
+          variant="table"
+          :icon="searchQuery || selectedStatus ? 'search' : 'document'"
+          :title="searchQuery ? `ไม่พบสัญญาเช่าที่ตรงกับ “${searchQuery}”` : (selectedStatus ? `ไม่มีรายการในสถานะ “${getStatusLabel(selectedStatus)}”` : 'ยังไม่มีรายการสัญญาเช่า')"
+          :description="searchQuery ? 'ลองตรวจสอบคำค้นหาหรือล้างตัวกรอง' : (isTenant ? 'สัญญาจะแสดงเมื่อคำร้องขอเช่าได้รับอนุมัติ' : 'สร้างสัญญาใหม่ได้จากปุ่มด้านบน')"
+        >
+          <template v-if="searchQuery || selectedStatus" #actions>
+            <AppButton variant="outline" size="sm" @click="searchQuery = ''; selectedStatus = ''; filterContracts(); currentPage = 1">ล้างตัวกรอง</AppButton>
+          </template>
+        </AppEmptyState>
 
         <!-- Content Mode 1: Table View -->
         <div v-else-if="viewMode === 'table'" class="table-container">
@@ -432,15 +424,12 @@
     <!-- Modal: Create Contract -->
     <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
       <div class="modal-content" style="max-width: 720px;">
-        <div class="modal-header">
-          <h3 style="font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-            <span>{{ isTenant ? 'จัดทำสัญญาเช่าพื้นที่แผงค้า (ทำสัญญา)' : 'สร้างสัญญาเช่าพื้นที่ใหม่ (New Rental Contract)' }}</span>
-          </h3>
-          <button class="btn-logout" @click="showCreateModal = false" aria-label="ปิด">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
+        <AppModalHeader
+          :title="isTenant ? 'จัดทำสัญญาเช่าพื้นที่แผงค้า' : 'สร้างสัญญาเช่าพื้นที่ใหม่'"
+          :subtitle="isTenant ? 'ตรวจสอบข้อมูลและส่งสัญญาให้เจ้าหน้าที่พิจารณา' : 'บันทึกข้อมูลผู้เช่า แผงค้า และเงื่อนไขสัญญา'"
+          icon="edit"
+          @close="showCreateModal = false"
+        />
 
         <form novalidate @submit.prevent="submitContract">
           <div class="modal-body">
@@ -448,15 +437,15 @@
             <div v-if="isTenant" class="tenant-contract-banner">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
               <div>
-                <strong style="color: #1e40af; font-size: 0.95rem;">คำร้องขอเช่าแผงค้าได้รับการอนุมัติเรียบร้อยแล้ว</strong>
-                <p style="margin: 2px 0 0; color: #3b82f6; font-size: 0.825rem;">กรุณาตรวจสอบข้อมูลสัญญาเช่าด้านล่าง เมื่อกดยืนยันแล้ว สัญญาจะถูกส่งไปยังเจ้าหน้าที่เพื่อตรวจสอบและอนุมัติสัญญา</p>
+                <strong style="color: var(--tx-1e40af); font-size: 0.95rem;">คำร้องขอเช่าแผงค้าได้รับการอนุมัติเรียบร้อยแล้ว</strong>
+                <p style="margin: 2px 0 0; color: var(--tx-3b82f6); font-size: 0.825rem;">กรุณาตรวจสอบข้อมูลสัญญาเช่าด้านล่าง เมื่อกดยืนยันแล้ว สัญญาจะถูกส่งไปยังเจ้าหน้าที่เพื่อตรวจสอบและอนุมัติสัญญา</p>
               </div>
             </div>
 
             <h4 style="font-size: 0.95rem; margin-bottom: 12px; color: var(--primary);">1. ข้อมูลแผงเช่าและร้านค้า</h4>
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label" for="c_stall_id">เลือกแผงเช่าที่ต้องการเช่า *</label>
+                <label class="form-label" for="c_stall_id">เลือกแผงเช่าที่ต้องการเช่า <span class="req-star" aria-hidden="true">*</span></label>
                 <AppInput
                   v-if="isTenant"
                   id="c_stall_id"
@@ -474,7 +463,7 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="c_business_name">ชื่อร้านค้า (Shop/Business Name) *</label>
+                <label class="form-label" for="c_business_name">ชื่อร้านค้า (Shop/Business Name) <span class="req-star" aria-hidden="true">*</span></label>
                 <AppInput id="c_business_name" v-model="formContract.business_name" type="text" placeholder="เช่น ส้มตำรสเด็ด" :error="contractErrors.business_name" @blur="validateContractField('business_name')" />
               </div>
             </div>
@@ -487,19 +476,19 @@
             <h4 style="font-size: 0.95rem; margin: 20px 0 12px; color: var(--primary);">2. ข้อมูลผู้เช่า (Tenant Information)</h4>
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label" for="c_tenant_name">ชื่อ-นามสกุล ผู้เช่า *</label>
+                <label class="form-label" for="c_tenant_name">ชื่อ-นามสกุล ผู้เช่า <span class="req-star" aria-hidden="true">*</span></label>
                 <AppInput id="c_tenant_name" v-model="formContract.tenant_name" type="text" placeholder="นาย/นาง/น.ส. ..." :error="contractErrors.tenant_name" @blur="validateContractField('tenant_name')" />
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="c_tenant_id_card">เลขประจำตัวประชาชน / Tax ID *</label>
+                <label class="form-label" for="c_tenant_id_card">เลขประจำตัวประชาชน / Tax ID <span class="req-star" aria-hidden="true">*</span></label>
                 <AppInput id="c_tenant_id_card" v-model="formContract.tenant_id_card" type="text" placeholder="13 หลัก" :error="contractErrors.tenant_id_card" @blur="validateContractField('tenant_id_card')" />
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label" for="c_tenant_phone">เบอร์โทรศัพท์ติดต่อ *</label>
+                <label class="form-label" for="c_tenant_phone">เบอร์โทรศัพท์ติดต่อ <span class="req-star" aria-hidden="true">*</span></label>
                 <AppInput id="c_tenant_phone" v-model="formContract.tenant_phone" type="text" placeholder="08x-xxx-xxxx" :error="contractErrors.tenant_phone" @blur="validateContractField('tenant_phone')" />
               </div>
 
@@ -517,12 +506,12 @@
             <h4 style="font-size: 0.95rem; margin: 20px 0 12px; color: var(--primary);">3. เงื่อนไขและอัตราค่าเช่า (Lease Terms)</h4>
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label" for="c_start_date">วันที่เริ่มต้นสัญญา *</label>
+                <label class="form-label" for="c_start_date">วันที่เริ่มต้นสัญญา <span class="req-star" aria-hidden="true">*</span></label>
                 <AppInput id="c_start_date" v-model="formContract.start_date" type="date" :error="contractErrors.start_date" @blur="validateContractField('start_date')" />
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="c_end_date">วันที่สิ้นสุดสัญญา *</label>
+                <label class="form-label" for="c_end_date">วันที่สิ้นสุดสัญญา <span class="req-star" aria-hidden="true">*</span></label>
                 <AppInput id="c_end_date" v-model="formContract.end_date" type="date" :error="contractErrors.end_date" @blur="validateContractField('end_date')" />
               </div>
             </div>
@@ -534,7 +523,7 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="c_rental_fee">ค่าเช่าต่องวด (บาท) *</label>
+                <label class="form-label" for="c_rental_fee">ค่าเช่าต่องวด (บาท) <span class="req-star" aria-hidden="true">*</span></label>
                 <AppInput id="c_rental_fee" v-model="formContract.rental_fee" type="number" :error="contractErrors.rental_fee" @blur="validateContractField('rental_fee')" />
               </div>
             </div>
@@ -558,8 +547,8 @@
           </div>
 
           <div class="modal-footer">
-            <AppButton type="button" variant="secondary" @click="showCreateModal = false">ยกเลิก</AppButton>
-            <AppButton type="submit" variant="primary" :disabled="saving">
+            <AppButton type="button" variant="secondary" size="md" @click="showCreateModal = false">ยกเลิก</AppButton>
+            <AppButton type="submit" variant="primary" size="md" :disabled="saving">
               <span v-if="saving">กำลังส่งสัญญา...</span>
               <span v-else-if="isTenant">ยืนยันและส่งสัญญาให้เจ้าหน้าที่ตรวจสอบ</span>
               <span v-else>ยืนยันและเปิดใช้งานสัญญา</span>
@@ -571,17 +560,15 @@
 
     <!-- Modal: View Contract Document (Print-ready) -->
     <div v-if="viewDocModal && currentDoc" class="modal-overlay" @click.self="viewDocModal = false">
-      <div class="modal-content" style="max-width: 800px; background: #fff;">
-        <div class="modal-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #0f172a;">
-          <h3 style="font-size: 1.15rem;">เอกสารสัญญาเช่าพื้นที่แผงค้า (เลขที่ {{ currentDoc.contract_number }})</h3>
-          <div style="display: flex; gap: 8px;">
-            <button type="button" class="btn btn-sm btn-primary" style="display: inline-flex; align-items: center; gap: 6px;" @click="printDoc">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-              <span>พิมพ์เอกสาร</span>
-            </button>
-            <button type="button" class="btn btn-sm btn-secondary" @click="viewDocModal = false">ปิด</button>
-          </div>
-        </div>
+      <div class="modal-content" style="max-width: 800px; background: var(--bg-ffffff);">
+        <AppModalHeader title="เอกสารสัญญาเช่าพื้นที่แผงค้า" :subtitle="`เลขที่สัญญา ${currentDoc.contract_number}`" icon="document" @close="viewDocModal = false">
+          <template #actions>
+            <AppButton type="button" variant="primary" size="md" @click="printDoc">
+              <template #prefix><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></template>
+              พิมพ์เอกสาร
+            </AppButton>
+          </template>
+        </AppModalHeader>
 
         <div class="modal-body" id="print-area">
           <!-- Officer Review Banner inside Contract Document -->
@@ -607,8 +594,8 @@
           <div class="contract-document">
             <div class="contract-header">
               <h2 style="font-size: 1.4rem; font-weight: 700;">หนังสือสัญญาเช่าพื้นที่แผงค้าในตลาด</h2>
-              <div style="font-size: 0.9rem; color: #475569; margin-top: 4px;">ระบบจัดการตลาด e-Market Management System</div>
-              <div style="font-size: 0.85rem; font-weight: 600; color: #059669; margin-top: 6px;">
+              <div style="font-size: 0.9rem; color: var(--tx-475569); margin-top: 4px;">ระบบจัดการตลาด e-Market Management System</div>
+              <div style="font-size: 0.85rem; font-weight: 600; color: var(--tx-059669); margin-top: 6px;">
                 เลขที่สัญญา: {{ currentDoc.contract_number }}
               </div>
             </div>
@@ -619,7 +606,7 @@
                 ระหว่าง <strong>บริษัท บริหารจัดการตลาด จำกัด</strong> (ซึ่งต่อไปนี้เรียกว่า "ผู้ให้เช่า") ฝ่ายหนึ่ง กับ
               </p>
 
-              <div class="contract-grid" style="margin-top: 14px; background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <div class="contract-grid" style="margin-top: 14px; background: var(--bg-f8fafc); padding: 14px; border-radius: 8px; border: 1px solid var(--bd-e2e8f0);">
                 <div><strong>ชื่อผู้เช่า:</strong> {{ currentDoc.tenant_name }}</div>
                 <div><strong>เลขประจำตัวประชาชน:</strong> {{ currentDoc.tenant_id_card }}</div>
                 <div><strong>เบอร์โทรศัพท์:</strong> {{ currentDoc.tenant_phone }}</div>
@@ -639,7 +626,7 @@
               </p>
 
               <div class="section-title">ข้อ ๓. ค่าเช่าและเงินประกัน</div>
-              <div class="contract-grid" style="margin-top: 8px; background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <div class="contract-grid" style="margin-top: 8px; background: var(--bg-f8fafc); padding: 14px; border-radius: 8px; border: 1px solid var(--bd-e2e8f0);">
                 <div><strong>อัตราค่าเช่า:</strong> ฿{{ Number(currentDoc.rental_fee).toLocaleString() }} ({{ currentDoc.billing_cycle === 'monthly' ? 'รายเดือน' : 'รายวัน' }})</div>
                 <div><strong>เงินประกันสัญญา:</strong> ฿{{ Number(currentDoc.security_deposit || 0).toLocaleString() }} บาท</div>
                 <div><strong>เงินจ่ายล่วงหน้า:</strong> ฿{{ Number(currentDoc.advance_payment || 0).toLocaleString() }} บาท</div>
@@ -647,7 +634,7 @@
               </div>
 
               <div class="section-title">ข้อ ๔. ข้อกำหนดและเงื่อนไขเพิ่มเติม</div>
-              <p style="color: #475569;">
+              <p style="color: var(--tx-475569);">
                 {{ currentDoc.terms_and_conditions || 'ผู้เช่าต้องปฏิบัติตามกฎระเบียบความสะอาด สุขอนามัย และความปลอดภัยของตลาดอย่างเคร่งครัด' }}
               </p>
 
@@ -764,7 +751,13 @@ const loadData = async () => {
       get('/stalls'),
       get('/applications').catch(() => [])
     ])
-    contracts.value = Array.isArray(contractsRes) ? contractsRes : (Array.isArray(contractsRes?.data) ? contractsRes.data : [])
+    const rawContracts: any[] = Array.isArray(contractsRes) ? contractsRes : (Array.isArray(contractsRes?.data) ? contractsRes.data : [])
+    // API ส่งค่าเช่าเป็น monthly_rental (ไม่มี rental_fee / billing_cycle) จึงแปลงให้หน้านี้ใช้ได้ ไม่ให้แสดง ฿NaN
+    contracts.value = rawContracts.map((c: any) => ({
+      ...c,
+      rental_fee: Number(c.rental_fee ?? c.monthly_rental ?? 0),
+      billing_cycle: c.billing_cycle || 'monthly'
+    }))
     const rawStalls = Array.isArray(stallsRes) ? stallsRes : (Array.isArray(stallsRes?.data) ? stallsRes.data : [])
     const rawApps = Array.isArray(appsRes) ? appsRes : (Array.isArray(appsRes?.data) ? appsRes.data : [])
     availableStalls.value = rawStalls.filter((s: any) => s.status === 'available' || s.stall_status === 'available')
@@ -1110,7 +1103,7 @@ onMounted(() => {
 <style scoped>
 .contracts-page {
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .content-body {
@@ -1127,7 +1120,7 @@ onMounted(() => {
 
 .loading-spinner-row {
   font-size: 0.9375rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -1144,8 +1137,8 @@ onMounted(() => {
 
 /* Standard Table Card Container */
 .table-card-container {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   padding: 24px 28px;
@@ -1170,14 +1163,14 @@ onMounted(() => {
 .table-card-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
   letter-spacing: -0.01em;
 }
 
 .table-card-subtitle {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .table-header-actions {
@@ -1197,7 +1190,7 @@ onMounted(() => {
 .search-icon {
   position: absolute;
   left: 12px;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   pointer-events: none;
 }
 
@@ -1207,9 +1200,9 @@ onMounted(() => {
   padding: 0 34px 0 36px;
   font-size: 0.875rem;
   font-family: inherit;
-  color: #1e293b;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  color: var(--tx-1e293b);
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
   transition: all 0.2s ease;
 }
@@ -1221,7 +1214,7 @@ onMounted(() => {
 }
 
 .search-input::placeholder {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
 }
 
 .clear-search-btn {
@@ -1229,7 +1222,7 @@ onMounted(() => {
   right: 10px;
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -1240,7 +1233,7 @@ onMounted(() => {
 }
 
 .clear-search-btn:hover {
-  color: #475569;
+  color: var(--tx-475569);
 }
 
 /* Header Buttons */
@@ -1250,9 +1243,9 @@ onMounted(() => {
   font-size: 0.875rem;
   font-family: inherit;
   font-weight: 500;
-  color: #475569;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  color: var(--tx-475569);
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
   display: inline-flex;
   align-items: center;
@@ -1262,9 +1255,9 @@ onMounted(() => {
 }
 
 .btn-export-report:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #1e293b;
+  background: var(--bg-f8fafc);
+  border-color: var(--bd-cbd5e1);
+  color: var(--tx-1e293b);
 }
 
 .btn-table-primary-action {
@@ -1316,8 +1309,8 @@ onMounted(() => {
 }
 
 .kpi-ribbon-card {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 14px;
   padding: 13px 16px;
   display: flex;
@@ -1355,7 +1348,7 @@ onMounted(() => {
 
 .kpi-title {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   line-height: 1.2;
   margin-bottom: 4px;
@@ -1371,7 +1364,7 @@ onMounted(() => {
 .kpi-count {
   font-size: 1.35rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   line-height: 1;
 }
 
@@ -1385,77 +1378,77 @@ onMounted(() => {
 
 /* KPI Color Variations */
 .kpi-all .kpi-icon-box {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #dbeafe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-dbeafe);
 }
 .kpi-all .kpi-unit-pill {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
 }
 .kpi-all.active {
   border-color: #2563eb;
-  background: #f8faff;
+  background: var(--bg-f8faff);
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
 }
 
 .kpi-applied .kpi-icon-box {
-  background: #f0fdf4;
-  color: #16a34a;
-  border: 1px solid #dcfce7;
+  background: var(--bg-f0fdf4);
+  color: var(--tx-16a34a);
+  border: 1px solid var(--bd-dcfce7);
 }
 .kpi-applied .kpi-unit-pill {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 .kpi-applied.active {
   border-color: #16a34a;
-  background: #f7fee7;
+  background: var(--bg-f7fee7);
   box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.18);
 }
 
 .kpi-pending .kpi-icon-box {
-  background: #fffbeb;
-  color: #d97706;
-  border: 1px solid #fef3c7;
+  background: var(--bg-fffbeb);
+  color: var(--tx-d97706);
+  border: 1px solid var(--bd-fef3c7);
 }
 .kpi-pending .kpi-unit-pill {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--bg-fef3c7);
+  color: var(--tx-b45309);
 }
 .kpi-pending.active {
   border-color: #f59e0b;
-  background: #fffdf7;
+  background: var(--bg-fffdf7);
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
 }
 
 .kpi-expired .kpi-icon-box {
-  background: #f8fafc;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  color: var(--tx-64748b);
+  border: 1px solid var(--bd-e2e8f0);
 }
 .kpi-expired .kpi-unit-pill {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
 }
 .kpi-expired.active {
-  border-color: #94a3b8;
-  background: #f8fafc;
+  border-color: var(--bd-94a3b8);
+  background: var(--bg-f8fafc);
   box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.18);
 }
 
 .kpi-terminated .kpi-icon-box {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fee2e2;
+  background: var(--bg-fef2f2);
+  color: var(--tx-dc2626);
+  border: 1px solid var(--bd-fee2e2);
 }
 .kpi-terminated .kpi-unit-pill {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--bg-fee2e2);
+  color: var(--tx-b91c1c);
 }
 .kpi-terminated.active {
   border-color: #ef4444;
-  background: #fffafa;
+  background: var(--bg-fffafa);
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.18);
 }
 
@@ -1469,9 +1462,9 @@ onMounted(() => {
   width: 68px;
   height: 68px;
   border-radius: 50%;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #94a3b8;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-94a3b8);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1481,13 +1474,13 @@ onMounted(() => {
 .empty-title {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin-bottom: 6px;
 }
 
 .empty-desc {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   max-width: 440px;
   margin: 0 auto;
 }
@@ -1498,22 +1491,22 @@ onMounted(() => {
   font-size: 0.8125rem;
   font-family: inherit;
   font-weight: 600;
-  color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-empty-reset:hover {
-  background: #dbeafe;
+  background: var(--bg-dbeafe);
 }
 
 /* Custom Table Styles */
 .table-container {
   overflow-x: auto;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--bd-f1f5f9);
   border-radius: 12px;
   margin-bottom: 18px;
 }
@@ -1529,25 +1522,25 @@ onMounted(() => {
   padding: 13px 16px;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #64748b;
-  background: #f8fafc;
-  border-bottom: 1px solid #eef2f6;
+  color: var(--tx-64748b);
+  background: var(--bg-f8fafc);
+  border-bottom: 1px solid var(--bd-eef2f6);
   white-space: nowrap;
 }
 
 .custom-table td {
   padding: 15px 16px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #334155;
+  border-bottom: 1px solid var(--bd-f1f5f9);
+  color: var(--tx-334155);
   vertical-align: middle;
 }
 
 .custom-table tbody tr:hover {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .table-code-blue {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 700;
   font-size: 0.875rem;
 }
@@ -1559,34 +1552,34 @@ onMounted(() => {
 }
 
 .clickable-code:hover {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
 }
 
 .cell-sub-cycle {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   margin-top: 2px;
 }
 
 .cell-shop-name {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .cell-sub-category {
   font-size: 0.78rem;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   margin-top: 1px;
 }
 
 .cell-tenant-name {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .cell-phone-link {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -1595,17 +1588,17 @@ onMounted(() => {
 }
 
 .cell-phone-link:hover {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .cell-duration-text {
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.8125rem;
 }
 
 .cell-expiring-tag {
   font-size: 0.75rem;
-  color: #dc2626;
+  color: var(--tx-dc2626);
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -1615,7 +1608,7 @@ onMounted(() => {
 
 .cell-bold-amount {
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 0.9375rem;
 }
 
@@ -1635,8 +1628,8 @@ onMounted(() => {
 }
 
 .contract-card {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 14px;
   padding: 18px;
   display: flex;
@@ -1648,7 +1641,7 @@ onMounted(() => {
 }
 
 .contract-card:hover {
-  border-color: #cbd5e1;
+  border-color: var(--bd-cbd5e1);
   box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.08);
   transform: translateY(-2px);
 }
@@ -1683,7 +1676,7 @@ onMounted(() => {
 
 .contract-label-text {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-weight: 500;
 }
 
@@ -1700,7 +1693,7 @@ onMounted(() => {
 
 .contract-card-cycle {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1717,8 +1710,8 @@ onMounted(() => {
 .expiring-badge {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #dc2626;
-  background: #fee2e2;
+  color: var(--tx-dc2626);
+  background: var(--bg-fee2e2);
   padding: 2px 8px;
   border-radius: 6px;
   display: inline-flex;
@@ -1739,60 +1732,60 @@ onMounted(() => {
 }
 
 .pill-green {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 
 .pill-amber {
-  background: #fef3c7;
-  color: #d97706;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
 }
 
 .pill-blue {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
 }
 
 .pill-gray {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
 }
 
 .pill-red {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
 }
 
 /* Circle Status Icons */
 .green-circle {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 
 .amber-circle {
-  background: #fef3c7;
-  color: #d97706;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
 }
 
 .blue-circle {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
 }
 
 .gray-circle {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
 }
 
 .red-circle {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
 }
 
 /* Shop Banner in Card */
 .contract-shop-banner {
-  background: #f8fafc;
-  border: 1px solid #f1f5f9;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-f1f5f9);
   border-radius: 10px;
   padding: 11px 14px;
   display: flex;
@@ -1810,13 +1803,13 @@ onMounted(() => {
 .shop-name-title {
   font-size: 0.9375rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   line-height: 1.3;
 }
 
 .shop-category-subtitle {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 2px;
 }
 
@@ -1824,9 +1817,9 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
+  border: 1px solid var(--bd-bfdbfe);
   padding: 3px 9px;
   border-radius: 6px;
   font-size: 0.78rem;
@@ -1849,7 +1842,7 @@ onMounted(() => {
 
 .meta-card-label {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   margin-bottom: 2px;
 }
@@ -1857,13 +1850,13 @@ onMounted(() => {
 .meta-card-value {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   line-height: 1.3;
 }
 
 .meta-card-phone {
   font-size: 0.8125rem;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1879,21 +1872,21 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.8125rem;
 }
 
 .meta-card-amount {
   font-size: 1.05rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   line-height: 1.2;
 }
 
 .meta-card-amount .unit-text {
   font-size: 0.78rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-left: 2px;
 }
 
@@ -1904,16 +1897,16 @@ onMounted(() => {
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
   padding-top: 12px;
   margin-top: auto;
 }
 
 /* Badge helpers */
 .badge-occupied {
-  background: #f1f5f9;
-  color: #334155;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-334155);
+  border: 1px solid var(--bd-e2e8f0);
   padding: 3px 8px;
   border-radius: 6px;
   font-size: 0.78rem;
@@ -1924,7 +1917,7 @@ onMounted(() => {
 .field-error-text {
   margin: 4px 0 0;
   font-size: 0.75rem;
-  color: #dc2626;
+  color: var(--tx-dc2626);
   font-weight: 500;
 }
 
@@ -1932,8 +1925,8 @@ onMounted(() => {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
   border-radius: 10px;
   padding: 14px 16px;
   margin-bottom: 20px;
@@ -1944,8 +1937,8 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: #fefce8;
-  border: 1px solid #fef08a;
+  background: var(--bg-fefce8);
+  border: 1px solid var(--bd-fef08a);
   border-radius: 10px;
   padding: 14px 18px;
   margin-bottom: 18px;
@@ -1957,7 +1950,7 @@ onMounted(() => {
   gap: 6px;
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #854d0e;
+  color: var(--tx-854d0e);
   background: #fef08a;
   padding: 3px 10px;
   border-radius: 6px;
@@ -1965,7 +1958,7 @@ onMounted(() => {
 
 .review-desc {
   font-size: 0.8125rem;
-  color: #713f12;
+  color: var(--tx-713f12);
   margin-top: 4px;
 }
 

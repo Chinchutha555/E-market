@@ -35,7 +35,12 @@ export default defineNuxtConfig({
     { path: '~/components/extras', pathPrefix: false },
     { path: '~/core/modules/stall/ui/components', pathPrefix: false },
   ],
-  css: ['maplibre-gl/dist/maplibre-gl.css', '~/assets/css/main.css'],
+  css: [
+    'maplibre-gl/dist/maplibre-gl.css',
+    '~/assets/css/theme-tokens.css',
+    '~/assets/css/main.css',
+    '~/assets/css/notification-cards.css'
+  ],
   app: {
     head: {
       title: 'e-Market | ระบบจัดการแผงเช่าตลาดและสัญญาการเช่า',
@@ -45,6 +50,13 @@ export default defineNuxtConfig({
         {
           name: 'description',
           content: 'ระบบบริหารจัดการแผงเช่าตลาด สัญญาการเช่าผู้เช่า และติดตามรายรับอย่างมีประสิทธิภาพ รองรับ REST API และ JWT'
+        }
+      ],
+      // ตั้งธีมก่อนวาดหน้าแรก กันหน้าวาบเป็นสีขาวตอนโหลดในโหมดมืด (ค่าเดียวกับ useTheme)
+      script: [
+        {
+          innerHTML: "try{var t=localStorage.getItem('emarket-theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.dataset.theme=t}catch(e){}",
+          tagPosition: 'head'
         }
       ],
       link: [

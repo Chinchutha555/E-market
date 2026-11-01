@@ -186,3 +186,34 @@ func (h *Handler) TerminateContract(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, responses.SuccessResponse(gin.H{"terminated": true}, http.StatusOK))
 }
+
+// UpdateContractWorkflow godoc
+// @Summary อัปเดตสถานะติดตามสัญญา (ต่อสัญญา / ส่งคืนแผง / คดี)
+// @Tags Contracts
+// @ID update-contract-workflow
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Contract ID"
+// @Param body body requests.UpdateContractWorkflowRequest true "Workflow statuses"
+// @Success 200 {object} responses.Success{data=responses.ContractResponse}
+// @Router /contracts/{id}/workflow [patch]
+func (h *Handler) UpdateContractWorkflow(c *gin.Context) {
+	userID := middlewares.GetUserID(c)
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		respondError(c, responses.NewAppErr(http.StatusBadRequest, "ID ไม่ถูกต้อง"))
+		return
+	}
+	var req requests.UpdateContractWorkflowRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondError(c, responses.NewAppErr(http.StatusBadRequest, "ข้อมูลไม่ถูกต้อง"))
+		return
+	}
+	res, err := h.useCase.UpdateContractWorkflow(id, userID, req)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, responses.SuccessResponse(res, http.StatusOK))
+}

@@ -17,6 +17,22 @@
           <h1 class="page-title">{{ isHolidaySection ? 'จัดการวันหยุด' : 'จัดการรอบเข้าชม' }}</h1>
           <p class="page-desc">{{ isHolidaySection ? 'กำหนดวันที่งดรับนัดเป็นกรณีพิเศษ' : 'ตั้งค่ารอบเวลาเข้าชมและการยื่นคำร้อง' }}</p>
         </div>
+        <div v-if="!isHolidaySection" class="visit-page-actions">
+          <span class="draft-status" :class="{ published: !hasUnsavedChanges, 'is-dirty': hasUnsavedChanges }">
+            <i></i>
+            {{ hasUnsavedChanges ? 'มีการแก้ไขที่ยังไม่บันทึก' : 'บันทึกแล้ว' }}
+          </span>
+          <AppButton size="md" :variant="hasUnsavedChanges ? 'primary' : 'outline'" :disabled="!hasUnsavedChanges" @click="handleSaveAll">
+            <template #prefix>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+            </template>
+            บันทึกตารางเวลา
+          </AppButton>
+        </div>
       </header>
 
       <section v-if="isHolidaySection" class="schedule-card card glass-card holiday-placeholder-card">
@@ -36,7 +52,13 @@
               <button type="button" class="btn btn-outline btn-sm holiday-remove" @click="removeHolidayDate(holiday.date)">ลบ</button>
             </div>
           </div>
-          <div v-else class="holiday-empty">ยังไม่มีวันหยุดที่ตั้งค่าไว้</div>
+          <AppEmptyState
+            v-else
+            variant="compact"
+            icon="calendar"
+            title="ยังไม่มีวันหยุด"
+            description="เพิ่มวันที่ต้องการปิดรับนัดจากแบบฟอร์มด้านบน"
+          />
         </div>
       </section>
 
@@ -348,39 +370,13 @@
         </div>
 
 
-        <!-- Footer Bar with Save -->
-        <footer class="schedule-footer">
-          <div class="footer-right">
-            <AppButton variant="primary" size="md" @click="handleSaveAll">
-              <template #prefix>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path>
-                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                  <polyline points="7 3 7 8 15 8"></polyline>
-                </svg>
-              </template>
-              บันทึกตารางเวลา
-            </AppButton>
-          </div>
-        </footer>
       </section>
     </main>
 
     <!-- Copy Modal: คัดลอกการตั้งค่าไปยังวันอื่นๆ ในสัปดาห์ -->
     <div v-if="showWeeklyCopyModal" class="copy-modal-overlay" @click.self="showWeeklyCopyModal = false">
       <div class="copy-modal-card">
-        <div class="cm-head">
-          <div class="cm-title-wrap">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-            <h3>คัดลอกรอบเวลาของ{{ activeWeeklyDay.dayName }}</h3>
-          </div>
-          <button type="button" class="cm-close" @click="showWeeklyCopyModal = false">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
+        <AppModalHeader :title="`คัดลอกรอบเวลาของ${activeWeeklyDay.dayName}`" :subtitle="`เลือกรายการปลายทางสำหรับ ${activeWeeklyDay.slots.length} รอบเวลา`" icon="calendar" @close="showWeeklyCopyModal = false" />
         <div class="cm-body">
           <p class="cm-desc">เลือกวันที่ต้องการใช้รอบเวลา {{ activeWeeklyDay.slots.length }} รอบ</p>
 
@@ -409,10 +405,8 @@
           </div>
         </div>
         <div class="cm-foot">
-          <button type="button" class="outline-btn" @click="showWeeklyCopyModal = false">ยกเลิก</button>
-          <button type="button" class="primary-btn" @click="executeWeeklyCopy">
-            <span>ยืนยันคัดลอกรอบเวลา</span>
-          </button>
+          <AppButton type="button" variant="secondary" size="md" @click="showWeeklyCopyModal = false">ยกเลิก</AppButton>
+          <AppButton type="button" variant="primary" size="md" @click="executeWeeklyCopy">ยืนยันคัดลอกรอบเวลา</AppButton>
         </div>
       </div>
     </div>
@@ -445,7 +439,7 @@ import { getMarketGisConfig } from '../data/markets_registry'
 const route = useRoute()
 const { get, post } = useApi()
 const { user } = useAuth()
-const { showSuccess, showError } = useAppAlert()
+const { showSuccess, showError, showConfirm } = useAppAlert()
 const { applyMarketOverride } = useMarketOverrides()
 const isStaff = computed(() => user.value?.role === 'staff')
 const isHolidaySection = computed(() => route.query.section === 'holidays')
@@ -547,6 +541,7 @@ const initAllData = () => {
   Object.values(weeklyMaster).forEach(day => {
     day.slots?.forEach(slot => ensureSlotTimeRange(slot))
   })
+  takeWeeklySnapshot()
 }
 
 const openWeeklySlotCount = (dayOfWeek: number): number => {
@@ -569,9 +564,11 @@ const handleWeeklyBadgeChange = (val: string) => {
   saveWeeklyMaster()
 }
 
-const saveWeeklyMaster = () => {
-  saveStoredWeeklyMaster(marketId.value, weeklyMaster)
-}
+// การแก้ไขเป็นฉบับร่างจนกว่าจะกด "บันทึกตารางเวลา" (สถานะดูจาก hasUnsavedChanges)
+const saveWeeklyMaster = () => {}
+const weeklySnapshot = ref('')
+const takeWeeklySnapshot = () => { weeklySnapshot.value = JSON.stringify(weeklyMaster) }
+const hasUnsavedChanges = computed(() => !!weeklySnapshot.value && JSON.stringify(weeklyMaster) !== weeklySnapshot.value)
 
 const handleWeeklySlotToggle = (slot: IVisitSlot) => {
   if (!slot.enabled) {
@@ -772,6 +769,7 @@ const applyWeeklyPreset = (type: 'weekend' | 'everyday' | 'weekdays' | 'reset') 
 
 const handleSaveAll = () => {
   saveStoredWeeklyMaster(marketId.value, weeklyMaster)
+  takeWeeklySnapshot()
   showSuccess(
     'บันทึกตารางหลักประจำสัปดาห์สำเร็จแล้ว! ระบบจะนำตารางเวลานี้ไปใช้งานวนรอบทุกสัปดาห์ตลอดไปโดยอัตโนมัติ โดยไม่ต้องกลับมาเซ็ตซ้ำ',
     'บันทึกตารางเวลาแล้ว'
@@ -824,6 +822,12 @@ onBeforeUnmount(() => {
   window.removeEventListener('click', handleDocumentClick)
 })
 
+// เตือนก่อนออกจากหน้าเมื่อมีการแก้ไขที่ยังไม่บันทึก
+onBeforeRouteLeave(async () => {
+  if (!hasUnsavedChanges.value) return true
+  return await showConfirm('ตารางเวลามีการแก้ไขที่ยังไม่ได้บันทึก ต้องการทิ้งการแก้ไขและออกจากหน้านี้หรือไม่', { title: 'มีการแก้ไขที่ยังไม่ได้บันทึก', confirmText: 'ทิ้งและออกจากหน้านี้' })
+})
+
 watch(marketId, () => {
   void loadMarketAndBookings()
 })
@@ -832,7 +836,7 @@ watch(marketId, () => {
 <style scoped>
 .visit-page-root {
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .visit-page {
@@ -846,8 +850,8 @@ watch(marketId, () => {
   margin-top: 0;
   width: 100%;
   box-sizing: border-box;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 16px;
   padding: 20px 24px 24px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
@@ -869,7 +873,7 @@ watch(marketId, () => {
 
 .visit-page-heading .page-title {
   margin: 0;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 1.5rem;
   font-weight: 800;
   line-height: 1.3;
@@ -877,7 +881,7 @@ watch(marketId, () => {
 
 .visit-page-heading .page-desc {
   margin: 4px 0 0;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.5;
@@ -896,9 +900,9 @@ watch(marketId, () => {
   gap: 6px;
   padding: 9px 14px;
   border-radius: 9px;
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-bfdbfe);
   font-size: 0.84rem;
   font-weight: 600;
   text-decoration: none;
@@ -906,7 +910,7 @@ watch(marketId, () => {
 }
 
 .preview-link-btn:hover {
-  background: #dbeafe;
+  background: var(--bg-dbeafe);
   transform: translateY(-1px);
 }
 
@@ -926,14 +930,14 @@ watch(marketId, () => {
 }
 
 .outline-btn {
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #334155;
+  border: 1px solid var(--bd-cbd5e1);
+  background: var(--bg-ffffff);
+  color: var(--tx-334155);
 }
 
 .outline-btn:hover {
-  border-color: #94a3b8;
-  background: #f8fafc;
+  border-color: var(--bd-94a3b8);
+  background: var(--bg-f8fafc);
 }
 
 .primary-btn {
@@ -950,20 +954,20 @@ watch(marketId, () => {
 }
 
 .secondary-btn {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  color: #334155;
+  background: var(--bg-f1f5f9);
+  border: 1px solid var(--bd-cbd5e1);
+  color: var(--tx-334155);
   text-decoration: none;
 }
 
 .secondary-btn:hover {
-  background: #e2e8f0;
+  background: var(--bg-e2e8f0);
 }
 
 /* Mode Navigation Bar */
 .mode-navigation-bar {
   padding: 16px 0 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
 }
 
 .mode-tabs {
@@ -977,11 +981,11 @@ watch(marketId, () => {
   align-items: center;
   gap: 8px;
   padding: 10px 18px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-bottom: none;
   border-radius: 12px 12px 0 0;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
@@ -992,33 +996,33 @@ watch(marketId, () => {
 }
 
 .mode-tab-btn:hover {
-  color: #2563eb;
-  background: #ffffff;
+  color: var(--tx-2563eb);
+  background: var(--bg-ffffff);
 }
 
 .mode-tab-btn.active {
-  background: #ffffff;
-  color: #2563eb;
+  background: var(--bg-ffffff);
+  color: var(--tx-2563eb);
   font-weight: 700;
-  border-color: #e2e8f0;
-  border-bottom: 2px solid #ffffff;
+  border-color: var(--bd-e2e8f0);
+  border-bottom: 2px solid var(--bd-ffffff);
   box-shadow: 0 -2px 8px rgba(15, 23, 42, 0.04);
 }
 
 .mode-active-pill {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
   padding: 2px 7px;
   border-radius: 6px;
 }
 
 .override-badge {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--bg-fef3c7);
+  color: var(--tx-b45309);
   padding: 2px 7px;
   border-radius: 6px;
 }
@@ -1033,8 +1037,8 @@ watch(marketId, () => {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
-  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, var(--bg-eff6ff) 0%, var(--bg-f0fdf4) 100%);
+  border: 1px solid var(--bd-bfdbfe);
   border-radius: 12px;
   padding: 14px 18px;
   margin-bottom: 20px;
@@ -1045,8 +1049,8 @@ watch(marketId, () => {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: #ffffff;
-  color: #2563eb;
+  background: var(--bg-ffffff);
+  color: var(--tx-2563eb);
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -1061,13 +1065,13 @@ watch(marketId, () => {
 .ssb-content strong {
   display: block;
   font-size: 0.92rem;
-  color: #1e3a8a;
+  color: var(--tx-1e3a8a);
 }
 
 .ssb-content p {
   margin: 3px 0 0;
   font-size: 0.78rem;
-  color: #3b82f6;
+  color: var(--tx-3b82f6);
   line-height: 1.45;
 }
 
@@ -1081,10 +1085,10 @@ watch(marketId, () => {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
@@ -1094,8 +1098,8 @@ watch(marketId, () => {
 }
 
 .preset-btn:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: var(--bg-f8fafc);
+  border-color: var(--bd-94a3b8);
 }
 
 .preset-menu {
@@ -1103,8 +1107,8 @@ watch(marketId, () => {
   top: calc(100% + 6px);
   right: 0;
   z-index: 50;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
   padding: 6px;
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12);
@@ -1127,33 +1131,33 @@ watch(marketId, () => {
 }
 
 .preset-menu-item:hover {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
 }
 
 .preset-menu-item .pmi-title {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .preset-menu-item .pmi-desc {
-  font-size: 0.72rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
   margin-top: 2px;
   line-height: 1.35;
 }
 
 .preset-menu-item.is-reset:hover {
-  background: #fef2f2;
+  background: var(--bg-fef2f2);
 }
 
 .preset-menu-item.is-reset .pmi-title {
-  color: #dc2626;
+  color: var(--tx-dc2626);
 }
 
 .preset-menu-divider {
   height: 1px;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
   margin: 2px 0;
 }
 
@@ -1170,8 +1174,8 @@ watch(marketId, () => {
 
 /* LEFT: Master Sidebar (7 Days List) */
 .weekly-master-sidebar {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 16px;
   padding: 20px 18px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
@@ -1185,20 +1189,20 @@ watch(marketId, () => {
   justify-content: space-between;
   align-items: center;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
 }
 
 .sidebar-title {
   font-size: 1.08rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
 }
 
 .sidebar-sub {
   font-size: 0.85rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
   display: block;
   margin-top: 3px;
 }
@@ -1208,9 +1212,9 @@ watch(marketId, () => {
   align-items: center;
   gap: 5px;
   padding: 6px 12px;
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-bfdbfe);
   border-radius: 7px;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -1219,7 +1223,7 @@ watch(marketId, () => {
 }
 
 .quick-copy-all-btn:hover {
-  background: #dbeafe;
+  background: var(--bg-dbeafe);
 }
 
 .days-master-list {
@@ -1234,8 +1238,8 @@ watch(marketId, () => {
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  background: #ffffff;
-  border: 1.5px solid #f1f5f9;
+  background: var(--bg-ffffff);
+  border: 1.5px solid var(--bd-f1f5f9);
   border-radius: 12px;
   cursor: pointer;
   text-align: left;
@@ -1244,12 +1248,12 @@ watch(marketId, () => {
 }
 
 .day-master-item:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--bd-cbd5e1);
+  background: var(--bg-f8fafc);
 }
 
 .day-master-item.active {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   border-color: #3b82f6;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
 }
@@ -1286,11 +1290,11 @@ watch(marketId, () => {
 .dmi-name {
   font-size: 0.96rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .day-master-item.active .dmi-name {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
 }
 
 .dmi-bot-row {
@@ -1299,24 +1303,24 @@ watch(marketId, () => {
 }
 
 .dmi-status-open {
-  color: #16a34a;
+  color: var(--tx-16a34a);
   font-weight: 600;
 }
 
 .dmi-status-closed {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-weight: 500;
 }
 
 .dmi-arrow {
-  color: #cbd5e1;
+  color: var(--tx-cbd5e1);
   display: inline-flex;
   align-items: center;
   transition: all 0.15s ease;
 }
 
 .day-master-item.active .dmi-arrow {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   transform: translateX(2px);
 }
 
@@ -1325,10 +1329,10 @@ watch(marketId, () => {
   align-items: center;
   gap: 8px;
   padding: 11px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 10px;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.84rem;
   font-weight: 500;
   line-height: 1.45;
@@ -1336,7 +1340,7 @@ watch(marketId, () => {
 
 .sidebar-tip-box svg {
   flex-shrink: 0;
-  color: #3b82f6;
+  color: var(--tx-3b82f6);
 }
 
 /* RIGHT: Detail Panel */
@@ -1354,8 +1358,8 @@ watch(marketId, () => {
   align-items: center;
   gap: 16px;
   padding: 20px 24px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
   flex-wrap: wrap;
@@ -1370,7 +1374,7 @@ watch(marketId, () => {
 .ddh-day-title {
   font-size: 1.32rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   margin: 0;
 }
 
@@ -1378,7 +1382,7 @@ watch(marketId, () => {
   margin: 5px 0 0;
   font-size: 0.92rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .ddh-right {
@@ -1404,7 +1408,7 @@ watch(marketId, () => {
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background-color: #cbd5e1;
+  background-color: var(--bg-cbd5e1);
   transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 25px;
 }
@@ -1416,7 +1420,7 @@ watch(marketId, () => {
   width: 19px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
+  background-color: var(--bg-ffffff);
   transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 50%;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -1433,11 +1437,11 @@ watch(marketId, () => {
 .toggle-text {
   font-size: 0.92rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .toggle-text.is-active {
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 /* Day Config (Badge & Advice) */
@@ -1446,8 +1450,8 @@ watch(marketId, () => {
   align-items: flex-end;
   gap: 14px;
   padding: 18px 22px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   flex-wrap: wrap;
 }
@@ -1470,8 +1474,8 @@ watch(marketId, () => {
 
 /* Slots Management Box */
 .detail-slots-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 16px;
   padding: 20px 22px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
@@ -1482,21 +1486,21 @@ watch(marketId, () => {
   justify-content: space-between;
   align-items: center;
   padding-bottom: 14px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   margin-bottom: 14px;
 }
 
 .sch-title {
   font-size: 1.06rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
 }
 
 .sch-sub {
   font-size: 0.85rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
   display: block;
   margin-top: 3px;
 }
@@ -1506,9 +1510,9 @@ watch(marketId, () => {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: #eff6ff;
-  border: 1px solid #93c5fd;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-93c5fd);
+  color: var(--tx-2563eb);
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -1517,44 +1521,44 @@ watch(marketId, () => {
 }
 
 .btn-add-slot-top:hover {
-  background: #dbeafe;
+  background: var(--bg-dbeafe);
 }
 
 .field-label {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #334155;
+  color: var(--tx-334155);
 }
 
-.holiday-placeholder-card { min-height: 0; display: block; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); }
+.holiday-placeholder-card { min-height: 0; display: block; background: var(--bg-ffffff); border: 1px solid var(--bd-e2e8f0); border-radius: 16px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); }
 .holiday-placeholder-card .empty-state-panel { display: grid; justify-items: center; max-width: 420px; text-align: center; }
-.holiday-placeholder-card .empty-icon { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 14px; border-radius: 16px; background: #eff6ff; color: #2563eb; }
-.holiday-placeholder-card .empty-title { color: #1e293b; font-size: 1rem; font-weight: 700; }
-.holiday-placeholder-card .empty-desc { margin-top: 6px; color: #64748b; font-size: .875rem; line-height: 1.5; }
+.holiday-placeholder-card .empty-icon { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 14px; border-radius: 16px; background: var(--bg-eff6ff); color: var(--tx-2563eb); }
+.holiday-placeholder-card .empty-title { color: var(--tx-1e293b); font-size: 1rem; font-weight: 700; }
+.holiday-placeholder-card .empty-desc { margin-top: 6px; color: var(--tx-64748b); font-size: .875rem; line-height: 1.5; }
 .holiday-manager { padding: 0; }
-.holiday-manager-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; padding: 4px 0 18px; border-bottom: 1px solid #eef2f6; }
-.holiday-manager-head h2 { margin: 0; color: #1e293b; font-size: 1.125rem; }
-.holiday-manager-head p { margin: 5px 0 0; color: #64748b; font-size: .875rem; }
-.holiday-count { color: #2563eb; background: #eff6ff; border-radius: 999px; padding: 5px 10px; font-size: .8rem; font-weight: 700; white-space: nowrap; }
+.holiday-manager-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; padding: 4px 0 18px; border-bottom: 1px solid var(--bd-eef2f6); }
+.holiday-manager-head h2 { margin: 0; color: var(--tx-1e293b); font-size: 1.125rem; }
+.holiday-manager-head p { margin: 5px 0 0; color: var(--tx-64748b); font-size: .875rem; }
+.holiday-count { color: var(--tx-2563eb); background: var(--bg-eff6ff); border-radius: 999px; padding: 5px 10px; font-size: .8rem; font-weight: 700; white-space: nowrap; }
 .holiday-add-row { display: grid; grid-template-columns: 180px 1fr auto; gap: 10px; margin-top: 16px; align-items: center; }
 .holiday-list { display: grid; gap: 8px; margin-top: 16px; }
-.holiday-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; }
-.holiday-row div { display: flex; flex-direction: column; gap: 3px; }.holiday-row strong { color: #1e293b; }.holiday-row span { color: #64748b; font-size: .8125rem; }.holiday-remove { color: #dc2626; border-color: #fecaca; }
-.holiday-empty { margin-top: 18px; padding: 22px; border: 1px dashed #cbd5e1; border-radius: 10px; color: #64748b; text-align: center; font-size: .875rem; }
+.holiday-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--bd-e2e8f0); border-radius: 10px; background: var(--bg-f8fafc); }
+.holiday-row div { display: flex; flex-direction: column; gap: 3px; }.holiday-row strong { color: var(--tx-1e293b); }.holiday-row span { color: var(--tx-64748b); font-size: .8125rem; }.holiday-remove { color: var(--tx-dc2626); border-color: var(--bd-fecaca); }
+.holiday-empty { margin-top: 18px; padding: 22px; border: 1px dashed var(--bd-cbd5e1); border-radius: 10px; color: var(--tx-64748b); text-align: center; font-size: .875rem; }
 
-.day-booked-badge { display: inline-flex; align-items: center; margin-left: 6px; padding: 2px 7px; border-radius: 999px; background: #dbeafe; color: #1d4ed8; font-size: .75rem; font-weight: 700; white-space: nowrap; }
+.day-booked-badge { display: inline-flex; align-items: center; margin-left: 6px; padding: 2px 7px; border-radius: 999px; background: var(--bg-dbeafe); color: var(--tx-1d4ed8); font-size: .75rem; font-weight: 700; white-space: nowrap; }
 
 .styled-input {
   width: 100%;
   height: 44px;
   box-sizing: border-box;
   padding: 8px 12px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   font-size: 0.9375rem;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-family: inherit;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   transition: border-color 0.15s ease;
 }
 
@@ -1569,12 +1573,12 @@ watch(marketId, () => {
   align-items: center;
   gap: 6px;
   padding: 9px 14px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--tx-334155);
   cursor: pointer;
   white-space: nowrap;
   font-family: inherit;
@@ -1582,14 +1586,14 @@ watch(marketId, () => {
 }
 
 .copy-day-btn:hover {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  border-color: var(--bd-93c5fd);
+  color: var(--tx-2563eb);
 }
 
 /* Slots Step & List */
 .slots-step {
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
   margin-top: 14px;
 }
 
@@ -1608,7 +1612,7 @@ watch(marketId, () => {
   padding: 0 14px;
   font-size: 0.825rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .slot-row {
@@ -1617,9 +1621,9 @@ watch(marketId, () => {
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   transition: all 0.15s ease;
 }
 
@@ -1630,7 +1634,7 @@ watch(marketId, () => {
 }
 
 .time-range-separator {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-size: 0.875rem;
   font-weight: 600;
   flex-shrink: 0;
@@ -1640,8 +1644,8 @@ watch(marketId, () => {
 .cap-stepper-box {
   display: inline-flex;
   align-items: center;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   height: 38px;
   width: 100%;
@@ -1662,8 +1666,8 @@ watch(marketId, () => {
   width: 28px;
   height: 100%;
   border: none;
-  background: #f8fafc;
-  color: #64748b;
+  background: var(--bg-f8fafc);
+  color: var(--tx-64748b);
   cursor: pointer;
   transition: all 0.12s ease;
   flex-shrink: 0;
@@ -1671,8 +1675,8 @@ watch(marketId, () => {
 }
 
 .cap-step-btn:hover:not(:disabled) {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
 }
 
 .cap-step-btn:disabled {
@@ -1697,7 +1701,7 @@ watch(marketId, () => {
   text-align: right;
   font-size: 0.9375rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   padding: 0;
   margin: 0;
   outline: none;
@@ -1713,7 +1717,7 @@ watch(marketId, () => {
 
 .cap-suffix {
   font-size: 0.84rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   margin-left: 4px;
   user-select: none;
@@ -1721,34 +1725,34 @@ watch(marketId, () => {
 }
 
 .slot-row:hover {
-  border-color: #cbd5e1;
+  border-color: var(--bd-cbd5e1);
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
 }
 
 .slot-row.disabled {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
   opacity: 0.65;
 }
 
 .slot-row.is-sim-full {
-  background: #fffdf5;
-  border-color: #fde68a;
+  background: var(--bg-fffdf5);
+  border-color: var(--bd-fde68a);
 }
 
 .custom-check {
   width: 18px;
   height: 18px;
-  accent-color: #2563eb;
+  accent-color: var(--tx-2563eb);
   cursor: pointer;
 }
 
 .time-input,
 .note-input {
   width: 100%;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   padding: 8px 12px;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-family: inherit;
   font-size: 0.92rem;
 }
@@ -1781,7 +1785,7 @@ watch(marketId, () => {
   position: relative;
   width: 36px;
   height: 20px;
-  background-color: #cbd5e1;
+  background-color: var(--bg-cbd5e1);
   border-radius: 20px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
@@ -1794,7 +1798,7 @@ watch(marketId, () => {
   width: 14px;
   left: 3px;
   bottom: 3px;
-  background-color: #ffffff;
+  background-color: var(--bg-ffffff);
   border-radius: 50%;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -1811,19 +1815,19 @@ watch(marketId, () => {
 .status-toggle-label {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   min-width: 26px;
   transition: color 0.15s ease;
 }
 
 .status-toggle-label.is-active {
-  color: #16a34a;
+  color: var(--tx-16a34a);
 }
 
 .delete-button {
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   padding: 6px;
   cursor: pointer;
   border-radius: 6px;
@@ -1834,17 +1838,17 @@ watch(marketId, () => {
 }
 
 .delete-button:hover {
-  color: #dc2626;
-  background: #fee2e2;
+  color: var(--tx-dc2626);
+  background: var(--bg-fee2e2);
 }
 
 .add-slot-row-btn {
   margin-top: 4px;
   padding: 10px 14px;
-  border: 1.5px dashed #cbd5e1;
+  border: 1.5px dashed var(--bd-cbd5e1);
   border-radius: 10px;
-  background: #f8fafc;
-  color: #2563eb;
+  background: var(--bg-f8fafc);
+  color: var(--tx-2563eb);
   font-size: 0.875rem;
   font-weight: 700;
   display: inline-flex;
@@ -1857,8 +1861,8 @@ watch(marketId, () => {
 }
 
 .add-slot-row-btn:hover {
-  background: #eff6ff;
-  border-color: #93c5fd;
+  background: var(--bg-eff6ff);
+  border-color: var(--bd-93c5fd);
 }
 
 .closed-day-banner {
@@ -1867,29 +1871,29 @@ watch(marketId, () => {
   gap: 14px;
   padding: 18px 22px;
   border-radius: 14px;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #92400e;
+  background: var(--bg-fffbeb);
+  border: 1px solid var(--bd-fde68a);
+  color: var(--tx-92400e);
   margin-top: 4px;
 }
 
 .closed-day-banner svg {
   flex-shrink: 0;
-  color: #d97706;
+  color: var(--tx-d97706);
 }
 
 .closed-day-banner strong {
   display: block;
   font-size: 1rem;
   font-weight: 700;
-  color: #78350f;
+  color: var(--tx-78350f);
 }
 
 .closed-day-banner p {
   margin: 4px 0 0;
   font-size: 0.9rem;
   font-weight: 500;
-  color: #92400e;
+  color: var(--tx-92400e);
 }
 
 .reopen-day-btn {
@@ -1917,8 +1921,8 @@ watch(marketId, () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
   padding: 14px 18px;
   margin-bottom: 16px;
@@ -1929,21 +1933,21 @@ watch(marketId, () => {
 .calendar-horizon-banner strong {
   display: block;
   font-size: 0.92rem;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .calendar-horizon-banner p {
   margin: 3px 0 0;
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .horizon-capsule {
   display: inline-flex;
   padding: 3px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
 }
 
 .horizon-tab {
@@ -1953,7 +1957,7 @@ watch(marketId, () => {
   border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
@@ -1978,10 +1982,10 @@ watch(marketId, () => {
   min-width: 125px;
   text-align: left;
   padding: 12px 14px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--bd-e2e8f0);
   border-radius: 12px;
-  background: #ffffff;
-  color: #334155;
+  background: var(--bg-ffffff);
+  color: var(--tx-334155);
   cursor: pointer;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
@@ -1989,20 +1993,20 @@ watch(marketId, () => {
 }
 
 .date-card:hover {
-  border-color: #93c5fd;
+  border-color: var(--bd-93c5fd);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
 }
 
 .date-card.active {
   border-color: #2563eb;
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
 }
 
 .date-card.closed {
   opacity: 0.65;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .date-card.has-override {
@@ -2019,12 +2023,12 @@ watch(marketId, () => {
 }
 
 .date-status {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
-.date-status.status-open { color: #16a34a; }
-.date-status.status-closed { color: #94a3b8; }
+.date-status.status-open { color: var(--tx-16a34a); }
+.date-status.status-closed { color: var(--tx-94a3b8); }
 
 .date-badge {
   font-size: 0.78rem;
@@ -2034,24 +2038,24 @@ watch(marketId, () => {
   white-space: nowrap;
 }
 
-.badge-primary { background: #dbeafe; color: #1e40af; }
-.badge-success { background: #dcfce7; color: #166534; }
-.badge-purple { background: #f3e8ff; color: #6b21a8; }
-.badge-neutral { background: #f1f5f9; color: #475569; }
-.badge-override { background: #fef3c7; color: #b45309; }
+.badge-primary { background: var(--bg-dbeafe); color: var(--tx-1e40af); }
+.badge-success { background: var(--bg-dcfce7); color: var(--tx-166534); }
+.badge-purple { background: var(--bg-f3e8ff); color: var(--tx-6b21a8); }
+.badge-neutral { background: var(--bg-f1f5f9); color: var(--tx-475569); }
+.badge-override { background: var(--bg-fef3c7); color: var(--tx-b45309); }
 
-.date-day-name { font-size: 0.8rem; font-weight: 700; color: #475569; }
-.date-card.active .date-day-name { color: #1e40af; }
-.date-day-num { font-size: 1.6rem; color: #0f172a; line-height: 1.1; margin: 2px 0 3px; font-weight: 800; }
-.date-card.active .date-day-num { color: #1d4ed8; }
-.date-month { font-size: 0.74rem; color: #64748b; font-weight: 500; }
-.date-card-bot { margin-top: 8px; padding-top: 6px; border-top: 1px dashed #e2e8f0; font-size: 0.72rem; }
-.day-cap-tag { color: #2563eb; font-weight: 700; }
-.day-closed-tag { color: #94a3b8; font-weight: 500; }
+.date-day-name { font-size: 0.8rem; font-weight: 700; color: var(--tx-475569); }
+.date-card.active .date-day-name { color: var(--tx-1e40af); }
+.date-day-num { font-size: 1.6rem; color: var(--tx-0f172a); line-height: 1.1; margin: 2px 0 3px; font-weight: 800; }
+.date-card.active .date-day-num { color: var(--tx-1d4ed8); }
+.date-month { font-size: 0.75rem; color: var(--tx-64748b); font-weight: 500; }
+.date-card-bot { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--bd-e2e8f0); font-size: 0.75rem; }
+.day-cap-tag { color: var(--tx-2563eb); font-weight: 700; }
+.day-closed-tag { color: var(--tx-94a3b8); font-weight: 500; }
 
 .single-override-box {
-  background: #f8fafc;
-  border: 1.5px solid #cbd5e1;
+  background: var(--bg-f8fafc);
+  border: 1.5px solid var(--bd-cbd5e1);
   border-radius: 12px;
   padding: 18px 20px;
   margin-top: 18px;
@@ -2069,13 +2073,13 @@ watch(marketId, () => {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .sob-head p {
   margin: 4px 0 0;
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .sob-actions {
@@ -2089,18 +2093,18 @@ watch(marketId, () => {
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
+  border: 1px solid var(--bd-cbd5e1);
+  background: var(--bg-ffffff);
   border-radius: 8px;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
   cursor: pointer;
 }
 
 .revert-override-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-0f172a);
 }
 
 .quick-toggle-day-btn {
@@ -2115,50 +2119,32 @@ watch(marketId, () => {
 }
 
 .quick-toggle-day-btn.btn-red {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--bg-fee2e2);
+  color: var(--tx-b91c1c);
 }
 
 .quick-toggle-day-btn.btn-red:hover {
-  background: #fecaca;
-  color: #991b1b;
+  background: var(--bg-fecaca);
+  color: var(--tx-991b1b);
 }
 
 .quick-toggle-day-btn.btn-green {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 
 .quick-toggle-day-btn.btn-green:hover {
-  background: #bbf7d0;
-  color: #166534;
+  background: var(--bg-bbf7d0);
+  color: var(--tx-166534);
 }
 
-/* Footer Bar */
-.schedule-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-top: 28px;
-  padding-top: 20px;
-  border-top: 1px solid #f1f5f9;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.footer-left .footer-hint {
-  font-size: 0.8rem;
-  color: #475569;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.footer-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+/* Page actions: สถานะการแก้ไข + ปุ่มบันทึก (ตำแหน่งเดียวกับหน้าจัดการผัง GIS) */
+.visit-page-actions { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.draft-status { display: inline-flex; align-items: center; gap: 7px; height: 34px; box-sizing: border-box; padding: 0 12px; border-radius: 999px; background: var(--bg-f1f5f9); color: var(--tx-475569); font-size: 0.8125rem; font-weight: 600; transition: all .2s ease; }
+.draft-status i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.draft-status.published { background: var(--bg-ecfdf5); color: var(--tx-15803d); border: 1px solid var(--bd-bbf7d0); }
+.draft-status.is-dirty { background: var(--bg-fff7ed); color: var(--tx-c2410c); border: 1px solid var(--bd-fed7aa); }
+.draft-status.is-dirty i { background: #ea580c; box-shadow: 0 0 0 3px rgba(234, 88, 12, .18); }
 
 /* Copy Modal */
 .copy-modal-overlay {
@@ -2175,10 +2161,13 @@ watch(marketId, () => {
 .copy-modal-card {
   width: 100%;
   max-width: 480px;
-  background: #ffffff;
+  max-height: min(90vh, 90dvh);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-ffffff);
   border-radius: 16px;
   box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   overflow: hidden;
 }
 
@@ -2187,7 +2176,7 @@ watch(marketId, () => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
 }
 
 .cm-title-wrap {
@@ -2200,25 +2189,29 @@ watch(marketId, () => {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .cm-close {
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   cursor: pointer;
   padding: 4px;
 }
 
 .cm-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 18px 20px;
 }
 
 .cm-desc {
   margin: 0 0 14px;
   font-size: 0.84rem;
-  color: #475569;
+  color: var(--tx-475569);
 }
 
 .copy-target-options {
@@ -2232,32 +2225,32 @@ watch(marketId, () => {
   align-items: flex-start;
   gap: 12px;
   padding: 12px 14px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--bd-e2e8f0);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .target-option-card:hover {
-  border-color: #93c5fd;
-  background: #f8fafc;
+  border-color: var(--bd-93c5fd);
+  background: var(--bg-f8fafc);
 }
 
 .target-option-card input {
   margin-top: 3px;
-  accent-color: #2563eb;
+  accent-color: var(--tx-2563eb);
 }
 
 .target-option-card strong {
   display: block;
   font-size: 0.86rem;
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .target-option-card p {
   margin: 2px 0 0;
   font-size: 0.76rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .cm-foot {
@@ -2265,8 +2258,8 @@ watch(marketId, () => {
   justify-content: flex-end;
   gap: 10px;
   padding: 14px 20px;
-  background: #f8fafc;
-  border-top: 1px solid #f1f5f9;
+  background: var(--bg-f8fafc);
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 
 @media (max-width: 992px) {

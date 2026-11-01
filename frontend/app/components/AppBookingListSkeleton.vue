@@ -55,9 +55,9 @@ withDefaults(defineProps<{
 
 .booking-skeleton-card {
   padding: 20px 22px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-left: 4px solid #dbeafe;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
+  border-left: 4px solid var(--bd-dbeafe);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -77,7 +77,7 @@ withDefaults(defineProps<{
 
 .skeleton-shape {
   display: block;
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 45%, #f1f5f9 65%);
+  background: linear-gradient(90deg, var(--bg-f1f5f9) 25%, var(--bg-e2e8f0) 45%, var(--bg-f1f5f9) 65%);
   background-size: 240% 100%;
   animation: bookingSkeletonShimmer 1.35s ease-in-out infinite;
 }
@@ -96,8 +96,8 @@ withDefaults(defineProps<{
   gap: 24px;
   margin-top: 22px;
   padding: 20px;
-  background: #f8fafc;
-  border: 1px solid #f1f5f9;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-f1f5f9);
   border-radius: 10px;
 }
 
@@ -118,7 +118,7 @@ withDefaults(defineProps<{
   gap: 28px;
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 
 .skeleton-detail { align-items: flex-start; }

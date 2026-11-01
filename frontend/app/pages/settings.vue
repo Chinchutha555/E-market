@@ -86,7 +86,7 @@
             </svg>
           </NuxtLink>
         </div>
-        <div style="padding: 16px 20px; color: #475569; font-size: 0.875rem; line-height: 1.6; background: #f8fafc; border-radius: 8px; margin: 0 20px 20px; border: 1px solid var(--border-subtle);">
+        <div style="padding: 16px 20px; color: var(--tx-475569); font-size: 0.875rem; line-height: 1.6; background: var(--bg-f8fafc); border-radius: 8px; margin: 0 20px 20px; border: 1px solid var(--border-subtle);">
           ระบบจัดการหัวข้อ/เรื่องที่ขอในการยื่นคำร้องทั่วไป เช่น ขอเปลี่ยนชื่อผู้ค้าประจำแผง, ขอติดตั้งมิเตอร์ไฟฟ้า, ขอยกเลิกการเช่า ฯลฯ สามารถกำหนดรหัส, ลำดับการแสดงผล และเปิด-ปิดการใช้งานเพื่อให้หน้าบ้านดึงไปแสดงผลโดยอัตโนมัติ
         </div>
       </div>
@@ -103,31 +103,31 @@
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 14px; font-size: 0.88rem;">
-            <div style="background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+            <div style="background: var(--bg-f8fafc); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
               <div style="color: var(--primary); font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 <span>JWT Authentication:</span>
               </div>
-              <div style="color: #334155;">เข้าถึงทุก API ผ่าน Authorization Header: <code>Bearer &lt;token&gt;</code> มาตรฐาน RFC 7519</div>
+              <div style="color: var(--tx-334155);">เข้าถึงทุก API ผ่าน Authorization Header: <code>Bearer &lt;token&gt;</code> มาตรฐาน RFC 7519</div>
             </div>
 
-            <div style="background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-              <div style="color: #2563eb; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <div style="background: var(--bg-f8fafc); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+              <div style="color: var(--tx-2563eb); font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
                 <span>Interactive Documentation:</span>
               </div>
-              <div style="color: #334155;">
+              <div style="color: var(--tx-334155);">
                 Swagger UI: <a href="http://localhost:8000/docs" target="_blank" style="color: var(--primary); text-decoration: underline; font-weight: 600;">http://localhost:8000/docs</a><br>
-                ReDoc: <a href="http://localhost:8000/redoc" target="_blank" style="color: #7c3aed; text-decoration: underline; font-weight: 600;">http://localhost:8000/redoc</a>
+                ReDoc: <a href="http://localhost:8000/redoc" target="_blank" style="color: var(--tx-7c3aed); text-decoration: underline; font-weight: 600;">http://localhost:8000/redoc</a>
               </div>
             </div>
 
-            <div style="background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-              <div style="color: #d97706; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <div style="background: var(--bg-f8fafc); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+              <div style="color: var(--tx-d97706); font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                 <span>Endpoints Security:</span>
               </div>
-              <div style="color: #334155;">CORS Allowed Origins, Pydantic Schema Validation, Direct Bcrypt Hashing, Password Expiry Policy.</div>
+              <div style="color: var(--tx-334155);">CORS Allowed Origins, Pydantic Schema Validation, Direct Bcrypt Hashing, Password Expiry Policy.</div>
             </div>
           </div>
         </div>
@@ -142,25 +142,25 @@
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.88rem;">
-            <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border: 1px solid var(--border-subtle); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; padding: 12px; background: var(--bg-f8fafc); border: 1px solid var(--border-subtle); border-radius: 8px;">
               <span style="color: var(--text-muted);">Frontend Framework:</span>
-              <strong style="color: #059669;">Nuxt.js (Nuxt 3.12 + Vue 3)</strong>
+              <strong style="color: var(--tx-059669);">Nuxt.js (Nuxt 3.12 + Vue 3)</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border: 1px solid var(--border-subtle); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; padding: 12px; background: var(--bg-f8fafc); border: 1px solid var(--border-subtle); border-radius: 8px;">
               <span style="color: var(--text-muted);">Backend Framework:</span>
-              <strong style="color: #2563eb;">Python FastAPI (REST API Standard)</strong>
+              <strong style="color: var(--tx-2563eb);">Python FastAPI (REST API Standard)</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border: 1px solid var(--border-subtle); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; padding: 12px; background: var(--bg-f8fafc); border: 1px solid var(--border-subtle); border-radius: 8px;">
               <span style="color: var(--text-muted);">Database & ORM:</span>
-              <strong style="color: #7c3aed;">SQLAlchemy 2.0 + SQLite</strong>
+              <strong style="color: var(--tx-7c3aed);">SQLAlchemy 2.0 + SQLite</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border: 1px solid var(--border-subtle); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; padding: 12px; background: var(--bg-f8fafc); border: 1px solid var(--border-subtle); border-radius: 8px;">
               <span style="color: var(--text-muted);">Authentication:</span>
-              <strong style="color: #d97706;">OAuth2 Bearer JWT Token (HS256)</strong>
+              <strong style="color: var(--tx-d97706);">OAuth2 Bearer JWT Token (HS256)</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border: 1px solid var(--border-subtle); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; padding: 12px; background: var(--bg-f8fafc); border: 1px solid var(--border-subtle); border-radius: 8px;">
               <span style="color: var(--text-muted);">UI Design System:</span>
-              <strong style="color: #4361ee;">Modern Royal Blue Light Design</strong>
+              <strong style="color: var(--tx-4361ee);">Modern Royal Blue Light Design</strong>
             </div>
           </div>
         </div>
@@ -170,23 +170,23 @@
     <!-- Modal: Create / Edit Zone -->
     <div v-if="showZoneModal" class="modal-overlay" @click.self="showZoneModal = false">
       <div class="modal-content">
-        <div class="modal-header">
-          <h3 style="font-size: 1.15rem;">{{ isEditing ? 'แก้ไขข้อมูลโซน' : 'เพิ่มโซนตลาดใหม่' }}</h3>
-          <button class="btn-logout" @click="showZoneModal = false" aria-label="ปิด">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
+        <AppModalHeader
+          :title="isEditing ? 'แก้ไขข้อมูลโซน' : 'เพิ่มโซนตลาดใหม่'"
+          subtitle="กำหนดรหัส ชื่อ และสีประจำโซนของตลาด"
+          icon="settings"
+          @close="showZoneModal = false"
+        />
 
         <form @submit.prevent="saveZone">
           <div class="modal-body">
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label" for="z_code">รหัสโซน (Zone Code) *</label>
+                <label class="form-label" for="z_code">รหัสโซน (Zone Code) <span class="req-star" aria-hidden="true">*</span></label>
                 <input id="z_code" v-model="formZone.code" type="text" required placeholder="เช่น E, F" class="form-input" maxlength="5" />
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="z_color">สีประจำโซน *</label>
+                <label class="form-label" for="z_color">สีประจำโซน <span class="req-star" aria-hidden="true">*</span></label>
                 <div style="display: flex; gap: 8px;">
                   <input id="z_color" v-model="formZone.color_code" type="color" class="form-input" style="width: 50px; padding: 2px;" />
                   <input v-model="formZone.color_code" type="text" class="form-input" style="flex: 1;" />
@@ -195,7 +195,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="z_name">ชื่อโซนตลาด *</label>
+              <label class="form-label" for="z_name">ชื่อโซนตลาด <span class="req-star" aria-hidden="true">*</span></label>
               <input id="z_name" v-model="formZone.name" type="text" required placeholder="เช่น โซน E: สินค้าโอทอปและของฝาก" class="form-input" />
             </div>
 
@@ -206,11 +206,8 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="showZoneModal = false">ยกเลิก</button>
-            <button type="submit" class="btn btn-primary" :disabled="saving">
-              <span v-if="saving">กำลังบันทึก...</span>
-              <span v-else>บันทึก</span>
-            </button>
+            <AppButton type="button" variant="secondary" size="md" @click="showZoneModal = false">ยกเลิก</AppButton>
+            <AppButton type="submit" variant="primary" size="md" :loading="saving">บันทึก</AppButton>
           </div>
         </form>
       </div>

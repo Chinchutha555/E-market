@@ -71,21 +71,22 @@
             />
 
             <!-- Primary Action: ยื่นคำร้องทั่วไป -->
-            <button type="button" class="btn-table-primary-action" @click="openCreateGeneralModal" title="ยื่นคำร้องทั่วไป">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              <span>ยื่นคำร้องทั่วไป</span>
-            </button>
+            <AppButton variant="primary" size="md" title="ยื่นคำร้องทั่วไป" @click="openCreateGeneralModal">
+              <template #prefix><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></template>
+              ยื่นคำร้องทั่วไป
+            </AppButton>
 
             <!-- Manage Application Types (Admin & Staff) -->
-            <NuxtLink
+            <AppButton
               v-if="isAdminOrStaff"
               to="/applications/types"
-              class="btn-table-manage-types"
+              variant="secondary"
+              size="md"
               title="จัดการประเภทคำร้อง"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
-              <span>จัดการประเภทคำร้อง</span>
-            </NuxtLink>
+              <template #prefix><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></template>
+              จัดการประเภทคำร้อง
+            </AppButton>
 
           </div>
         </div>
@@ -984,29 +985,23 @@
           </div>
 
           <!-- Empty State in Card View -->
-          <div v-else class="empty-state-box officer-empty-state">
-            <div class="empty-state-panel">
-              <div class="empty-icon" aria-hidden="true">
-                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                </svg>
-              </div>
-              <div class="empty-title">ไม่พบรายการคำร้องที่ค้นหา</div>
-              <div class="empty-desc">ลองตรวจสอบคำค้นหา หรือเปลี่ยนตัวกรองเพื่อดูรายการอื่น</div>
-              <button
-                v-if="searchQuery || activeTab !== 'all' || typeFilter !== 'all'"
-                type="button"
-                class="btn btn-outline-primary btn-sm"
-                style="margin-top: 14px;"
+          <AppEmptyState
+            v-else
+            variant="table"
+            icon="search"
+            title="ไม่พบรายการคำร้อง"
+            description="ลองเปลี่ยนคำค้นหาหรือตัวกรองเพื่อดูรายการอื่น"
+          >
+            <template v-if="searchQuery || activeTab !== 'all' || typeFilter !== 'all'" #actions>
+              <AppButton
+                variant="outline"
+                size="sm"
                 @click="searchQuery = ''; activeTab = 'all'; typeFilter = 'all'; pendingSubFilter = 'all'; currentPage = 1"
               >
-                ล้างตัวกรองทั้งหมด
-              </button>
-            </div>
-          </div>
+                ล้างตัวกรอง
+              </AppButton>
+            </template>
+          </AppEmptyState>
         </div>
 
         <!-- View 2: Table View -->
@@ -1033,7 +1028,7 @@
                     <span v-if="isStallLease(app)" class="badge-type badge-type-stall">ขอเช่าแผง</span>
                     <span v-else class="badge-type badge-type-general">คำร้องทั่วไป</span>
                   </div>
-                  <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 2px;">
+                  <div style="font-size: 0.75rem; color: var(--tx-94a3b8); margin-top: 2px;">
                     {{ app.created_at?.slice(0, 10) }}
                   </div>
                 </td>
@@ -1042,7 +1037,7 @@
                     <span class="badge badge-occupied">
                       แผง {{ app.stall_number }}
                     </span>
-                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">
+                    <div style="font-size: 0.75rem; color: var(--tx-64748b); margin-top: 2px;">
                       ฿{{ Number(app.stall_monthly_rate).toLocaleString() }}/ด. ({{ app.requested_period_months }} เดือน)
                     </div>
                   </template>
@@ -1057,22 +1052,22 @@
                   </template>
                 </td>
                 <td>
-                  <div style="font-weight: 600; color: #1e293b;">{{ app.applicant_name }}</div>
-                  <div style="font-size: 0.8125rem; color: #64748b;">{{ app.applicant_phone }}</div>
+                  <div style="font-weight: 600; color: var(--tx-1e293b);">{{ app.applicant_name }}</div>
+                  <div style="font-size: 0.8125rem; color: var(--tx-64748b);">{{ app.applicant_phone }}</div>
                 </td>
                 <td>
                   <template v-if="isStallLease(app)">
-                    <div style="font-weight: 600; color: #1e293b;">{{ app.shop_name }}</div>
-                    <div style="font-size: 0.8125rem; color: #94a3b8;">{{ app.product_type || '-' }}</div>
+                    <div style="font-weight: 600; color: var(--tx-1e293b);">{{ app.shop_name }}</div>
+                    <div style="font-size: 0.8125rem; color: var(--tx-94a3b8);">{{ app.product_type || '-' }}</div>
                   </template>
                   <template v-else>
-                    <div style="font-weight: 600; color: #1e293b;">{{ app.shop_name || app.applicant_name }}</div>
-                    <div style="font-size: 0.8125rem; color: #64748b; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" :title="app.review_note || app.subject">
+                    <div style="font-weight: 600; color: var(--tx-1e293b);">{{ app.shop_name || app.applicant_name }}</div>
+                    <div style="font-size: 0.8125rem; color: var(--tx-64748b); max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" :title="app.review_note || app.subject">
                       {{ app.review_note || app.subject || '-' }}
                     </div>
                   </template>
                 </td>
-                <td style="color: #475569;">{{ app.requested_start_date || app.created_at?.slice(0, 10) }}</td>
+                <td style="color: var(--tx-475569);">{{ app.requested_start_date || app.created_at?.slice(0, 10) }}</td>
                 <td>
                   <span class="status-pill-badge" :class="getStatusPillClass(app.status)">
                     {{ getStatusBadgeLabel(app.status) }}
@@ -1213,7 +1208,7 @@
               </tr>
 
               <tr v-if="filteredApplications.length === 0">
-                <td colspan="8" style="text-align: center; color: #94a3b8; padding: 48px;">
+                <td colspan="8" style="text-align: center; color: var(--tx-94a3b8); padding: 48px;">
                   ไม่พบรายการคำร้องขอเช่าตามเงื่อนไขที่ค้นหา
                 </td>
               </tr>
@@ -1240,29 +1235,13 @@
     >
       <div class="modal-content reject-modal-box">
         <!-- Modal Header -->
-        <div class="modal-header">
-          <div class="modal-header-title-wrap">
-            <div class="modal-icon-badge modal-icon-danger">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="15" y1="9" x2="9" y2="15"></line>
-                <line x1="9" y1="9" x2="15" y2="15"></line>
-              </svg>
-            </div>
-            <div>
-              <h3 class="modal-title-danger">{{ rejectAction === 'return_revision' ? 'ระบุเหตุผลส่งกลับแก้ไข' : 'ระบุเหตุผลไม่อนุมัติคำร้อง' }}</h3>
-              <div class="modal-subtitle">
-                คำร้องเลขที่ <strong style="color: #2563eb;">{{ targetAppForReject.application_number }}</strong>
-              </div>
-            </div>
-          </div>
-          <button class="btn-modal-close" @click="closeRejectModal" aria-label="ปิด">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
+        <AppModalHeader
+          :title="rejectAction === 'return_revision' ? 'ระบุเหตุผลส่งกลับแก้ไข' : 'ระบุเหตุผลไม่อนุมัติคำร้อง'"
+          :subtitle="`คำร้องเลขที่ ${targetAppForReject.application_number}`"
+          icon="warning"
+          :tone="rejectAction === 'return_revision' ? 'warning' : 'danger'"
+          @close="closeRejectModal"
+        />
 
         <!-- Modal Body -->
         <div class="modal-body">
@@ -1307,7 +1286,7 @@
           <!-- Textarea Field -->
           <div>
             <label class="form-label" for="reject-comment-input">
-              หมายเหตุ / เหตุผล <span style="color: #dc2626;">*</span>
+              หมายเหตุ / เหตุผล <span class="req-star" aria-hidden="true">*</span>
             </label>
             <textarea
               id="reject-comment-input"
@@ -1348,32 +1327,12 @@
     <div v-if="revisionTarget" class="modal-overlay" @click.self="closeRevision">
       <div class="modal-content revision-modal-content" role="dialog" aria-modal="true" aria-labelledby="revision-title">
         <!-- Modal Header -->
-        <div class="modal-header">
-          <div class="revision-header-left">
-            <div class="revision-icon-badge">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-              </svg>
-            </div>
-            <div>
-              <h3 id="revision-title" class="revision-modal-title">แก้ไขคำร้องขอเช่าแผงค้า (Edit Lease Application)</h3>
-              <div class="revision-modal-subtitle">
-                แผงเลขที่: <strong>{{ revisionTargetStallNumber }}</strong>
-                <span class="revision-sub-dot">•</span>
-                <span>เลขที่คำร้อง: <strong>{{ revisionTarget.application_number || revisionTarget.application_no || '-' }}</strong></span>
-              </div>
-            </div>
-          </div>
-          <button type="button" class="btn-modal-close" aria-label="ปิด" @click="closeRevision">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
+        <AppModalHeader
+          title="แก้ไขคำร้องขอเช่าแผงค้า"
+          :subtitle="`แผง ${revisionTargetStallNumber} · เลขที่คำร้อง ${revisionTarget.application_number || revisionTarget.application_no || '-'}`"
+          icon="edit"
+          @close="closeRevision"
+        />
 
         <!-- Form Body -->
         <form novalidate @submit.prevent="submitRevision">
@@ -1501,118 +1460,17 @@
               </div>
             </div>
 
-            <!-- ลำดับที่ 6: สำเนาบัตรประชาชน (Modern Document Attachment UI) -->
-            <div class="form-group upload-section-container">
-              <div class="upload-header-bar">
-                <label class="upload-label" for="rev_id_copy">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-                    <circle cx="8" cy="10" r="2"></circle>
-                    <line x1="14" y1="9" x2="18" y2="9"></line>
-                    <line x1="14" y1="13" x2="18" y2="13"></line>
-                    <line x1="6" y1="16" x2="18" y2="16"></line>
-                  </svg>
-                  <span>สำเนาบัตรประชาชน (ID Card Copy)</span>
-                </label>
-                <span class="upload-badge-spec">PDF, JPG หรือ PNG (ไม่เกิน 3 MB)</span>
-              </div>
-
-              <input
-                ref="revIdCardInputRef"
-                id="rev_id_copy"
-                type="file"
-                class="sr-only"
-                accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                @change="onRevIDCardCopyChange"
-              />
-
-              <!-- การ์ดพรีวิวไฟล์เมื่อเลือกเอกสารแล้ว -->
-              <div v-if="revIdCardCopy" class="id-card-preview-box">
-                <div class="preview-thumb-wrap">
-                  <img v-if="revIdCardPreviewUrl" :src="revIdCardPreviewUrl" alt="ID Card Preview" class="preview-thumb-img" />
-                  <div v-else class="preview-pdf-badge">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <polyline points="14 2 14 8 20 8"></polyline>
-                      <line x1="16" y1="13" x2="8" y2="13"></line>
-                      <line x1="16" y1="17" x2="8" y2="17"></line>
-                    </svg>
-                    <span>PDF</span>
-                  </div>
-                </div>
-
-                <div class="preview-details">
-                  <div class="preview-filename" :title="revIdCardCopy.name">{{ revIdCardCopy.name }}</div>
-                  <div class="preview-meta">
-                    <span class="meta-size">{{ formatFileSize(revIdCardCopy.size) }}</span>
-                    <span class="meta-check">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                      <span>พร้อมแนบไฟล์</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div class="preview-actions">
-                  <button type="button" class="btn-preview-change" @click="triggerRevFileInput" title="เปลี่ยนไฟล์">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M21 2v6h-6"></path>
-                      <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
-                      <path d="M3 22v-6h6"></path>
-                      <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
-                    </svg>
-                    <span>เปลี่ยน</span>
-                  </button>
-                  <button type="button" class="btn-preview-delete" @click="removeRevIDCardFile" title="ลบไฟล์">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- กล่อง Dropzone แบบคลีนเมื่อยังไม่ได้เลือกไฟล์ใหม่ -->
-              <div
-                v-else
-                class="id-card-dropzone"
-                :class="{ 'is-drag-over': isRevDragging, 'has-error': !!revIdCardCopyError }"
-                @click="triggerRevFileInput"
-                @dragover.prevent="isRevDragging = true"
-                @dragleave.prevent="isRevDragging = false"
-                @drop.prevent="handleRevFileDrop"
-              >
-                <div class="dropzone-icon-box">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                  </svg>
-                </div>
-                <div class="dropzone-prompt">
-                  <div class="prompt-title">
-                    <span class="prompt-link">คลิกเพื่อเลือกไฟล์</span> หรือลากไฟล์มาวางที่นี่
-                  </div>
-                  <div class="prompt-desc">แนบสำเนาบัตรประจำตัวประชาชนฉบับแก้ไข พร้อมรับรองสำเนาถูกต้อง</div>
-                </div>
-                <div class="dropzone-cta-btn">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                  </svg>
-                  <span>เลือกไฟล์</span>
-                </div>
-              </div>
-
-              <div v-if="revIdCardCopyError" class="upload-error-msg">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-                <span>{{ revIdCardCopyError }}</span>
-              </div>
-            </div>
+            <AppFileUpload
+              v-model="revIdCardCopy"
+              class="form-group"
+              label="สำเนาบัตรประชาชน (ID Card Copy)"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              :max-size-mb="3"
+              hint="PDF, JPG หรือ PNG ขนาดไม่เกิน 3MB"
+              description="แนบสำเนาบัตรประจำตัวประชาชนฉบับแก้ไข พร้อมรับรองสำเนาถูกต้อง"
+              :error="revIdCardCopyError"
+              @error="revIdCardCopyError = $event"
+            />
 
             <!-- ส่วนที่ 2: ข้อมูลร้านค้าและสินค้าที่ขอจำหน่าย -->
             <h4 class="form-section-heading">
@@ -1732,35 +1590,14 @@
     >
       <div class="modal-content general-modal-box">
         <!-- Modal Header -->
-        <div class="modal-header">
-          <div class="modal-header-title-wrap">
-            <div class="modal-icon-badge modal-icon-purple">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-              </svg>
-            </div>
-            <div>
-              <h3 class="modal-title-general">ยื่นคำร้องทั่วไป</h3>
-              <div class="modal-subtitle">บันทึกคำร้องทั่วไปสำหรับผู้ค้าหรือประชาชนทั่วไป</div>
-            </div>
-          </div>
-          <button class="btn-modal-close" @click="closeCreateGeneralModal" aria-label="ปิด">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
+        <AppModalHeader title="ยื่นคำร้องทั่วไป" subtitle="บันทึกคำร้องทั่วไปสำหรับผู้ค้าหรือประชาชนทั่วไป" icon="document" @close="closeCreateGeneralModal" />
 
         <!-- Modal Body -->
         <div class="modal-body general-modal-body">
           <form @submit.prevent="submitGeneralApplication" class="general-app-form">
             <div class="form-grid-2">
               <div class="form-group">
-                <label class="form-label" for="gen-applicant-name">ชื่อ-นามสกุล ผู้ยื่นคำร้อง <span class="text-danger">*</span></label>
+                <label class="form-label" for="gen-applicant-name">ชื่อ-นามสกุล ผู้ยื่นคำร้อง <span class="req-star" aria-hidden="true">*</span></label>
                 <input
                   id="gen-applicant-name"
                   v-model="generalForm.applicant_name"
@@ -1772,7 +1609,7 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="gen-applicant-phone">เบอร์โทรศัพท์ติดต่อ <span class="text-danger">*</span></label>
+                <label class="form-label" for="gen-applicant-phone">เบอร์โทรศัพท์ติดต่อ <span class="req-star" aria-hidden="true">*</span></label>
                 <input
                   id="gen-applicant-phone"
                   v-model="generalForm.applicant_phone"
@@ -1832,7 +1669,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="gen-subject">เรื่อง / หัวข้อคำร้อง <span class="text-danger">*</span></label>
+              <label class="form-label" for="gen-subject">เรื่อง / หัวข้อคำร้อง <span class="req-star" aria-hidden="true">*</span></label>
               <input
                 id="gen-subject"
                 v-model="generalForm.subject"
@@ -1844,7 +1681,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="gen-details">รายละเอียดคำร้อง <span class="text-danger">*</span></label>
+              <label class="form-label" for="gen-details">รายละเอียดคำร้อง <span class="req-star" aria-hidden="true">*</span></label>
               <textarea
                 id="gen-details"
                 v-model="generalForm.details"
@@ -1906,16 +1743,13 @@
   <Teleport to="body">
     <div v-if="idCopyPreviewUrl" class="id-copy-overlay" @click.self="closeIDCopyPreview">
       <section class="id-copy-modal" role="dialog" aria-modal="true" aria-labelledby="id-copy-title">
-        <header class="id-copy-header">
-          <h2 id="id-copy-title">สำเนาบัตรประชาชน</h2>
-          <button type="button" class="id-copy-close" aria-label="ปิดหน้าต่าง" @click="closeIDCopyPreview"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-        </header>
+        <AppModalHeader title="สำเนาบัตรประชาชน" subtitle="ตัวอย่างเอกสารประกอบคำร้อง" icon="document" @close="closeIDCopyPreview" />
         <div class="id-copy-content">
           <img v-if="idCopyPreviewType.startsWith('image/')" :src="idCopyPreviewUrl" alt="สำเนาบัตรประชาชน" />
           <iframe v-else-if="idCopyPreviewType === 'application/pdf'" :src="idCopyPreviewUrl" title="สำเนาบัตรประชาชน"></iframe>
           <p v-else>ไม่สามารถแสดงตัวอย่างไฟล์ประเภทนี้ได้</p>
         </div>
-        <footer class="id-copy-footer"><AppButton variant="secondary" @click="closeIDCopyPreview">ปิด</AppButton></footer>
+        <footer class="id-copy-footer"><AppButton variant="secondary" size="md" @click="closeIDCopyPreview">ปิด</AppButton></footer>
       </section>
     </div>
   </Teleport>
@@ -1925,6 +1759,7 @@
 
 <script setup lang="ts">
 import ApplicationActionsMenu from '~/components/ApplicationActionsMenu.vue'
+import AppFileUpload from '~/components/AppFileUpload.vue'
 import OfficerSignatureModal from '~/components/OfficerSignatureModal.vue'
 import ApplicationDocumentPreview from '~/components/ApplicationDocumentPreview.vue'
 const documentPreviewApplication = ref<any | null>(null)
@@ -1982,64 +1817,10 @@ const revisionSaving = ref(false)
 const revisionError = ref('')
 const revIdCardCopy = ref<File | null>(null)
 const revIdCardCopyError = ref('')
-const revIdCardInputRef = ref<HTMLInputElement | null>(null)
-
-const formatFileSize = (bytes: number) => {
-  if (!bytes || bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1)
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
-}
-const isRevDragging = ref(false)
-const revIdCardPreviewUrl = ref('')
-
-const triggerRevFileInput = () => {
-  revIdCardInputRef.value?.click()
-}
-
-const handleRevFileSelect = (file: File | null) => {
-  revIdCardCopyError.value = ''
-  if (revIdCardPreviewUrl.value) {
-    URL.revokeObjectURL(revIdCardPreviewUrl.value)
-    revIdCardPreviewUrl.value = ''
-  }
-  if (!file) {
-    revIdCardCopy.value = null
-    return
-  }
-  if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type) || file.size > 3 * 1024 * 1024) {
-    revIdCardCopy.value = null
-    if (revIdCardInputRef.value) revIdCardInputRef.value.value = ''
-    revIdCardCopyError.value = 'กรุณาเลือกไฟล์ PDF, JPG หรือ PNG ขนาดไม่เกิน 3 MB'
-    return
-  }
-  revIdCardCopy.value = file
-  if (file.type.startsWith('image/')) {
-    revIdCardPreviewUrl.value = URL.createObjectURL(file)
-  }
-}
-
-const onRevIDCardCopyChange = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0] || null
-  handleRevFileSelect(file)
-}
-
-const handleRevFileDrop = (event: DragEvent) => {
-  isRevDragging.value = false
-  const file = event.dataTransfer?.files?.[0] || null
-  handleRevFileSelect(file)
-}
 
 const removeRevIDCardFile = () => {
-  if (revIdCardPreviewUrl.value) {
-    URL.revokeObjectURL(revIdCardPreviewUrl.value)
-    revIdCardPreviewUrl.value = ''
-  }
   revIdCardCopy.value = null
   revIdCardCopyError.value = ''
-  if (revIdCardInputRef.value) revIdCardInputRef.value.value = ''
 }
 
 const readRevIDCardCopy = (file: File) => new Promise<string>((resolve, reject) => {
@@ -3230,18 +3011,18 @@ watch(() => route.query.booking, (value, previous) => {
 .collapsed-actions-group :deep(.app-action-detail), .footer-right-actions :deep(.app-action-detail), .table-actions-cell :deep(.app-action-detail) { order: 3; }
 .collapsed-actions-group :deep(.more-root), .footer-right-actions :deep(.more-root), .table-actions-cell :deep(.more-root) { order: 4; }
 .id-copy-overlay { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 16px; background: rgba(15, 23, 42, .55); }
-.id-copy-modal { width: min(760px, 100%); max-height: 90vh; display: flex; flex-direction: column; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 35px rgba(15,23,42,.2); }
+.id-copy-modal { width: min(760px, 100%); max-height: 90vh; display: flex; flex-direction: column; background: var(--bg-ffffff); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 35px rgba(15,23,42,.2); }
 .id-copy-header, .id-copy-footer { display: flex; align-items: center; padding: 16px 20px; }
-.id-copy-header { justify-content: space-between; border-bottom: 1px solid #e2e8f0; }
-.id-copy-header h2 { margin: 0; font-size: 1.125rem; color: #1e293b; }
-.id-copy-close { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 8px; background: #f1f5f9; color: #475569; cursor: pointer; }
-.id-copy-content { display: grid; place-items: center; overflow: auto; min-height: 240px; padding: 16px; background: #f8fafc; }
+.id-copy-header { justify-content: space-between; border-bottom: 1px solid var(--bd-e2e8f0); }
+.id-copy-header h2 { margin: 0; font-size: 1.125rem; color: var(--tx-1e293b); }
+.id-copy-close { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 8px; background: var(--bg-f1f5f9); color: var(--tx-475569); cursor: pointer; }
+.id-copy-content { display: grid; place-items: center; overflow: auto; min-height: 240px; padding: 16px; background: var(--bg-f8fafc); }
 .id-copy-content img { max-width: 100%; max-height: 65vh; object-fit: contain; }
-.id-copy-content iframe { width: 100%; height: 65vh; border: 0; background: white; }
-.id-copy-content p { font-size: .875rem; color: #64748b; }
-.id-copy-footer { justify-content: flex-end; border-top: 1px solid #e2e8f0; }
+.id-copy-content iframe { width: 100%; height: 65vh; border: 0; background: var(--bg-ffffff); }
+.id-copy-content p { font-size: .875rem; color: var(--tx-64748b); }
+.id-copy-footer { justify-content: flex-end; border-top: 1px solid var(--bd-e2e8f0); }
 
-.shop-product { color: #64748b; font-size: .875rem; overflow-wrap: anywhere; }
+.shop-product { color: var(--tx-64748b); font-size: .875rem; overflow-wrap: anywhere; }
 .applicant-phone-row { margin-top: 6px; }
 
 /* -------------------------------------------------------------
@@ -3265,14 +3046,14 @@ watch(() => route.query.booking, (value, previous) => {
 .section-title {
   font-size: 1.35rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   letter-spacing: -0.02em;
   margin: 0;
 }
 
 .item-count-subtitle {
   font-size: 0.825rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
@@ -3293,11 +3074,11 @@ watch(() => route.query.booking, (value, previous) => {
 .search-input {
   width: 100%;
   padding: 8px 32px 8px 34px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 9px;
   font-size: 0.83rem;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-family: inherit;
   transition: all 0.2s ease;
   height: 38px;
@@ -3312,7 +3093,7 @@ watch(() => route.query.booking, (value, previous) => {
 .search-icon {
   position: absolute;
   left: 10px;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   pointer-events: none;
 }
 
@@ -3321,7 +3102,7 @@ watch(() => route.query.booking, (value, previous) => {
   right: 8px;
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   cursor: pointer;
   padding: 3px;
   display: flex;
@@ -3330,7 +3111,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .clear-search-btn:hover {
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 /* Officer KPI Ribbon */
@@ -3354,8 +3135,8 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .kpi-ribbon-card {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 14px;
   padding: 14px 16px;
   display: flex;
@@ -3393,7 +3174,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 .kpi-title {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   line-height: 1.2;
   margin-bottom: 4px;
@@ -3409,7 +3190,7 @@ watch(() => route.query.booking, (value, previous) => {
 .kpi-count {
   font-size: 1.45rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   line-height: 1;
 }
 
@@ -3423,65 +3204,65 @@ watch(() => route.query.booking, (value, previous) => {
 
 /* 1. ทั้งหมด */
 .kpi-all .kpi-icon-box {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #dbeafe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-dbeafe);
 }
 .kpi-all .kpi-unit-pill {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
 }
 .kpi-all.active {
   border-color: #2563eb;
-  background: #f8faff;
+  background: var(--bg-f8faff);
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
 }
 
 /* 2. รอดำเนินการ */
 .kpi-pending .kpi-icon-box {
-  background: #fffbeb;
-  color: #d97706;
-  border: 1px solid #fef3c7;
+  background: var(--bg-fffbeb);
+  color: var(--tx-d97706);
+  border: 1px solid var(--bd-fef3c7);
 }
 .kpi-pending .kpi-unit-pill {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--bg-fef3c7);
+  color: var(--tx-b45309);
 }
 .kpi-pending.active {
   border-color: #f59e0b;
-  background: #fffdf7;
+  background: var(--bg-fffdf7);
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
 }
 
 /* 3. อนุมัติแล้ว */
 .kpi-applied .kpi-icon-box {
-  background: #f5f3ff;
-  color: #7c3aed;
-  border: 1px solid #ede9fe;
+  background: var(--bg-f5f3ff);
+  color: var(--tx-7c3aed);
+  border: 1px solid var(--bd-ede9fe);
 }
 .kpi-applied .kpi-unit-pill {
-  background: #ede9fe;
-  color: #6d28d9;
+  background: var(--bg-ede9fe);
+  color: var(--tx-6d28d9);
 }
 .kpi-applied.active {
   border-color: #8b5cf6;
-  background: #faf5ff;
+  background: var(--bg-faf5ff);
   box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
 /* 4. ยกเลิก/ส่งกลับ */
 .kpi-cancelled .kpi-icon-box {
-  background: #f1f5f9;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
+  border: 1px solid var(--bd-e2e8f0);
 }
 .kpi-cancelled .kpi-unit-pill {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
 }
 .kpi-cancelled.active {
-  border-color: #94a3b8;
-  background: #f8fafc;
+  border-color: var(--bd-94a3b8);
+  background: var(--bg-f8fafc);
   box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.18);
 }
 
@@ -3497,9 +3278,9 @@ watch(() => route.query.booking, (value, previous) => {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-64748b);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3509,9 +3290,9 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .kpi-info-btn:hover {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  border-color: var(--bd-93c5fd);
+  color: var(--tx-2563eb);
   transform: scale(1.08);
 }
 
@@ -3520,8 +3301,8 @@ watch(() => route.query.booking, (value, previous) => {
   top: calc(100% + 6px);
   right: -4px;
   width: 250px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
   padding: 12px;
@@ -3533,12 +3314,12 @@ watch(() => route.query.booking, (value, previous) => {
 .kpi-popover-header {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   display: flex;
   align-items: center;
   gap: 6px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   margin-bottom: 8px;
 }
 
@@ -3555,19 +3336,19 @@ watch(() => route.query.booking, (value, previous) => {
   padding: 6px 8px;
   border-radius: 8px;
   font-size: 0.8rem;
-  color: #334155;
+  color: var(--tx-334155);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .kpi-popover-item:hover {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .kpi-popover-item.is-selected {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   font-weight: 600;
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .kpi-status-dot {
@@ -3598,9 +3379,9 @@ watch(() => route.query.booking, (value, previous) => {
 .kpi-popover-reset {
   margin-top: 8px;
   padding-top: 6px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
   font-size: 0.75rem;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 600;
   text-align: center;
   cursor: pointer;
@@ -3613,8 +3394,8 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 8px;
   flex-wrap: wrap;
   padding: 6px 10px;
-  background: #ffffff;
-  border: 1px solid #eef2f6;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
   margin-top: -12px;
@@ -3663,184 +3444,184 @@ watch(() => route.query.booking, (value, previous) => {
 
 /* 1. All chip (Slate / Neutral) */
 .subfilter-chip.chip-all {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #475569;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-475569);
 }
 .subfilter-chip.chip-all .subfilter-badge {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-475569);
 }
 .subfilter-chip.chip-all:hover:not(.active) {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #1e293b;
+  background: var(--bg-f1f5f9);
+  border-color: var(--bd-cbd5e1);
+  color: var(--tx-1e293b);
 }
 .subfilter-chip.chip-all.active {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   border: 1.5px solid #3b82f6;
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(37, 99, 235, 0.12);
 }
 .subfilter-chip.chip-all.active .subfilter-badge {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--bg-dbeafe);
+  color: var(--tx-1d4ed8);
   font-weight: 700;
 }
 
 /* 2. Amber chip (รอ จนท. ตรวจสอบ) */
 .subfilter-chip.chip-amber {
-  background: #fffbeb;
-  border: 1px solid #fef3c7;
-  color: #92400e;
+  background: var(--bg-fffbeb);
+  border: 1px solid var(--bd-fef3c7);
+  color: var(--tx-92400e);
 }
 .subfilter-chip.chip-amber .subfilter-dot {
   background: #f59e0b;
 }
 .subfilter-chip.chip-amber .subfilter-badge {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--bg-fef3c7);
+  color: var(--tx-b45309);
 }
 .subfilter-chip.chip-amber:hover:not(.active) {
-  background: #fef3c7;
-  border-color: #fde68a;
-  color: #78350f;
+  background: var(--bg-fef3c7);
+  border-color: var(--bd-fde68a);
+  color: var(--tx-78350f);
 }
 .subfilter-chip.chip-amber.active {
-  background: #fef3c7;
+  background: var(--bg-fef3c7);
   border: 1.5px solid #f59e0b;
-  color: #78350f;
+  color: var(--tx-78350f);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(245, 158, 11, 0.15);
 }
 .subfilter-chip.chip-amber.active .subfilter-badge {
   background: #fde68a;
-  color: #78350f;
+  color: var(--tx-78350f);
   font-weight: 700;
 }
 
 /* 3. Blue chip (รอ ตรวจสอบหนี้) */
 .subfilter-chip.chip-blue {
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  color: #1e40af;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-dbeafe);
+  color: var(--tx-1e40af);
 }
 .subfilter-chip.chip-blue .subfilter-dot {
   background: #3b82f6;
 }
 .subfilter-chip.chip-blue .subfilter-badge {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--bg-dbeafe);
+  color: var(--tx-1d4ed8);
 }
 .subfilter-chip.chip-blue:hover:not(.active) {
-  background: #dbeafe;
-  border-color: #bfdbfe;
-  color: #1e3a8a;
+  background: var(--bg-dbeafe);
+  border-color: var(--bd-bfdbfe);
+  color: var(--tx-1e3a8a);
 }
 .subfilter-chip.chip-blue.active {
-  background: #dbeafe;
+  background: var(--bg-dbeafe);
   border: 1.5px solid #3b82f6;
-  color: #1e3a8a;
+  color: var(--tx-1e3a8a);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(59, 130, 246, 0.15);
 }
 .subfilter-chip.chip-blue.active .subfilter-badge {
-  background: #bfdbfe;
-  color: #1e3a8a;
+  background: var(--bg-bfdbfe);
+  color: var(--tx-1e3a8a);
   font-weight: 700;
 }
 
 /* 4. Purple chip (รอ ผอ.ตลาด) */
 .subfilter-chip.chip-purple {
-  background: #faf5ff;
-  border: 1px solid #f3e8ff;
-  color: #6b21a8;
+  background: var(--bg-faf5ff);
+  border: 1px solid var(--bd-f3e8ff);
+  color: var(--tx-6b21a8);
 }
 .subfilter-chip.chip-purple .subfilter-dot {
   background: #9333ea;
 }
 .subfilter-chip.chip-purple .subfilter-badge {
-  background: #f3e8ff;
-  color: #7e22ce;
+  background: var(--bg-f3e8ff);
+  color: var(--tx-7e22ce);
 }
 .subfilter-chip.chip-purple:hover:not(.active) {
-  background: #f3e8ff;
-  border-color: #e9d5ff;
-  color: #581c87;
+  background: var(--bg-f3e8ff);
+  border-color: var(--bd-e9d5ff);
+  color: var(--tx-581c87);
 }
 .subfilter-chip.chip-purple.active {
-  background: #f3e8ff;
+  background: var(--bg-f3e8ff);
   border: 1.5px solid #9333ea;
-  color: #581c87;
+  color: var(--tx-581c87);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(147, 51, 234, 0.15);
 }
 .subfilter-chip.chip-purple.active .subfilter-badge {
-  background: #e9d5ff;
-  color: #581c87;
+  background: var(--bg-e9d5ff);
+  color: var(--tx-581c87);
   font-weight: 700;
 }
 
 /* 5. Green chip (รอ ผอ.สำนักตลาด) */
 .subfilter-chip.chip-green {
-  background: #f0fdf4;
-  border: 1px solid #dcfce7;
-  color: #166534;
+  background: var(--bg-f0fdf4);
+  border: 1px solid var(--bd-dcfce7);
+  color: var(--tx-166534);
 }
 .subfilter-chip.chip-green .subfilter-dot {
   background: #10b981;
 }
 .subfilter-chip.chip-green .subfilter-badge {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 .subfilter-chip.chip-green:hover:not(.active) {
-  background: #dcfce7;
-  border-color: #bbf7d0;
-  color: #14532d;
+  background: var(--bg-dcfce7);
+  border-color: var(--bd-bbf7d0);
+  color: var(--tx-14532d);
 }
 .subfilter-chip.chip-green.active {
-  background: #dcfce7;
+  background: var(--bg-dcfce7);
   border: 1.5px solid #10b981;
-  color: #14532d;
+  color: var(--tx-14532d);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(16, 185, 129, 0.15);
 }
 .subfilter-chip.chip-green.active .subfilter-badge {
-  background: #bbf7d0;
-  color: #14532d;
+  background: var(--bg-bbf7d0);
+  color: var(--tx-14532d);
   font-weight: 700;
 }
 
 /* 6. Orange chip (ส่งกลับแก้ไข) */
 .subfilter-chip.chip-orange {
-  background: #fff7ed;
-  border: 1px solid #ffedd5;
-  color: #9a3412;
+  background: var(--bg-fff7ed);
+  border: 1px solid var(--bd-ffedd5);
+  color: var(--tx-9a3412);
 }
 .subfilter-chip.chip-orange .subfilter-dot {
   background: #ea580c;
 }
 .subfilter-chip.chip-orange .subfilter-badge {
-  background: #ffedd5;
-  color: #c2410c;
+  background: var(--bg-ffedd5);
+  color: var(--tx-c2410c);
 }
 .subfilter-chip.chip-orange:hover:not(.active) {
-  background: #ffedd5;
-  border-color: #fed7aa;
-  color: #7c2d12;
+  background: var(--bg-ffedd5);
+  border-color: var(--bd-fed7aa);
+  color: var(--tx-7c2d12);
 }
 .subfilter-chip.chip-orange.active {
-  background: #ffedd5;
+  background: var(--bg-ffedd5);
   border: 1.5px solid #ea580c;
-  color: #7c2d12;
+  color: var(--tx-7c2d12);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(234, 88, 12, 0.15);
 }
 .subfilter-chip.chip-orange.active .subfilter-badge {
-  background: #fed7aa;
-  color: #7c2d12;
+  background: var(--bg-fed7aa);
+  color: var(--tx-7c2d12);
   font-weight: 700;
 }
 
@@ -3863,8 +3644,8 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 18px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
   cursor: pointer;
   text-align: left;
@@ -3872,7 +3653,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .officer-project-header:hover {
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
 }
 
 .officer-project-header .header-left-content {
@@ -3882,7 +3663,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .chevron-indicator {
-  color: #64748b;
+  color: var(--tx-64748b);
   transition: transform 0.25s ease;
 }
 
@@ -3891,7 +3672,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .accordion-header-icon {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   display: flex;
   align-items: center;
 }
@@ -3899,17 +3680,17 @@ watch(() => route.query.booking, (value, previous) => {
 .market-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .market-count-pill {
   font-size: 0.78rem;
   font-weight: 600;
   padding: 3px 10px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
-  color: #475569;
+  color: var(--tx-475569);
 }
 
 .market-accordion-body {
@@ -3920,9 +3701,9 @@ watch(() => route.query.booking, (value, previous) => {
 
 /* Booking Item Card (Application) */
 .booking-item-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-left: 4px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
+  border-left: 4px solid var(--bd-cbd5e1);
   border-radius: 14px;
   padding: 20px 22px;
   transition: all 0.2s ease;
@@ -3950,7 +3731,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .booking-item-card.border-status-muted {
-  border-left: 4px solid #94a3b8;
+  border-left: 4px solid var(--bd-94a3b8);
 }
 
 /* Card Top Row */
@@ -3986,9 +3767,9 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .circle-status-icon.blue-circle {
-  background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, var(--bg-eff6ff) 0%, var(--bg-e0e7ff) 100%);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-bfdbfe);
   box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08);
 }
 
@@ -4006,7 +3787,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 .booking-label {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 600;
   line-height: 1.2;
 }
@@ -4014,7 +3795,7 @@ watch(() => route.query.booking, (value, previous) => {
 .booking-id-text {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -4024,7 +3805,7 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   gap: 5px;
   margin-top: 3px;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-size: 0.78rem;
   font-weight: 500;
 }
@@ -4048,39 +3829,39 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .pill-green {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 
 .pill-amber {
-  background: #fef3c7;
-  color: #d97706;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
 }
 
 .pill-blue {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
 }
 
 .pill-purple {
-  background: #f5f3ff;
-  color: #7c3aed;
+  background: var(--bg-f5f3ff);
+  color: var(--tx-7c3aed);
 }
 
 .pill-gray {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
 }
 
 .pill-red {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
 }
 
 .card-collapse-btn {
   background: transparent;
   border: none;
-  color: #64748b;
+  color: var(--tx-64748b);
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -4102,7 +3883,7 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8rem;
 }
 
@@ -4115,30 +3896,30 @@ watch(() => route.query.booking, (value, previous) => {
 
 .compact-meta-item + .compact-meta-item {
   padding-left: 12px;
-  border-left: 1px solid #e2e8f0;
+  border-left: 1px solid var(--bd-e2e8f0);
 }
 
 .compact-meta-item svg {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   flex-shrink: 0;
 }
 
 .compact-meta-item strong {
-  color: #334155;
+  color: var(--tx-334155);
   font-weight: 650;
 }
 
 .compact-meta-stall strong {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
 }
 
 .compact-meta-item a {
-  color: #64748b;
+  color: var(--tx-64748b);
   text-decoration: none;
 }
 
 .compact-meta-item a:hover {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   text-decoration: underline;
 }
 
@@ -4146,9 +3927,9 @@ watch(() => route.query.booking, (value, previous) => {
 .booking-stepper-container {
   margin: 18px 0 16px 0;
   padding: 12px 16px;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
   border-radius: 10px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--bd-f1f5f9);
 }
 
 .stepper-track {
@@ -4173,8 +3954,8 @@ watch(() => route.query.booking, (value, previous) => {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #e2e8f0;
-  color: #64748b;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   font-weight: 700;
   display: flex;
@@ -4186,7 +3967,7 @@ watch(() => route.query.booking, (value, previous) => {
 .step-label-text {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
   white-space: nowrap;
 }
 
@@ -4196,7 +3977,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .stepper-step.completed .step-label-text {
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .stepper-step.active .step-circle {
@@ -4206,14 +3987,14 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .stepper-step.active .step-label-text {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 700;
 }
 
 .stepper-connector {
   flex: 1;
   height: 3px;
-  background: #e2e8f0;
+  background: var(--bg-e2e8f0);
   margin: -18px 8px 0 8px;
   z-index: 1;
   transition: background 0.25s ease;
@@ -4229,7 +4010,7 @@ watch(() => route.query.booking, (value, previous) => {
   grid-template-columns: 1.25fr 1.15fr 1fr 1.35fr;
   gap: 16px;
   padding: 14px 0 8px 0;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 
 @media (max-width: 900px) {
@@ -4255,7 +4036,7 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   gap: 6px;
   font-size: 0.76rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
@@ -4269,17 +4050,17 @@ watch(() => route.query.booking, (value, previous) => {
 .info-value-text {
   font-size: 0.92rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .days-remaining-pill {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
   padding: 2px 8px;
   border-radius: 12px;
-  border: 1px solid #dbeafe;
+  border: 1px solid var(--bd-dbeafe);
 }
 
 .stall-count-pill {
@@ -4288,29 +4069,29 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 6px;
   font-size: 0.82rem;
   font-weight: 700;
-  color: #1e293b;
-  background: #f8fafc;
+  color: var(--tx-1e293b);
+  background: var(--bg-f8fafc);
   padding: 3px 10px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 .stall-code-strong {
   font-weight: 700;
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
 }
 
 .cell-sub-meeting-point {
   font-size: 0.76rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .phone-call-btn {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   padding: 3px 8px;
   border-radius: 6px;
   font-size: 0.78rem;
@@ -4331,7 +4112,7 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   padding-top: 14px;
   margin-top: 10px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -4387,7 +4168,7 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 10px;
   margin-top: 12px;
   padding-top: 11px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
   font-size: 0.8125rem;
   line-height: 1.45;
 }
@@ -4409,7 +4190,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .collapsed-next-step-label {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -4448,10 +4229,10 @@ watch(() => route.query.booking, (value, previous) => {
   border-color: #1d4ed8;
 }
 
-.tone-waiting { color: #d97706; }
-.tone-success { color: #15803d; }
-.tone-action { color: #2563eb; }
-.tone-muted { color: #64748b; }
+.tone-waiting { color: var(--tx-d97706); }
+.tone-success { color: var(--tx-15803d); }
+.tone-action { color: var(--tx-2563eb); }
+.tone-muted { color: var(--tx-64748b); }
 
 /* Application Type Bar & Filter Pills (สถานะประเภท) */
 .application-type-bar {
@@ -4462,7 +4243,7 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 12px;
   margin-bottom: 22px;
   padding-bottom: 14px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
 }
 
 .type-filter-pills {
@@ -4471,8 +4252,8 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 8px;
   flex-wrap: wrap;
   padding: 6px 10px;
-  background: #ffffff;
-  border: 1px solid #eef2f6;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
@@ -4510,89 +4291,89 @@ watch(() => route.query.booking, (value, previous) => {
 /* 1. All Type Chip (Slate / Neutral) */
 .type-pill.pill-all,
 .type-pill:not(.pill-stall):not(.pill-general) {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #475569;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-475569);
 }
 .type-pill.pill-all .type-pill-count,
 .type-pill:not(.pill-stall):not(.pill-general) .type-pill-count {
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-475569);
 }
 .type-pill.pill-all:hover:not(.active),
 .type-pill:not(.pill-stall):not(.pill-general):hover:not(.active) {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #1e293b;
+  background: var(--bg-f1f5f9);
+  border-color: var(--bd-cbd5e1);
+  color: var(--tx-1e293b);
 }
 .type-pill.pill-all.active,
 .type-pill:not(.pill-stall):not(.pill-general).active {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   border: 1.5px solid #3b82f6;
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(37, 99, 235, 0.12);
 }
 .type-pill.pill-all.active .type-pill-count,
 .type-pill:not(.pill-stall):not(.pill-general).active .type-pill-count {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--bg-dbeafe);
+  color: var(--tx-1d4ed8);
   font-weight: 700;
 }
 
 /* 2. Stall Lease Chip (Emerald / Green Tone) */
 .type-pill.pill-stall {
-  background: #f0fdf4;
-  border: 1px solid #dcfce7;
-  color: #166534;
+  background: var(--bg-f0fdf4);
+  border: 1px solid var(--bd-dcfce7);
+  color: var(--tx-166534);
 }
 .type-pill.pill-stall .type-pill-count {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 .type-pill.pill-stall:hover:not(.active) {
-  background: #dcfce7;
-  border-color: #bbf7d0;
-  color: #14532d;
+  background: var(--bg-dcfce7);
+  border-color: var(--bd-bbf7d0);
+  color: var(--tx-14532d);
 }
 .type-pill.pill-stall.active {
-  background: #dcfce7;
+  background: var(--bg-dcfce7);
   border: 1.5px solid #10b981;
-  color: #14532d;
+  color: var(--tx-14532d);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(16, 185, 129, 0.15);
 }
 .type-pill.pill-stall.active .type-pill-count {
-  background: #bbf7d0;
-  color: #14532d;
+  background: var(--bg-bbf7d0);
+  color: var(--tx-14532d);
   font-weight: 700;
 }
 
 /* 3. General Request Chip (Purple Tone) */
 .type-pill.pill-general {
-  background: #faf5ff;
-  border: 1px solid #f3e8ff;
-  color: #6b21a8;
+  background: var(--bg-faf5ff);
+  border: 1px solid var(--bd-f3e8ff);
+  color: var(--tx-6b21a8);
 }
 .type-pill.pill-general .type-pill-count {
-  background: #f3e8ff;
-  color: #7e22ce;
+  background: var(--bg-f3e8ff);
+  color: var(--tx-7e22ce);
 }
 .type-pill.pill-general:hover:not(.active) {
-  background: #f3e8ff;
-  border-color: #e9d5ff;
-  color: #581c87;
+  background: var(--bg-f3e8ff);
+  border-color: var(--bd-e9d5ff);
+  color: var(--tx-581c87);
 }
 .type-pill.pill-general.active {
-  background: #f3e8ff;
+  background: var(--bg-f3e8ff);
   border: 1.5px solid #9333ea;
-  color: #581c87;
+  color: var(--tx-581c87);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(147, 51, 234, 0.15);
 }
 .type-pill.pill-general.active .type-pill-count {
-  background: #e9d5ff;
-  color: #581c87;
+  background: var(--bg-e9d5ff);
+  color: var(--tx-581c87);
   font-weight: 700;
 }
 
@@ -4601,9 +4382,9 @@ watch(() => route.query.booking, (value, previous) => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #ffffff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-ffffff);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-bfdbfe);
   font-size: 0.85rem;
   font-weight: 600;
   padding: 7px 14px;
@@ -4615,9 +4396,9 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .btn-table-stall-action:hover {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  border-color: var(--bd-93c5fd);
+  color: var(--tx-1d4ed8);
 }
 
 /* Manage Types Button (Admin Only) */
@@ -4625,9 +4406,9 @@ watch(() => route.query.booking, (value, previous) => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #ffffff;
-  color: #475569;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  color: var(--tx-475569);
+  border: 1px solid var(--bd-cbd5e1);
   font-size: 0.85rem;
   font-weight: 600;
   padding: 7px 14px;
@@ -4639,9 +4420,9 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .btn-table-manage-types:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-  color: #0f172a;
+  background: var(--bg-f8fafc);
+  border-color: var(--bd-94a3b8);
+  color: var(--tx-0f172a);
 }
 
 /* Type Badges */
@@ -4657,32 +4438,32 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .badge-type-stall {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
+  border: 1px solid var(--bd-bfdbfe);
 }
 
 .badge-type-general {
-  background: #f5f3ff;
-  color: #6d28d9;
-  border: 1px solid #ddd6fe;
+  background: var(--bg-f5f3ff);
+  color: var(--tx-6d28d9);
+  border: 1px solid var(--bd-ddd6fe);
 }
 
 .general-subject-title {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 0.875rem;
 }
 
 .general-stall-hint {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 2px;
 }
 
 .general-no-stall-hint {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   margin-top: 2px;
 }
 
@@ -4691,53 +4472,54 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   gap: 4px;
   padding: 5px 10px;
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  background: var(--bg-ecfdf5);
+  color: var(--tx-047857);
+  border: 1px solid var(--bd-a7f3d0);
   border-radius: 6px;
   font-size: 0.8125rem;
   font-weight: 600;
 }
 
 .icon-box-general {
-  background: #f5f3ff !important;
-  color: #7c3aed !important;
+  background: var(--bg-f5f3ff) !important;
+  color: var(--tx-7c3aed) !important;
 }
 
 .banner-general {
-  background: #faf5ff !important;
-  border-color: #f3e8ff !important;
+  background: var(--bg-faf5ff) !important;
+  border-color: var(--bd-f3e8ff) !important;
 }
 
 .badge-general-pill {
-  background: #f3e8ff;
-  color: #6b21a8;
-  border: 1px solid #e9d5ff;
+  background: var(--bg-f3e8ff);
+  color: var(--tx-6b21a8);
+  border: 1px solid var(--bd-e9d5ff);
 }
 
 /* General Application Modal Styles */
 .general-modal-box {
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border-radius: 16px;
   width: 100%;
   max-width: 620px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   overflow: hidden;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
 }
 
-.modal-icon-purple {
-  background: #f5f3ff;
-  color: #7c3aed;
+.modal-icon-primary {
+  border: 1px solid var(--bd-dbeafe);
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
 }
 
 .modal-title-general {
   font-size: 1.0625rem; /* 17px */
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
   line-height: 1.3;
 }
@@ -4754,9 +4536,9 @@ watch(() => route.query.booking, (value, previous) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  background: var(--bg-fef2f2);
+  border: 1px solid var(--bd-fecaca);
+  color: var(--tx-b91c1c);
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 0.8125rem;
@@ -4770,13 +4552,13 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .general-preset-btn {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 0.8125rem; /* 13px */
   font-weight: 500;
-  color: #475569;
+  color: var(--tx-475569);
   text-align: left;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -4785,15 +4567,15 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .general-preset-btn:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #1e293b;
+  background: var(--bg-f1f5f9);
+  border-color: var(--bd-cbd5e1);
+  color: var(--tx-1e293b);
 }
 
 .general-preset-btn.active {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  border-color: var(--bd-93c5fd);
+  color: var(--tx-1d4ed8);
   font-weight: 600;
 }
 
@@ -4810,11 +4592,11 @@ watch(() => route.query.booking, (value, previous) => {
 
 .form-input {
   width: 100%;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 0.875rem; /* 14px */
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-family: inherit;
   outline: none;
   box-sizing: border-box;
@@ -4828,21 +4610,21 @@ watch(() => route.query.booking, (value, previous) => {
 
 .form-input:disabled,
 .form-input.input-disabled {
-  background-color: #f1f5f9;
-  color: #64748b;
+  background-color: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
   cursor: not-allowed;
-  border-color: #e2e8f0;
+  border-color: var(--bd-e2e8f0);
   opacity: 0.95;
   user-select: none;
 }
 
 .form-textarea {
   width: 100%;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 0.875rem; /* 14px */
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-family: inherit;
   outline: none;
   resize: vertical;
@@ -4857,7 +4639,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .text-danger {
-  color: #dc2626;
+  color: var(--tx-dc2626);
 }
 
 /* Applications Cards Grid Styles */
@@ -4873,8 +4655,8 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .application-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   padding: 18px;
   display: flex;
@@ -4886,7 +4668,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .application-card:hover {
-  border-color: #cbd5e1;
+  border-color: var(--bd-cbd5e1);
   box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.08);
   transform: translateY(-2px);
 }
@@ -4908,8 +4690,8 @@ watch(() => route.query.booking, (value, previous) => {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4925,7 +4707,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 .app-card-date {
   font-size: 0.75rem; /* 12px min floor */
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   margin-top: 2px;
 }
 
@@ -4934,8 +4716,8 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .app-card-shop-banner {
-  background: #f8fafc;
-  border: 1px solid #f1f5f9;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-f1f5f9);
   border-radius: 10px;
   padding: 12px 14px;
   display: flex;
@@ -4953,13 +4735,13 @@ watch(() => route.query.booking, (value, previous) => {
 .app-card-shop-name {
   font-weight: 700;
   font-size: 0.9375rem; /* 15px */
-  color: #1e293b;
+  color: var(--tx-1e293b);
   line-height: 1.3;
 }
 
 .app-card-product-type {
   font-size: 0.8125rem; /* 13px */
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 2px;
 }
 
@@ -4973,7 +4755,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 .app-card-stall-rate {
   font-size: 0.75rem; /* 12px min floor */
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -4987,7 +4769,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 .meta-label {
   font-size: 0.75rem; /* 12px min floor */
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-bottom: 2px;
   display: block;
 }
@@ -4995,13 +4777,13 @@ watch(() => route.query.booking, (value, previous) => {
 .meta-val-primary {
   font-size: 0.875rem; /* 14px */
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   line-height: 1.3;
 }
 
 .meta-val-sub {
   font-size: 0.8125rem; /* 13px */
-  color: #64748b;
+  color: var(--tx-64748b);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -5012,14 +4794,14 @@ watch(() => route.query.booking, (value, previous) => {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: #334155;
+  color: var(--tx-334155);
 }
 
 .app-card-note-section {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border-top: 1px dashed #f1f5f9;
+  border-top: 1px dashed var(--bd-f1f5f9);
   padding-top: 10px;
 }
 
@@ -5029,7 +4811,7 @@ watch(() => route.query.booking, (value, previous) => {
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
   padding-top: 14px;
   margin-top: auto;
 }
@@ -5041,9 +4823,9 @@ watch(() => route.query.booking, (value, previous) => {
   padding: 6px 14px;
   font-size: 0.8125rem; /* 13px */
   font-weight: 500;
-  color: #334155;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  color: var(--tx-334155);
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -5051,17 +4833,17 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .btn-card-detail:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #0f172a;
+  background: var(--bg-f8fafc);
+  border-color: var(--bd-cbd5e1);
+  color: var(--tx-0f172a);
 }
 
 .empty-cards-state {
   text-align: center;
   padding: 56px 20px;
-  color: #94a3b8;
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
+  color: var(--tx-94a3b8);
+  background: var(--bg-f8fafc);
+  border: 1px dashed var(--bd-cbd5e1);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -5071,7 +4853,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 .empty-cards-title {
   font-size: 0.9375rem; /* 15px */
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
@@ -5089,45 +4871,45 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .actor-tag-officer-pending {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-475569);
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 .actor-tag-officer {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-1d4ed8);
+  border: 1px solid var(--bd-bfdbfe);
 }
 
 .actor-tag-director {
-  background: #eef2ff;
-  color: #4338ca;
-  border: 1px solid #c7d2fe;
+  background: var(--bg-eef2ff);
+  color: var(--tx-4338ca);
+  border: 1px solid var(--bd-c7d2fe);
 }
 
 .actor-tag-success {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  background: var(--bg-ecfdf5);
+  color: var(--tx-047857);
+  border: 1px solid var(--bd-a7f3d0);
 }
 
 .actor-tag-warning {
-  background: #fffbeb;
-  color: #b45309;
-  border: 1px solid #fde68a;
+  background: var(--bg-fffbeb);
+  color: var(--tx-b45309);
+  border: 1px solid var(--bd-fde68a);
 }
 
 .actor-tag-danger {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  background: var(--bg-fef2f2);
+  color: var(--tx-b91c1c);
+  border: 1px solid var(--bd-fecaca);
 }
 
 .actor-tag-default {
-  background: #f8fafc;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  color: var(--tx-64748b);
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 /* Comment Box in หมายเหตุการพิจารณา */
@@ -5147,39 +4929,39 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .comment-officer {
-  background: #f0f7ff;
-  border: 1px solid #dbeafe;
-  color: #1e3a8a;
+  background: var(--bg-f0f7ff);
+  border: 1px solid var(--bd-dbeafe);
+  color: var(--tx-1e3a8a);
 }
 
 .comment-director {
-  background: #f5f3ff;
-  border: 1px solid #ede9fe;
-  color: #3730a3;
+  background: var(--bg-f5f3ff);
+  border: 1px solid var(--bd-ede9fe);
+  color: var(--tx-3730a3);
 }
 
 .comment-success {
-  background: #f0fdf4;
-  border: 1px solid #dcfce7;
-  color: #166534;
+  background: var(--bg-f0fdf4);
+  border: 1px solid var(--bd-dcfce7);
+  color: var(--tx-166534);
 }
 
 .comment-warning {
-  background: #fffdf5;
-  border: 1px solid #fef3c7;
-  color: #92400e;
+  background: var(--bg-fffdf5);
+  border: 1px solid var(--bd-fef3c7);
+  color: var(--tx-92400e);
 }
 
 .comment-danger {
-  background: #fff5f5;
-  border: 1px solid #fee2e2;
-  color: #991b1b;
+  background: var(--bg-fff5f5);
+  border: 1px solid var(--bd-fee2e2);
+  color: var(--tx-991b1b);
 }
 
 .comment-info {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #334155;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-334155);
 }
 
 .comment-header-row {
@@ -5206,7 +4988,7 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   gap: 4px;
   font-size: 0.75rem; /* 12px */
-  color: #2563eb;
+  color: var(--tx-2563eb);
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 4px;
@@ -5215,12 +4997,12 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .more-comments-badge:hover {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   text-decoration: underline;
 }
 
 .text-empty-dash {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-size: 0.875rem;
   padding-left: 4px;
 }
@@ -5239,12 +5021,12 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .reject-modal-box {
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border-radius: 16px;
   width: 100%;
   max-width: 520px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   overflow: hidden;
 }
 
@@ -5253,7 +5035,7 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   justify-content: space-between;
   padding: 18px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
 }
 
 .modal-header-title-wrap {
@@ -5273,21 +5055,21 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .modal-icon-danger {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
 }
 
 .modal-title-danger {
   font-size: 1.0625rem; /* 17px */
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
   line-height: 1.3;
 }
 
 .modal-subtitle {
   font-size: 0.8125rem; /* 13px */
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 2px;
 }
 
@@ -5295,7 +5077,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: transparent;
   border: none;
   cursor: pointer;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   padding: 6px;
   border-radius: 6px;
   display: flex;
@@ -5305,8 +5087,8 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .btn-modal-close:hover {
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-334155);
 }
 
 .modal-body {
@@ -5314,8 +5096,8 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .reject-summary-banner {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 10px;
   padding: 10px 14px;
   margin-bottom: 14px;
@@ -5332,21 +5114,21 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .summary-label {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
 .summary-value {
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .reject-alert-box {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--bg-fef2f2);
+  border: 1px solid var(--bd-fecaca);
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 0.78125rem; /* 12.5px */
-  color: #991b1b;
+  color: var(--tx-991b1b);
   margin-bottom: 14px;
   display: flex;
   align-items: flex-start;
@@ -5357,7 +5139,7 @@ watch(() => route.query.booking, (value, previous) => {
 .form-label-sub {
   font-size: 0.75rem; /* 12px */
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-bottom: 6px;
   display: block;
 }
@@ -5370,9 +5152,9 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .quick-preset-chip {
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  color: #475569;
+  background: var(--bg-f1f5f9);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-475569);
   font-size: 0.75rem; /* 12px */
   padding: 4px 10px;
   border-radius: 6px;
@@ -5382,27 +5164,27 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .quick-preset-chip:hover {
-  background: #e2e8f0;
-  color: #0f172a;
-  border-color: #cbd5e1;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-0f172a);
+  border-color: var(--bd-cbd5e1);
 }
 
 .form-label {
   display: block;
   font-size: 0.8125rem; /* 13px */
   font-weight: 600;
-  color: #334155;
+  color: var(--tx-334155);
   margin-bottom: 6px;
 }
 
 .reject-textarea {
   width: 100%;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 0.875rem; /* 14px */
   font-family: inherit;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   resize: vertical;
   min-height: 80px;
   box-sizing: border-box;
@@ -5423,7 +5205,7 @@ watch(() => route.query.booking, (value, previous) => {
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #dc2626;
+  color: var(--tx-dc2626);
   font-size: 0.75rem; /* 12px */
   margin-top: 5px;
 }
@@ -5434,8 +5216,8 @@ watch(() => route.query.booking, (value, previous) => {
   justify-content: flex-end;
   gap: 10px;
   padding: 14px 24px;
-  background: #f8fafc;
-  border-top: 1px solid #f1f5f9;
+  background: var(--bg-f8fafc);
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 .preset-label-header {
   display: flex;
@@ -5450,9 +5232,9 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 5px;
   font-size: 0.75rem; /* 12px min floor */
   font-weight: 600;
-  color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
   padding: 3px 8px;
   border-radius: 6px;
   text-decoration: none;
@@ -5460,9 +5242,9 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .btn-manage-types-shortcut:hover {
-  background: #dbeafe;
-  color: #1d4ed8;
-  border-color: #93c5fd;
+  background: var(--bg-dbeafe);
+  color: var(--tx-1d4ed8);
+  border-color: var(--bd-93c5fd);
 }
 
 /* ==========================================================================
@@ -5472,7 +5254,7 @@ watch(() => route.query.booking, (value, previous) => {
   max-width: 680px;
   width: 95%;
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   overflow: hidden;
 }
@@ -5487,8 +5269,8 @@ watch(() => route.query.booking, (value, previous) => {
   width: 42px;
   height: 42px;
   border-radius: 10px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5498,14 +5280,14 @@ watch(() => route.query.booking, (value, previous) => {
 .revision-modal-title {
   font-size: 1.125rem; /* 18px */
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
   line-height: 1.3;
 }
 
 .revision-modal-subtitle {
   font-size: 0.8125rem; /* 13px */
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 3px;
   display: flex;
   align-items: center;
@@ -5514,12 +5296,12 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .revision-modal-subtitle strong {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 600;
 }
 
 .revision-sub-dot {
-  color: #cbd5e1;
+  color: var(--tx-cbd5e1);
 }
 
 .revision-modal-body {
@@ -5530,8 +5312,8 @@ watch(() => route.query.booking, (value, previous) => {
 
 /* Officer Note Alert Banner */
 .revision-officer-note-card {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
+  background: var(--bg-fffbeb);
+  border: 1px solid var(--bd-fde68a);
   border-radius: 10px;
   padding: 12px 14px;
   margin-bottom: 16px;
@@ -5543,21 +5325,21 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 6px;
   font-weight: 700;
   font-size: 0.8125rem; /* 13px */
-  color: #b45309;
+  color: var(--tx-b45309);
   margin-bottom: 4px;
 }
 
 .revision-note-body {
   font-size: 0.875rem; /* 14px */
-  color: #92400e;
+  color: var(--tx-92400e);
   line-height: 1.5;
   word-break: break-word;
 }
 
 /* Stall Financial Summary Banner */
 .revision-stall-summary-banner {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
   border-radius: 10px;
   padding: 12px 14px;
   margin-bottom: 16px;
@@ -5570,7 +5352,7 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   gap: 10px;
   font-size: 0.85rem;
-  color: #1e3a8a;
+  color: var(--tx-1e3a8a);
 }
 
 .summary-stall-col {
@@ -5581,7 +5363,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .summary-market-tag {
-  color: #3b82f6;
+  color: var(--tx-3b82f6);
   font-size: 0.8125rem;
 }
 
@@ -5593,7 +5375,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .summary-total-highlight {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
   font-size: 0.9375rem;
   font-weight: 700;
 }
@@ -5602,12 +5384,12 @@ watch(() => route.query.booking, (value, previous) => {
 .form-section-heading {
   font-size: 0.9375rem; /* 15px */
   font-weight: 700;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   margin: 18px 0 12px;
   display: flex;
   align-items: center;
   gap: 8px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   padding-bottom: 6px;
 }
 
@@ -5616,10 +5398,10 @@ watch(() => route.query.booking, (value, previous) => {
   width: 100%;
   min-height: 60px;
   padding: 9px 14px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 10px;
-  background: #fff;
-  color: #1e293b;
+  background: var(--bg-ffffff);
+  color: var(--tx-1e293b);
   font-family: inherit;
   font-size: 0.875rem; /* 14px */
   line-height: 1.5;
@@ -5637,11 +5419,11 @@ watch(() => route.query.booking, (value, previous) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--bg-fef2f2);
+  border: 1px solid var(--bd-fecaca);
   border-radius: 8px;
   padding: 10px 14px;
-  color: #dc2626;
+  color: var(--tx-dc2626);
   font-size: 0.8125rem; /* 13px */
   font-weight: 500;
   margin-top: 14px;
@@ -5653,8 +5435,8 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   gap: 12px;
   padding: 14px 24px;
-  background: #f8fafc;
-  border-top: 1px solid #f1f5f9;
+  background: var(--bg-f8fafc);
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 
 /* Upload styles for Revision Modal */
@@ -5678,14 +5460,14 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 6px;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
 }
 
 .upload-badge-spec {
   font-size: 0.75rem;
-  color: #64748b;
-  background: #f1f5f9;
+  color: var(--tx-64748b);
+  background: var(--bg-f1f5f9);
   padding: 3px 8px;
   border-radius: 6px;
   font-weight: 500;
@@ -5695,8 +5477,8 @@ watch(() => route.query.booking, (value, previous) => {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #f8fafc;
-  border: 1.5px dashed #cbd5e1;
+  background: var(--bg-f8fafc);
+  border: 1.5px dashed var(--bd-cbd5e1);
   border-radius: 12px;
   padding: 14px 16px;
   cursor: pointer;
@@ -5705,22 +5487,22 @@ watch(() => route.query.booking, (value, previous) => {
 
 .id-card-dropzone:hover,
 .id-card-dropzone.is-drag-over {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   border-color: #2563eb;
   transform: translateY(-1px);
 }
 
 .id-card-dropzone.has-error {
-  background: #fef2f2;
-  border-color: #f87171;
+  background: var(--bg-fef2f2);
+  border-color: var(--bd-f87171);
 }
 
 .dropzone-icon-box {
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5741,19 +5523,19 @@ watch(() => route.query.booking, (value, previous) => {
 .prompt-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin-bottom: 2px;
 }
 
 .prompt-link {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .prompt-desc {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   line-height: 1.4;
 }
 
@@ -5761,9 +5543,9 @@ watch(() => route.query.booking, (value, previous) => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #334155;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
+  color: var(--tx-334155);
   font-size: 0.8125rem;
   font-weight: 600;
   padding: 7px 13px;
@@ -5776,8 +5558,8 @@ watch(() => route.query.booking, (value, previous) => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #ffffff;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-bfdbfe);
   border-radius: 12px;
   padding: 10px 14px;
   box-shadow: 0 2px 6px rgba(37, 99, 235, 0.05);
@@ -5788,12 +5570,12 @@ watch(() => route.query.booking, (value, previous) => {
   height: 46px;
   border-radius: 8px;
   overflow: hidden;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 .preview-thumb-img {
@@ -5807,8 +5589,8 @@ watch(() => route.query.booking, (value, previous) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #dc2626;
-  background: #fee2e2;
+  color: var(--tx-dc2626);
+  background: var(--bg-fee2e2);
   width: 100%;
   height: 100%;
   gap: 1px;
@@ -5831,7 +5613,7 @@ watch(() => route.query.booking, (value, previous) => {
 .preview-filename {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -5845,7 +5627,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .meta-size {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
@@ -5853,9 +5635,9 @@ watch(() => route.query.booking, (value, previous) => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #16a34a;
+  color: var(--tx-16a34a);
   font-weight: 600;
-  background: #ecfdf5;
+  background: var(--bg-ecfdf5);
   padding: 1px 7px;
   border-radius: 6px;
 }
@@ -5871,9 +5653,9 @@ watch(() => route.query.booking, (value, previous) => {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
+  color: var(--tx-2563eb);
   font-size: 0.8125rem;
   font-weight: 600;
   padding: 6px 10px;
@@ -5883,7 +5665,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .btn-preview-change:hover {
-  background: #dbeafe;
+  background: var(--bg-dbeafe);
 }
 
 .btn-preview-delete {
@@ -5892,16 +5674,16 @@ watch(() => route.query.booking, (value, previous) => {
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: #ffffff;
-  border: 1px solid #fecaca;
-  color: #ef4444;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-fecaca);
+  color: var(--tx-ef4444);
   border-radius: 7px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-preview-delete:hover {
-  background: #fee2e2;
+  background: var(--bg-fee2e2);
 }
 
 .upload-error-msg {
@@ -5910,9 +5692,9 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 6px;
   margin-top: 6px;
   font-size: 0.8125rem;
-  color: #dc2626;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  color: var(--tx-dc2626);
+  background: var(--bg-fef2f2);
+  border: 1px solid var(--bd-fecaca);
   padding: 6px 10px;
   border-radius: 7px;
 }
@@ -5932,31 +5714,31 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .officer-custom-table thead tr {
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  border-top: 1px solid var(--bd-e2e8f0);
+  border-bottom: 1px solid var(--bd-e2e8f0);
 }
 
 .officer-custom-table th {
   background: transparent !important;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   font-size: 0.8125rem;
   padding: 16px 20px;
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  border-top: 1px solid var(--bd-e2e8f0);
+  border-bottom: 1px solid var(--bd-e2e8f0);
   text-align: left;
   white-space: nowrap;
 }
 
 .officer-custom-table td {
   padding: 14px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   vertical-align: middle;
-  color: #334155;
+  color: var(--tx-334155);
 }
 
 .officer-custom-table tr:hover td {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .officer-custom-table tbody tr:last-child td {
@@ -5978,7 +5760,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 /* Page layout, header & card shell: same as the bookings page */
 .application-main-page {
-  background-color: #f8fafc;
+  background-color: var(--bg-f8fafc);
   min-height: 100vh;
   padding-bottom: 60px;
 }
@@ -6004,13 +5786,13 @@ watch(() => route.query.booking, (value, previous) => {
 .main-page-title {
   font-size: 1.55rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   letter-spacing: -0.01em;
 }
 
 .page-subtitle {
   margin: 4px 0 0;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.875rem;
   font-weight: 500;
 }
@@ -6023,8 +5805,8 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .table-card-container {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 16px;
   padding: 24px 28px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
@@ -6063,10 +5845,10 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 7px;
   height: 38px;
   padding: 0 12px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
-  background: #ffffff;
-  color: #334155;
+  background: var(--bg-ffffff);
+  color: var(--tx-334155);
   font-family: inherit;
   font-size: 0.84rem;
   font-weight: 600;
@@ -6077,30 +5859,30 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .sort-toggle-btn:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-  color: #0f172a;
+  background: var(--bg-f8fafc);
+  border-color: var(--bd-94a3b8);
+  color: var(--tx-0f172a);
 }
 
 .sort-toggle-btn.active {
   border-color: #2563eb;
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
 }
 
 .sort-toggle-icon {
-  color: #475569;
+  color: var(--tx-475569);
   flex-shrink: 0;
   transition: color 0.15s ease;
 }
 
 .sort-toggle-btn:hover .sort-toggle-icon,
 .sort-toggle-btn.active .sort-toggle-icon {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .dropdown-chevron-icon {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   transition: transform 0.2s ease;
 }
 
@@ -6121,8 +5903,8 @@ watch(() => route.query.booking, (value, previous) => {
   right: 0;
   z-index: 50;
   min-width: 270px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
   padding: 8px;
@@ -6146,7 +5928,7 @@ watch(() => route.query.booking, (value, previous) => {
 .sort-dropdown-header {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--tx-64748b);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding: 6px 10px 4px;
@@ -6160,7 +5942,7 @@ watch(() => route.query.booking, (value, previous) => {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #334155;
+  color: var(--tx-334155);
   cursor: pointer;
   text-align: left;
   font-family: inherit;
@@ -6169,13 +5951,13 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .sort-dropdown-item:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-0f172a);
 }
 
 .sort-dropdown-item.selected {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
 }
 
 .sort-item-icon {
@@ -6185,14 +5967,14 @@ watch(() => route.query.booking, (value, previous) => {
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  background: #f8fafc;
-  color: #64748b;
+  background: var(--bg-f8fafc);
+  color: var(--tx-64748b);
   flex-shrink: 0;
 }
 
 .sort-dropdown-item.selected .sort-item-icon {
-  background: #dbeafe;
-  color: #2563eb;
+  background: var(--bg-dbeafe);
+  color: var(--tx-2563eb);
 }
 
 .sort-item-text {
@@ -6210,16 +5992,16 @@ watch(() => route.query.booking, (value, previous) => {
 
 .sort-item-text small {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   line-height: 1.1;
 }
 
 .sort-dropdown-item.selected .sort-item-text small {
-  color: #3b82f6;
+  color: var(--tx-3b82f6);
 }
 
 .sort-check-icon {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   flex-shrink: 0;
 }
 
@@ -6231,9 +6013,9 @@ watch(() => route.query.booking, (value, previous) => {
   box-sizing: border-box;
   height: 24px;
   padding: 0 8px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
+  color: var(--tx-2563eb);
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 1;
@@ -6279,12 +6061,12 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .stall-shop-row .shop-prefix {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
 .stall-shop-row .shop-name-highlight {
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-weight: 600;
   word-break: break-word;
 }
@@ -6293,8 +6075,8 @@ watch(() => route.query.booking, (value, previous) => {
 .applicant-age-pill {
   font-size: 0.75rem; /* 12px min floor */
   font-weight: 600;
-  color: #0369a1;
-  background: #e0f2fe;
+  color: var(--tx-0369a1);
+  background: var(--bg-e0f2fe);
   padding: 2px 7px;
   border-radius: 9999px;
   line-height: 1;
@@ -6313,21 +6095,21 @@ watch(() => route.query.booking, (value, previous) => {
 
 .applicant-id-mono {
   font-family: inherit;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-weight: 600;
 }
 
 .applicant-id-mono .sub-label {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   font-family: inherit;
 }
 
 .btn-id-card-pill {
   appearance: none;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
+  color: var(--tx-2563eb);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -6342,16 +6124,16 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .btn-id-card-pill:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
-  color: #1d4ed8;
+  background: var(--bg-dbeafe);
+  border-color: var(--bd-93c5fd);
+  color: var(--tx-1d4ed8);
 }
 
 /* Inline Metadata Bar (แสดงแบบโปร่งสบาย ไม่ใช้กล่องข้อความ) */
 .application-inline-meta-bar {
   margin: 10px 18px 6px;
   padding: 8px 0;
-  border-top: 1px dashed #e2e8f0;
+  border-top: 1px dashed var(--bd-e2e8f0);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -6373,17 +6155,17 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .inline-item-chip .meta-label {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
 .inline-item-chip .meta-val {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 600;
 }
 
 .inline-item-chip .meta-val-muted {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-style: italic;
 }
 
@@ -6391,7 +6173,7 @@ watch(() => route.query.booking, (value, previous) => {
   appearance: none;
   background: transparent;
   border: none;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -6406,7 +6188,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .inline-doc-link-btn:hover {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
 }
 
 /* รายละเอียดแบบข้อความโปร่ง ไม่มีกรอบกล่อง */
@@ -6419,13 +6201,13 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .details-lead-label {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 600;
   flex-shrink: 0;
 }
 
 .details-lead-text {
-  color: #334155;
+  color: var(--tx-334155);
   font-weight: 400;
   word-break: break-word;
 }

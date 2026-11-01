@@ -1,4 +1,4 @@
-// สถานะกลางของงานจัดการค่าใช้จ่าย (ข้อมูลจำลอง ยังไม่เชื่อม API)
+// สถานะกลางของรอบจดมิเตอร์ ใช้ข้อมูลแผง สัญญา มิเตอร์ และอัตราค่าน้ำ-ไฟร่วมกัน
 // ใช้ร่วมกันระหว่าง: แผงรายการบิล, ลิ้นชักรายแผง, การ์ดกรอง และการไฮไลต์แผงบนแผนที่
 import { computed, reactive, ref } from 'vue'
 
@@ -11,6 +11,11 @@ export type AmountRange = 'all' | 'lt500' | '500-1000' | 'gt1000'
 export interface UtilityBill {
   stall: string
   tenant: string
+  contractId?: string
+  contractNumber?: string
+  shopName?: string
+  waterMeterCode?: string
+  electricMeterCode?: string
   prevWater: number
   prevElectric: number
   currWater: number | null
@@ -56,9 +61,38 @@ const isoShift = (days: number) => new Date(Date.now() + days * 86400000).toISOS
 
 // ----- state (module-level singleton) -----
 const rates = reactive({ water: 18, electric: 8 })
+
+// ----- อัตราตามที่ตั้งไว้ในหน้าตั้งค่าน้ำ-ไฟ (รายแผง -> โครงการ -> มาตรฐาน) -----
+export type ChargeKind = 'water' | 'electric'
+export interface ChargeRule { mode: 'meter' | 'flat' | 'none'; rate: number; flat: number; surcharge: number }
+type RuleResolver = (code: string, kind: ChargeKind) => ChargeRule | null
+let ruleResolver: RuleResolver | null = null
+const resolverVersion = ref(0)
+export const registerRuleResolver = (fn: RuleResolver) => { ruleResolver = fn; resolverVersion.value++ }
+// แผง -> โครงการ (ลงทะเบียนจากหน้าข้อมูลตลาด เพื่อให้หาอัตราระดับโครงการได้)
+const stallProjects = reactive<Record<string, string>>({})
+export const registerStallProjects = (map: Record<string, string>) => { Object.assign(stallProjects, map) }
+export const projectOfStall = (code: string) => stallProjects[code.toUpperCase()] || ''
+
+const fallbackRule = (kind: ChargeKind): ChargeRule => ({ mode: 'meter', rate: rates[kind], flat: 0, surcharge: 0 })
+export const chargeRuleOf = (code: string, kind: ChargeKind): ChargeRule => {
+  void resolverVersion.value
+  return ruleResolver?.(code, kind) || fallbackRule(kind)
+}
+// ค่าใช้จ่ายของมิเตอร์หนึ่งประเภท: ตามมิเตอร์ = หน่วย x อัตรา + ค่าบริการ, เหมาจ่าย = ยอดเหมา, ไม่คิดค่าใช้บริการ = 0 (null = ยังไม่มีเลขมิเตอร์)
+export const chargeFor = (rule: ChargeRule, units: number | null): number | null => {
+  if (rule.mode === 'none') return 0
+  if (rule.mode === 'flat') return rule.flat
+  if (units == null) return null
+  return Math.max(0, units) * (rule.rate + (rule.surcharge || 0))
+}
+// ประเภทที่ต้องจดมิเตอร์ (เฉพาะตามมิเตอร์)
+export const needsReading = (code: string, kind: ChargeKind) => chargeRuleOf(code, kind).mode === 'meter'
 const billingMonth = ref(isoToday().slice(0, 7))
 const amountRange = ref<AmountRange>('all')
 const utilityBills = reactive<Record<string, UtilityBill>>({})
+// แผงที่ข้ามการจดในรอบนี้ (พร้อมเหตุผล) key = เดือน:รหัสแผง
+const utilitySkips = reactive<Record<string, string>>({})
 const tempBills = ref<TempBill[]>([])
 let tempSeeded = false
 
@@ -66,23 +100,51 @@ const monthKey = (code: string) => `${billingMonth.value}:${code.toUpperCase()}`
 
 export const useStallBilling = () => {
   // ---------- สาธารณูปโภค ----------
-  const ensureUtilityBills = (occupied: { code: string; tenant: string }[]) => {
-    occupied.forEach(({ code, tenant }) => {
+  const ensureUtilityBills = (occupied: Array<{
+    code: string
+    tenant: string
+    contractId?: string
+    contractNumber?: string
+    shopName?: string
+    prevWater?: number | null
+    prevElectric?: number | null
+    waterMeterCode?: string
+    electricMeterCode?: string
+    currWater?: number | null
+    currElectric?: number | null
+    status?: UtilityStatus
+  }>) => {
+    occupied.forEach((context) => {
+      const { code, tenant } = context
       const key = monthKey(code)
-      if (utilityBills[key]) return
-      const h = hash(key)
-      const prevWater = 100 + (hash(code) % 400)
-      const prevElectric = 1000 + (hash(code + 'e') % 3000)
-      const k = h % 10
-      const status: UtilityStatus = k < 3 ? 'unrecorded' : k < 6 ? 'pending' : k < 7 ? 'overdue' : 'paid'
+      const existing = utilityBills[key]
+      if (existing) {
+        existing.tenant = tenant || existing.tenant
+        existing.contractId = context.contractId || existing.contractId
+        existing.contractNumber = context.contractNumber || existing.contractNumber
+        existing.shopName = context.shopName || existing.shopName
+        existing.waterMeterCode = context.waterMeterCode || existing.waterMeterCode
+        existing.electricMeterCode = context.electricMeterCode || existing.electricMeterCode
+        if (context.currWater != null) existing.currWater = context.currWater
+        if (context.currElectric != null) existing.currElectric = context.currElectric
+        if (context.status) existing.status = context.status
+        return
+      }
+      const prevWater = context.prevWater ?? (100 + (hash(code) % 400))
+      const prevElectric = context.prevElectric ?? (1000 + (hash(code + 'e') % 3000))
       utilityBills[key] = {
         stall: code.toUpperCase(),
         tenant,
+        contractId: context.contractId,
+        contractNumber: context.contractNumber,
+        shopName: context.shopName,
+        waterMeterCode: context.waterMeterCode,
+        electricMeterCode: context.electricMeterCode,
         prevWater,
         prevElectric,
-        currWater: status === 'unrecorded' ? null : prevWater + 6 + (h % 19),
-        currElectric: status === 'unrecorded' ? null : prevElectric + 40 + (h % 90),
-        status
+        currWater: context.currWater ?? null,
+        currElectric: context.currElectric ?? null,
+        status: context.status || 'unrecorded'
       }
     })
   }
@@ -96,14 +158,24 @@ export const useStallBilling = () => {
   const getUtility = (code: string) => utilityBills[monthKey(code)] || null
   const waterUnits = (b: UtilityBill) => (b.currWater == null ? null : b.currWater - b.prevWater)
   const electricUnits = (b: UtilityBill) => (b.currElectric == null ? null : b.currElectric - b.prevElectric)
+  const waterCharge = (b: UtilityBill) => chargeFor(chargeRuleOf(b.stall, 'water'), waterUnits(b))
+  const electricCharge = (b: UtilityBill) => chargeFor(chargeRuleOf(b.stall, 'electric'), electricUnits(b))
   const utilityTotal = (b: UtilityBill) => {
-    const w = waterUnits(b)
-    const e = electricUnits(b)
-    return w == null || e == null ? null : w * rates.water + e * rates.electric
+    const w = waterCharge(b)
+    const e = electricCharge(b)
+    return w == null || e == null ? null : w + e
+  }
+  const getUtilitySkip = (code: string) => utilitySkips[monthKey(code)] || ''
+  const skipUtility = (code: string, reason: string) => {
+    utilitySkips[monthKey(code)] = reason
+  }
+  const clearUtilitySkip = (code: string) => {
+    delete utilitySkips[monthKey(code)]
   }
   const saveUtilityReadings = (code: string, water: number, electric: number) => {
     const b = getUtility(code)
     if (!b) return
+    clearUtilitySkip(code)
     b.currWater = water
     b.currElectric = electric
     if (b.status === 'unrecorded') b.status = 'pending'
@@ -178,9 +250,14 @@ export const useStallBilling = () => {
     utilityList,
     ensureUtilityBills,
     getUtility,
+    getUtilitySkip,
+    skipUtility,
+    clearUtilitySkip,
     waterUnits,
     electricUnits,
     utilityTotal,
+    waterCharge,
+    electricCharge,
     saveUtilityReadings,
     markUtilityPaid,
     seedTempBills,

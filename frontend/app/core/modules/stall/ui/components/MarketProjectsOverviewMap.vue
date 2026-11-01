@@ -1,5 +1,5 @@
 <template>
-  <div class="projects-master-container" :class="{ 'is-preview-mode': previewMode }">
+  <div class="projects-master-container" :class="{ 'is-preview-mode': previewMode, 'is-management': managementMode }">
     <!-- Top Interactive Filter & Quick Search Bar -->
     <Teleport :to="canTeleportToolbar ? '#step1-map-toolbar' : 'body'" :disabled="!canTeleportToolbar">
     <div v-if="!previewMode && !isOverviewPage" class="master-map-top-bar">
@@ -15,9 +15,12 @@
           <input
             v-model="searchQuery"
             type="text"
-            :placeholder="managementMode ? 'ค้นหาโซน รหัสแผง หรือประเภทสินค้า...' : 'ค้นหาโครงการหรือหมวดหมู่สินค้า...'"
+            :placeholder="managementMode ? 'ค้นหาเลขที่การจอง คำร้อง โซน รหัสแผง หรือประเภทสินค้า...' : 'ค้นหาโครงการหรือหมวดหมู่สินค้า...'"
             class="map-search-input"
             @input="handleSearchInput"
+            @keydown.down.prevent="moveSearchSuggestion(1)"
+            @keydown.up.prevent="moveSearchSuggestion(-1)"
+            @keydown.enter.prevent="selectActiveSearchSuggestion"
           />
           <button
             v-if="searchQuery"
@@ -180,9 +183,9 @@
           </span>
         </button>
 
-        <span v-if="activeProjectId && isNotViewingBookedProject" class="viewing-other-badge" style="font-size: 0.78rem; color: #475569; background: #f1f5f9; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;">
+        <span v-if="activeProjectId && isNotViewingBookedProject" class="viewing-other-badge" style="font-size: 0.78rem; color: var(--tx-475569); background: var(--bg-f1f5f9); padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;">
           <span>กำลังดู:</span>
-          <strong style="color: #0f172a;">{{ activeProject?.name }}</strong>
+          <strong style="color: var(--tx-0f172a);">{{ activeProject?.name }}</strong>
         </span>
 
         <div class="preview-legend-row">
@@ -531,21 +534,12 @@
           @click.self="closeFloorSelector"
         >
           <section class="floor-selector-panel">
-            <div class="fsc-top-bar">
-              <div class="fsc-top-left">
-                <div class="fsc-badge-row">
-                  <span class="fsc-building-tag" :style="{ color: floorSelectorProject.color, borderColor: floorSelectorProject.color, backgroundColor: `${floorSelectorProject.color}14` }">
-                    อาคาร {{ floorSelectorProject.floors?.length }} ชั้น
-                  </span>
-                  <span class="fsc-proj-code">โครงการที่ {{ floorSelectorProject.sectionNumber }}</span>
-                </div>
-                <h3 id="floor-selector-title" class="fsc-title">เลือกชั้นที่ต้องการดู</h3>
-                <p class="fsc-desc">{{ floorSelectorProject.name }} · {{ floorSelectorProject.category }}</p>
-              </div>
-              <button type="button" class="fsc-close-btn" @click="closeFloorSelector" aria-label="ปิดตัวเลือกชั้น">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
-            </div>
+            <AppModalHeader
+              title="เลือกชั้นที่ต้องการดู"
+              :subtitle="`${floorSelectorProject.name} · ${floorSelectorProject.floors?.length} ชั้น · โครงการที่ ${floorSelectorProject.sectionNumber}`"
+              icon="grid"
+              @close="closeFloorSelector"
+            />
 
             <div class="fsc-floors-stack" aria-label="รายการชั้น">
               <button
@@ -602,7 +596,7 @@
       <!-- Drill-down Panel: แสดงเมื่อคลิกเข้าโครงการ (แผงย่อยวาดอยู่ในกรอบบนแผนที่) -->
       <transition name="smp-slide">
         <aside
-          v-if="!previewMode && activeProject && activeLayout"
+          v-if="!previewMode && activeProject && activeLayout && !appliedSearchQuery.trim()"
           class="stall-mode-panel"
           :class="{
             'is-swapped-out': hideProjectPanel,
@@ -706,6 +700,9 @@
             </div>
           </div>
 
+          <!-- เนื้อหาแผงโครงการ: หน้าข้อมูลตลาดบางมุมมอง (เช่น จดมิเตอร์) ส่งเนื้อหาของตัวเองผ่านสล็อตแทนสถิติแผงเดิม -->
+          <slot v-if="$slots['project-body']" name="project-body" :project="activeProject" />
+          <template v-else>
           <!-- Full Floor Alert Banner with Quick Switch to Available Floor -->
           <div v-if="activeProjectFloors.length > 1 && activeLayout?.available === 0 && activeLayout?.reserved === 0" class="smp-floor-full-banner">
             <div class="sffb-head">
@@ -749,28 +746,32 @@
             </button>
           </div>
 
-          <!-- 4 สถิติแผงค้าหลัก (แผงทั้งหมด / ว่าง / ติดจอง / มีผู้เช่า) -->
-          <div class="smp-stats">
-            <div class="smp-stat is-total">
+          <!-- 4 สถิติแผงค้าหลัก (แผงทั้งหมด / ว่าง / ติดจอง / มีผู้เช่า): หน้าข้อมูลตลาดมีการ์ด KPI ด้านบนแสดงตัวเลขชุดเดียวกันอยู่แล้ว จึงซ่อนไม่ให้ซ้ำ -->
+          <div v-if="!isOverviewPage" class="smp-stats" :class="{ 'is-loading': statusDataLoading }" :aria-busy="statusDataLoading">
+            <button type="button" class="smp-stat is-total" :class="{ 'is-active': appliedAvailabilityFilter === 'all' }" :aria-pressed="appliedAvailabilityFilter === 'all'" :disabled="statusDataLoading" @click="setProjectStatusQuickFilter('all')">
               <span class="smp-stat-label">แผงทั้งหมด</span>
-              <strong>{{ activeLayout.total.toLocaleString('th-TH') }}</strong>
-            </div>
-            <div class="smp-stat is-available">
+              <span v-if="statusDataLoading" class="smp-stat-skeleton" aria-hidden="true"></span>
+              <strong v-else>{{ activeLayout.total.toLocaleString('th-TH') }}</strong>
+            </button>
+            <button type="button" class="smp-stat is-available" :class="{ 'is-active': appliedAvailabilityFilter === 'available' }" :aria-pressed="appliedAvailabilityFilter === 'available'" :disabled="statusDataLoading" @click="setProjectStatusQuickFilter('available')">
               <span class="smp-stat-label">ว่างพร้อมเช่า</span>
-              <strong>{{ activeLayout.available.toLocaleString('th-TH') }}</strong>
-            </div>
-            <div class="smp-stat is-reserved">
+              <span v-if="statusDataLoading" class="smp-stat-skeleton" aria-hidden="true"></span>
+              <strong v-else>{{ activeLayout.available.toLocaleString('th-TH') }}</strong>
+            </button>
+            <button type="button" class="smp-stat is-reserved" :class="{ 'is-active': appliedAvailabilityFilter === 'reserved' }" :aria-pressed="appliedAvailabilityFilter === 'reserved'" :disabled="statusDataLoading" @click="setProjectStatusQuickFilter('reserved')">
               <span class="smp-stat-label">ติดจอง</span>
-              <strong>{{ activeLayout.reserved.toLocaleString('th-TH') }}</strong>
-            </div>
-            <div class="smp-stat is-occupied">
+              <span v-if="statusDataLoading" class="smp-stat-skeleton" aria-hidden="true"></span>
+              <strong v-else>{{ activeLayout.reserved.toLocaleString('th-TH') }}</strong>
+            </button>
+            <button type="button" class="smp-stat is-occupied" :class="{ 'is-active': appliedAvailabilityFilter === 'occupied' }" :aria-pressed="appliedAvailabilityFilter === 'occupied'" :disabled="statusDataLoading" @click="setProjectStatusQuickFilter('occupied')">
               <span class="smp-stat-label">มีผู้เช่า</span>
-              <strong>{{ activeLayout.occupied.toLocaleString('th-TH') }}</strong>
-            </div>
+              <span v-if="statusDataLoading" class="smp-stat-skeleton" aria-hidden="true"></span>
+              <strong v-else>{{ activeLayout.occupied.toLocaleString('th-TH') }}</strong>
+            </button>
           </div>
 
           <!-- อัตราการเช่าพื้นที่ (Occupancy Progress Bar) -->
-          <div class="smp-occ-card">
+          <div v-if="managementMode" class="smp-occ-card" :class="{ 'is-map-colors': isOverviewPage }">
             <div class="smp-occ-header">
               <div class="smp-occ-title-group">
                 <span class="smp-occ-title">อัตราการเช่าพื้นที่</span>
@@ -785,21 +786,21 @@
               <span class="track-reserved" :style="{ width: `${activeLayout.total > 0 ? (activeLayout.reserved / activeLayout.total) * 100 : 0}%` }"></span>
             </div>
             <div class="smp-occ-legend">
-              <span><i class="dot-occ"></i> เช่าแล้ว {{ activeLayout.total > 0 ? ((activeLayout.occupied / activeLayout.total) * 100).toFixed(0) : 0 }}%</span>
+              <span><i class="dot-occ"></i> {{ isOverviewPage ? 'มีผู้เช่า' : 'เช่าแล้ว' }} {{ activeLayout.total > 0 ? ((activeLayout.occupied / activeLayout.total) * 100).toFixed(0) : 0 }}%</span>
               <span><i class="dot-res"></i> ติดจอง {{ activeLayout.total > 0 ? ((activeLayout.reserved / activeLayout.total) * 100).toFixed(0) : 0 }}%</span>
               <span><i class="dot-avail"></i> ว่าง {{ activeLayout.total > 0 ? ((activeLayout.available / activeLayout.total) * 100).toFixed(0) : 0 }}%</span>
             </div>
           </div>
 
           <!-- ข้อมูลโครงการ: ขนาดพื้นที่ & ขนาดแผงมาตรฐาน -->
-          <div class="smp-project-info-grid">
+          <div class="smp-project-info-grid" :class="{ 'is-list': isOverviewPage || !managementMode }">
             <div class="smp-info-pill">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path>
               </svg>
               <div class="smp-info-text">
                 <small>พื้นที่ในโครงการ</small>
-                <strong>{{ activeProject.realAreaSqm ? activeProject.realAreaSqm.toLocaleString('th-TH') : '-' }} <em>ตร.ม.</em></strong>
+                <strong class="smp-area-measure"><span>{{ activeProject.realAreaSqm ? activeProject.realAreaSqm.toLocaleString('th-TH') : '-' }}</span><em>ตร.ม.</em></strong>
               </div>
             </div>
             <div class="smp-info-pill">
@@ -808,13 +809,13 @@
               </svg>
               <div class="smp-info-text">
                 <small>ขนาดแผงมาตรฐาน</small>
-                <strong>2.5 × 2.0 <em>ม. (5 ตร.ม.)</em></strong>
+                <strong><span>2.5 × 2.0</span><em>ม. (5 ตร.ม.)</em></strong>
               </div>
             </div>
           </div>
 
           <!-- สัญลักษณ์สีสถานะแผงบนผัง -->
-          <div class="smp-legend">
+          <div v-if="managementMode && !isOverviewPage" class="smp-legend">
             <span class="smp-legend-title">สัญลักษณ์สีแผงค้า</span>
             <div class="smp-legend-items">
               <div><span class="smp-sw sw-available"></span>ว่างพร้อมเช่า</div>
@@ -823,12 +824,13 @@
             </div>
           </div>
 
-          <div class="smp-hint">
+          <div class="smp-hint" :class="{ 'is-quiet': isOverviewPage }">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            <span v-if="managementMode && inspectOnly">แตะแผงใดก็ได้บนผังแผนที่เพื่อดูข้อมูลแผง ผู้เช่า และสัญญาเช่า</span>
+            <span v-if="managementMode && inspectOnly">{{ isOverviewPage ? 'แตะแผงบนผังเพื่อดูรายละเอียดแผง ผู้เช่า และสัญญา' : 'แตะแผงใดก็ได้บนผังแผนที่เพื่อดูข้อมูลแผง ผู้เช่า และสัญญาเช่า' }}</span>
             <span v-else-if="managementMode">แตะแผงบนผังแผนที่เพื่อตั้งค่าข้อมูลแผง หรือใช้ปุ่มเครื่องมือด้านบนเพื่อวาดและปรับขนาด</span>
             <span v-else>แตะแผงสีเขียวหรือสีส้มบนผังแผนที่เพื่อเลือกแผงค้า</span>
           </div>
+          </template>
         </div>
       </aside>
       </transition>
@@ -934,38 +936,88 @@
                     ref="ovSearchInput"
                     v-model="searchQuery"
                     type="search"
-                    :placeholder="managementMode ? 'ค้นหาโซน รหัสแผง หรือประเภทสินค้า' : 'ค้นหาโครงการหรือหมวดหมู่สินค้า'"
+                    :placeholder="managementMode ? 'ค้นหาเลขที่การจอง คำร้อง โซน รหัสแผง หรือประเภทสินค้า' : 'ค้นหาโครงการหรือหมวดหมู่สินค้า'"
                     @input="handleSearchInput"
+                    @keydown.down.prevent="moveSearchSuggestion(1)"
+                    @keydown.up.prevent="moveSearchSuggestion(-1)"
+                    @keydown.enter.prevent="selectActiveSearchSuggestion"
                   />
                   <button v-if="searchQuery" type="button" class="ov-search-clear" aria-label="ล้างคำค้นหา" @click="clearSearch">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M18 6 6 18"></path></svg>
                   </button>
                 </label>
-                <div v-if="!searchQuery.trim() || !searchResults.length" class="ov-empty">
-                  <span class="ov-empty-icon" aria-hidden="true">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                  </span>
-                  <strong>{{ searchQuery.trim() ? 'ไม่พบผลลัพธ์' : 'เริ่มค้นหา' }}</strong>
-                  <p>{{ searchQuery.trim() ? `ไม่พบ "${searchQuery}" ลองใช้คำอื่น` : 'พิมพ์ชื่อโซน/โครงการ รหัสแผง หรือประเภทสินค้า' }}</p>
+                <div v-if="appliedSearchQuery.trim()" class="ov-applied-search">
+                  <span>กำลังแสดงผล: <strong>{{ appliedSearchQuery }}</strong></span>
+                  <button type="button" @click="clearAppliedSearch">ล้างผลบนแผนที่</button>
                 </div>
-                <ul v-else class="ov-result-list">
-                  <li v-for="p in searchResults" :key="p.id">
-                    <button type="button" class="ov-result" @click="focusProject(p)">
-                      <span class="ov-swatch" :style="{ backgroundColor: projectColor(p) }"></span>
+                <AppEmptyState
+                  v-if="!suggestionQuery.trim() || !searchResults.length"
+                  variant="map"
+                  icon="search"
+                  :title="suggestionQuery.trim() ? 'ไม่พบผลลัพธ์' : 'เริ่มค้นหา'"
+                  :description="suggestionQuery.trim() ? `ไม่พบ “${suggestionQuery}” ลองใช้คำอื่น` : 'พิมพ์เลขที่การจอง เลขที่คำร้อง ชื่อโซน โครงการ รหัสแผง หรือประเภทสินค้า'"
+                />
+                <template v-else>
+                  <p class="ov-search-summary">
+                    พบ <strong>{{ searchResults.length.toLocaleString('th-TH') }}</strong> โครงการ
+                    <template v-if="searchResultStallCount"> · <strong>{{ searchResultStallCount.toLocaleString('th-TH') }}</strong> แผง</template>
+                  </p>
+                  <ul class="ov-result-list" role="listbox" aria-label="ผลการค้นหา">
+                  <li v-for="(result, index) in searchResults" :key="result.project.id">
+                    <button
+                      type="button"
+                      class="ov-result"
+                      :class="{
+                        focused: index === focusedSuggestionIndex,
+                        active: String(result.project.id) === selectedSuggestionId
+                      }"
+                      :data-suggestion-index="index"
+                      role="option"
+                      :aria-selected="String(result.project.id) === selectedSuggestionId"
+                      @click="selectSearchResult(result)"
+                    >
+                      <span class="ov-swatch" :style="{ backgroundColor: projectColor(result.project) }"></span>
                       <span class="ov-result-text">
-                        <strong>{{ p.name }}</strong>
-                        <small>{{ p.category || 'ไม่ระบุหมวด' }} · {{ (p.stalls?.length || p.totalStalls || 0).toLocaleString('th-TH') }} แผง</small>
+                        <strong>
+                          <template v-for="(part, partIndex) in getHighlightedSearchParts(result.project.name)" :key="partIndex">
+                            <mark v-if="part.match">{{ part.text }}</mark><template v-else>{{ part.text }}</template>
+                          </template>
+                        </strong>
+                        <span class="ov-result-badges">
+                          <span v-for="type in result.matchTypes" :key="type" class="ov-result-badge" :class="`is-${type}`">{{ searchMatchTypeLabel(type) }}</span>
+                        </span>
+                        <small v-if="result.referenceText" class="ov-result-reference">
+                          <template v-for="(part, partIndex) in getHighlightedSearchParts(result.referenceText)" :key="partIndex">
+                            <mark v-if="part.match">{{ part.text }}</mark><template v-else>{{ part.text }}</template>
+                          </template>
+                        </small>
+                        <small>{{ result.project.category || 'ไม่ระบุหมวด' }} · {{ (result.project.stalls?.length || result.project.totalStalls || 0).toLocaleString('th-TH') }} แผง</small>
                       </span>
                       <svg class="ov-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </button>
                   </li>
-                </ul>
+                  </ul>
+                </template>
               </template>
 
               <!-- ตัวกรอง: ชุดตัวกรองต่างกันตามโหมด -->
               <template v-else-if="ovPanel === 'filter'">
                 <slot v-if="filterContext === 'costs'" name="filter-costs" />
                 <template v-else>
+                  <div v-if="activeKpiFilterLabel" class="ov-kpi-filter-chip">
+                    <span>สถานะจากการ์ด: <strong>{{ activeKpiFilterLabel }}</strong></span>
+                    <button type="button" :aria-label="`ล้างสถานะ ${activeKpiFilterLabel}`" @click="emit('clear-status-filter')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+                    </button>
+                  </div>
+
+                  <div v-if="contractStatusFilter !== 'all'" class="ov-kpi-filter-chip">
+                    <span>สถานะสัญญา: <strong>{{ contractStatusLabel }}</strong></span>
+                    <button type="button" :aria-label="`ล้างสถานะสัญญา ${contractStatusLabel}`" @click="applyDashboardFilter({ contractStatus: 'all' })">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+                    </button>
+                  </div>
+
                   <section class="ov-filter-section">
                     <h4>พื้นที่</h4>
                     <div class="ov-filter-grid">
@@ -981,40 +1033,74 @@
                   </section>
 
                   <section class="ov-filter-section">
-                    <h4>สถานะแผงและสัญญา</h4>
+                    <h4>คุณสมบัติแผง</h4>
                     <div class="ov-filter-grid">
                       <div class="ov-field">
-                        <span class="ov-label">สถานะแผง</span>
-                        <AppSelect v-model="availabilityFilter" :options="availabilityOptions" placeholder="ทุกสถานะ" />
+                        <span class="ov-label">ค่าเช่ารายเดือน</span>
+                        <AppSelect v-model="rentFilter" :options="rentOptions" placeholder="ทุกช่วงราคา" />
                       </div>
                       <div class="ov-field">
-                        <span class="ov-label">สถานะสัญญา</span>
-                        <AppSelect v-model="contractStatusFilter" :options="contractStatusOptions" placeholder="ทุกสถานะ" />
+                        <span class="ov-label">ขนาดแผง</span>
+                        <AppSelect v-model="sizeFilter" :options="sizeOptions" placeholder="ทุกขนาด" />
                       </div>
                       <div class="ov-field">
-                        <span class="ov-label">สัญญาจะหมดอายุภายใน</span>
-                        <AppSelect v-model="contractExpiryFilter" :options="contractExpiryOptions" placeholder="ไม่จำกัด" />
-                      </div>
-                      <div class="ov-field">
-                        <span class="ov-label">การต่ออายุสัญญา</span>
-                        <AppSelect v-model="renewalStatusFilter" :options="renewalStatusOptions" placeholder="ทุกสถานะ" />
+                        <span class="ov-label">ความครบถ้วนของข้อมูล</span>
+                        <AppSelect v-model="readinessFilter" :options="readinessOptions" placeholder="ทั้งหมด" />
                       </div>
                     </div>
                   </section>
 
                   <section class="ov-filter-section">
-                    <h4>การดำเนินงาน</h4>
+                    <h4>ช่วงเวลา</h4>
                     <div class="ov-filter-grid">
+                      <div class="ov-field">
+                        <span class="ov-label">สัญญาจะหมดอายุ</span>
+                        <AppSelect v-model="contractExpiryFilter" :options="contractExpiryOptions" placeholder="ไม่จำกัด" />
+                        <div v-if="contractExpiryFilter === 'custom'" class="ov-date-range">
+                          <label><span>ตั้งแต่</span><AppDatePicker v-model="contractExpiryFrom" placeholder="เลือกวันที่" aria-label="สัญญาหมดอายุตั้งแต่วันที่" /></label>
+                          <label><span>ถึง</span><AppDatePicker v-model="contractExpiryTo" placeholder="เลือกวันที่" align="right" aria-label="สัญญาหมดอายุถึงวันที่" /></label>
+                        </div>
+                      </div>
+                      <div class="ov-field">
+                        <span class="ov-label">มีการจองในช่วง</span>
+                        <AppSelect v-model="bookingRangeFilter" :options="bookingRangeOptions" placeholder="ไม่จำกัด" />
+                        <div v-if="bookingRangeFilter === 'custom'" class="ov-date-range">
+                          <label><span>ตั้งแต่</span><AppDatePicker v-model="bookingFrom" placeholder="เลือกวันที่" aria-label="มีการจองตั้งแต่วันที่" /></label>
+                          <label><span>ถึง</span><AppDatePicker v-model="bookingTo" placeholder="เลือกวันที่" align="right" aria-label="มีการจองถึงวันที่" /></label>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="ov-filter-section">
+                    <h4>สัญญาและการส่งคืน</h4>
+                    <div class="ov-filter-grid">
+                      <div class="ov-field">
+                        <span class="ov-label">การต่ออายุสัญญา</span>
+                        <AppSelect v-model="renewalStatusFilter" :options="renewalStatusOptions" placeholder="ทุกสถานะ" />
+                      </div>
                       <div class="ov-field">
                         <span class="ov-label">การส่งคืนแผง</span>
                         <AppSelect v-model="returnStatusFilter" :options="returnStatusOptions" placeholder="ทุกสถานะ" />
                       </div>
+                    </div>
+                  </section>
+
+                  <section v-if="statusFilterContext === 'legal_case'" class="ov-filter-section">
+                    <h4>รายละเอียดคดี</h4>
+                    <div class="ov-filter-grid">
                       <div class="ov-field">
-                        <span class="ov-label">สถานะคดี</span>
-                        <AppSelect v-model="legalStatusFilter" :options="legalStatusOptions" placeholder="ทุกสถานะ" />
+                        <span class="ov-label">ขั้นตอนของคดี</span>
+                        <AppSelect v-model="legalStatusFilter" :options="legalStatusOptions" placeholder="ทุกขั้นตอน" />
                       </div>
+                    </div>
+                  </section>
+
+                  <section v-if="statusFilterContext === 'action_required'" class="ov-filter-section">
+                    <h4>รายละเอียดที่ต้องดำเนินการ</h4>
+                    <div class="ov-filter-grid">
                       <div class="ov-field">
-                        <span class="ov-label">งานซ่อม</span>
+                        <span class="ov-label">สถานะงานซ่อม</span>
                         <AppSelect v-model="maintenanceStatusFilter" :options="maintenanceStatusFilterOptions" placeholder="ทุกสถานะ" />
                       </div>
                       <div class="ov-field">
@@ -1044,7 +1130,6 @@
                   <div class="ov-section-head">
                     <h4>สิ่งอำนวยความสะดวก</h4>
                   </div>
-                  <p class="ov-hint">เลือกเปิดหรือปิดข้อมูลประกอบที่แสดงทับบนผังตลาด</p>
                   <div class="ov-layer-toggle-list" role="group" aria-label="สิ่งอำนวยความสะดวก">
                     <button
                       type="button"
@@ -1055,8 +1140,10 @@
                     >
                       <span class="ov-layer-icon" aria-hidden="true">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M12 22s7-5.3 7-12a7 7 0 1 0-14 0c0 6.7 7 12 7 12Z"></path>
-                          <circle cx="12" cy="10" r="2.5"></circle>
+                          <path d="M3 20h18"></path>
+                          <path d="M5 20v-2a7 7 0 0 1 14 0v2"></path>
+                          <path d="M12 11V4"></path>
+                          <path d="M10 4h4"></path>
                         </svg>
                       </span>
                       <span class="ov-layer-text">
@@ -1071,16 +1158,36 @@
                 </section>
                 <section class="ov-section">
                   <div class="ov-section-head">
-                    <h4>สีโครงการ</h4>
-                    <button v-if="legendCategories.length" type="button" class="ov-chip-clear" @click="clearLegendCategories">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
-                      ล้างตัวกรอง ({{ legendCategories.length }})
+                    <h4>ป้ายกำกับ</h4>
+                  </div>
+                  <div class="ov-label-layer-list" role="group" aria-label="ป้ายกำกับบนแผนที่">
+                    <button type="button" class="ov-label-layer" :class="{ active: showProjectLabels }" :aria-pressed="showProjectLabels" @click="toggleProjectLabels">
+                      <span class="ov-label-layer-icon" aria-hidden="true">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h5"></path></svg>
+                      </span>
+                      <span>ชื่อโครงการ</span>
+                      <span class="ov-mini-switch" aria-hidden="true"><span></span></span>
+                    </button>
+                    <button type="button" class="ov-label-layer" :class="{ active: showStallNumberLabels }" :aria-pressed="showStallNumberLabels" @click="toggleStallLabels">
+                      <span class="ov-label-layer-icon" aria-hidden="true">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"></path></svg>
+                      </span>
+                      <span>เลขแผง</span>
+                      <span class="ov-mini-switch" aria-hidden="true"><span></span></span>
                     </button>
                   </div>
-                  <p class="ov-hint">สีของกรอบโครงการบนแผนที่ เลือกได้หลายหมวดเพื่อกรองให้เห็นเฉพาะหมวดนั้น</p>
+                </section>
+                <section class="ov-section">
+                  <div class="ov-section-head">
+                    <h4>สีโครงการ</h4>
+                    <div class="ov-legend-actions">
+                      <span class="ov-selected-count">{{ legendCategories.length ? `${legendCategories.length} ที่เลือก` : 'แสดงทั้งหมด' }}</span>
+                      <button v-if="legendCategories.length" type="button" class="ov-show-all" @click="clearLegendCategories">แสดงทั้งหมด</button>
+                    </div>
+                  </div>
                   <ul class="ov-legend" role="group" aria-label="สีโครงการ">
                     <li v-for="cat in categoryStats" :key="cat.name">
-                      <button type="button" class="ov-legend-item" :class="{ active: legendCategories.includes(cat.name), dimmed: legendCategories.length > 0 && !legendCategories.includes(cat.name) }" :aria-pressed="legendCategories.includes(cat.name)" @click="toggleLegendCategory(cat.name)">
+                      <button type="button" class="ov-legend-item" :class="{ active: legendCategories.includes(cat.name), dimmed: legendCategories.length > 0 && !legendCategories.includes(cat.name) }" :style="legendCategoryStyle(cat.color)" :aria-pressed="legendCategories.includes(cat.name)" @click="toggleLegendCategory(cat.name)">
                         <span class="ov-tile" :style="{ backgroundColor: cat.color }" :title="`${cat.projectCount} โครงการ`">{{ cat.projectCount }}</span>
                         <span class="ov-legend-text">
                           <strong>{{ cat.name }}</strong>
@@ -1098,7 +1205,7 @@
 
             <footer v-if="ovPanel === 'filter'" class="ov-slide-foot">
               <template v-if="filterContext === 'costs'">
-                <AppButton variant="secondary" size="md" full-width @click="emit('reset-cost-filters')">ล้างค่า</AppButton>
+                <AppButton variant="secondary" size="md" full-width @click="resetCostFiltersAndOverview">ล้างค่า</AppButton>
               </template>
               <template v-else>
                 <AppButton variant="secondary" size="md" @click="clearAllFilters">ล้างค่า</AppButton>
@@ -1114,25 +1221,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, onActivated, onDeactivated } from 'vue'
 import AppButton from '~/components/AppButton.vue'
 import { addStandardMapControls } from '~/utils/mapControls'
+import AppDatePicker from '~/components/AppDatePicker.vue'
 import AppSelect, { type SelectOption } from '~/components/AppSelect.vue'
 import type { ProjectZone, ProjectFloor, MarketFacility } from '../../data/market_gis_types'
 import { getProjectStallLayout, getAllFloorLayoutsForProject, isOverviewBoundaryProject, clearLayoutCache, type MapStall, type ProjectStallLayout } from '../../data/market_stall_layout'
 import { getMarketGisConfig, type MarketGisConfig } from '../../data/markets_registry'
-import { loadMarketGisJson, mergeMarketProjects, cloneProjects } from '../../data/market_loader'
+import { loadMarketGisJson, mergeMarketProjects, cloneProjects, getLoadedMarketFacilities, sharedRequest } from '../../data/market_loader'
 
 export type { ProjectZone, ProjectFloor }
 
 export interface StallOperationalFilterMeta {
   contractStatus?: 'active' | 'expiring' | 'expired'
   contractExpiryDays?: number
+  lastBookingAt?: number
   renewalStatus?: 'pending' | 'reviewing' | 'approved' | 'declined'
-  returnStatus?: 'pending' | 'inspection' | 'returned' | 'overdue'
+  returnStatus?: 'notified' | 'pending' | 'inspection' | 'returned' | 'overdue'
   legalStatus?: 'legal_review' | 'proceeding' | 'enforcement' | 'closed'
   maintenanceStatus?: 'pending' | 'repairing' | 'completed' | 'overdue'
   requestTypes?: Array<'contract_name_change' | 'transfer' | 'contract_cancel' | 'sublease'>
+  searchTerms?: string[]
+  searchReferences?: Array<{ type: 'booking' | 'application'; number: string }>
 }
 
 const props = withDefaults(defineProps<{
@@ -1145,6 +1256,7 @@ const props = withDefaults(defineProps<{
   myBookedStallCodes?: string[]
   stallStatusOverrides?: Record<string, 'available' | 'reserved' | 'occupied'>
   stallStatusFilter?: 'all' | 'available' | 'reserved' | 'occupied' | 'action_required'
+  statusFilterContext?: 'all' | 'available' | 'reserved' | 'occupied' | 'action_required' | 'legal_case'
   actionRequiredStallCodes?: string[]
   onlyAvailable?: boolean
   categoryFilter?: string | null
@@ -1161,11 +1273,13 @@ const props = withDefaults(defineProps<{
   returnProjectPanel?: boolean
   managedProjects?: ProjectZone[]
   managedFacilities?: MarketFacility[]
+  managedDataVersion?: number
   isDashboardOpen?: boolean
   dashboardTitle?: string
   dashboardSubtitle?: string
   activeFilterCodes?: string[] | null
   operationalFilterMeta?: Record<string, StallOperationalFilterMeta>
+  statusDataLoading?: boolean
 }>(), {
   containerId: 'step1-projects-maplibre',
   marketId: '1',
@@ -1176,6 +1290,7 @@ const props = withDefaults(defineProps<{
   myBookedStallCodes: () => [],
   stallStatusOverrides: () => ({}),
   stallStatusFilter: 'all',
+  statusFilterContext: 'all',
   actionRequiredStallCodes: () => [],
   onlyAvailable: false,
   categoryFilter: null,
@@ -1192,11 +1307,13 @@ const props = withDefaults(defineProps<{
   returnProjectPanel: false,
   managedProjects: () => [],
   managedFacilities: () => [],
+  managedDataVersion: 0,
   isDashboardOpen: false,
   dashboardTitle: '',
   dashboardSubtitle: '',
   activeFilterCodes: null,
-  operationalFilterMeta: () => ({})
+  operationalFilterMeta: () => ({}),
+  statusDataLoading: false
 })
 
 const emit = defineEmits<{
@@ -1220,6 +1337,9 @@ const emit = defineEmits<{
   (e: 'update:isDashboardOpen', val: boolean): void
   (e: 'toggleDashboard'): void
   (e: 'update:activePanel', val: string | null): void
+  (e: 'clear-status-filter'): void
+  (e: 'operational-filter-change', filters: { zone: string; search: string; contractStatus: string; renewalStatus: string; returnStatus: string; legalStatus: string; maintenanceStatus: string }): void
+  (e: 'market-data-loaded', payload: { projects: ProjectZone[]; facilities: MarketFacility[] }): void
 }>()
 
 // Active Map Style Mode ('standard' = Street, 'satellite' = Imagery)
@@ -1244,20 +1364,32 @@ const setMapStyle = (mode: 'standard' | 'satellite' | 'dark') => {
 }
 
 const searchQuery = ref('')
+const suggestionQuery = ref('')
+const focusedSuggestionIndex = ref(-1)
+const selectedSuggestionId = ref<string | null>(null)
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
 const rentFilter = ref<'all' | 'under-2000' | '2000-3000' | 'over-3000'>('all')
+type StallSizeFilter = 'all' | 'up-to-5' | '5-to-10' | 'over-10'
+const sizeFilter = ref<StallSizeFilter>('all')
 const availabilityFilter = ref<'available' | 'reserved' | 'occupied' | 'action_required' | 'all'>('all')
 const zoneFilter = ref('all')
 const readinessFilter = ref<'all' | 'ready' | 'missing-stalls' | 'incomplete-stalls'>('all')
 type ContractStatusFilter = 'all' | 'active' | 'expiring' | 'expired'
-type ExpiryFilter = 'all' | '30' | '60' | '90'
-type RenewalFilter = 'all' | 'pending' | 'reviewing' | 'approved' | 'declined'
-type ReturnFilter = 'all' | 'pending' | 'inspection' | 'returned' | 'overdue'
+type ExpiryFilter = 'all' | '30' | '60' | '90' | 'custom'
+type BookingRangeFilter = 'all' | '7' | '30' | '90' | 'custom'
+type RenewalFilter = 'all' | 'awaiting' | 'pending' | 'reviewing' | 'approved' | 'declined'
+type ReturnFilter = 'all' | 'notified' | 'pending' | 'inspection' | 'returned' | 'overdue'
 type LegalFilter = 'all' | 'legal_review' | 'proceeding' | 'enforcement' | 'closed'
 type MaintenanceFilter = 'all' | 'pending' | 'repairing' | 'completed' | 'overdue'
 type RequestTypeFilter = 'all' | 'contract_name_change' | 'transfer' | 'contract_cancel' | 'sublease'
 const floorFilter = ref('all')
 const contractStatusFilter = ref<ContractStatusFilter>('all')
 const contractExpiryFilter = ref<ExpiryFilter>('all')
+const contractExpiryFrom = ref('')
+const contractExpiryTo = ref('')
+const bookingRangeFilter = ref<BookingRangeFilter>('all')
+const bookingFrom = ref('')
+const bookingTo = ref('')
 const renewalStatusFilter = ref<RenewalFilter>('all')
 const returnStatusFilter = ref<ReturnFilter>('all')
 const legalStatusFilter = ref<LegalFilter>('all')
@@ -1270,23 +1402,47 @@ const appliedCategoryFilter = ref(props.categoryFilter || '')
 // กรองหลายหมวดจากสีโครงการ (ชั้นข้อมูล) แยกจากตัวกรองหมวดเดี่ยวในหน้าตัวกรอง
 const legendCategories = ref<string[]>([])
 const showFacilities = ref(false)
-// สถานะแผงที่ตั้งจากการ์ด KPI ด้านบน ไม่นับเป็นตัวกรองบนปุ่มตัวกรอง
-const availabilityFromCard = ref(false)
+const showStallNumberLabels = ref(true)
+const showProjectLabels = ref(true)
 const appliedSearchQuery = ref('')
 const appliedRentFilter = ref<'all' | 'under-2000' | '2000-3000' | 'over-3000'>('all')
+const appliedSizeFilter = ref<StallSizeFilter>('all')
 const appliedAvailabilityFilter = ref<'available' | 'reserved' | 'occupied' | 'action_required' | 'all'>('all')
 const appliedZoneFilter = ref('all')
 const appliedReadinessFilter = ref<'all' | 'ready' | 'missing-stalls' | 'incomplete-stalls'>('all')
 const appliedFloorFilter = ref('all')
 const appliedContractStatusFilter = ref<ContractStatusFilter>('all')
 const appliedContractExpiryFilter = ref<ExpiryFilter>('all')
+const appliedContractExpiryFrom = ref('')
+const appliedContractExpiryTo = ref('')
+const appliedBookingRangeFilter = ref<BookingRangeFilter>('all')
+const appliedBookingFrom = ref('')
+const appliedBookingTo = ref('')
 const appliedRenewalStatusFilter = ref<RenewalFilter>('all')
 const appliedReturnStatusFilter = ref<ReturnFilter>('all')
 const appliedLegalStatusFilter = ref<LegalFilter>('all')
 const appliedMaintenanceStatusFilter = ref<MaintenanceFilter>('all')
 const appliedRequestTypeFilter = ref<RequestTypeFilter>('all')
+
+const setProjectStatusQuickFilter = (status: 'available' | 'reserved' | 'occupied' | 'all') => {
+  const nextStatus = status !== 'all' && appliedAvailabilityFilter.value === status ? 'all' : status
+  availabilityFilter.value = nextStatus
+  appliedAvailabilityFilter.value = nextStatus
+  emit('update:onlyAvailable', nextStatus === 'available')
+  refreshSources()
+}
 const showAdvancedFilters = ref(false)
 const showColorLegend = ref(false)
+const activeKpiFilterLabel = computed(() => {
+  const labels: Record<string, string> = {
+    available: 'ว่าง',
+    reserved: 'ติดจอง',
+    occupied: 'มีผู้เช่า',
+    action_required: 'ต้องดำเนินการ',
+    legal_case: 'มีคดี'
+  }
+  return labels[props.statusFilterContext] || ''
+})
 
 const currentMarket = ref<MarketGisConfig>(getMarketGisConfig(props.marketId))
 const managedFacilities = ref<MarketFacility[]>([])
@@ -1440,30 +1596,57 @@ const projectFootprintArea = (project: ProjectZone): number => {
 }
 
 const baseMarketProjects = ref<ProjectZone[]>([])
+let marketSyncRun = 0
 
-const syncMarketJson = async (idOrSlug?: string | number) => {
-  const data = await loadMarketGisJson(idOrSlug)
-  if (data) {
+const syncMarketJson = async (idOrSlug?: string | number, signal?: AbortSignal) => {
+  const run = ++marketSyncRun
+  const data = await loadMarketGisJson(idOrSlug, false, signal)
+  if (data && run === marketSyncRun && !isUnmounted) {
     clearLayoutCache()
-    baseMarketProjects.value = cloneProjects((data.projects || []).filter(p => !String(p.id).startsWith('zone-')))
-    currentMarket.value = cloneProjects(data)
+    clearProjectLayoutCache()
+    // This data is used as a read-only map source. Keep the cached nested geometry by
+    // reference and only replace the outer containers, otherwise a 10k-stall market
+    // blocks the main thread while structuredClone duplicates the complete payload.
+    // Read-only overview/booking maps can safely share the cached nested geometry.
+    // Only the actual GIS editor needs an isolated mutable copy.
+    const loadedProjects = props.managementMode && !props.isOverviewPage
+      ? cloneProjects(data.projects || [])
+      : (data.projects || [])
+    baseMarketProjects.value = loadedProjects.filter(p => !String(p.id).startsWith('zone-'))
+    currentMarket.value = { ...data, projects: loadedProjects }
     try {
-      const endpoint = props.managementMode
-        ? `/markets/${encodeURIComponent(String(idOrSlug || data.id))}/gis-config/draft`
-        : `/markets/${encodeURIComponent(String(idOrSlug || data.id))}/gis-config`
-      const response: any = await apiGet(endpoint)
-      const managed = response?.data || response
-      if (Array.isArray(managed?.projects) && managed.projects.length) {
-        currentMarket.value = { ...data, projects: mergeMarketProjects(baseMarketProjects.value, managed.projects) }
+      const marketKey = String(idOrSlug || data.id)
+      const loadedFacilities = getLoadedMarketFacilities(marketKey)
+      if (props.managementMode) {
+        // The management page owns the draft request and pushes a versioned result
+        // through managedProjects/managedFacilities. Do not request the same large
+        // draft a second time from the child map.
+        managedFacilities.value = props.managedFacilities.length
+          ? props.managedFacilities
+          : (loadedFacilities || [])
+      } else if (loadedFacilities) {
+        // gis-config ของตลาดนี้ถูกโหลดแล้วโดย loadMarketGisJson ไม่ต้องโหลดก้อนเดิมซ้ำ
+        managedFacilities.value = loadedFacilities
+      } else {
+        const endpoint = `/markets/${encodeURIComponent(marketKey)}/gis-config`
+        const response: any = await sharedRequest(endpoint, () => apiGet(endpoint))
+        const managed = response?.data || response
+        if (Array.isArray(managed?.projects) && managed.projects.length) {
+          currentMarket.value = { ...data, projects: mergeMarketProjects(baseMarketProjects.value, managed.projects, false) }
+        }
+        managedFacilities.value = Array.isArray(managed?.facilities) ? managed.facilities : []
       }
-      managedFacilities.value = Array.isArray(managed?.facilities) ? managed.facilities : []
     } catch {
       managedFacilities.value = []
     }
     if (props.managementMode && props.managedProjects.length) {
-      currentMarket.value = { ...currentMarket.value, projects: mergeMarketProjects(baseMarketProjects.value, props.managedProjects) }
+      currentMarket.value = { ...currentMarket.value, projects: mergeMarketProjects(baseMarketProjects.value, props.managedProjects, false) }
     }
-    if (props.managementMode) managedFacilities.value = props.managedFacilities
+    if (props.managementMode && props.managedFacilities.length) managedFacilities.value = props.managedFacilities
+    emit('market-data-loaded', {
+      projects: currentMarket.value.projects || [],
+      facilities: managedFacilities.value
+    })
     if (map) {
       refreshSources()
       renderZoneLabels()
@@ -1474,7 +1657,8 @@ const syncMarketJson = async (idOrSlug?: string | number) => {
 const applyManagedProjects = (nextProjects: ProjectZone[]) => {
   if (!props.managementMode || !nextProjects.length) return
   clearLayoutCache()
-  const merged = mergeMarketProjects(baseMarketProjects.value, nextProjects)
+  clearProjectLayoutCache()
+  const merged = mergeMarketProjects(baseMarketProjects.value, nextProjects, false)
   currentMarket.value = { ...currentMarket.value, projects: merged }
   if (activeProjectId.value && !merged.some(project => project.id === activeProjectId.value)) {
     isPolygonEditMode.value = false
@@ -1532,33 +1716,34 @@ const categories = computed(() => {
   return Array.from(uniqueCats.entries()).map(([name, color]) => ({ name, color }))
 })
 
+// Build normalized indexes once. The previous fallback walked every override for
+// every stall, which became O(stalls × contracts) and froze large markets.
+const stallStatusOverrideIndex = computed(() => {
+  const direct = new Map<string, 'available' | 'reserved' | 'occupied'>()
+  const digits = new Map<string, 'available' | 'reserved' | 'occupied'>()
+  Object.entries(props.stallStatusOverrides || {}).forEach(([rawCode, status]) => {
+    const cleanCode = rawCode.toUpperCase().trim()
+    if (!cleanCode) return
+    direct.set(cleanCode, status)
+    const rawDigits = cleanCode.replace(/[^0-9]/g, '')
+    if (!rawDigits) return
+    if (!digits.has(rawDigits)) digits.set(rawDigits, status)
+    const normalizedDigits = rawDigits.replace(/^0+/, '')
+    if (normalizedDigits && !digits.has(normalizedDigits)) digits.set(normalizedDigits, status)
+  })
+  return { direct, digits }
+})
+
 // Helper to match stall status override with robust normalization
 const findStallStatusOverride = (stallCode: string): 'available' | 'reserved' | 'occupied' | undefined => {
-  if (!props.stallStatusOverrides) return undefined
-  if (props.stallStatusOverrides[stallCode]) {
-    return props.stallStatusOverrides[stallCode]
-  }
   const cleanCode = stallCode.toUpperCase().trim()
-  if (props.stallStatusOverrides[cleanCode]) {
-    return props.stallStatusOverrides[cleanCode]
-  }
-  // Try case-insensitive matching
-  for (const [k, v] of Object.entries(props.stallStatusOverrides)) {
-    const cleanK = k.toUpperCase().trim()
-    if (cleanK === cleanCode) return v
-  }
+  const direct = stallStatusOverrideIndex.value.direct.get(cleanCode)
+  if (direct) return direct
   // Fallback: match by number/identifier if project/zone is aligned (e.g. PRA-10-004 vs 10-A04 or PRA-10-4)
   const codeDigits = cleanCode.replace(/[^0-9]/g, '')
-  if (codeDigits) {
-    for (const [k, v] of Object.entries(props.stallStatusOverrides)) {
-      const kDigits = k.toUpperCase().trim().replace(/[^0-9]/g, '')
-      if (kDigits && kDigits === codeDigits) return v
-      const kNorm = kDigits.replace(/^0+/, '')
-      const codeNorm = codeDigits.replace(/^0+/, '')
-      if (kNorm && codeNorm && kNorm === codeNorm) return v
-    }
-  }
-  return undefined
+  if (!codeDigits) return undefined
+  return stallStatusOverrideIndex.value.digits.get(codeDigits)
+    || stallStatusOverrideIndex.value.digits.get(codeDigits.replace(/^0+/, ''))
 }
 
 // Apply the authoritative market-level state before any counter, color,
@@ -1595,47 +1780,49 @@ const getEffectiveFloorLayoutsForProject = (project: ProjectZone): Map<string, P
   return effectiveLayouts
 }
 
-// Sub-stall layouts generated for each project/zone in the active market
-const layouts = computed(() => {
-  const map = new Map<string, ProjectStallLayout>()
-  currentMarket.value.projects.forEach(p => {
-    if (p.floors && p.floors.length > 1) {
-      const floorLayouts = getAllFloorLayoutsForProject(p)
-      const allStalls: MapStall[] = []
-      let total = 0
-      let available = 0
-      let reserved = 0
-      let occupied = 0
-      floorLayouts.forEach(fl => {
-        const eff = applyMarketStatus(fl)
-        allStalls.push(...eff.stalls)
-        total += eff.total
-        available += eff.available
-        reserved += eff.reserved
-        occupied += eff.occupied
-      })
-      const defaultFloorLayout = getProjectStallLayout(p)
-      map.set(p.id, {
-        stalls: allStalls,
-        labelPoint: defaultFloorLayout.labelPoint,
-        total,
-        available,
-        reserved,
-        occupied,
-        floorId: 'all',
-        floorName: `รวมทุกชั้น (${p.floors.length} ชั้น)`
-      })
-    } else {
-      map.set(p.id, applyMarketStatus(getProjectStallLayout(p)))
+// สร้าง layout เมื่อมีผู้ใช้เปิด/กรองโครงการนั้นเท่านั้น แทนการประมวลผล
+// polygon ทุกแผงของทุกโครงการทุกครั้งที่ reactive state เปลี่ยน
+const projectLayoutCache = new Map<string, ProjectStallLayout>()
+const clearProjectLayoutCache = () => projectLayoutCache.clear()
+const getProjectLayout = (project: ProjectZone): ProjectStallLayout => {
+  const cached = projectLayoutCache.get(project.id)
+  if (cached) return cached
+  let result: ProjectStallLayout
+  if (project.floors && project.floors.length > 1) {
+    const allStalls: MapStall[] = []
+    let total = 0
+    let available = 0
+    let reserved = 0
+    let occupied = 0
+    getAllFloorLayoutsForProject(project).forEach((floorLayout) => {
+      const effective = applyMarketStatus(floorLayout)
+      allStalls.push(...effective.stalls)
+      total += effective.total
+      available += effective.available
+      reserved += effective.reserved
+      occupied += effective.occupied
+    })
+    result = {
+      stalls: allStalls,
+      labelPoint: getProjectStallLayout(project).labelPoint,
+      total,
+      available,
+      reserved,
+      occupied,
+      floorId: 'all',
+      floorName: `รวมทุกชั้น (${project.floors.length} ชั้น)`
     }
-  })
-  return map
-})
+  } else {
+    result = applyMarketStatus(getProjectStallLayout(project))
+  }
+  projectLayoutCache.set(project.id, result)
+  return result
+}
 
 const projects = computed<ProjectZone[]>(() => {
   const sourceProjects = currentMarket.value.projects
   return sourceProjects.filter(p => !isOverviewBoundaryProject(p, sourceProjects)).map(p => {
-    const l = layouts.value.get(p.id)
+    const l = projectLayoutCache.get(p.id)
     return { ...p, totalStalls: l ? l.total : p.totalStalls, stallsAvailable: l ? l.available : p.stallsAvailable }
   })
 })
@@ -1673,6 +1860,11 @@ interface OperationalFilterSelection {
   floor: string
   contractStatus: ContractStatusFilter
   contractExpiry: ExpiryFilter
+  contractExpiryFrom: string
+  contractExpiryTo: string
+  bookingRange: BookingRangeFilter
+  bookingFrom: string
+  bookingTo: string
   renewalStatus: RenewalFilter
   returnStatus: ReturnFilter
   legalStatus: LegalFilter
@@ -1684,6 +1876,11 @@ const draftOperationalFilters = (): OperationalFilterSelection => ({
   floor: floorFilter.value,
   contractStatus: contractStatusFilter.value,
   contractExpiry: contractExpiryFilter.value,
+  contractExpiryFrom: contractExpiryFrom.value,
+  contractExpiryTo: contractExpiryTo.value,
+  bookingRange: bookingRangeFilter.value,
+  bookingFrom: bookingFrom.value,
+  bookingTo: bookingTo.value,
   renewalStatus: renewalStatusFilter.value,
   returnStatus: returnStatusFilter.value,
   legalStatus: legalStatusFilter.value,
@@ -1695,6 +1892,11 @@ const appliedOperationalFilters = (): OperationalFilterSelection => ({
   floor: appliedFloorFilter.value,
   contractStatus: appliedContractStatusFilter.value,
   contractExpiry: appliedContractExpiryFilter.value,
+  contractExpiryFrom: appliedContractExpiryFrom.value,
+  contractExpiryTo: appliedContractExpiryTo.value,
+  bookingRange: appliedBookingRangeFilter.value,
+  bookingFrom: appliedBookingFrom.value,
+  bookingTo: appliedBookingTo.value,
   renewalStatus: appliedRenewalStatusFilter.value,
   returnStatus: appliedReturnStatusFilter.value,
   legalStatus: appliedLegalStatusFilter.value,
@@ -1702,12 +1904,23 @@ const appliedOperationalFilters = (): OperationalFilterSelection => ({
   requestType: appliedRequestTypeFilter.value
 })
 
-const hasOperationalFilter = (filters: OperationalFilterSelection) => Object.values(filters).some(value => value !== 'all')
+// 'custom' ที่ยังไม่ได้เลือกวันที่ ถือว่ายังไม่กรอง (ช่องวันที่ว่าง = '')
+const hasOperationalFilter = (filters: OperationalFilterSelection) => {
+  const { contractExpiryFrom: expiryFrom, contractExpiryTo: expiryTo, bookingFrom: from, bookingTo: to, ...rest } = filters
+  if (Object.values(rest).some(value => value !== 'all' && !(value === 'custom' && !(
+    (rest.contractExpiry === 'custom' && (expiryFrom || expiryTo)) || (rest.bookingRange === 'custom' && (from || to))
+  )))) return true
+  return false
+}
+
+const dayStart = (dateText: string) => new Date(`${dateText}T00:00:00`).getTime()
+const todayStart = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime() }
 
 const matchesStallFiltersWith = (
   stall: MapStall,
   rent: typeof rentFilter.value,
   availability: typeof availabilityFilter.value,
+  size: StallSizeFilter,
   operational: OperationalFilterSelection = appliedOperationalFilters()
 ) => {
   if (activeFilterCodeSet.value !== null) {
@@ -1723,6 +1936,13 @@ const matchesStallFiltersWith = (
   if (rent === 'under-2000' && stall.monthlyRent >= 2000) return false
   if (rent === '2000-3000' && (stall.monthlyRent < 2000 || stall.monthlyRent > 3000)) return false
   if (rent === 'over-3000' && stall.monthlyRent <= 3000) return false
+  if (size !== 'all') {
+    const areaSqM = Number(stall.widthM) * Number(stall.depthM)
+    if (!Number.isFinite(areaSqM) || areaSqM <= 0) return false
+    if (size === 'up-to-5' && areaSqM > 5) return false
+    if (size === '5-to-10' && (areaSqM <= 5 || areaSqM > 10)) return false
+    if (size === 'over-10' && areaSqM <= 10) return false
+  }
   const floorId = String(stall.floor ?? stall.floorLevel ?? '')
   if (operational.floor !== 'all' && floorId !== operational.floor) return false
 
@@ -1730,11 +1950,40 @@ const matchesStallFiltersWith = (
     const meta = props.operationalFilterMeta[String(stall.code || '').trim().toUpperCase()]
     if (!meta) return false
     if (operational.contractStatus !== 'all' && meta.contractStatus !== operational.contractStatus) return false
-    if (operational.contractExpiry !== 'all') {
+    if (operational.contractExpiry === 'custom') {
+      // ช่วงวันที่กำหนดเอง: เทียบวันหมดอายุกับช่วง (วันที่ผ่านมาแล้วก็เลือกได้ เช่น สัญญาที่หมดไปเมื่อเดือนก่อน)
+      if (operational.contractExpiryFrom || operational.contractExpiryTo) {
+        const expiryDays = Number(meta.contractExpiryDays)
+        if (!Number.isFinite(expiryDays)) return false
+        const base = todayStart()
+        const fromDays = operational.contractExpiryFrom ? Math.round((dayStart(operational.contractExpiryFrom) - base) / 86_400_000) : -Infinity
+        const toDays = operational.contractExpiryTo ? Math.round((dayStart(operational.contractExpiryTo) - base) / 86_400_000) : Infinity
+        // เลือกวันเริ่มหลังวันสิ้นสุด: สลับให้เป็นช่วงที่ถูกต้อง
+        const low = Math.min(fromDays, toDays)
+        const high = Math.max(fromDays, toDays)
+        if (expiryDays < low || expiryDays > high) return false
+      }
+    } else if (operational.contractExpiry !== 'all') {
       const expiryDays = Number(meta.contractExpiryDays)
       if (!Number.isFinite(expiryDays) || expiryDays < 0 || expiryDays > Number(operational.contractExpiry)) return false
     }
-    if (operational.renewalStatus !== 'all' && meta.renewalStatus !== operational.renewalStatus) return false
+    if (operational.bookingRange !== 'all') {
+      const bookedAt = Number(meta.lastBookingAt)
+      if (operational.bookingRange === 'custom') {
+        if (operational.bookingFrom || operational.bookingTo) {
+          if (!Number.isFinite(bookedAt)) return false
+          const startOf = operational.bookingFrom ? dayStart(operational.bookingFrom) : -Infinity
+          const endOf = operational.bookingTo ? dayStart(operational.bookingTo) + 86_400_000 - 1 : Infinity
+          // เลือกวันเริ่มหลังวันสิ้นสุด: สลับให้เป็นช่วงที่ถูกต้อง
+          const from = startOf <= endOf ? startOf : endOf - 86_400_000 + 1
+          const to = startOf <= endOf ? endOf : startOf + 86_400_000 - 1
+          if (bookedAt < from || bookedAt > to) return false
+        }
+      } else if (!Number.isFinite(bookedAt) || bookedAt < Date.now() - Number(operational.bookingRange) * 86_400_000) return false
+    }
+    if (operational.renewalStatus === 'awaiting') {
+      if (meta.renewalStatus !== 'pending' && meta.renewalStatus !== 'reviewing') return false
+    } else if (operational.renewalStatus !== 'all' && meta.renewalStatus !== operational.renewalStatus) return false
     if (operational.returnStatus !== 'all' && meta.returnStatus !== operational.returnStatus) return false
     if (operational.legalStatus !== 'all' && meta.legalStatus !== operational.legalStatus) return false
     if (operational.maintenanceStatus !== 'all' && meta.maintenanceStatus !== operational.maintenanceStatus) return false
@@ -1747,24 +1996,37 @@ const matchesStallFilters = (stall: MapStall) => matchesStallFiltersWith(
   stall,
   appliedRentFilter.value,
   appliedAvailabilityFilter.value,
+  appliedSizeFilter.value,
   appliedOperationalFilters()
 )
+
+const stallMatchesSearchWith = (stall: MapStall, value: string): boolean => {
+  const query = value.trim().toLowerCase()
+  if (!query) return true
+  const code = String(stall.code || '').trim().toUpperCase()
+  const mapNumber = getStallMapLabel(stall).toLowerCase()
+  if (mapNumber.includes(query)) return true
+  if (!/^\d+$/.test(query) && code.toLowerCase().includes(query)) return true
+  return (props.operationalFilterMeta[code]?.searchTerms || [])
+    .some(term => String(term).toLowerCase().includes(query))
+}
 
 const projectHasMatchingStallWith = (
   project: ProjectZone,
   rent: typeof rentFilter.value,
   availability: typeof availabilityFilter.value,
+  size: StallSizeFilter,
   operational: OperationalFilterSelection
 ) => {
   // With no stall-level filter every project already matches. Avoid walking
   // and cloning thousands of stall polygons on every project hover.
-  if (rent === 'all' && availability === 'all' && !hasOperationalFilter(operational) && activeFilterCodeSet.value === null) return true
-  return Array.from(getEffectiveFloorLayoutsForProject(project).values())
-    .some(layout => layout.stalls.some(stall => matchesStallFiltersWith(stall, rent, availability, operational)))
+  if (rent === 'all' && availability === 'all' && size === 'all' && !hasOperationalFilter(operational) && activeFilterCodeSet.value === null) return true
+  const projectLayout = getProjectLayout(project)
+  return Boolean(projectLayout?.stalls.some(stall => matchesStallFiltersWith(stall, rent, availability, size, operational)))
 }
 
 const getProjectReadiness = (project: ProjectZone): 'ready' | 'missing-stalls' | 'incomplete-stalls' => {
-  const stalls = Array.from(getEffectiveFloorLayoutsForProject(project).values()).flatMap(layout => layout.stalls)
+  const stalls = getProjectLayout(project).stalls
   if (!stalls.length) return 'missing-stalls'
   return stalls.some(stall => !stall.code || !Number(stall.widthM) || !Number(stall.depthM) || !Number(stall.monthlyRent))
     ? 'incomplete-stalls'
@@ -1777,6 +2039,7 @@ const projectMatchesAllFiltersWith = (
   query: string,
   rent: typeof rentFilter.value,
   availability: typeof availabilityFilter.value,
+  size: StallSizeFilter,
   zone = 'all',
   readiness: typeof readinessFilter.value = 'all',
   operational: OperationalFilterSelection = appliedOperationalFilters()
@@ -1785,7 +2048,7 @@ const projectMatchesAllFiltersWith = (
     (legendCategories.value.length === 0 || legendCategories.value.includes(project.category))
   const matchesZone = zone === 'all' || project.id === zone
   const matchesReadiness = readiness === 'all' || getProjectReadiness(project) === readiness
-  return matchesCategory && matchesZone && matchesReadiness && matchesSearchWith(project, query) && projectHasMatchingStallWith(project, rent, availability, operational)
+  return matchesCategory && matchesZone && matchesReadiness && matchesSearchWith(project, query) && projectHasMatchingStallWith(project, rent, availability, size, operational)
 }
 
 const projectMatchesAllFilters = (project: ProjectZone) => projectMatchesAllFiltersWith(
@@ -1794,6 +2057,7 @@ const projectMatchesAllFilters = (project: ProjectZone) => projectMatchesAllFilt
   appliedSearchQuery.value,
   appliedRentFilter.value,
   appliedAvailabilityFilter.value,
+  appliedSizeFilter.value,
   appliedZoneFilter.value,
   appliedReadinessFilter.value,
   appliedOperationalFilters()
@@ -1802,11 +2066,10 @@ const projectMatchesAllFilters = (project: ProjectZone) => projectMatchesAllFilt
 const filteredProjectCount = computed(() => overviewProjects.value.filter(projectMatchesAllFilters).length)
 const filteredStallCount = computed(() => overviewProjects.value.reduce((count, project) => {
   if (!projectMatchesAllFilters(project)) return count
-  if (appliedRentFilter.value === 'all' && appliedAvailabilityFilter.value === 'all' && !hasOperationalFilter(appliedOperationalFilters())) {
+  if (appliedRentFilter.value === 'all' && appliedAvailabilityFilter.value === 'all' && appliedSizeFilter.value === 'all' && !hasOperationalFilter(appliedOperationalFilters())) {
     return count + (project.stalls?.length || project.totalStalls || 0)
   }
-  return count + Array.from(getEffectiveFloorLayoutsForProject(project).values())
-    .reduce((floorCount, layout) => floorCount + layout.stalls.filter(matchesStallFilters).length, 0)
+  return count + getProjectLayout(project).stalls.filter(matchesStallFilters).length
 }, 0))
 
 const previewFilteredProjectCount = computed(() => overviewProjects.value.filter(project => projectMatchesAllFiltersWith(
@@ -1815,28 +2078,29 @@ const previewFilteredProjectCount = computed(() => overviewProjects.value.filter
   searchQuery.value,
   rentFilter.value,
   availabilityFilter.value,
+  sizeFilter.value,
   zoneFilter.value,
   readinessFilter.value,
   draftOperationalFilters()
 )).length)
 const previewFilteredStallCount = computed(() => overviewProjects.value.reduce((count, project) => {
-  if (!projectMatchesAllFiltersWith(project, draftCategoryFilter.value, searchQuery.value, rentFilter.value, availabilityFilter.value, zoneFilter.value, readinessFilter.value, draftOperationalFilters())) return count
-  return count + Array.from(getEffectiveFloorLayoutsForProject(project).values())
-    .reduce((floorCount, layout) => floorCount + layout.stalls.filter(stall => matchesStallFiltersWith(stall, rentFilter.value, availabilityFilter.value, draftOperationalFilters())).length, 0)
+  if (!projectMatchesAllFiltersWith(project, draftCategoryFilter.value, searchQuery.value, rentFilter.value, availabilityFilter.value, sizeFilter.value, zoneFilter.value, readinessFilter.value, draftOperationalFilters())) return count
+  return count + getProjectLayout(project).stalls.filter(stall => matchesStallFiltersWith(stall, rentFilter.value, availabilityFilter.value, sizeFilter.value, draftOperationalFilters())).length
 }, 0))
 
 const hasActiveFilters = computed(() => Boolean(
-  appliedCategoryFilter.value || appliedSearchQuery.value.trim() || appliedRentFilter.value !== 'all' || appliedAvailabilityFilter.value !== 'all' || appliedZoneFilter.value !== 'all' || appliedReadinessFilter.value !== 'all' || hasOperationalFilter(appliedOperationalFilters())
+  appliedCategoryFilter.value || appliedSearchQuery.value.trim() || appliedRentFilter.value !== 'all' || appliedAvailabilityFilter.value !== 'all' || appliedSizeFilter.value !== 'all' || appliedZoneFilter.value !== 'all' || appliedReadinessFilter.value !== 'all' || hasOperationalFilter(appliedOperationalFilters())
 ))
 const advancedFilterCount = computed(() => [
   appliedCategoryFilter.value,
   appliedRentFilter.value !== 'all',
-  appliedAvailabilityFilter.value !== 'all',
+  appliedSizeFilter.value !== 'all',
+  !props.isOverviewPage && appliedAvailabilityFilter.value !== 'all',
   appliedZoneFilter.value !== 'all',
   appliedReadinessFilter.value !== 'all',
   appliedFloorFilter.value !== 'all',
-  appliedContractStatusFilter.value !== 'all',
   appliedContractExpiryFilter.value !== 'all',
+  appliedBookingRangeFilter.value !== 'all',
   appliedRenewalStatusFilter.value !== 'all',
   appliedReturnStatusFilter.value !== 'all',
   appliedLegalStatusFilter.value !== 'all',
@@ -1882,6 +2146,13 @@ const rentOptions: SelectOption[] = [
   { value: 'over-3000', label: 'มากกว่า ฿3,000' },
 ]
 
+const sizeOptions: SelectOption[] = [
+  { value: 'all', label: 'ทุกขนาด' },
+  { value: 'up-to-5', label: 'ไม่เกิน 5 ตร.ม.' },
+  { value: '5-to-10', label: 'มากกว่า 5–10 ตร.ม.' },
+  { value: 'over-10', label: 'มากกว่า 10 ตร.ม.' }
+]
+
 const availabilityOptions: SelectOption[] = [
   { value: 'all', label: 'ทุกสถานะ' },
   { value: 'available', label: 'ว่าง' },
@@ -1900,14 +2171,24 @@ const contractStatusOptions: SelectOption[] = [
   { value: 'expiring', label: 'ใกล้หมดอายุ' },
   { value: 'expired', label: 'หมดอายุ' }
 ]
+const contractStatusLabel = computed(() => contractStatusOptions.find(option => option.value === contractStatusFilter.value)?.label || '')
 const contractExpiryOptions: SelectOption[] = [
   { value: 'all', label: 'ไม่จำกัด' },
-  { value: '30', label: '30 วัน' },
-  { value: '60', label: '60 วัน' },
-  { value: '90', label: '90 วัน' }
+  { value: '30', label: 'ภายใน 30 วัน' },
+  { value: '60', label: 'ภายใน 60 วัน' },
+  { value: '90', label: 'ภายใน 90 วัน' },
+  { value: 'custom', label: 'กำหนดเอง (ช่วงวันที่)' }
+]
+const bookingRangeOptions: SelectOption[] = [
+  { value: 'all', label: 'ไม่จำกัด' },
+  { value: '7', label: '7 วันล่าสุด' },
+  { value: '30', label: '30 วันล่าสุด' },
+  { value: '90', label: '90 วันล่าสุด' },
+  { value: 'custom', label: 'กำหนดเอง (ช่วงวันที่)' }
 ]
 const renewalStatusOptions: SelectOption[] = [
   { value: 'all', label: 'ทุกสถานะ' },
+  { value: 'awaiting', label: 'รอตอบรับ (รอต่อ + พิจารณา)' },
   { value: 'pending', label: 'รอต่ออายุ' },
   { value: 'reviewing', label: 'อยู่ระหว่างพิจารณา' },
   { value: 'approved', label: 'อนุมัติ' },
@@ -1915,6 +2196,7 @@ const renewalStatusOptions: SelectOption[] = [
 ]
 const returnStatusOptions: SelectOption[] = [
   { value: 'all', label: 'ทุกสถานะ' },
+  { value: 'notified', label: 'แจ้งไม่ต่อ' },
   { value: 'pending', label: 'รอส่งคืน' },
   { value: 'inspection', label: 'รอตรวจรับ' },
   { value: 'returned', label: 'คืนแล้ว' },
@@ -1982,7 +2264,7 @@ const floorSelectorProject = ref<ProjectZone | null>(null)
 const initialBookedProjectId = ref<string | null>(props.selectedProjectId || null)
 watch(() => props.selectedProjectId, (newId) => {
   if (newId) initialBookedProjectId.value = newId
-}, { immediate: true })
+})
 
 const bookedProjectId = computed(() => {
   if (props.selectedProjectId) return props.selectedProjectId
@@ -2173,7 +2455,7 @@ const cancelStallPolygonEdit = () => {
 const requestDeleteActiveProject = () => {
   const target = activeProject.value || overviewEditProject.value
   if (!target) return
-  const layoutSummary = layouts.value.get(target.id)
+  const layoutSummary = getProjectLayout(target)
   const stats = layoutSummary
     ? {
         total: layoutSummary.total,
@@ -2532,7 +2814,7 @@ const currentProjectInfo = computed<ProjectZone | null>(() => {
   return activeProject.value || hoveredProject.value || overviewProjects.value[0] || null
 })
 
-const currentProjectLayout = computed(() => (currentProjectInfo.value ? layouts.value.get(currentProjectInfo.value.id) || null : null))
+const currentProjectLayout = computed(() => (currentProjectInfo.value ? getProjectLayout(currentProjectInfo.value) : null))
 
 // Stall search and filter states in side panel
 const stallSearchQuery = ref('')
@@ -2593,7 +2875,8 @@ const handleStallCardHover = (stall: MapStall) => {
   if (!map || !hoverPopup) return
   setHoveredStall(stall)
   const isMyBooked = !props.previewMode && (props.myBookedStallCodes || []).includes(stall.code)
-  map.getCanvas().style.cursor = (stall.status === 'occupied' || isMyBooked) ? 'not-allowed' : 'pointer'
+  const canClick = props.managementMode || (stall.status !== 'occupied' && !isMyBooked)
+  map.getCanvas().style.cursor = canClick ? 'pointer' : 'not-allowed'
   showPopupForStall(stall)
 }
 
@@ -2627,7 +2910,7 @@ const projectMarkerElements = new Map<string, HTMLElement>()
 let hoverPopup: any = null
 
 // Interior label point (inside the polygon frame, not the vertex average)
-const projectToLngLat = (p: ProjectZone): [number, number] => layouts.value.get(p.id)?.labelPoint || p.centroid
+const projectToLngLat = (p: ProjectZone): [number, number] => projectLayoutCache.get(p.id)?.labelPoint || p.centroid
 
 const getProjectBounds = (p: ProjectZone): [[number, number], [number, number]] => {
   const lngs = p.coordinates.map(c => c[0])
@@ -2909,6 +3192,14 @@ const initMap = () => {
 }
 
 // ---------------- GeoJSON builders ----------------
+const closePolygonRing = (ring: [number, number][]): [number, number][] => {
+  if (!ring.length) return []
+  const first = ring[0]!
+  const last = ring[ring.length - 1]!
+  if (first[0] === last[0] && first[1] === last[1]) return ring
+  return [...ring, [first[0], first[1]]]
+}
+
 const isProjectDimmed = (p: ProjectZone) => {
   // A project is only prominent when it has at least one stall that matches
   // every active filter. Previously this considered only category/search, so
@@ -2923,6 +3214,7 @@ const getProjectsGeoJson = () => {
       const isOverviewEditTarget = isPolygonEditMode.value && !activeProjectId.value && overviewEditProjectId.value === p.id
       const isActive = activeProjectId.value === p.id || isOverviewEditTarget
       const isOtherWhileActive = Boolean(activeProjectId.value) && !isActive
+      const isDimmedByFilter = isProjectDimmed(p)
 
       const fillColor = p.color
       const strokeColor = p.color
@@ -2932,15 +3224,15 @@ const getProjectsGeoJson = () => {
         id: index + 1,
         geometry: {
           type: 'Polygon',
-          coordinates: [p.coordinates]
+          coordinates: [closePolygonRing(p.coordinates)]
         },
         properties: {
           id: p.id,
           fillColor,
-          strokeColor: isActive || hoveredProject.value?.id === p.id ? '#2563eb' : strokeColor,
-          isActive,
-          isHovered: hoveredProject.value?.id === p.id,
-          isDimmed: isProjectDimmed(p) || isOtherWhileActive
+          strokeColor: (isActive && !isDimmedByFilter) || (!isDimmedByFilter && hoveredProject.value?.id === p.id) ? '#2563eb' : strokeColor,
+          isActive: isActive && !isDimmedByFilter,
+          isHovered: !isDimmedByFilter && hoveredProject.value?.id === p.id,
+          isDimmed: isDimmedByFilter || isOtherWhileActive
         }
       }
     })
@@ -2949,14 +3241,20 @@ const getProjectsGeoJson = () => {
 
 const getStallsGeoJson = () => {
   const layout = activeLayout.value
+  const hasStallSearchMatches = Boolean(appliedSearchQuery.value.trim())
+    && Boolean(layout?.stalls.some(stall => stallMatchesSearchWith(stall, appliedSearchQuery.value)))
   return {
     type: 'FeatureCollection',
     features: (layout?.stalls || []).map((s, idx) => {
+      const isSearchMatch = Boolean(appliedSearchQuery.value.trim()) && stallMatchesSearchWith(s, appliedSearchQuery.value)
       const isSelected = isStallSelected(s)
       return {
         type: 'Feature',
         id: idx + 1,
-        geometry: { type: 'Polygon', coordinates: [s.coordinates, ...(s.polygonHoles || [])] },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [closePolygonRing(s.coordinates), ...(s.polygonHoles || []).map(closePolygonRing)]
+        },
         properties: {
           // Survey exports can reuse a human-readable stall code. Keep the
           // layout index so map hit-testing always resolves the exact polygon.
@@ -2968,7 +3266,8 @@ const getStallsGeoJson = () => {
           isHovered: hoveredStallKey.value === getStallSelectionKey(s),
           floor: s.floor,
           floorName: s.floorName,
-          isDimmed: !matchesStallFilters(s)
+          isSearchMatch,
+          isDimmed: !matchesStallFilters(s) || (hasStallSearchMatches && !stallMatchesSearchWith(s, appliedSearchQuery.value))
         }
       }
     })
@@ -2979,7 +3278,7 @@ const getStallsGeoJson = () => {
 const setupProjectLayers = () => {
   if (!map) return
 
-  ;['zone-drawing-points', 'zone-drawing-line', 'zone-drawing-fill', 'facilities-label', 'facilities-circle', 'facilities-polygon-line', 'facilities-polygon-fill', 'projects-hover-outline', 'projects-hover-casing', 'projects-active-outline', 'stalls-selected-stroke', 'stalls-selected-casing', 'stalls-hover-stroke', 'stalls-hover-casing', 'stalls-label', 'stalls-line', 'stalls-casing', 'stalls-fill', 'projects-stroke', 'projects-casing', 'projects-fill'].forEach(id => {
+  ;['zone-drawing-points', 'zone-drawing-line', 'zone-drawing-fill', 'facilities-label', 'facilities-circle', 'facilities-polygon-line', 'facilities-polygon-fill', 'projects-hover-outline', 'projects-hover-casing', 'projects-active-outline', 'stalls-selected-stroke', 'stalls-selected-casing', 'stalls-hover-stroke', 'stalls-hover-casing', 'stalls-search-stroke', 'stalls-search-casing', 'stalls-label', 'stalls-line', 'stalls-casing', 'stalls-fill', 'projects-stroke', 'projects-casing', 'projects-fill'].forEach(id => {
     if (map.getLayer(id)) map.removeLayer(id)
   })
   ;['projects-polygons', 'project-stalls', 'market-facilities', 'zone-drawing'].forEach(id => {
@@ -3128,6 +3427,7 @@ const setupProjectLayers = () => {
     filter: ['!=', ['get', 'label'], ''],
     layout: {
       'text-field': ['get', 'label'],
+      'visibility': showStallNumberLabels.value ? 'visible' : 'none',
       'text-size': [
         'interpolate', ['linear'], ['zoom'],
         18, 8,
@@ -3157,6 +3457,34 @@ const setupProjectLayers = () => {
         ['boolean', ['get', 'isDimmed'], false], 0.55,
         0.95
       ]
+    }
+  })
+
+  // Search matches keep their real status colour and receive a clear blue
+  // outline so users can distinguish the target from dimmed surrounding stalls.
+  map.addLayer({
+    id: 'stalls-search-casing',
+    type: 'line',
+    source: 'project-stalls',
+    filter: ['boolean', ['get', 'isSearchMatch'], false],
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: {
+      'line-color': '#ffffff',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 14, 3.6, 16, 4.8, 18, 6.2, 20, 8],
+      'line-opacity': 1
+    }
+  })
+
+  map.addLayer({
+    id: 'stalls-search-stroke',
+    type: 'line',
+    source: 'project-stalls',
+    filter: ['boolean', ['get', 'isSearchMatch'], false],
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: {
+      'line-color': '#2563eb',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1.8, 16, 2.4, 18, 3.2, 20, 4.2],
+      'line-opacity': 1
     }
   })
 
@@ -3328,14 +3656,48 @@ const setupProjectLayers = () => {
   renderZoneLabels()
 }
 
-const refreshSources = () => {
+const refreshGeometrySources = () => {
   if (!map) return
   map.getSource('projects-polygons')?.setData(getProjectsGeoJson())
   map.getSource('project-stalls')?.setData(getStallsGeoJson())
   map.getSource('market-facilities')?.setData(getFacilitiesGeoJson())
   refreshDrawingZone()
+}
+
+const refreshSources = () => {
+  if (!map) return
+  refreshGeometrySources()
   renderZoneLabels()
   renderFacilityMarkers()
+}
+
+// Availability updates do not change facilities or drawing geometry. Updating
+// those sources and rebuilding their DOM markers made contract data arriving
+// during a fly/fit animation visibly stutter on the public booking map.
+let statusRefreshFrame: number | null = null
+let statusRefreshQueuedForMove = false
+const refreshStatusSources = () => {
+  if (!map) return
+  map.getSource('projects-polygons')?.setData(getProjectsGeoJson())
+  map.getSource('project-stalls')?.setData(getStallsGeoJson())
+  renderZoneLabels()
+}
+const scheduleStatusSourceRefresh = () => {
+  if (!map || isUnmounted) return
+  if (map.isMoving()) {
+    if (statusRefreshQueuedForMove) return
+    statusRefreshQueuedForMove = true
+    map.once('moveend', () => {
+      statusRefreshQueuedForMove = false
+      scheduleStatusSourceRefresh()
+    })
+    return
+  }
+  if (statusRefreshFrame !== null) window.cancelAnimationFrame(statusRefreshFrame)
+  statusRefreshFrame = window.requestAnimationFrame(() => {
+    statusRefreshFrame = null
+    if (!isUnmounted) refreshStatusSources()
+  })
 }
 
 const clearPolygonVertexHandles = () => {
@@ -3832,7 +4194,7 @@ const FACILITY_META: Record<string, { label: string; color: string; bg: string; 
     label: 'ห้องน้ำ',
     color: '#0284c7',
     bg: '#e0f2fe',
-    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="5" r="2"/><path d="M5 22v-5l-1-1v-4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4l-1 1v5"/><circle cx="17" cy="5" r="2"/><path d="M15 22v-4h-2l2-6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1l2 6h-2v4"/></svg>'
+    svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="4" r="1.8"/><path d="M3 21v-7H2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4H9v7M6 14v7"/><path d="M12 3v18"/><circle cx="18" cy="4" r="1.8"/><path d="M16 21v-4h-2l2-9h4l2 9h-2v4M18 17v4"/></svg>'
   },
   parking: {
     label: 'ที่จอดรถ',
@@ -3867,6 +4229,94 @@ const getFacilityMeta = (type: string) => FACILITY_META[type] || {
   svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-5.3 7-12a7 7 0 1 0-14 0c0 6.7 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg>'
 }
 
+const NAMED_FACILITY_META = {
+  sink: {
+    label: 'อ่างล้างมือ', color: '#0284c7', bg: '#e0f2fe',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14v2a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5v-2Z"/><path d="M8 12V8a4 4 0 0 1 8 0v1M14 9h4M7 19v2M17 19v2"/></svg>'
+  },
+  stairs: {
+    label: 'บันได', color: '#d97706', bg: '#fef3c7',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h5v-4h4v-4h4V7h5"/><path d="M3 22h18"/></svg>'
+  },
+  escalator: {
+    label: 'บันไดเลื่อน', color: '#d97706', bg: '#fef3c7',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h4l8-12h4M4 21h5l8-12h3"/><path d="m16 17 4 4m0-4v4h-4"/></svg>'
+  },
+  shrine: {
+    label: 'ศาล', color: '#dc2626', bg: '#fee2e2',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18L12 3 3 9Z"/><path d="M5 9v9M19 9v9M9 9v9M15 9v9M3 21h18M7 18h10"/></svg>'
+  },
+  clockTower: {
+    label: 'หอนาฬิกา', color: '#7c3aed', bg: '#ede9fe',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 22h10L16 9H8L7 22Z"/><circle cx="12" cy="6" r="4"/><path d="M12 4v2l1.5 1M5 22h14"/></svg>'
+  },
+  tent: {
+    label: 'เต็นท์', color: '#059669', bg: '#d1fae5',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20 12 4l9 16H3Z"/><path d="m9 20 3-6 3 6M12 4v10"/></svg>'
+  },
+  plaza: {
+    label: 'ลานส่วนกลาง', color: '#0f766e', bg: '#ccfbf1',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8v8H8zM3 12h5M16 12h5M12 3v5M12 16v5"/></svg>'
+  },
+  meeting: {
+    label: 'ห้องประชุม', color: '#7c3aed', bg: '#ede9fe',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2"/><circle cx="16" cy="8" r="2"/><path d="M4 19v-2a4 4 0 0 1 8 0v2M12 17a4 4 0 0 1 8 0v2"/></svg>'
+  },
+  training: {
+    label: 'ศูนย์ฝึกอาชีพ', color: '#2563eb', bg: '#dbeafe',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-5 9 5-9 5-9-5Z"/><path d="M7 12v5c3 2 7 2 10 0v-5M21 9v6"/></svg>'
+  },
+  office: {
+    label: 'สำนักงาน', color: '#64748b', bg: '#f1f5f9',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V4h8v3M3 12h18M10 12v2h4v-2"/></svg>'
+  },
+  security: {
+    label: 'จุดรักษาความปลอดภัย', color: '#475569', bg: '#f1f5f9',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>'
+  },
+  firstAid: {
+    label: 'จุดปฐมพยาบาล', color: '#dc2626', bg: '#fee2e2',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>'
+  },
+  fireSafety: {
+    label: 'อุปกรณ์ดับเพลิง', color: '#dc2626', bg: '#fee2e2',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4 0 7-3 7-7 0-3-2-5-4-7 0 3-2 4-3 4 1-4-1-7-4-10 0 5-3 7-3 12 0 5 3 8 7 8Z"/><path d="M9 18c0-2 1-3 3-5 0 2 2 2 2 4 0 2-1 3-2 3"/></svg>'
+  },
+  elevator: {
+    label: 'ลิฟต์', color: '#7c3aed', bg: '#ede9fe',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="m9 8 3-3 3 3M9 16l3 3 3-3M12 5v14"/></svg>'
+  },
+  accessible: {
+    label: 'ทางลาดผู้ใช้รถเข็น', color: '#2563eb', bg: '#dbeafe',
+    svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="2"/><path d="M8 10h5l2 4h3M9 8v7a5 5 0 1 0 5 5M13 10l2-2"/></svg>'
+  }
+} as const
+
+const getFacilityMetaForFacility = (facility: MarketFacility) => {
+  const name = String(facility.name || '').trim().toLowerCase()
+  if (name.includes('ห้องน้ำ') || name.includes('สุขา') || name.includes('ส้วม') || name.includes('toilet') || name.includes('restroom') || /(^|\s)wc($|\s)/i.test(name)) return FACILITY_META.toilet
+  if (name.includes('อ่างล้างมือ')) return NAMED_FACILITY_META.sink
+  if (name.includes('บันไดเลื่อน')) return NAMED_FACILITY_META.escalator
+  if (name.includes('บันได')) return NAMED_FACILITY_META.stairs
+  if (name.includes('ลิฟต์') || name.includes('elevator')) return NAMED_FACILITY_META.elevator
+  if (name.includes('ทางลาด') || name.includes('รถเข็น') || name.includes('ผู้พิการ') || name.includes('accessible')) return NAMED_FACILITY_META.accessible
+  if (name.includes('ที่จอด') || name.includes('parking')) return FACILITY_META.parking
+  if (name.includes('ทางเข้า') || name.includes('ทางออก') || name.includes('ประตู') || name.includes('entrance') || name.includes('exit')) return FACILITY_META.exit
+  if (name.includes('ขยะ') || name.includes('waste') || name.includes('trash')) return FACILITY_META.waste
+  if (name.includes('รปภ') || name.includes('รักษาความปลอดภัย') || name.includes('ป้อมยาม') || name.includes('security')) return NAMED_FACILITY_META.security
+  if (name.includes('ปฐมพยาบาล') || name.includes('พยาบาล') || name.includes('first aid')) return NAMED_FACILITY_META.firstAid
+  if (name.includes('ดับเพลิง') || name.includes('ถังดับเพลิง') || name.includes('fire')) return NAMED_FACILITY_META.fireSafety
+  if (name.includes('ศาลเจ้า') || name.includes('ศาลพระพรหม')) return NAMED_FACILITY_META.shrine
+  if (name.includes('หอนาฬิกา')) return NAMED_FACILITY_META.clockTower
+  if (name.includes('เต้น') || name.includes('เต็นท์')) return NAMED_FACILITY_META.tent
+  if (name.includes('ลาน')) return NAMED_FACILITY_META.plaza
+  if (name.includes('ห้องประชุม')) return NAMED_FACILITY_META.meeting
+  if (name.includes('ศูนย์ฝึก')) return NAMED_FACILITY_META.training
+  if (name.includes('ประชาสัมพันธ์') || name.includes('ประชาสัมพันธุ์') || name.includes('จุดบริการ') || name.includes('information')) return FACILITY_META.service
+  if (name.startsWith('งาน') || name.includes('ปฏิบัติการ') || name === 'บก.' || name === 'diy') return NAMED_FACILITY_META.office
+  return getFacilityMeta(facility.type)
+}
+
 const findHostZoneForFacility = (facility: MarketFacility): ProjectZone | null => {
   if (facility.projectId) {
     const byId = projects.value.find(p => p.id === facility.projectId)
@@ -3884,7 +4334,7 @@ const showPopupForFacility = (facility: MarketFacility) => {
     hoverPopup.remove()
     return
   }
-  const meta = getFacilityMeta(facility.type)
+  const meta = getFacilityMetaForFacility(facility)
   const hostZone = findHostZoneForFacility(facility)
   const canEditFacility = props.managementMode && !props.inspectOnly
   const deleteAction = canEditFacility
@@ -3939,19 +4389,17 @@ const renderFacilityMarkers = () => {
   if (map.getLayer('facilities-label')) map.setLayoutProperty('facilities-label', 'visibility', 'none')
   if (!showFacilities.value) return
 
-  // Facilities are part of a project's internal layout. Keep the overview
-  // uncluttered; reveal them only after a staff member enters that project.
-  const activeProjectID = activeProjectId.value
-  if (!activeProjectID) return
-
   managedFacilities.value
     .filter(facility => {
-      if (findHostZoneForFacility(facility)?.id !== activeProjectID) return false
-      return !facility.floorId || String(facility.floorId) === String(currentFloorId.value)
+      const visibleFloorId = activeProjectId.value ? currentFloorId.value : selectedMarketFloorId.value
+      return !visibleFloorId
+        || visibleFloorId === 'all'
+        || !facility.floorId
+        || String(facility.floorId) === String(visibleFloorId)
     })
     .forEach(facility => {
       if (!Array.isArray(facility.coordinates) || facility.coordinates.length < 2) return
-      const meta = getFacilityMeta(facility.type)
+      const meta = getFacilityMetaForFacility(facility)
       const el = document.createElement('button')
       el.type = 'button'
       el.className = 'facility-map-marker'
@@ -3961,10 +4409,11 @@ const renderFacilityMarkers = () => {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        width: '24px',
-        height: '24px',
+        width: '28px',
+        height: '28px',
         padding: '0',
-        borderRadius: '50%',
+        gap: '0',
+        borderRadius: '9999px',
         border: `1.5px solid ${meta.color}`,
         background: '#ffffff',
         color: '#0f172a',
@@ -3972,11 +4421,16 @@ const renderFacilityMarkers = () => {
         boxShadow: '0 2px 6px rgba(15,23,42,0.16)',
         cursor: 'pointer',
         whiteSpace: 'nowrap',
-        zIndex: '22'
+        zIndex: '8'
       })
       el.innerHTML = `
-        <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:${meta.bg};color:${meta.color}">${meta.svg}</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;flex:0 0 20px;width:20px;height:20px;border-radius:50%;background:${meta.bg};color:${meta.color}">${meta.svg}</span>
       `
+      const markerSvg = el.querySelector('svg')
+      if (markerSvg) {
+        markerSvg.style.width = '16px'
+        markerSvg.style.height = '16px'
+      }
       el.addEventListener('mouseenter', () => {
         showPopupForFacility(facility)
       })
@@ -4020,7 +4474,7 @@ const showPopupForProject = (p: ProjectZone, lngLat: [number, number]) => {
     hoverPopup.remove()
     return
   }
-  const layout = layouts.value.get(p.id)
+  const layout = getProjectLayout(p)
   const total = layout?.total ?? 0
   const available = layout?.available ?? 0
   const reserved = layout?.reserved ?? 0
@@ -4122,7 +4576,8 @@ const renderSelectedStallPins = () => {
   // with a floating check marker. Keep a beacon only when viewing another project.
   if (props.previewMode && bookedProject.value && activeProjectId.value !== bookedProjectId.value) {
     // หากอยู่ใน Step 3 แต่กำลังคลิกดูโครงการอื่น ให้ปักหมุด Beacon นำทางบนโครงการที่มีแผงที่จองไว้
-    const bLayout = layouts.value.get(bookedProjectId.value || '')
+    const bookedProject = projects.value.find(project => project.id === bookedProjectId.value)
+    const bLayout = bookedProject ? getProjectLayout(bookedProject) : null
     const bookedStallsList = (bLayout?.stalls || []).filter(isStallSelected)
     const pinLocation: [number, number] = bookedStallsList.length > 0
       ? bookedStallsList[0].center
@@ -4182,7 +4637,10 @@ const getDrillMapPadding = () => {
     const bottomPad = Math.round(Math.min(window.innerHeight * 0.56, Math.max(240, sheetH + 16)))
     return { top: 70, bottom: bottomPad, left: 20, right: 20 }
   }
-  return { top: 70, bottom: 50, left: 320, right: 380 }
+  // ลดพื้นที่กันขอบลงเล็กน้อย เพื่อให้ตอนเข้าโครงการเห็นแผงใกล้ขึ้น
+  // โดยยังเหลือพื้นที่สำหรับการ์ดซ้ายและแผงเครื่องมือด้านขวา
+  if (appliedSearchQuery.value.trim()) return { top: 55, bottom: 35, left: 40, right: 340 }
+  return { top: 55, bottom: 35, left: 280, right: 340 }
 }
 
 const recenterMapView = () => {
@@ -4190,7 +4648,7 @@ const recenterMapView = () => {
   hoverPopup?.remove()
   if (activeProject.value) {
     const p = activeProject.value
-    const pLayout = layouts.value.get(p.id) || activeLayout.value
+    const pLayout = getProjectLayout(p) || activeLayout.value
     const selectedStallsList = (pLayout?.stalls || []).filter(isStallSelected)
     const stallBounds = props.previewMode && selectedStallsList.length > 0 ? getStallsBounds(selectedStallsList) : null
 
@@ -4275,12 +4733,31 @@ const enterProject = (p: ProjectZone, directToFloor?: string) => {
     currentFloorId.value = firstAvailFloor?.id || p.floors?.[0]?.id || '1'
   }
 
-  refreshSources()
+  // Show the selected project's stall polygons immediately. DOM facility
+  // markers remain deferred until the camera settles because rebuilding those
+  // markers is the expensive part that can interrupt the fit animation.
+  const deferPublicProjectDetails = !props.managementMode && !props.previewMode
+  if (deferPublicProjectDetails && map) {
+    map.getSource('projects-polygons')?.setData(getProjectsGeoJson())
+    map.getSource('project-stalls')?.setData(getStallsGeoJson())
+  } else {
+    refreshSources()
+  }
   setBuildingsOpacity(BUILDINGS_OPACITY_DRILL)
 
-  const pLayout = layouts.value.get(p.id) || activeLayout.value
+  const pLayout = getProjectLayout(p) || activeLayout.value
   const selectedStallsList = (pLayout?.stalls || []).filter(isStallSelected)
   const stallBounds = props.previewMode && selectedStallsList.length > 0 ? getStallsBounds(selectedStallsList) : null
+
+  if (deferPublicProjectDetails && map) {
+    const expectedProjectId = p.id
+    map.once('moveend', () => {
+      if (isUnmounted || activeProjectId.value !== expectedProjectId) return
+      map.getSource('market-facilities')?.setData(getFacilitiesGeoJson())
+      renderFacilityMarkers()
+      renderSelectedStallPins()
+    })
+  }
 
   map?.fitBounds(stallBounds || getProjectBounds(p), {
     padding: getDrillMapPadding(),
@@ -4289,9 +4766,16 @@ const enterProject = (p: ProjectZone, directToFloor?: string) => {
     bearing: map.getBearing(),
     duration: 800
   })
-  renderSelectedStallPins()
+  if (!deferPublicProjectDetails) renderSelectedStallPins()
   renderPolygonVertexHandles()
-  emit('selectProject', p)
+  // ส่งสถิติจาก layout ที่ผ่านการรวมสถานะจริงแล้วให้หน้าจองด้วย
+  // ป้องกัน empty state ใช้ค่า stallsAvailable เดิมจาก master project
+  // ในขณะที่การ์ดสรุปด้านซ้ายแสดงว่าพื้นที่เต็มแล้ว
+  emit('selectProject', {
+    ...p,
+    totalStalls: pLayout.total,
+    stallsAvailable: pLayout.available
+  })
 }
 
 // ควบคุมการเลื่อนปรับขนาดความสูง Bottom Sheet ของโครงการบนโหมด Responsive
@@ -4502,7 +4986,8 @@ const bindMapEvents = () => {
       const s = getStallFromFeature(stallHit[0])
       const changedStall = setHoveredStall(s)
       const isMyBooked = Boolean(s && !props.previewMode && (props.myBookedStallCodes || []).includes(s.code))
-      map.getCanvas().style.cursor = s && s.status !== 'occupied' && !isMyBooked ? 'pointer' : 'not-allowed'
+      const canClick = Boolean(s && (props.managementMode || (s.status !== 'occupied' && !isMyBooked)))
+      map.getCanvas().style.cursor = canClick ? 'pointer' : 'not-allowed'
       // Keep stall details click-driven so the tooltip does not flicker while moving across the map.
       return
     }
@@ -4634,6 +5119,7 @@ const renderZoneLabels = () => {
   projectMarkers.forEach(m => m.remove())
   projectMarkers = []
   projectMarkerElements.clear()
+  if (!showProjectLabels.value) return
 
   const zoom = map.getZoom()
   const visibleProjects = overviewProjects.value.filter(p => p.id !== activeProjectId.value && !isProjectDimmed(p))
@@ -4700,7 +5186,7 @@ const matchesSearchWith = (p: ProjectZone, value: string): boolean => {
   if (p.name.toLowerCase().includes(query)) return true
   if (p.category.toLowerCase().includes(query)) return true
   if (props.managementMode && Array.from(getEffectiveFloorLayoutsForProject(p).values())
-    .some(layout => layout.stalls.some(stall => String(stall.code || '').toLowerCase().includes(query)))) return true
+    .some(layout => layout.stalls.some(stall => stallMatchesSearchWith(stall, query)))) return true
   const numInQuery = query.replace(/[^0-9]/g, '')
   const numInProject = p.name.replace(/[^0-9]/g, '')
   if (numInQuery && numInProject && numInProject.includes(numInQuery)) return true
@@ -4710,33 +5196,69 @@ const matchesSearchWith = (p: ProjectZone, value: string): boolean => {
 const matchesSearch = (p: ProjectZone): boolean => matchesSearchWith(p, appliedSearchQuery.value)
 
 const handleSearchInput = () => {
-  appliedSearchQuery.value = searchQuery.value
-  refreshSources()
-  if (searchQuery.value.trim() && map && !activeProjectId.value) {
-    const found = overviewProjects.value.find(projectMatchesAllFilters)
-    if (found) map.flyTo({ center: projectToLngLat(found), zoom: 17.5, duration: 800 })
+  // Search text is a draft. Keep the map unchanged until the user chooses a suggestion.
+  focusedSuggestionIndex.value = -1
+  selectedSuggestionId.value = null
+  if (searchDebounceTimer) window.clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = window.setTimeout(() => {
+    suggestionQuery.value = searchQuery.value
+    searchDebounceTimer = null
+  }, 250)
+}
+
+const returnToProjectOverview = () => {
+  if (activeProjectId.value) {
+    exitProject()
+    return
   }
+  map?.flyTo({
+    center: currentMarketCenter.value,
+    zoom: currentMarketZoom.value,
+    pitch: currentMarketPitch.value,
+    bearing: currentMarketBearing.value,
+    duration: 700
+  })
 }
 
 const clearSearch = () => {
+  if (searchDebounceTimer) window.clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = null
   searchQuery.value = ''
+  suggestionQuery.value = ''
+  focusedSuggestionIndex.value = -1
+  selectedSuggestionId.value = null
   appliedSearchQuery.value = ''
   refreshSources()
-  if (map && !activeProjectId.value) {
-    map.flyTo({ center: currentMarketCenter.value, zoom: currentMarketZoom.value, duration: 800 })
-  }
+  returnToProjectOverview()
+}
+
+const clearAppliedSearch = () => {
+  appliedSearchQuery.value = ''
+  selectedSuggestionId.value = null
+  refreshSources()
+  returnToProjectOverview()
 }
 
 const clearAllFilters = () => {
-  availabilityFromCard.value = false
+  if (searchDebounceTimer) window.clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = null
   searchQuery.value = ''
+  suggestionQuery.value = ''
+  focusedSuggestionIndex.value = -1
+  selectedSuggestionId.value = null
   rentFilter.value = 'all'
-  availabilityFilter.value = 'all'
+  sizeFilter.value = 'all'
+  availabilityFilter.value = props.stallStatusFilter
   zoneFilter.value = 'all'
   readinessFilter.value = 'all'
   floorFilter.value = 'all'
   contractStatusFilter.value = 'all'
   contractExpiryFilter.value = 'all'
+  contractExpiryFrom.value = ''
+  contractExpiryTo.value = ''
+  bookingRangeFilter.value = 'all'
+  bookingFrom.value = ''
+  bookingTo.value = ''
   renewalStatusFilter.value = 'all'
   returnStatusFilter.value = 'all'
   legalStatusFilter.value = 'all'
@@ -4745,12 +5267,18 @@ const clearAllFilters = () => {
   draftCategoryFilter.value = ''
   appliedSearchQuery.value = ''
   appliedRentFilter.value = 'all'
-  appliedAvailabilityFilter.value = 'all'
+  appliedSizeFilter.value = 'all'
+  appliedAvailabilityFilter.value = props.stallStatusFilter
   appliedZoneFilter.value = 'all'
   appliedReadinessFilter.value = 'all'
   appliedFloorFilter.value = 'all'
   appliedContractStatusFilter.value = 'all'
   appliedContractExpiryFilter.value = 'all'
+  appliedContractExpiryFrom.value = ''
+  appliedContractExpiryTo.value = ''
+  appliedBookingRangeFilter.value = 'all'
+  appliedBookingFrom.value = ''
+  appliedBookingTo.value = ''
   appliedRenewalStatusFilter.value = 'all'
   appliedReturnStatusFilter.value = 'all'
   appliedLegalStatusFilter.value = 'all'
@@ -4759,17 +5287,49 @@ const clearAllFilters = () => {
   appliedCategoryFilter.value = ''
   emit('update:categoryFilter', null)
   refreshSources()
+  returnToProjectOverview()
+}
+
+const resetCostFiltersAndOverview = () => {
+  emit('reset-cost-filters')
+  returnToProjectOverview()
+}
+
+const focusAppliedProjectFilterResults = (): boolean => {
+  if (!hasActiveFilters.value || appliedSearchQuery.value.trim()) return false
+  const matchingProjects = overviewProjects.value.filter(projectMatchesAllFilters)
+  if (activeProjectId.value) exitProject()
+  if (matchingProjects.length !== 1 || !matchingProjects[0]) {
+    returnToProjectOverview()
+    return true
+  }
+  const target = matchingProjects[0]
+  nextTick(() => {
+    map?.fitBounds(getProjectBounds(target), {
+      padding: { top: 80, bottom: 80, left: 80, right: 380 },
+      maxZoom: 17.8,
+      pitch: currentMarketPitch.value,
+      bearing: currentMarketBearing.value,
+      duration: 800
+    })
+  })
+  return true
 }
 
 const applyFilters = () => {
-  appliedSearchQuery.value = searchQuery.value
   appliedRentFilter.value = rentFilter.value
+  appliedSizeFilter.value = sizeFilter.value
   appliedAvailabilityFilter.value = availabilityFilter.value
   appliedZoneFilter.value = zoneFilter.value
   appliedReadinessFilter.value = readinessFilter.value
   appliedFloorFilter.value = floorFilter.value
   appliedContractStatusFilter.value = contractStatusFilter.value
   appliedContractExpiryFilter.value = contractExpiryFilter.value
+  appliedContractExpiryFrom.value = contractExpiryFrom.value
+  appliedContractExpiryTo.value = contractExpiryTo.value
+  appliedBookingRangeFilter.value = bookingRangeFilter.value
+  appliedBookingFrom.value = bookingFrom.value
+  appliedBookingTo.value = bookingTo.value
   appliedRenewalStatusFilter.value = renewalStatusFilter.value
   appliedReturnStatusFilter.value = returnStatusFilter.value
   appliedLegalStatusFilter.value = legalStatusFilter.value
@@ -4780,10 +5340,7 @@ const applyFilters = () => {
   emit('update:onlyAvailable', availabilityFilter.value === 'available')
   showAdvancedFilters.value = false
   refreshSources()
-  if (appliedSearchQuery.value.trim() && map && !activeProjectId.value) {
-    const found = overviewProjects.value.find(projectMatchesAllFilters)
-    if (found) map.flyTo({ center: projectToLngLat(found), zoom: 17.5, duration: 800 })
-  }
+  if (focusAppliedProjectFilterResults()) return
 }
 
 const toggleCategoryFilter = (catName: string) => {
@@ -4831,30 +5388,50 @@ watch(() => props.onlyAvailable, (onlyAvailable) => {
 })
 
 watch(() => props.stallStatusFilter, (status) => {
-  availabilityFromCard.value = status !== 'all'
   availabilityFilter.value = status
   appliedAvailabilityFilter.value = status
   refreshSources()
+})
+
+watch(() => props.statusFilterContext, (context) => {
+  let changed = false
+  if (context !== 'legal_case' && (legalStatusFilter.value !== 'all' || appliedLegalStatusFilter.value !== 'all')) {
+    legalStatusFilter.value = 'all'
+    appliedLegalStatusFilter.value = 'all'
+    changed = true
+  }
+  if (context !== 'action_required') {
+    if (maintenanceStatusFilter.value !== 'all' || appliedMaintenanceStatusFilter.value !== 'all') changed = true
+    if (requestTypeFilter.value !== 'all' || appliedRequestTypeFilter.value !== 'all') changed = true
+    maintenanceStatusFilter.value = 'all'
+    appliedMaintenanceStatusFilter.value = 'all'
+    requestTypeFilter.value = 'all'
+    appliedRequestTypeFilter.value = 'all'
+  }
+  if (changed) refreshSources()
 })
 
 watch(() => props.actionRequiredStallCodes, () => {
   if (appliedAvailabilityFilter.value === 'action_required') {
     refreshSources()
   }
-}, { deep: true })
+})
 
 watch(() => props.activeFilterCodes, () => {
   refreshSources()
-}, { deep: true })
+})
 
 watch(() => props.operationalFilterMeta, () => {
   if (hasOperationalFilter(appliedOperationalFilters())) refreshSources()
-}, { deep: true })
+})
 
-watch(() => [props.selectedStallCodes, props.selectedStallKeys], () => {
+watch([
+  () => props.selectedStallCodes.join('\u001f'),
+  () => props.selectedStallKeys.join('\u001f')
+], () => {
   map?.getSource('project-stalls')?.setData(getStallsGeoJson())
   renderSelectedStallPins()
-}, { deep: true })
+})
 
 watch(() => props.marketFull, () => {
   refreshSources()
@@ -4862,12 +5439,16 @@ watch(() => props.marketFull, () => {
 })
 
 watch(() => props.stallStatusOverrides, () => {
-  refreshSources()
-  renderZoneLabels()
-}, { deep: true })
+  clearProjectLayoutCache()
+  scheduleStatusSourceRefresh()
+})
 
-watch(() => props.managedProjects, applyManagedProjects, { deep: true })
-watch(() => props.managedFacilities, applyManagedFacilities, { deep: true })
+// Parent explicitly bumps this key after a GIS edit/load. Avoid traversing the
+// complete 13MB projects tree with Vue deep-watch on every nested mutation.
+watch(() => props.managedDataVersion, () => {
+  applyManagedProjects(props.managedProjects)
+  applyManagedFacilities(props.managedFacilities)
+})
 
 // Parent may switch project externally (e.g. deep-link or breadcrumb reset); follow it if different
 watch(() => props.selectedProjectId, (newId) => {
@@ -4882,13 +5463,25 @@ watch(() => props.selectedProjectId, (newId) => {
   if (found) enterProject(found)
 })
 
+let marketSwitchController: AbortController | null = null
 // Dynamic market switcher watcher: loads dedicated JSON file on demand and flies to market location
 watch(() => props.marketId, async (newMarketId) => {
+  marketSwitchController?.abort()
+  const controller = new AbortController()
+  marketSwitchController = controller
   activeProjectId.value = null
   hoveredProject.value = null
   hoveredStallKey.value = null
   currentFloorId.value = '1'
-  await syncMarketJson(newMarketId)
+  try {
+    await syncMarketJson(newMarketId, controller.signal)
+  } catch (error: any) {
+    if (controller.signal.aborted || error?.name === 'AbortError') return
+    throw error
+  } finally {
+    if (marketSwitchController === controller) marketSwitchController = null
+  }
+  if (controller.signal.aborted) return
   const selectedProject = props.selectedProjectId
     ? projects.value.find(project => project.id === props.selectedProjectId)
     : null
@@ -4948,19 +5541,22 @@ const ovTitle = computed(() => {
 })
 const ovSubtitle = computed(() => {
   if (ovPanel.value === 'dashboard') return props.dashboardSubtitle || 'สรุปข้อมูลภาพรวม'
-  if (ovPanel.value === 'search') return 'หาโซน โครงการ หรือรหัสแผง'
+  if (ovPanel.value === 'search') return 'หาเลขที่การจอง คำร้อง โซน โครงการ หรือรหัสแผง'
   if (ovPanel.value === 'filter') return props.filterContext === 'costs' ? 'หาบิลที่ต้องติดตาม' : 'หาแผงและโซนที่ตรงเงื่อนไข'
   return 'เลือกแผนที่ฐานและดูความหมายของสี'
 })
 // กรองจากสีโครงการ (ชั้นข้อมูล) แยกจากตัวกรอง จึงไม่นับในตัวเลขบนปุ่มตัวกรอง
 const ovFilterBadge = computed(() => (props.filterContext === 'costs'
   ? props.filterBadge
-  : advancedFilterCount.value - (availabilityFromCard.value && appliedAvailabilityFilter.value !== 'all' ? 1 : 0)))
-const mapLayerFilterCount = computed(() => legendCategories.value.length + (showFacilities.value ? 0 : 1))
+  : advancedFilterCount.value))
+// Layer visibility is a display preference, not an active data filter.
+// Only selected project-colour categories contribute to the badge count.
+const mapLayerFilterCount = computed(() => legendCategories.value.length)
 const basemapOptions: { value: 'standard' | 'satellite' | 'dark'; label: string }[] = [
   { value: 'standard', label: 'แผนที่ปกติ' },
   { value: 'satellite', label: 'ดาวเทียม' }
 ]
+const legendCategoryStyle = (color: string): Record<string, string> => ({ '--ov-category-color': color })
 const toggleOvPanel = (panel: 'dashboard' | 'search' | 'filter' | 'layers') => {
   ovPanel.value = ovPanel.value === panel ? null : panel
   // preventScroll: แผงกำลังสไลด์เข้าจากนอกจอ ถ้า focus แบบปกติเบราว์เซอร์จะเลื่อน container ไปหาช่องค้นหา ทำให้แผนที่เคลื่อนผิดปกติ
@@ -4974,15 +5570,118 @@ watch(() => props.isDashboardOpen, (open) => {
   if (open && ovPanel.value !== 'dashboard') ovPanel.value = 'dashboard'
   else if (!open && ovPanel.value === 'dashboard') ovPanel.value = null
 })
+type SearchMatchType = 'booking' | 'application' | 'stall' | 'project'
+
 const searchResults = computed(() => {
-  const q = searchQuery.value.trim()
+  const q = suggestionQuery.value.trim()
   if (!q) return []
-  return overviewProjects.value.filter(p => matchesSearchWith(p, q)).slice(0, 30)
+  const normalizedQuery = q.toLowerCase()
+  return overviewProjects.value.filter(project => matchesSearchWith(project, q)).slice(0, 30).map((project) => {
+    const stallCodes = new Set<string>()
+    const references = new Map<string, { type: 'booking' | 'application'; number: string }>()
+    const matchedStalls: Array<{ floorId: string; stall: MapStall }> = []
+    const matchedKeys = new Set<string>()
+    getEffectiveFloorLayoutsForProject(project).forEach((layout, floorId) => {
+      layout.stalls.forEach((stall) => {
+        const code = String(stall.code || '').trim().toUpperCase()
+        const meta = props.operationalFilterMeta[code]
+        const mapNumber = getStallMapLabel(stall).toLowerCase()
+        const matchedReferences = (meta?.searchReferences || [])
+          .filter(reference => reference.number.toLowerCase().includes(normalizedQuery))
+        const matchesVisibleNumber = mapNumber.includes(normalizedQuery)
+        const matchesInternalCode = !/^\d+$/.test(normalizedQuery) && code.toLowerCase().includes(normalizedQuery)
+        if (matchesVisibleNumber || matchesInternalCode || matchedReferences.length) {
+          stallCodes.add(getStallMapLabel(stall) || String(stall.name || '').trim() || code)
+          const key = `${floorId}:${getStallSelectionKey(stall)}`
+          if (!matchedKeys.has(key)) {
+            matchedKeys.add(key)
+            matchedStalls.push({ floorId, stall })
+          }
+        }
+        matchedReferences.forEach(reference => references.set(`${reference.type}:${reference.number}`, reference))
+      })
+    })
+    const referenceLabels = Array.from(references.values()).map(reference =>
+      `${reference.type === 'booking' ? 'เลขที่การจอง' : 'เลขที่คำร้อง'} ${reference.number}`
+    )
+    const referenceText = [referenceLabels.join(', '), stallCodes.size ? `แผง ${Array.from(stallCodes).join(', ')}` : '']
+      .filter(Boolean).join(' · ')
+    const matchTypes = new Set<SearchMatchType>()
+    Array.from(references.values()).forEach(reference => matchTypes.add(reference.type))
+    if (stallCodes.size) matchTypes.add('stall')
+    if (!matchTypes.size) matchTypes.add('project')
+    return { project, referenceText, matchedStalls, matchTypes: Array.from(matchTypes) }
+  })
 })
-const projectColor = (p: ProjectZone) => categories.value.find(c => c.name === p.category)?.color || '#94a3b8'
-const focusProject = (p: ProjectZone) => {
-  if (map) map.flyTo({ center: projectToLngLat(p), zoom: 17.5, duration: 800 })
+const searchResultStallCount = computed(() => searchResults.value.reduce((total, result) => total + result.matchedStalls.length, 0))
+const searchMatchTypeLabel = (type: SearchMatchType) => ({
+  booking: 'การจอง',
+  application: 'คำร้อง',
+  stall: 'เลขแผง',
+  project: 'โครงการ'
+}[type])
+const getHighlightedSearchParts = (text: string) => {
+  const query = suggestionQuery.value.trim()
+  if (!query) return [{ text, match: false }]
+  const parts: Array<{ text: string; match: boolean }> = []
+  const normalizedText = text.toLocaleLowerCase('th-TH')
+  const normalizedQuery = query.toLocaleLowerCase('th-TH')
+  let cursor = 0
+  let matchIndex = normalizedText.indexOf(normalizedQuery, cursor)
+  while (matchIndex >= 0) {
+    if (matchIndex > cursor) parts.push({ text: text.slice(cursor, matchIndex), match: false })
+    parts.push({ text: text.slice(matchIndex, matchIndex + query.length), match: true })
+    cursor = matchIndex + query.length
+    matchIndex = normalizedText.indexOf(normalizedQuery, cursor)
+  }
+  if (cursor < text.length) parts.push({ text: text.slice(cursor), match: false })
+  return parts.length ? parts : [{ text, match: false }]
 }
+const projectColor = (p: ProjectZone) => categories.value.find(c => c.name === p.category)?.color || '#94a3b8'
+const moveSearchSuggestion = (direction: 1 | -1) => {
+  const count = searchResults.value.length
+  if (!count) return
+  if (focusedSuggestionIndex.value < 0) focusedSuggestionIndex.value = direction > 0 ? 0 : count - 1
+  else focusedSuggestionIndex.value = (focusedSuggestionIndex.value + direction + count) % count
+  nextTick(() => {
+    document.querySelector<HTMLElement>(`[data-suggestion-index="${focusedSuggestionIndex.value}"]`)
+      ?.scrollIntoView({ block: 'nearest' })
+  })
+}
+const selectActiveSearchSuggestion = () => {
+  const result = searchResults.value[focusedSuggestionIndex.value >= 0 ? focusedSuggestionIndex.value : 0]
+  if (result) selectSearchResult(result)
+}
+const selectSearchResult = (result: (typeof searchResults.value)[number]) => {
+  selectedSuggestionId.value = String(result.project.id)
+  focusedSuggestionIndex.value = searchResults.value.findIndex(item => String(item.project.id) === selectedSuggestionId.value)
+  appliedSearchQuery.value = suggestionQuery.value.trim()
+  refreshSources()
+  if (result.matchedStalls.length) {
+    const targetFloor = new Set(result.matchedStalls.map(match => match.floorId)).size === 1
+      ? result.matchedStalls[0]?.floorId
+      : undefined
+    enterProject(result.project, targetFloor)
+    nextTick(() => {
+      const bounds = getStallsBounds(result.matchedStalls.map(match => match.stall))
+      if (!bounds) return
+      map?.fitBounds(bounds, {
+        padding: getDrillMapPadding(),
+        maxZoom: result.matchedStalls.length === 1 ? 21 : 19.5,
+        pitch: DRILL_PITCH,
+        bearing: map.getBearing(),
+        duration: 800
+      })
+    })
+    return
+  }
+  enterProject(result.project)
+}
+
+watch(searchResults, (results) => {
+  if (!results.length) focusedSuggestionIndex.value = -1
+  else if (focusedSuggestionIndex.value >= results.length) focusedSuggestionIndex.value = results.length - 1
+})
 const toggleLegendCategory = (name: string) => {
   legendCategories.value = legendCategories.value.includes(name)
     ? legendCategories.value.filter(n => n !== name)
@@ -4993,6 +5692,16 @@ const clearLegendCategories = () => {
   legendCategories.value = []
   refreshSources()
 }
+const toggleProjectLabels = () => {
+  showProjectLabels.value = !showProjectLabels.value
+  renderZoneLabels()
+}
+const toggleStallLabels = () => {
+  showStallNumberLabels.value = !showStallNumberLabels.value
+  if (map?.getLayer('stalls-label')) {
+    map.setLayoutProperty('stalls-label', 'visibility', showStallNumberLabels.value ? 'visible' : 'none')
+  }
+}
 const toggleFacilitiesLayer = () => {
   showFacilities.value = !showFacilities.value
   pinnedFacilityPopup.value = false
@@ -5000,7 +5709,6 @@ const toggleFacilitiesLayer = () => {
   refreshSources()
 }
 const applyFiltersFromPanel = () => {
-  availabilityFromCard.value = false
   applyFilters()
   ovPanel.value = null
 }
@@ -5008,35 +5716,90 @@ const onOvKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Escape' && ovPanel.value) ovPanel.value = null
 }
 onMounted(() => { if (process.client) window.addEventListener('keydown', onOvKeydown) })
-onBeforeUnmount(() => { if (process.client) window.removeEventListener('keydown', onOvKeydown) })
+onBeforeUnmount(() => {
+  if (process.client) window.removeEventListener('keydown', onOvKeydown)
+  if (searchDebounceTimer) window.clearTimeout(searchDebounceTimer)
+})
 
-defineExpose({ enterProject, exitProject, resize, finishActiveTools, focusSelectedStalls, focusBookedStalls })
+// กดตัวเลขสถานะบนแดชบอร์ดเพื่อกรองแผงทันที (ใช้ตัวกรองชุดเดียวกับหน้าตัวกรอง) ส่งค่าที่ไม่ระบุ = คงเดิม
+const applyDashboardFilter = (patch: Partial<{ zone: string; contractStatus: ContractStatusFilter; renewalStatus: RenewalFilter; returnStatus: ReturnFilter; legalStatus: LegalFilter; maintenanceStatus: MaintenanceFilter }>) => {
+  if (patch.zone !== undefined) { zoneFilter.value = patch.zone || 'all'; appliedZoneFilter.value = zoneFilter.value }
+  if (patch.contractStatus !== undefined) { contractStatusFilter.value = patch.contractStatus; appliedContractStatusFilter.value = patch.contractStatus }
+  if (patch.renewalStatus !== undefined) { renewalStatusFilter.value = patch.renewalStatus; appliedRenewalStatusFilter.value = patch.renewalStatus }
+  if (patch.returnStatus !== undefined) { returnStatusFilter.value = patch.returnStatus; appliedReturnStatusFilter.value = patch.returnStatus }
+  if (patch.legalStatus !== undefined) { legalStatusFilter.value = patch.legalStatus; appliedLegalStatusFilter.value = patch.legalStatus }
+  if (patch.maintenanceStatus !== undefined) { maintenanceStatusFilter.value = patch.maintenanceStatus; appliedMaintenanceStatusFilter.value = patch.maintenanceStatus }
+  refreshSources()
+}
+
+watch([appliedSearchQuery, appliedZoneFilter, appliedContractStatusFilter, appliedRenewalStatusFilter, appliedReturnStatusFilter, appliedLegalStatusFilter, appliedMaintenanceStatusFilter], () => {
+  emit('operational-filter-change', {
+    zone: appliedZoneFilter.value,
+    search: appliedSearchQuery.value,
+    contractStatus: appliedContractStatusFilter.value,
+    renewalStatus: appliedRenewalStatusFilter.value,
+    returnStatus: appliedReturnStatusFilter.value,
+    legalStatus: appliedLegalStatusFilter.value,
+    maintenanceStatus: appliedMaintenanceStatusFilter.value
+  })
+}, { immediate: true })
+
+// กดแผงในแดชบอร์ด: ใช้กลไกค้นหาเดียวกับกล่องค้นหา (เข้าโครงการ ซูมไปที่แผง หรี่แผงอื่น) กดซ้ำเพื่อล้าง
+const searchStallFromDashboard = async (code: string) => {
+  const query = String(code || '').trim()
+  if (!query) return
+  searchQuery.value = query
+  suggestionQuery.value = query
+  await nextTick()
+  const result = searchResults.value[0]
+  if (result) selectSearchResult(result)
+}
+
+defineExpose({ enterProject, exitProject, resize, finishActiveTools, focusSelectedStalls, focusBookedStalls, applyDashboardFilter, searchStallFromDashboard, clearAppliedSearch })
 
 const canTeleportToolbar = ref(false)
 let isUnmounted = false
+let mapLoadController: AbortController | null = null
 
 const handleWindowResize = () => {
   map?.resize()
 }
 
-onMounted(async () => {
-  isUnmounted = false
-  if (process.client) {
-    canTeleportToolbar.value = Boolean(document.getElementById('step1-map-toolbar'))
-    window.addEventListener('resize', handleWindowResize)
-    try {
-      await syncMarketJson(props.marketId)
-      const ml = await import('maplibre-gl')
-      if (isUnmounted) return
-      maplibregl = ml.default || ml
-      initMap()
-    } catch (error) {
-      // Do not leave a permanent loading surface if the map library or data
-      // cannot be prepared; the existing page controls remain usable.
-      console.error('[map] unable to initialize:', error)
-      isMapLoading.value = false
-    }
+const initializeMap = async () => {
+  if (!process.client || map || isUnmounted) return
+  mapLoadController?.abort()
+  const controller = new AbortController()
+  mapLoadController = controller
+  canTeleportToolbar.value = Boolean(document.getElementById('step1-map-toolbar'))
+  window.removeEventListener('resize', handleWindowResize)
+  window.addEventListener('resize', handleWindowResize)
+  try {
+    // Start both jobs together and render the basemap as soon as MapLibre is
+    // available. Large GIS JSON continues hydrating the sources in parallel.
+    const marketDataPromise = syncMarketJson(props.marketId, controller.signal).then(
+      () => null,
+      error => error
+    )
+    const ml = await import('maplibre-gl')
+    if (isUnmounted || controller.signal.aborted) return
+    maplibregl = ml.default || ml
+    initMap()
+    const marketDataError = await marketDataPromise
+    if (marketDataError) throw marketDataError
+  } catch (error: any) {
+    if (controller.signal.aborted || error?.name === 'AbortError') return
+    // Do not leave a permanent loading surface if the map library or data
+    // cannot be prepared; the existing page controls remain usable.
+    console.error('[map] unable to initialize:', error)
+    isMapLoading.value = false
+  } finally {
+    if (mapLoadController === controller) mapLoadController = null
   }
+}
+
+onMounted(() => {
+  isUnmounted = false
+  void initializeMap()
 })
 
 // วัดตำแหน่งขอบล่างของชุดปุ่มซูมจริง แล้วส่งเป็นตัวแปร --ov-ctrl-bottom ให้แถบเลือกชั้นวางขอบล่างเสมอกันเป๊ะ
@@ -5061,8 +5824,17 @@ const cleanupMapResources = () => {
   ctrlBaselineObserver?.disconnect()
   ctrlBaselineObserver = null
   isUnmounted = true
+  mapLoadController?.abort()
+  mapLoadController = null
+  marketSwitchController?.abort()
+  marketSwitchController = null
   isMapLoading.value = true
   canTeleportToolbar.value = false
+  if (statusRefreshFrame !== null) {
+    window.cancelAnimationFrame(statusRefreshFrame)
+    statusRefreshFrame = null
+  }
+  statusRefreshQueuedForMove = false
   if (process.client) {
     window.removeEventListener('resize', handleWindowResize)
   }
@@ -5079,19 +5851,57 @@ const cleanupMapResources = () => {
   if (map) {
     const mapInstance = map
     map = null
-    try {
-      mapInstance.remove()
-    } catch {}
+    // Removing a large WebGL map synchronously blocks route navigation. Detach
+    // it from Vue now, then release GPU resources once the next tab has painted.
+    try { mapInstance.stop() } catch {}
+    const releaseMap = () => {
+      try { mapInstance.remove() } catch {}
+    }
+    if (process.client && typeof (window as any).requestIdleCallback === 'function') {
+      ;(window as any).requestIdleCallback(releaseMap, { timeout: 500 })
+    } else if (process.client) {
+      window.setTimeout(releaseMap, 0)
+    } else {
+      releaseMap()
+    }
   }
 }
 
 onBeforeUnmount(cleanupMapResources)
-onUnmounted(cleanupMapResources)
+
+// A kept-alive GIS page keeps its WebGL context and parsed sources. Pause animation
+// and global listeners while another page is active, then resize the existing map
+// when the user returns instead of destroying and rebuilding MapLibre.
+onDeactivated(() => {
+  mapLoadController?.abort()
+  mapLoadController = null
+  marketSwitchController?.abort()
+  marketSwitchController = null
+  if (process.client) window.removeEventListener('resize', handleWindowResize)
+  if (statusRefreshFrame !== null) {
+    window.cancelAnimationFrame(statusRefreshFrame)
+    statusRefreshFrame = null
+  }
+  statusRefreshQueuedForMove = false
+  try { map?.stop() } catch {}
+  try { hoverPopup?.remove() } catch {}
+})
+
+onActivated(() => {
+  if (!process.client || isUnmounted) return
+  window.removeEventListener('resize', handleWindowResize)
+  window.addEventListener('resize', handleWindowResize)
+  if (!map) {
+    void initializeMap()
+    return
+  }
+  nextTick(() => window.requestAnimationFrame(() => map?.resize()))
+})
 </script>
 
 <style scoped>
 .maplibre-overview-wrapper.is-drawing-active :deep(.maplibre-zone-number-badge),.maplibre-overview-wrapper.is-drawing-active :deep(.facility-map-marker){pointer-events:none!important}
-.zone-management-toolbar{position:absolute;z-index:26;left:50%;bottom:18px;transform:translateX(-50%);display:flex;max-width:calc(100% - 32px);overflow-x:auto;background:rgba(255,255,255,.97);border:1px solid #d7e2ef;border-radius:14px;box-shadow:0 8px 20px rgba(15,23,42,.13);backdrop-filter:blur(8px)}.zone-management-toolbar :deep(.app-btn){height:68px;min-height:68px;max-height:68px;min-width:104px;padding:7px 14px;flex:0 0 auto;flex-direction:column;gap:5px;border:0!important;border-right:1px solid #e8eef6!important;border-radius:0!important;background:transparent!important;color:#334155!important;font-size:.8125rem;font-weight:600;line-height:1.15;white-space:nowrap;box-shadow:none!important}.zone-management-toolbar :deep(.app-btn:first-child){border-radius:13px 0 0 13px!important}.zone-management-toolbar :deep(.app-btn:last-child){border-right:0!important;border-radius:0 13px 13px 0!important}.zone-management-toolbar :deep(.app-btn:hover:not(.is-disabled)){background:#f8fbff!important;color:#2563eb!important}.zone-management-toolbar :deep(.app-btn.app-btn-primary:not(.is-disabled)){background:#eff6ff!important;color:#2563eb!important;font-weight:700!important}.zone-management-toolbar :deep(.app-btn.app-btn-primary:hover:not(.is-disabled)){background:#dbeafe!important;color:#1d4ed8!important}.zone-management-toolbar :deep(.app-btn.app-btn-danger-outline:not(.is-disabled)){color:#dc2626!important}.zone-management-toolbar :deep(.app-btn.app-btn-danger-outline:hover:not(.is-disabled)){background:#fef2f2!important;color:#b91c1c!important}.zone-management-toolbar :deep(.app-btn.is-disabled){background:#fff!important;color:#cbd5e1!important;opacity:1!important}.zone-management-toolbar :deep(.app-btn svg){width:20px;height:20px}.zone-management-toolbar>button:not(.app-btn){min-width:88px;padding:11px 13px;border:0;border-radius:8px;background:transparent;color:#334155;display:grid;justify-items:center;gap:4px;font:600 .8125rem/1 inherit;cursor:pointer;white-space:nowrap}.zone-management-toolbar>button:not(.app-btn):hover:not(:disabled),.zone-management-toolbar>button:not(.app-btn).active{background:#eff6ff;color:#2563eb}.zone-management-toolbar>button.primary-save:not(:disabled){background:#2563eb;color:#fff;padding-inline:18px}.zone-management-toolbar>button.primary-save:hover:not(:disabled){background:#1d4ed8;color:#fff}.zone-management-toolbar>button:disabled{opacity:.38;cursor:not-allowed}.zone-management-toolbar>button.danger:hover:not(:disabled){background:#fef2f2;color:#dc2626}.polygon-edit-hint{position:absolute;z-index:26;left:50%;bottom:96px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;background:rgba(255,255,255,.97);border:1px solid #d7e2ef;color:#1e293b;font-size:.8125rem;font-weight:600;box-shadow:0 8px 20px rgba(15,23,42,.12);backdrop-filter:blur(8px);white-space:nowrap}.polygon-edit-hint svg{width:16px;height:16px;color:#2563eb;flex-shrink:0}@media(max-width:640px){.zone-management-toolbar{bottom:10px;left:16px;right:16px;transform:none}.zone-management-toolbar :deep(.app-btn){min-width:88px;height:62px;min-height:62px;max-height:62px;padding:6px 8px;font-size:.75rem}.zone-management-toolbar>button:not(.app-btn){min-width:76px;padding:9px 8px;font-size:.75rem}.polygon-edit-hint{bottom:82px;font-size:.75rem;white-space:normal;text-align:center}}
+.zone-management-toolbar{position:absolute;z-index:26;left:50%;bottom:18px;transform:translateX(-50%);display:flex;max-width:calc(100% - 32px);overflow-x:auto;background:var(--bg-rgba-255-255-255-0p97);border:1px solid var(--bd-d7e2ef);border-radius:14px;box-shadow:0 8px 20px rgba(15,23,42,.13);backdrop-filter:blur(8px)}.zone-management-toolbar :deep(.app-btn){height:68px;min-height:68px;max-height:68px;min-width:104px;padding:7px 14px;flex:0 0 auto;flex-direction:column;gap:5px;border:0!important;border-right:1px solid var(--bd-e8eef6)!important;border-radius:0!important;background:transparent!important;color:var(--tx-334155)!important;font-size:.8125rem;font-weight:600;line-height:1.15;white-space:nowrap;box-shadow:none!important}.zone-management-toolbar :deep(.app-btn:first-child){border-radius:13px 0 0 13px!important}.zone-management-toolbar :deep(.app-btn:last-child){border-right:0!important;border-radius:0 13px 13px 0!important}.zone-management-toolbar :deep(.app-btn:hover:not(.is-disabled)){background:var(--bg-f8fbff)!important;color:var(--tx-2563eb)!important}.zone-management-toolbar :deep(.app-btn.app-btn-primary:not(.is-disabled)){background:var(--bg-eff6ff)!important;color:var(--tx-2563eb)!important;font-weight:700!important}.zone-management-toolbar :deep(.app-btn.app-btn-primary:hover:not(.is-disabled)){background:var(--bg-dbeafe)!important;color:var(--tx-1d4ed8)!important}.zone-management-toolbar :deep(.app-btn.app-btn-danger-outline:not(.is-disabled)){color:var(--tx-dc2626)!important}.zone-management-toolbar :deep(.app-btn.app-btn-danger-outline:hover:not(.is-disabled)){background:var(--bg-fef2f2)!important;color:var(--tx-b91c1c)!important}.zone-management-toolbar :deep(.app-btn.is-disabled){background:var(--bg-ffffff)!important;color:var(--tx-cbd5e1)!important;opacity:1!important}.zone-management-toolbar :deep(.app-btn svg){width:20px;height:20px}.zone-management-toolbar>button:not(.app-btn){min-width:88px;padding:11px 13px;border:0;border-radius:8px;background:transparent;color:var(--tx-334155);display:grid;justify-items:center;gap:4px;font:600 .8125rem/1 inherit;cursor:pointer;white-space:nowrap}.zone-management-toolbar>button:not(.app-btn):hover:not(:disabled),.zone-management-toolbar>button:not(.app-btn).active{background:var(--bg-eff6ff);color:var(--tx-2563eb)}.zone-management-toolbar>button.primary-save:not(:disabled){background:#2563eb;color:#fff;padding-inline:18px}.zone-management-toolbar>button.primary-save:hover:not(:disabled){background:#1d4ed8;color:#fff}.zone-management-toolbar>button:disabled{opacity:.38;cursor:not-allowed}.zone-management-toolbar>button.danger:hover:not(:disabled){background:var(--bg-fef2f2);color:var(--tx-dc2626)}.polygon-edit-hint{position:absolute;z-index:26;left:50%;bottom:96px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;background:var(--bg-rgba-255-255-255-0p97);border:1px solid var(--bd-d7e2ef);color:var(--tx-1e293b);font-size:.8125rem;font-weight:600;box-shadow:0 8px 20px rgba(15,23,42,.12);backdrop-filter:blur(8px);white-space:nowrap}.polygon-edit-hint svg{width:16px;height:16px;color:var(--tx-2563eb);flex-shrink:0}@media(max-width:640px){.zone-management-toolbar{bottom:10px;left:16px;right:16px;transform:none}.zone-management-toolbar :deep(.app-btn){min-width:88px;height:62px;min-height:62px;max-height:62px;padding:6px 8px;font-size:.75rem}.zone-management-toolbar>button:not(.app-btn){min-width:76px;padding:9px 8px;font-size:.75rem}.polygon-edit-hint{bottom:82px;font-size:.75rem;white-space:normal;text-align:center}}
 .projects-master-container {
   display: flex;
   flex-direction: column;
@@ -5134,29 +5944,29 @@ onUnmounted(cleanupMapResources)
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 9999px;
   padding: 6px 14px;
   font-family: 'Bai Jamjuree', sans-serif;
   font-size: 0.84rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--tx-475569);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .map-filter-pill-btn:hover {
-  border-color: #94a3b8;
-  color: #1e293b;
+  border-color: var(--bd-94a3b8);
+  color: var(--tx-1e293b);
   transform: translateY(-1px);
 }
 
 .map-filter-pill-btn.active {
-  background: #ecfdf5;
+  background: var(--bg-ecfdf5);
   border-color: #10b981;
-  color: #065f46;
+  color: var(--tx-065f46);
   font-weight: 700;
   box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);
 }
@@ -5182,8 +5992,8 @@ onUnmounted(cleanupMapResources)
 }
 
 .map-advanced-filter-wrap { position: relative; }
-.map-advanced-filter-btn { display: inline-flex; align-items: center; gap: 6px; height: 35px; padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #475569; font-family: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
-.map-advanced-filter-btn:hover, .map-advanced-filter-btn.active { border-color: #93c5fd; background: #eff6ff; color: #1d4ed8; }
+.map-advanced-filter-btn { display: inline-flex; align-items: center; gap: 6px; height: 35px; padding: 6px 12px; border: 1px solid var(--bd-cbd5e1); border-radius: 8px; background: var(--bg-ffffff); color: var(--tx-475569); font-family: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
+.map-advanced-filter-btn:hover, .map-advanced-filter-btn.active { border-color: var(--bd-93c5fd); background: var(--bg-eff6ff); color: var(--tx-1d4ed8); }
 .map-advanced-count { display: grid; width: 17px; height: 17px; place-items: center; border-radius: 50%; background: #2563eb; color: #fff; font-size: .65rem; }
 .map-advanced-filter-panel {
   position: absolute;
@@ -5193,9 +6003,9 @@ onUnmounted(cleanupMapResources)
   z-index: 45;
   width: min(320px, calc(100vw - 64px));
   padding: 16px;
-  border: 1px solid #dbe5f2;
+  border: 1px solid var(--bd-dbe5f2);
   border-radius: 14px;
-  background: #fff;
+  background: var(--bg-ffffff);
   box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16), 0 4px 12px rgba(15, 23, 42, 0.05);
 }
 .map-filter-panel-head {
@@ -5203,7 +6013,7 @@ onUnmounted(cleanupMapResources)
   align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 0.88rem;
   font-weight: 700;
 }
@@ -5216,13 +6026,13 @@ onUnmounted(cleanupMapResources)
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #64748b;
+  color: var(--tx-64748b);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .map-filter-panel-head button:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-0f172a);
 }
 .filter-field-group {
   margin-top: 10px;
@@ -5230,7 +6040,7 @@ onUnmounted(cleanupMapResources)
 .filter-field-label {
   display: block;
   margin-bottom: 5px;
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.78rem;
   font-weight: 600;
 }
@@ -5255,7 +6065,7 @@ onUnmounted(cleanupMapResources)
   gap: 12px;
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 
 .mfp-result-summary {
@@ -5264,29 +6074,29 @@ onUnmounted(cleanupMapResources)
   justify-content: center;
   gap: 6px;
   font-size: 0.78rem;
-  color: #64748b;
-  background: #f8fafc;
+  color: var(--tx-64748b);
+  background: var(--bg-f8fafc);
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
 }
 
 .mfp-result-label {
-  color: #94a3b8;
-  font-size: 0.74rem;
+  color: var(--tx-94a3b8);
+  font-size: 0.75rem;
 }
 
 .mfp-result-val strong {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 700;
 }
 
 .mfp-result-dot {
-  color: #cbd5e1;
+  color: var(--tx-cbd5e1);
 }
 
 .mfp-result-stalls strong {
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-weight: 600;
 }
 
@@ -5304,9 +6114,9 @@ onUnmounted(cleanupMapResources)
   gap: 6px;
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1.5px solid #cbd5e1;
-  background: #ffffff;
-  color: #334155;
+  border: 1.5px solid var(--bd-cbd5e1);
+  background: var(--bg-ffffff);
+  color: var(--tx-334155);
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: 600;
@@ -5315,9 +6125,9 @@ onUnmounted(cleanupMapResources)
 }
 
 .btn-filter-reset:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-  color: #0f172a;
+  background: var(--bg-f8fafc);
+  border-color: var(--bd-94a3b8);
+  color: var(--tx-0f172a);
 }
 
 .btn-filter-apply {
@@ -5354,14 +6164,14 @@ onUnmounted(cleanupMapResources)
 .map-category-select {
   appearance: none;
   -webkit-appearance: none;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 9999px;
   padding: 6px 32px 6px 14px;
   font-family: 'Bai Jamjuree', sans-serif;
   font-size: 0.84rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--tx-334155);
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
@@ -5370,8 +6180,8 @@ onUnmounted(cleanupMapResources)
 }
 
 .map-category-select:hover {
-  border-color: #94a3b8;
-  color: #0f172a;
+  border-color: var(--bd-94a3b8);
+  color: var(--tx-0f172a);
 }
 
 .map-category-select:focus {
@@ -5383,28 +6193,28 @@ onUnmounted(cleanupMapResources)
   height: 35px;
   max-width: 175px;
   padding: 6px 9px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   outline: none;
-  background: #ffffff;
-  color: #475569;
+  background: var(--bg-ffffff);
+  color: var(--tx-475569);
   font-family: 'Bai Jamjuree', sans-serif;
   font-size: .78rem;
   font-weight: 600;
   cursor: pointer;
 }
-.map-filter-select:hover { border-color: #94a3b8; color: #1e293b; }
+.map-filter-select:hover { border-color: var(--bd-94a3b8); color: var(--tx-1e293b); }
 .map-filter-select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, .1); }
-.map-filter-result { color: #64748b; font-size: .76rem; white-space: nowrap; }
-.map-filter-result strong { color: #1e40af; font-weight: 800; }
-.map-clear-filters-btn { border: 0; padding: 4px 2px; background: transparent; color: #2563eb; font-family: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
-.map-clear-filters-btn:hover { color: #1d4ed8; text-decoration: underline; }
+.map-filter-result { color: var(--tx-64748b); font-size: .76rem; white-space: nowrap; }
+.map-filter-result strong { color: var(--tx-1e40af); font-weight: 800; }
+.map-clear-filters-btn { border: 0; padding: 4px 2px; background: transparent; color: var(--tx-2563eb); font-family: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.map-clear-filters-btn:hover { color: var(--tx-1d4ed8); text-decoration: underline; }
 
 .category-select-icon {
   position: absolute;
   right: 12px;
   pointer-events: none;
-  color: #64748b;
+  color: var(--tx-64748b);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5414,8 +6224,8 @@ onUnmounted(cleanupMapResources)
 .map-mode-segmented {
   display: inline-flex;
   align-items: center;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f1f5f9);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 9999px;
   padding: 3px;
   gap: 2px;
@@ -5425,7 +6235,7 @@ onUnmounted(cleanupMapResources)
 .map-mode-tab {
   border: none;
   background: transparent;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-family: 'Bai Jamjuree', sans-serif;
   font-size: 0.85rem;
   font-weight: 600;
@@ -5437,12 +6247,12 @@ onUnmounted(cleanupMapResources)
 }
 
 .map-mode-tab:hover {
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .map-mode-tab.active {
-  background: #ffffff;
-  color: #2563eb;
+  background: var(--bg-ffffff);
+  color: var(--tx-2563eb);
   font-weight: 700;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
@@ -5465,7 +6275,7 @@ onUnmounted(cleanupMapResources)
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5477,11 +6287,11 @@ onUnmounted(cleanupMapResources)
   height: 38px;
   padding: 8px 32px 8px 36px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
   font-size: 0.85rem;
   font-family: inherit;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -5492,7 +6302,7 @@ onUnmounted(cleanupMapResources)
 }
 
 .map-search-input::placeholder {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
 }
 
 .clear-search-btn {
@@ -5502,7 +6312,7 @@ onUnmounted(cleanupMapResources)
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -5512,7 +6322,7 @@ onUnmounted(cleanupMapResources)
 }
 
 .clear-search-btn:hover {
-  color: #475569;
+  color: var(--tx-475569);
 }
 
 
@@ -5523,7 +6333,7 @@ onUnmounted(cleanupMapResources)
   height: 620px;
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
 }
 
@@ -5542,8 +6352,8 @@ onUnmounted(cleanupMapResources)
   overflow: hidden;
   pointer-events: none;
   background:
-    linear-gradient(120deg, rgba(226, 232, 240, .5) 12%, rgba(248, 250, 252, .96) 30%, rgba(226, 232, 240, .5) 48%) 0 0 / 260% 100%,
-    #f8fafc;
+    linear-gradient(120deg, var(--bg-rgba-226-232-240-0p5) 12%, var(--bg-rgba-248-250-252-0p96) 30%, var(--bg-rgba-226-232-240-0p5) 48%) 0 0 / 260% 100%,
+    var(--bg-f8fafc);
   animation: mapSkeletonSweep 1.7s ease-in-out infinite;
 }
 
@@ -5552,8 +6362,8 @@ onUnmounted(cleanupMapResources)
   content: '';
   position: absolute;
   inset: auto;
-  border: 1px solid rgba(203, 213, 225, .72);
-  background: rgba(226, 232, 240, .36);
+  border: 1px solid var(--bd-rgba-203-213-225-0p72);
+  background: var(--bg-rgba-226-232-240-0p36);
 }
 
 .map-loading-skeleton::before {
@@ -5586,8 +6396,8 @@ onUnmounted(cleanupMapResources)
 .map-skeleton-tool,
 .map-skeleton-zone {
   display: block;
-  border: 1px solid rgba(203, 213, 225, .78);
-  background: rgba(226, 232, 240, .75);
+  border: 1px solid var(--bd-rgba-203-213-225-0p78);
+  background: var(--bg-rgba-226-232-240-0p75);
 }
 
 .is-map-tab { width: 68px; height: 34px; border-radius: 999px; }
@@ -5598,7 +6408,7 @@ onUnmounted(cleanupMapResources)
   position: absolute;
   z-index: 1;
   border-radius: 8px;
-  background: rgba(191, 219, 254, .48);
+  background: var(--bg-rgba-191-219-254-0p48);
   box-shadow: inset 0 0 0 1px rgba(147, 197, 253, .22);
 }
 
@@ -5613,9 +6423,9 @@ onUnmounted(cleanupMapResources)
   bottom: 18px;
   width: 184px;
   padding: 13px;
-  border: 1px solid rgba(203, 213, 225, .76);
+  border: 1px solid var(--bd-rgba-203-213-225-0p76);
   border-radius: 12px;
-  background: rgba(255, 255, 255, .78);
+  background: var(--bg-rgba-255-255-255-0p78);
 }
 
 .is-legend-title { width: 74px; height: 12px; border-radius: 999px; margin-bottom: 10px; }
@@ -5632,7 +6442,7 @@ onUnmounted(cleanupMapResources)
   transform: translateX(-50%);
 }
 
-.map-skeleton-tool { width: 82px; height: 48px; border-radius: 10px; background: rgba(255, 255, 255, .82); }
+.map-skeleton-tool { width: 82px; height: 48px; border-radius: 10px; background: var(--bg-rgba-255-255-255-0p82); }
 
 @keyframes mapSkeletonSweep {
   0%, 100% { background-position: 100% 0; }
@@ -5653,11 +6463,11 @@ onUnmounted(cleanupMapResources)
   gap: 10px;
   max-width: min(360px, calc(100% - 160px));
   padding: 11px 14px;
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--bd-bfdbfe);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--bg-rgba-255-255-255-0p96);
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
-  color: #1e3a8a;
+  color: var(--tx-1e3a8a);
   pointer-events: none;
 }
 
@@ -5681,19 +6491,19 @@ onUnmounted(cleanupMapResources)
 .map-project-guidance strong {
   font-size: 0.9rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .map-project-guidance small {
-  font-size: 0.74rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
   line-height: 1.35;
 }
 
 .map-project-guidance-arrow {
   flex: 0 0 auto;
   margin-left: auto;
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 @media (max-width: 680px) {
@@ -5725,7 +6535,7 @@ onUnmounted(cleanupMapResources)
   color: #ffffff;
   padding: 7px 16px 7px 12px;
   border-radius: 9999px;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--bd-ffffff);
   box-shadow: 0 4px 18px rgba(37, 99, 235, 0.45), 0 2px 6px rgba(15, 23, 42, 0.2);
   font-family: inherit;
   font-size: 0.84rem;
@@ -5743,7 +6553,7 @@ onUnmounted(cleanupMapResources)
 
 .map-floating-legend-btn.active {
   background: #1e40af;
-  border-color: #93c5fd;
+  border-color: var(--bd-93c5fd);
   box-shadow: 0 6px 20px rgba(30, 64, 175, 0.6);
 }
 
@@ -5751,7 +6561,7 @@ onUnmounted(cleanupMapResources)
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--bg-rgba-255-255-255-0p22);
   color: #ffffff;
   display: inline-flex;
   align-items: center;
@@ -5761,7 +6571,7 @@ onUnmounted(cleanupMapResources)
 }
 
 .map-floating-legend-btn:hover .legend-btn-icon-wrap {
-  background: rgba(255, 255, 255, 0.32);
+  background: var(--bg-rgba-255-255-255-0p32);
 }
 
 .legend-btn-label {
@@ -5770,8 +6580,8 @@ onUnmounted(cleanupMapResources)
 }
 
 .legend-count-pill {
-  background: #ffffff;
-  color: #2563eb;
+  background: var(--bg-ffffff);
+  color: var(--tx-2563eb);
   font-size: 0.76rem;
   font-weight: 800;
   padding: 1.5px 7.5px;
@@ -5799,8 +6609,8 @@ onUnmounted(cleanupMapResources)
   width: 440px;
   max-width: calc(100vw - 32px);
   max-height: 380px;
-  background: #ffffff;
-  border: 1.5px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  border: 1.5px solid var(--bd-cbd5e1);
   border-radius: 16px;
   box-shadow: 0 20px 42px rgba(15, 23, 42, 0.22);
   display: flex;
@@ -5814,26 +6624,26 @@ onUnmounted(cleanupMapResources)
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid #f1f5f9;
-  background: #ffffff;
+  border-bottom: 1px solid var(--bd-f1f5f9);
+  background: var(--bg-ffffff);
 }
 
 .mflc-title-group {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 0.88rem;
 }
 
 .mflc-title-group svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .mflc-sub {
-  font-size: 0.72rem;
-  color: #64748b;
-  background: #f1f5f9;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
+  background: var(--bg-f1f5f9);
   padding: 2px 7px;
   border-radius: 6px;
   font-weight: 500;
@@ -5847,14 +6657,14 @@ onUnmounted(cleanupMapResources)
   border-radius: 8px;
   display: grid;
   place-items: center;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .mflc-close-btn:hover {
-  background: #fee2e2;
-  color: #dc2626;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
 }
 
 .mflc-body {
@@ -5883,7 +6693,7 @@ onUnmounted(cleanupMapResources)
 }
 
 .mflc-item:hover {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .mflc-swatch {
@@ -5905,13 +6715,13 @@ onUnmounted(cleanupMapResources)
 .mflc-name {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   line-height: 1.35;
 }
 
 .mflc-projects {
-  font-size: 0.7rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
   margin-top: 2px;
   line-height: 1.3;
 }
@@ -5930,8 +6740,8 @@ onUnmounted(cleanupMapResources)
 
 /* Modern Category Filter Panel */
 .projects-category-filter-panel {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   padding: 16px 18px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
@@ -5946,7 +6756,7 @@ onUnmounted(cleanupMapResources)
   gap: 10px;
   margin-bottom: 14px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
 }
 
 .filter-header-left {
@@ -5959,31 +6769,31 @@ onUnmounted(cleanupMapResources)
 .filter-title {
   font-size: 0.88rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   display: inline-flex;
   align-items: center;
   gap: 7px;
 }
 
 .filter-title svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .filter-subtitle-badge {
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
-  background: #f1f5f9;
+  color: var(--tx-64748b);
+  background: var(--bg-f1f5f9);
   padding: 3px 9px;
   border-radius: 999px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   transition: all 0.2s ease;
 }
 
 .filter-subtitle-badge.is-filtering {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #1e40af;
+  background: var(--bg-eff6ff);
+  border-color: var(--bd-bfdbfe);
+  color: var(--tx-1e40af);
 }
 
 .btn-reset-filter {
@@ -5992,9 +6802,9 @@ onUnmounted(cleanupMapResources)
   gap: 5px;
   padding: 4px 10px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #dc2626;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
+  color: var(--tx-dc2626);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
@@ -6002,8 +6812,8 @@ onUnmounted(cleanupMapResources)
 }
 
 .btn-reset-filter:hover {
-  background: #fef2f2;
-  border-color: #fca5a5;
+  background: var(--bg-fef2f2);
+  border-color: var(--bd-fca5a5);
 }
 
 /* Chips Flow Layout */
@@ -6019,9 +6829,9 @@ onUnmounted(cleanupMapResources)
   gap: 8px;
   padding: 6px 13px;
   border-radius: 999px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #334155;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-334155);
   font-size: 0.8rem;
   font-weight: 500;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
@@ -6032,17 +6842,17 @@ onUnmounted(cleanupMapResources)
 }
 
 .category-filter-chip:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
-  color: #0f172a;
+  border-color: var(--bd-cbd5e1);
+  background: var(--bg-f8fafc);
+  color: var(--tx-0f172a);
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(15, 23, 42, 0.05);
 }
 
 .category-filter-chip.active-chip {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   border-color: #2563eb;
-  color: #1e40af;
+  color: var(--tx-1e40af);
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.16);
   transform: translateY(-1px);
@@ -6050,7 +6860,7 @@ onUnmounted(cleanupMapResources)
 
 .category-filter-chip.is-dimmed {
   opacity: 0.65;
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .category-filter-chip.is-dimmed:hover {
@@ -6083,24 +6893,24 @@ onUnmounted(cleanupMapResources)
 }
 
 .chip-count-pill {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   padding: 1px 7px;
   border-radius: 12px;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
 .category-filter-chip.active-chip .chip-count-pill {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--bg-dbeafe);
+  color: var(--tx-1e40af);
 }
 /* Project Area Details Banner */
 .project-area-banner {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   padding: 16px 20px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
@@ -6115,7 +6925,7 @@ onUnmounted(cleanupMapResources)
   gap: 12px;
   margin-bottom: 14px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--bd-e2e8f0);
 }
 
 .banner-title-group {
@@ -6135,17 +6945,17 @@ onUnmounted(cleanupMapResources)
 .banner-title {
   font-size: 1rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .banner-category-tag {
   font-size: 0.78rem;
   font-weight: 500;
-  color: #64748b;
-  background: #ffffff;
+  color: var(--tx-64748b);
+  background: var(--bg-ffffff);
   padding: 2px 10px;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 .btn-select-project-action {
@@ -6175,8 +6985,8 @@ onUnmounted(cleanupMapResources)
 }
 
 .metric-card {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 10px;
   padding: 12px 14px;
   display: flex;
@@ -6189,32 +6999,32 @@ onUnmounted(cleanupMapResources)
   align-items: center;
   gap: 6px;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
 .metric-label svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .metric-value {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .metric-value.highlight {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .metric-value .unit {
   font-size: 0.78rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .metric-value.text-danger {
-  color: #dc2626;
+  color: var(--tx-dc2626);
 }
 
 /* ===== Drill-down Panel (inside map) ===== */
@@ -6230,9 +7040,9 @@ onUnmounted(cleanupMapResources)
   gap: 12px;
   padding: 16px;
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--bg-rgba-255-255-255-0p96);
   backdrop-filter: blur(10px);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
 }
@@ -6240,7 +7050,7 @@ onUnmounted(cleanupMapResources)
 .smp-back-section {
   width: 100%;
   padding-bottom: 13px;
-  border-bottom: 1px solid #e8eef6;
+  border-bottom: 1px solid var(--bd-e8eef6);
 }
 
 .smp-back-btn {
@@ -6285,13 +7095,13 @@ onUnmounted(cleanupMapResources)
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .smp-category {
   margin-top: -6px;
   font-size: 0.9375rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   line-height: 1.4;
 }
 
@@ -6300,8 +7110,8 @@ onUnmounted(cleanupMapResources)
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
   padding: 10px 12px;
 }
@@ -6318,15 +7128,15 @@ onUnmounted(cleanupMapResources)
   gap: 6px;
   font-size: 0.875rem;
   font-weight: 700;
-  color: #334155;
+  color: var(--tx-334155);
 }
 
 .smp-floor-count {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
   padding: 1px 7px;
   border-radius: 9999px;
 }
@@ -6344,8 +7154,8 @@ onUnmounted(cleanupMapResources)
   gap: 7px;
   padding: 6px 9px;
   border-radius: 9px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
+  border: 1.5px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
   cursor: pointer;
   font-family: inherit;
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
@@ -6353,12 +7163,12 @@ onUnmounted(cleanupMapResources)
 }
 
 .smp-floor-segmented-btn:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--bd-cbd5e1);
+  background: var(--bg-f8fafc);
 }
 
 .smp-floor-segmented-btn.active {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   border-color: #2563eb;
   box-shadow: 0 2px 6px rgba(37, 99, 235, 0.12);
 }
@@ -6370,8 +7180,8 @@ onUnmounted(cleanupMapResources)
   width: 24px;
   height: 22px;
   border-radius: 6px;
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-334155);
   font-size: 0.8125rem;
   font-weight: 800;
   flex-shrink: 0;
@@ -6393,23 +7203,23 @@ onUnmounted(cleanupMapResources)
 .smp-seg-name {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   white-space: nowrap;
 }
 
 .smp-floor-segmented-btn.active .smp-seg-name {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
 }
 
 .smp-seg-avail {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #16a34a;
+  color: var(--tx-16a34a);
   white-space: nowrap;
 }
 
 .smp-floor-segmented-btn.active .smp-seg-avail {
-  color: #15803d;
+  color: var(--tx-15803d);
   font-weight: 700;
 }
 
@@ -6467,27 +7277,27 @@ onUnmounted(cleanupMapResources)
 }
 
 .smp-floor-segmented-btn.is-floor-full .smp-seg-avail.is-full {
-  color: #dc2626;
+  color: var(--tx-dc2626);
   font-weight: 700;
 }
 
 .smp-floor-segmented-btn.is-floor-queue .smp-seg-avail.is-queue {
-  color: #d97706;
+  color: var(--tx-d97706);
   font-weight: 700;
 }
 
 .smp-floor-segmented-btn.is-floor-full:not(.active) {
   opacity: 0.8;
-  background: #fafbfc;
+  background: var(--bg-fafbfc);
 }
 
 .smp-floor-segmented-btn.is-floor-queue:not(.active) {
-  background: #fffdf5;
+  background: var(--bg-fffdf5);
 }
 
 .smp-floor-segmented-btn.is-floor-full.active {
-  border-color: #fca5a5;
-  background: #fef2f2;
+  border-color: var(--bd-fca5a5);
+  background: var(--bg-fef2f2);
 }
 
 .smp-floor-segmented-btn.is-floor-full.active .smp-seg-badge {
@@ -6496,12 +7306,12 @@ onUnmounted(cleanupMapResources)
 }
 
 .smp-floor-segmented-btn.is-floor-full.active .smp-seg-name {
-  color: #b91c1c;
+  color: var(--tx-b91c1c);
 }
 
 .smp-floor-segmented-btn.is-floor-queue.active {
   border-color: #fcd34d;
-  background: #fffbeb;
+  background: var(--bg-fffbeb);
 }
 
 .smp-floor-segmented-btn.is-floor-queue.active .smp-seg-badge {
@@ -6510,12 +7320,12 @@ onUnmounted(cleanupMapResources)
 }
 
 .smp-floor-segmented-btn.is-floor-queue.active .smp-seg-name {
-  color: #b45309;
+  color: var(--tx-b45309);
 }
 
 .smp-floor-full-banner {
-  background: linear-gradient(135deg, #fef2f2 0%, #fff7ed 100%);
-  border: 1px solid #fecaca;
+  background: linear-gradient(135deg, var(--bg-fef2f2) 0%, var(--bg-fff7ed) 100%);
+  border: 1px solid var(--bd-fecaca);
   border-radius: 12px;
   padding: 11px 13px;
   display: flex;
@@ -6528,20 +7338,20 @@ onUnmounted(cleanupMapResources)
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #b91c1c;
+  color: var(--tx-b91c1c);
   font-size: 0.84rem;
   font-weight: 700;
 }
 
 .sffb-head svg {
   flex-shrink: 0;
-  color: #dc2626;
+  color: var(--tx-dc2626);
 }
 
 .sffb-desc {
   margin: 0;
   font-size: 0.8125rem;
-  color: #7f1d1d;
+  color: var(--tx-7f1d1d);
   line-height: 1.45;
 }
 
@@ -6572,8 +7382,8 @@ onUnmounted(cleanupMapResources)
 }
 
 .smp-floor-queue-banner {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-  border: 1px solid #fde68a;
+  background: linear-gradient(135deg, var(--bg-fffbeb) 0%, var(--bg-fef3c7) 100%);
+  border: 1px solid var(--bd-fde68a);
   border-radius: 12px;
   padding: 11px 13px;
   display: flex;
@@ -6586,20 +7396,20 @@ onUnmounted(cleanupMapResources)
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #b45309;
+  color: var(--tx-b45309);
   font-size: 0.84rem;
   font-weight: 700;
 }
 
 .sfqb-head svg {
   flex-shrink: 0;
-  color: #d97706;
+  color: var(--tx-d97706);
 }
 
 .sfqb-desc {
   margin: 0;
   font-size: 0.8125rem;
-  color: #92400e;
+  color: var(--tx-92400e);
   line-height: 1.45;
 }
 
@@ -6635,9 +7445,9 @@ onUnmounted(cleanupMapResources)
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 5px;
   padding: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 10px;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .smp-sc-item {
@@ -6645,13 +7455,13 @@ onUnmounted(cleanupMapResources)
   align-items: center;
   gap: 4px;
   min-width: 0;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.75rem;
   white-space: nowrap;
 }
 
 .smp-sc-item strong {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 0.8125rem;
 }
 
@@ -6677,7 +7487,7 @@ onUnmounted(cleanupMapResources)
 .smp-search-icon {
   position: absolute;
   left: 10px;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   pointer-events: none;
 }
 
@@ -6686,17 +7496,17 @@ onUnmounted(cleanupMapResources)
   min-width: 0;
   height: 34px;
   padding: 0 31px 0 31px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   outline: none;
-  background: #ffffff;
-  color: #1e293b;
+  background: var(--bg-ffffff);
+  color: var(--tx-1e293b);
   font: inherit;
   font-size: 0.78rem;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.smp-search-input::placeholder { color: #94a3b8; }
+.smp-search-input::placeholder { color: var(--tx-94a3b8); }
 
 .smp-search-input:focus {
   border-color: #3b82f6;
@@ -6715,11 +7525,11 @@ onUnmounted(cleanupMapResources)
   border: 0;
   border-radius: 5px;
   background: transparent;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   cursor: pointer;
 }
 
-.smp-search-clear:hover { background: #f1f5f9; color: #475569; }
+.smp-search-clear:hover { background: var(--bg-f1f5f9); color: var(--tx-475569); }
 
 .smp-filter-tabs {
   display: grid;
@@ -6730,22 +7540,22 @@ onUnmounted(cleanupMapResources)
 .smp-filter-tab {
   min-width: 0;
   padding: 5px 3px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 6px;
-  background: #ffffff;
-  color: #64748b;
+  background: var(--bg-ffffff);
+  color: var(--tx-64748b);
   font: inherit;
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.15;
   white-space: nowrap;
   cursor: pointer;
 }
 
-.smp-filter-tab:hover { border-color: #93c5fd; color: #2563eb; }
-.smp-filter-tab.active { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
-.smp-filter-tab.is-avail.active { border-color: #22c55e; background: #f0fdf4; color: #15803d; }
-.smp-filter-tab.is-res.active { border-color: #f59e0b; background: #fffbeb; color: #b45309; }
+.smp-filter-tab:hover { border-color: var(--bd-93c5fd); color: var(--tx-2563eb); }
+.smp-filter-tab.active { border-color: #2563eb; background: var(--bg-eff6ff); color: var(--tx-1d4ed8); }
+.smp-filter-tab.is-avail.active { border-color: #22c55e; background: var(--bg-f0fdf4); color: var(--tx-15803d); }
+.smp-filter-tab.is-res.active { border-color: #f59e0b; background: var(--bg-fffbeb); color: var(--tx-b45309); }
 
 .smp-stall-list {
   display: flex;
@@ -6764,16 +7574,17 @@ onUnmounted(cleanupMapResources)
   flex-direction: column;
   gap: 7px;
   padding: 9px 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 9px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-.smp-stall-card:hover { border-color: #93c5fd; box-shadow: 0 3px 9px rgba(37, 99, 235, 0.1); transform: translateY(-1px); }
-.smp-stall-card.is-selected { border-color: #2563eb; background: #eff6ff; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.16); }
-.smp-stall-card.is-occupied { background: #f8fafc; cursor: not-allowed; opacity: 0.76; }
+.smp-stall-card:hover { border-color: var(--bd-93c5fd); box-shadow: 0 3px 9px rgba(37, 99, 235, 0.1); transform: translateY(-1px); }
+.smp-stall-card.is-selected { border-color: #2563eb; background: var(--bg-eff6ff); box-shadow: 0 3px 10px rgba(37, 99, 235, 0.16); }
+.smp-stall-card.is-occupied { background: var(--bg-f8fafc); cursor: not-allowed; opacity: 0.76; }
+.projects-master-container.is-management .smp-stall-card.is-occupied { cursor: pointer; opacity: 1; }
 
 .smp-card-top, .smp-card-bottom, .smp-card-code-grp, .smp-card-specs, .smp-card-action {
   display: flex;
@@ -6782,8 +7593,8 @@ onUnmounted(cleanupMapResources)
 
 .smp-card-top, .smp-card-bottom { justify-content: space-between; gap: 8px; }
 .smp-card-code-grp { min-width: 0; gap: 5px; }
-.smp-card-code { color: #0f172a; font-size: 0.82rem; white-space: nowrap; }
-.smp-card-floor-badge { padding: 2px 5px; border-radius: 4px; background: #f1f5f9; color: #475569; font-size: 0.62rem; font-weight: 700; white-space: nowrap; }
+.smp-card-code { color: var(--tx-0f172a); font-size: 0.82rem; white-space: nowrap; }
+.smp-card-floor-badge { padding: 2px 5px; border-radius: 4px; background: var(--bg-f1f5f9); color: var(--tx-475569); font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
 
 .smp-card-status-badge, .smp-action-pill {
   display: inline-flex;
@@ -6791,25 +7602,25 @@ onUnmounted(cleanupMapResources)
   gap: 3px;
   padding: 3px 6px;
   border-radius: 9999px;
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
-.badge-available { background: #dcfce7; color: #15803d; }
-.badge-reserved { background: #fef3c7; color: #b45309; }
-.badge-occupied { background: #e2e8f0; color: #475569; }
+.badge-available { background: var(--bg-dcfce7); color: var(--tx-15803d); }
+.badge-reserved { background: var(--bg-fef3c7); color: var(--tx-b45309); }
+.badge-occupied { background: var(--bg-e2e8f0); color: var(--tx-475569); }
 .badge-selected { background: #2563eb; color: #ffffff; }
 
-.smp-card-specs { min-width: 0; gap: 5px; color: #64748b; font-size: 0.67rem; }
-.smp-spec-sep { color: #cbd5e1; }
-.smp-spec-rent { color: #1e293b; font-weight: 700; white-space: nowrap; }
-.smp-spec-rent small { color: #64748b; font-size: 0.6rem; font-weight: 500; }
+.smp-card-specs { min-width: 0; gap: 5px; color: var(--tx-64748b); font-size: 0.75rem; }
+.smp-spec-sep { color: var(--tx-cbd5e1); }
+.smp-spec-rent { color: var(--tx-1e293b); font-weight: 700; white-space: nowrap; }
+.smp-spec-rent small { color: var(--tx-64748b); font-size: 0.75rem; font-weight: 500; }
 .smp-card-action { margin-left: auto; }
-.smp-action-pill.is-selected { background: #dbeafe; color: #1d4ed8; }
-.smp-action-pill.is-avail { background: #dcfce7; color: #15803d; }
-.smp-action-pill.is-wait { background: #fef3c7; color: #b45309; }
-.smp-action-pill.is-occ { background: #e2e8f0; color: #64748b; }
+.smp-action-pill.is-selected { background: var(--bg-dbeafe); color: var(--tx-1d4ed8); }
+.smp-action-pill.is-avail { background: var(--bg-dcfce7); color: var(--tx-15803d); }
+.smp-action-pill.is-wait { background: var(--bg-fef3c7); color: var(--tx-b45309); }
+.smp-action-pill.is-occ { background: var(--bg-e2e8f0); color: var(--tx-64748b); }
 
 .smp-empty-state {
   display: flex;
@@ -6817,8 +7628,8 @@ onUnmounted(cleanupMapResources)
   align-items: center;
   gap: 7px;
   padding: 22px 10px;
-  color: #64748b;
-  font-size: 0.72rem;
+  color: var(--tx-64748b);
+  font-size: 0.75rem;
   text-align: center;
 }
 
@@ -6826,11 +7637,11 @@ onUnmounted(cleanupMapResources)
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
   padding: 3px 8px;
   border-radius: 6px;
   cursor: pointer;
@@ -6839,8 +7650,8 @@ onUnmounted(cleanupMapResources)
 }
 
 .smp-reopen-floor-btn:hover {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--bg-dbeafe);
+  color: var(--tx-1d4ed8);
   transform: translateY(-1px);
 }
 
@@ -6855,9 +7666,9 @@ onUnmounted(cleanupMapResources)
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--bg-rgba-255-255-255-0p96);
   backdrop-filter: blur(10px);
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--bd-bfdbfe);
   border-radius: 9999px;
   padding: 5px 8px 5px 12px;
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);
@@ -6866,7 +7677,7 @@ onUnmounted(cleanupMapResources)
 }
 
 .map-floating-active-floor-badge:hover {
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border-color: #3b82f6;
   box-shadow: 0 6px 18px rgba(37, 99, 235, 0.2);
   transform: translateY(-1px);
@@ -6877,16 +7688,16 @@ onUnmounted(cleanupMapResources)
   align-items: center;
   gap: 6px;
   font-size: 0.78rem;
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .mf-floor-tag svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   flex-shrink: 0;
 }
 
 .mf-floor-tag strong {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 800;
 }
 
@@ -6894,11 +7705,11 @@ onUnmounted(cleanupMapResources)
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-dbeafe);
   padding: 3px 9px;
   border-radius: 9999px;
   cursor: pointer;
@@ -6923,14 +7734,16 @@ onUnmounted(cleanupMapResources)
 .floor-selector-panel {
   width: 100%;
   max-width: 620px;
-  background: #ffffff;
+  max-height: min(90vh, 90dvh);
+  background: var(--bg-ffffff);
   border-radius: 20px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--bd-rgba-226-232-240-0p9);
   box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.04);
-  padding: 24px 28px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
+  overflow: hidden;
   animation: fscScaleUp 0.26s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -6970,7 +7783,7 @@ onUnmounted(cleanupMapResources)
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 9999px;
@@ -6978,11 +7791,11 @@ onUnmounted(cleanupMapResources)
 }
 
 .fsc-proj-code {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  color: var(--tx-64748b);
+  background: var(--bg-f1f5f9);
+  border: 1px solid var(--bd-e2e8f0);
   padding: 3px 9px;
   border-radius: 9999px;
 }
@@ -6990,14 +7803,14 @@ onUnmounted(cleanupMapResources)
 .fsc-title {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   margin: 2px 0 0;
   line-height: 1.3;
 }
 
 .fsc-desc {
   font-size: 0.84rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin: 0;
 }
 
@@ -7008,18 +7821,18 @@ onUnmounted(cleanupMapResources)
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #64748b;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
+  color: var(--tx-64748b);
   cursor: pointer;
   transition: all 0.16s ease;
   flex-shrink: 0;
 }
 
 .fsc-close-btn:hover {
-  background: #fee2e2;
-  color: #dc2626;
-  border-color: #fca5a5;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
+  border-color: var(--bd-fca5a5);
   transform: rotate(90deg);
 }
 
@@ -7028,8 +7841,8 @@ onUnmounted(cleanupMapResources)
   display: flex;
   align-items: center;
   gap: 12px;
-  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
-  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, var(--bg-eff6ff) 0%, var(--bg-f8fafc) 100%);
+  border: 1px solid var(--bd-bfdbfe);
   border-radius: 14px;
   padding: 12px 16px;
 }
@@ -7056,24 +7869,26 @@ onUnmounted(cleanupMapResources)
 .fsc-step-label {
   font-size: 0.78rem;
   font-weight: 800;
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
   letter-spacing: 0.02em;
 }
 
 .fsc-step-hint {
   font-size: 0.8rem;
-  color: #475569;
+  color: var(--tx-475569);
   line-height: 1.4;
 }
 
 /* Floor Stack */
 .fsc-floors-stack {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 360px;
   overflow-y: auto;
-  padding: 3px 7px 5px 3px;
+  overscroll-behavior: contain;
+  padding: 20px 28px 24px;
   box-sizing: border-box;
 }
 
@@ -7083,8 +7898,8 @@ onUnmounted(cleanupMapResources)
   gap: 14px;
   width: 100%;
   padding: 14px 16px;
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1.5px solid var(--bd-e2e8f0);
   border-radius: 14px;
   cursor: pointer;
   font-family: inherit;
@@ -7095,14 +7910,14 @@ onUnmounted(cleanupMapResources)
 
 .fsc-floor-item:hover {
   border-color: #3b82f6;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
   box-shadow: 0 6px 18px rgba(37, 99, 235, 0.1);
   transform: translateY(-2px);
 }
 
 .fsc-floor-item.is-active-preview {
   border-color: #2563eb;
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.14);
 }
 
@@ -7116,8 +7931,8 @@ onUnmounted(cleanupMapResources)
   padding: 0 6px;
   height: 58px;
   border-radius: 12px;
-  background: #f1f5f9;
-  border: 1.5px solid #e2e8f0;
+  background: var(--bg-f1f5f9);
+  border: 1.5px solid var(--bd-e2e8f0);
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
@@ -7125,15 +7940,15 @@ onUnmounted(cleanupMapResources)
 .fsc-pillar-level {
   font-size: 0.95rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   line-height: 1.2;
   white-space: nowrap;
 }
 
 .fsc-pillar-badge {
-  font-size: 0.64rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 3px;
 }
 
@@ -7168,110 +7983,110 @@ onUnmounted(cleanupMapResources)
 .fsc-floor-title-text {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .fsc-avail-chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 700;
   padding: 3px 9px;
   border-radius: 9999px;
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
+  border: 1px solid var(--bd-bbf7d0);
   flex-shrink: 0;
 }
 
 .fsc-avail-chip.is-none {
-  background: #f1f5f9;
-  color: #94a3b8;
-  border-color: #e2e8f0;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-94a3b8);
+  border-color: var(--bd-e2e8f0);
 }
 
 .fsc-avail-chip.is-full {
-  background: #fee2e2;
-  color: #dc2626;
-  border-color: #fca5a5;
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
+  border-color: var(--bd-fca5a5);
 }
 
 .fsc-avail-chip.is-queue {
-  background: #fef3c7;
-  color: #d97706;
-  border-color: #fde68a;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
+  border-color: var(--bd-fde68a);
 }
 
 .fsc-floor-item.is-floor-full {
-  background: #fafbfc;
+  background: var(--bg-fafbfc);
   opacity: 0.88;
 }
 
 .fsc-floor-item.is-floor-queue {
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .fsc-floor-item.is-floor-full:hover {
   opacity: 1;
-  background: #fffafa;
-  border-color: #fecaca;
+  background: var(--bg-fffafa);
+  border-color: var(--bd-fecaca);
   box-shadow: 0 6px 18px rgba(220, 38, 38, 0.08);
 }
 
 .fsc-pillar.is-full {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: var(--bg-f1f5f9);
+  border-color: var(--bd-cbd5e1);
 }
 
 .fsc-pillar.is-full .fsc-pillar-level,
 .fsc-pillar.is-full .fsc-pillar-badge {
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 /* Do not apply the blue "available/select" hover treatment to a full floor. */
 .fsc-floor-item.is-floor-full:hover .fsc-pillar {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: var(--bg-f1f5f9);
+  border-color: var(--bd-cbd5e1);
 }
 
 .fsc-floor-item.is-floor-full:hover .fsc-pillar .fsc-pillar-level,
 .fsc-floor-item.is-floor-full:hover .fsc-pillar .fsc-pillar-badge {
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .fsc-meta-pill.is-full-tag {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--bg-fee2e2);
+  color: var(--tx-b91c1c);
   font-weight: 700;
-  border-color: #fecaca;
+  border-color: var(--bd-fecaca);
 }
 
 .fsc-select-action-btn.is-full-action {
-  background: #f8fafc;
-  color: #64748b;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-f8fafc);
+  color: var(--tx-64748b);
+  border: 1px solid var(--bd-cbd5e1);
   box-shadow: none;
 }
 
 .fsc-select-action-btn.is-queue-action {
-  background: #fffbeb;
-  color: #d97706;
-  border: 1px solid #fde68a;
+  background: var(--bg-fffbeb);
+  color: var(--tx-d97706);
+  border: 1px solid var(--bd-fde68a);
   box-shadow: none;
 }
 
 .fsc-floor-item:hover .fsc-select-action-btn.is-queue-action {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--bg-fef3c7);
+  color: var(--tx-b45309);
   border-color: #fcd34d;
   box-shadow: 0 2px 6px rgba(217, 119, 6, 0.2);
 }
 
 .fsc-floor-item:hover .fsc-select-action-btn.is-full-action {
-  background: #f1f5f9;
-  color: #475569;
-  border-color: #94a3b8;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-475569);
+  border-color: var(--bd-94a3b8);
   box-shadow: 0 2px 6px rgba(71, 85, 105, 0.12);
 }
 
@@ -7293,16 +8108,16 @@ onUnmounted(cleanupMapResources)
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.72rem;
-  color: #64748b;
-  background: #f8fafc;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
+  background: var(--bg-f8fafc);
   padding: 3px 8px;
   border-radius: 6px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--bd-f1f5f9);
 }
 
 .fsc-meta-pill svg {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
 }
 
 .fsc-action-col {
@@ -7339,7 +8154,7 @@ onUnmounted(cleanupMapResources)
   justify-content: space-between;
   gap: 12px;
   padding-top: 10px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 
 .fsc-back-to-overview-btn {
@@ -7348,9 +8163,9 @@ onUnmounted(cleanupMapResources)
   gap: 6px;
   padding: 7px 12px;
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #475569;
+  border: 1px solid var(--bd-cbd5e1);
+  background: var(--bg-ffffff);
+  color: var(--tx-475569);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -7359,21 +8174,21 @@ onUnmounted(cleanupMapResources)
 }
 
 .fsc-back-to-overview-btn:hover {
-  background: #f1f5f9;
-  color: #1e293b;
-  border-color: #94a3b8;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-1e293b);
+  border-color: var(--bd-94a3b8);
 }
 
 .fsc-footer-tip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.72rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
 }
 
 .fsc-footer-tip svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   flex-shrink: 0;
 }
 
@@ -7410,31 +8225,31 @@ onUnmounted(cleanupMapResources)
 .smp-area-box {
   padding: 12px 14px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
-  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, var(--bg-eff6ff) 0%, var(--bg-ffffff) 100%);
+  border: 1px solid var(--bd-bfdbfe);
 }
 
 .smp-area-label {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 500;
-  color: #1e40af;
+  color: var(--tx-1e40af);
 }
 
 .smp-area-value {
   margin-top: 2px;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
   letter-spacing: -0.01em;
 }
 
 .smp-area-value span {
   font-size: 0.85rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .smp-stats {
@@ -7443,47 +8258,80 @@ onUnmounted(cleanupMapResources)
   gap: 8px;
 }
 
+.smp-stats.is-loading .smp-stat {
+  cursor: wait;
+}
+
 .smp-stat {
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding: 8px 10px;
   border-radius: 8px;
-  background: #f8fafc;
-  border: 1px solid #eef2f6;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-eef2f6);
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.smp-stat:hover { border-color: var(--bd-bfdbfe); background: var(--bg-eff6ff); }
+.smp-stat:focus-visible { outline: 2px solid var(--bd-93c5fd); outline-offset: 2px; }
+.smp-stat.is-active { border-color: #2563eb; background: var(--bg-eff6ff); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1); }
+.smp-stat:active { transform: translateY(1px); }
+.smp-stat:disabled {
+  opacity: 1;
+  pointer-events: none;
+}
+
+.smp-stat-skeleton {
+  display: block;
+  width: 58px;
+  height: 25px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #e8edf4 25%, #f8fafc 50%, #e8edf4 75%);
+  background-size: 200% 100%;
+  animation: smp-stat-skeleton-loading 1.15s ease-in-out infinite;
+}
+
+@keyframes smp-stat-skeleton-loading {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
 }
 
 .smp-stat-label {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .smp-stat strong {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
-.smp-stat.is-available strong { color: #15803d; }
-.smp-stat.is-reserved strong { color: #d97706; }
-.smp-stat.is-occupied strong { color: #64748b; }
+.smp-stat.is-available strong { color: var(--tx-15803d); }
+.smp-stat.is-reserved strong { color: var(--tx-d97706); }
+.smp-stat.is-occupied strong { color: var(--tx-64748b); }
 
 .smp-legend {
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 10px 12px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border-radius: 11px;
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   font-size: 0.875rem;
-  color: #334155;
+  color: var(--tx-334155);
 }
 
 .smp-legend-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .smp-legend-items {
@@ -7511,7 +8359,7 @@ onUnmounted(cleanupMapResources)
   touch-action: none;
   justify-content: center;
   align-items: center;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   margin-bottom: 4px;
 }
 .smp-drag-handle-bar:active {
@@ -7522,7 +8370,7 @@ onUnmounted(cleanupMapResources)
   width: 44px;
   height: 5px;
   border-radius: 999px;
-  background: #cbd5e1;
+  background: var(--bg-cbd5e1);
   transition: background 0.2s ease, width 0.2s ease;
 }
 .smp-drag-handle-bar:hover .smp-drag-handle-pill {
@@ -7545,9 +8393,9 @@ onUnmounted(cleanupMapResources)
   flex-direction: column;
   gap: 8px;
   padding: 10px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 .smp-occ-header {
   display: flex;
@@ -7562,22 +8410,22 @@ onUnmounted(cleanupMapResources)
 .smp-occ-title {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--tx-334155);
 }
 .smp-occ-sub {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 .smp-occ-pct {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 .smp-occ-track {
   width: 100%;
   height: 7px;
   border-radius: 999px;
-  background: #e2e8f0;
+  background: var(--bg-e2e8f0);
   display: flex;
   overflow: hidden;
 }
@@ -7596,7 +8444,7 @@ onUnmounted(cleanupMapResources)
   flex-wrap: wrap;
   gap: 8px 12px;
   font-size: 0.8125rem;
-  color: #475569;
+  color: var(--tx-475569);
   font-weight: 500;
 }
 .smp-occ-legend span {
@@ -7624,12 +8472,12 @@ onUnmounted(cleanupMapResources)
   align-items: center;
   gap: 10px;
   padding: 9px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 11px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 .smp-info-pill svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   flex-shrink: 0;
 }
 .smp-info-text {
@@ -7638,21 +8486,21 @@ onUnmounted(cleanupMapResources)
 }
 .smp-info-text small {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   line-height: 1.2;
 }
 .smp-info-text strong {
   font-size: 1rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   line-height: 1.3;
 }
 .smp-info-text strong em {
   font-size: 0.8125rem;
   font-weight: 500;
   font-style: normal;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .smp-sw {
@@ -7660,7 +8508,7 @@ onUnmounted(cleanupMapResources)
   height: 12px;
   border-radius: 3px;
   flex-shrink: 0;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--bd-rgba-15-23-42-0p08);
 }
 
 .sw-available { background: #10b981; }
@@ -7673,19 +8521,60 @@ onUnmounted(cleanupMapResources)
   gap: 8px;
   align-items: flex-start;
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   line-height: 1.45;
   padding: 9px 12px;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
   border-radius: 10px;
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
 }
 
 .smp-hint svg {
   flex-shrink: 0;
   margin-top: 2px;
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
+
+/* หน้าข้อมูลตลาดและฝั่งผู้เช่า: แสดงข้อมูลพื้นที่เป็นกล่องเดียวแบบสองแถว */
+.smp-occ-card.is-map-colors { gap: 12px; padding: 14px 16px; }
+.smp-occ-card.is-map-colors .track-occupied,
+.smp-occ-card.is-map-colors .dot-occ { background: #475569; }
+.smp-occ-card.is-map-colors .smp-occ-track { height: 8px; }
+.smp-occ-card.is-map-colors .smp-occ-legend { justify-content: space-between; gap: 6px 14px; font-size: 0.8125rem; }
+.smp-occ-card.is-map-colors .smp-occ-legend i { width: 8px; height: 8px; border-radius: 2px; }
+.smp-project-info-grid.is-list {
+  grid-template-columns: 1fr;
+  gap: 0;
+  border: 1px solid var(--bd-e2e8f0);
+  border-radius: 12px;
+  background: var(--bg-ffffff);
+  overflow: hidden;
+}
+.smp-project-info-grid.is-list .smp-info-pill { min-height: 62px; padding: 11px 16px; border: 0; border-radius: 0; background: transparent; gap: 12px; box-sizing: border-box; }
+.smp-project-info-grid.is-list .smp-info-pill + .smp-info-pill { border-top: 1px solid var(--bd-eef2f6); }
+.smp-project-info-grid.is-list .smp-info-text { flex: 1 1 auto; min-width: 0; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+.smp-project-info-grid.is-list .smp-info-text small { flex: 1 1 auto; min-width: 0; font-size: 0.875rem; white-space: nowrap; }
+.smp-project-info-grid.is-list .smp-info-text strong {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  min-width: 0;
+  max-width: 58%;
+  column-gap: 4px;
+  white-space: normal;
+  text-align: right;
+}
+.smp-project-info-grid.is-list .smp-info-text strong em { flex: 0 0 auto; white-space: nowrap; }
+.smp-project-info-grid.is-list .smp-info-text strong > span { flex: 0 0 auto; white-space: nowrap; }
+.smp-project-info-grid.is-list .smp-info-text strong.smp-area-measure { flex-direction: column; flex-wrap: nowrap; align-items: flex-end; line-height: 1.15; }
+.smp-hint.is-quiet { padding: 4px 2px 0; background: transparent; border: 0; border-radius: 0; font-size: 0.875rem; }
+
+/* ช่วงวันที่ในตัวกรอง (ตั้งแต่ / ถึง) */
+.ov-date-range { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.ov-date-range label { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ov-date-range label > span { color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 500; }
 
 .smp-slide-enter-active,
 .smp-slide-leave-active {
@@ -7720,8 +8609,8 @@ onUnmounted(cleanupMapResources)
     width: 100% !important;
     padding: 12px 0 10px !important;
     margin: 0 !important;
-    background: #ffffff !important;
-    border-bottom: 1px solid #f1f5f9 !important;
+    background: var(--bg-ffffff) !important;
+    border-bottom: 1px solid var(--bd-f1f5f9) !important;
     border-radius: 20px 20px 0 0 !important;
     cursor: grab !important;
     touch-action: none !important;
@@ -7747,13 +8636,13 @@ onUnmounted(cleanupMapResources)
     height: 50dvh !important;
     max-height: calc(100dvh - 58px) !important;
     border-radius: 20px 20px 0 0 !important;
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid var(--bd-e2e8f0) !important;
     border-bottom: 0 !important;
     box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.18) !important;
     z-index: 200 !important;
     display: flex !important;
     flex-direction: column !important;
-    background: #ffffff !important;
+    background: var(--bg-ffffff) !important;
     padding: 0 !important;
     overflow: hidden !important;
     box-sizing: border-box !important;
@@ -7769,7 +8658,7 @@ onUnmounted(cleanupMapResources)
     display: flex !important;
     flex-direction: column !important;
     gap: 12px !important;
-    background: #ffffff !important;
+    background: var(--bg-ffffff) !important;
   }
 
   .stall-mode-panel.is-sheet-expanded {
@@ -7962,7 +8851,7 @@ onUnmounted(cleanupMapResources)
   justify-content: center;
   background: rgba(15, 23, 42, 0.88);
   color: #ffffff;
-  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  border: 1.5px solid var(--bd-rgba-255-255-255-0p95);
   border-radius: 999px;
   padding: 3px 8px;
   font-family: 'Bai Jamjuree', sans-serif;
@@ -7989,7 +8878,7 @@ onUnmounted(cleanupMapResources)
 
 .zone-badge-inner .badge-floor {
   padding-left: 5px;
-  border-left: 1px solid rgba(255, 255, 255, 0.42);
+  border-left: 1px solid var(--bd-rgba-255-255-255-0p42);
   color: #bfdbfe;
   font-size: 12px;
   font-weight: 800;
@@ -7997,14 +8886,14 @@ onUnmounted(cleanupMapResources)
 
 .zone-badge-inner .badge-sep {
   opacity: 0.55;
-  font-size: 9px;
-  color: #94a3b8;
+  font-size: 0.75rem;
+  color: var(--tx-94a3b8);
 }
 
 .zone-badge-inner .badge-area {
-  font-size: 10px;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #93c5fd;
+  color: var(--tx-93c5fd);
 }
 
 .maplibre-zone-number-badge:hover .zone-badge-inner,
@@ -8015,7 +8904,7 @@ onUnmounted(cleanupMapResources)
 .maplibre-zone-number-badge:hover,
 .maplibre-zone-number-badge.is-project-hovered {
   background: #2563eb;
-  border-color: #ffffff;
+  border-color: var(--bd-ffffff);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4), 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
@@ -8030,7 +8919,7 @@ onUnmounted(cleanupMapResources)
 
 .maplibre-zone-number-badge.is-selected {
   background: #2563eb;
-  border-color: #ffffff;
+  border-color: var(--bd-ffffff);
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.45), 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 
@@ -8078,6 +8967,7 @@ onUnmounted(cleanupMapResources)
 
 /* Custom Popup Content (hover cards) */
 .mlp-popup {
+  z-index: 100 !important;
   pointer-events: none !important;
   filter: drop-shadow(0 0 1px rgba(15, 23, 42, 0.18))
           drop-shadow(0 14px 28px rgba(15, 23, 42, 0.22));
@@ -8096,7 +8986,7 @@ onUnmounted(cleanupMapResources)
   box-shadow: none !important;
   padding: 0 !important;
   overflow: hidden;
-  background: #ffffff !important;
+  background: var(--bg-ffffff) !important;
 }
 
 /* Seamless Tip Connection - flush and fully unified with the card */
@@ -8107,21 +8997,21 @@ onUnmounted(cleanupMapResources)
 .mlp-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
 .mlp-popup.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
 .mlp-popup.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
-  border-top-color: #ffffff !important;
+  border-top-color: var(--bd-ffffff) !important;
   margin-top: -2px;
 }
 .mlp-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip,
 .mlp-popup.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
 .mlp-popup.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
-  border-bottom-color: #ffffff !important;
+  border-bottom-color: var(--bd-ffffff) !important;
   margin-bottom: -2px;
 }
 .mlp-popup.maplibregl-popup-anchor-left .maplibregl-popup-tip {
-  border-right-color: #ffffff !important;
+  border-right-color: var(--bd-ffffff) !important;
   margin-right: -2px;
 }
 .mlp-popup.maplibregl-popup-anchor-right .maplibregl-popup-tip {
-  border-left-color: #ffffff !important;
+  border-left-color: var(--bd-ffffff) !important;
   margin-left: -2px;
 }
 
@@ -8130,18 +9020,18 @@ onUnmounted(cleanupMapResources)
   width: 360px;
   max-width: 100%;
 }
-.mlp-stall-tooltip { width: auto; min-width: 0; max-width: 220px; padding: 9px 14px; color: #0f172a; font-size: 0.9375rem; font-weight: 700; line-height: 1.35; white-space: nowrap; }
+.mlp-stall-tooltip { width: auto; min-width: 0; max-width: 220px; padding: 9px 14px; color: var(--tx-0f172a); font-size: 0.9375rem; font-weight: 700; line-height: 1.35; white-space: nowrap; }
 .mlp-popup:has(.mlp-stall-tooltip) .maplibregl-popup-content { width: max-content; max-width: 240px; }
 .mlp-accent {
   height: 4px;
-  background: linear-gradient(90deg, var(--mlp-accent), color-mix(in srgb, var(--mlp-accent) 40%, #ffffff));
+  background: linear-gradient(90deg, var(--mlp-accent), color-mix(in srgb, var(--mlp-accent) 40%, var(--bg-ffffff)));
 }
 .mlp-photo-wrap {
   position: relative;
   width: 100%;
   height: 124px;
   overflow: hidden;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
 }
 .mlp-photo-img {
   width: 100%;
@@ -8167,7 +9057,7 @@ onUnmounted(cleanupMapResources)
   background: rgba(15, 23, 42, 0.72);
   backdrop-filter: blur(6px);
   color: #ffffff;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 20px;
@@ -8176,12 +9066,12 @@ onUnmounted(cleanupMapResources)
   gap: 4px;
 }
 .mlp-photo-badge svg {
-  color: #93c5fd;
+  color: var(--tx-93c5fd);
 }
 .mlp-body { padding: 14px 16px 12px; }
-.mlp-project-context { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; overflow: hidden; color: #64748b; font-size: .68rem; font-weight: 700; white-space: nowrap; }
+.mlp-project-context { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; overflow: hidden; color: var(--tx-64748b); font-size: .68rem; font-weight: 700; white-space: nowrap; }
 .mlp-project-context span { overflow: hidden; text-overflow: ellipsis; }
-.mlp-project-context i { flex: 0 0 auto; color: #94a3b8; font-style: normal; }
+.mlp-project-context i { flex: 0 0 auto; color: var(--tx-94a3b8); font-style: normal; }
 
 .mlp-head {
   display: grid;
@@ -8204,7 +9094,7 @@ onUnmounted(cleanupMapResources)
 .mlp-title strong {
   font-size: 1rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -8217,15 +9107,15 @@ onUnmounted(cleanupMapResources)
   flex-shrink: 0;
 }
 .mlp-pill {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 999px;
   white-space: nowrap;
   flex-shrink: 0;
 }
-.mlp-pill.is-open { background: #dcfce7; color: #15803d; }
-.mlp-pill.is-full { background: #fee2e2; color: #dc2626; }
+.mlp-pill.is-open { background: var(--bg-dcfce7); color: var(--tx-15803d); }
+.mlp-pill.is-full { background: var(--bg-fee2e2); color: var(--tx-dc2626); }
 
 .mlp-building-row {
   margin: 5px 0 0 18px;
@@ -8234,19 +9124,19 @@ onUnmounted(cleanupMapResources)
 .mlp-building-badge {
   display: inline-flex;
   align-items: center;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   padding: 2px 7px;
   border-radius: 4px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   font-weight: 700;
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--bd-bfdbfe);
 }
 
 .mlp-sub {
   margin-top: 4px;
   font-size: 0.76rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   line-height: 1.45;
 }
 
@@ -8257,8 +9147,8 @@ onUnmounted(cleanupMapResources)
   margin-top: 12px;
 }
 .mlp-tile {
-  background: #f8fafc;
-  border: 1px solid #eef2f6;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 10px;
   padding: 8px 10px;
   min-width: 0;
@@ -8267,62 +9157,62 @@ onUnmounted(cleanupMapResources)
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-bottom: 3px;
 }
-.mlp-tile-label svg { color: #94a3b8; flex-shrink: 0; }
+.mlp-tile-label svg { color: var(--tx-94a3b8); flex-shrink: 0; }
 .mlp-tile-value {
   display: block;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   white-space: nowrap;
 }
-.mlp-tile-value small { font-size: 0.7rem; font-weight: 500; color: #64748b; }
-.mlp-tile-value.is-primary { color: #2563eb; }
-.mlp-tile-value.is-money { color: #059669; }
-.mlp-tile-note { display: block; font-size: 0.66rem; color: #94a3b8; margin-top: 1px; }
+.mlp-tile-value small { font-size: 0.75rem; font-weight: 500; color: var(--tx-64748b); }
+.mlp-tile-value.is-primary { color: var(--tx-2563eb); }
+.mlp-tile-value.is-money { color: var(--tx-059669); }
+.mlp-tile-note { display: block; font-size: 0.75rem; color: var(--tx-94a3b8); margin-top: 1px; }
 
 .mlp-occ { margin-top: 12px; }
 .mlp-occ-head {
   display: flex;
   justify-content: space-between;
-  font-size: 0.7rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
   margin-bottom: 6px;
 }
-.mlp-occ-pct { font-weight: 600; color: #334155; }
+.mlp-occ-pct { font-weight: 600; color: var(--tx-334155); }
 .mlp-occ-bar {
   display: flex;
   height: 8px;
   border-radius: 999px;
   overflow: hidden;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
 }
 .mlp-occ-bar i { display: block; height: 100%; }
 .mlp-occ-legend {
   display: flex;
   justify-content: space-between;
   margin-top: 7px;
-  font-size: 0.7rem;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: var(--tx-64748b);
 }
 .mlp-occ-legend span { display: inline-flex; align-items: center; gap: 4px; }
 .mlp-occ-legend i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
-.mlp-occ-legend b { color: #334155; font-weight: 700; }
+.mlp-occ-legend b { color: var(--tx-334155); font-weight: 700; }
 
 .mlp-hint {
   margin-top: 12px;
   padding-top: 9px;
-  border-top: 1px dashed #e2e8f0;
-  font-size: 0.72rem;
-  color: #94a3b8;
+  border-top: 1px dashed var(--bd-e2e8f0);
+  font-size: 0.75rem;
+  color: var(--tx-94a3b8);
   text-align: center;
 }
 .mlp-hint.is-reserved {
-  color: #d97706;
+  color: var(--tx-d97706);
   font-weight: 500;
 }
 .mlp-facility-delete {
@@ -8333,14 +9223,14 @@ onUnmounted(cleanupMapResources)
   width: 100%;
   height: 34px;
   margin-top: 10px;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--bd-fecaca);
   border-radius: 8px;
-  background: #fff;
-  color: #dc2626;
+  background: var(--bg-ffffff);
+  color: var(--tx-dc2626);
   font: 600 .8125rem/1 'Bai Jamjuree', sans-serif;
   cursor: pointer;
 }
-.mlp-facility-delete:hover { background: #fef2f2; }
+.mlp-facility-delete:hover { background: var(--bg-fef2f2); }
 .mlp-facility-delete svg { width: 15px; height: 15px; }
 
 /* Queue Info Box for Reserved Stalls */
@@ -8350,8 +9240,8 @@ onUnmounted(cleanupMapResources)
   gap: 10px;
   margin-top: 10px;
   padding: 8px 12px;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
+  background: var(--bg-fffbeb);
+  border: 1px solid var(--bd-fde68a);
   border-radius: 10px;
 }
 .mlp-queue-icon {
@@ -8361,8 +9251,8 @@ onUnmounted(cleanupMapResources)
   justify-content: center;
   width: 28px;
   height: 28px;
-  background: #fef3c7;
-  color: #d97706;
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
   border-radius: 8px;
 }
 .mlp-queue-content {
@@ -8374,18 +9264,18 @@ onUnmounted(cleanupMapResources)
 .mlp-queue-title {
   font-size: 0.76rem;
   font-weight: 700;
-  color: #92400e;
+  color: var(--tx-92400e);
 }
 .mlp-queue-title b {
-  color: #d97706;
+  color: var(--tx-d97706);
 }
 .mlp-queue-desc {
-  font-size: 0.7rem;
-  color: #a16207;
+  font-size: 0.75rem;
+  color: var(--tx-a16207);
   line-height: 1.35;
 }
 .mlp-queue-desc b {
-  color: #78350f;
+  color: var(--tx-78350f);
   font-weight: 700;
 }
 
@@ -8405,9 +9295,9 @@ onUnmounted(cleanupMapResources)
   align-items: center;
   gap: 2px;
   padding: 3px;
-  border: 1px solid rgba(191, 219, 254, 0.95);
+  border: 1px solid var(--bd-rgba-191-219-254-0p95);
   border-radius: 9999px;
-  background: rgba(239, 246, 255, 0.96);
+  background: var(--bg-rgba-239-246-255-0p96);
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.14);
 }
@@ -8417,14 +9307,14 @@ onUnmounted(cleanupMapResources)
   align-items: center;
   gap: 5px;
   padding: 0 8px 0 7px;
-  color: #475569;
+  color: var(--tx-475569);
   font-size: 0.78rem;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .market-floor-switcher-label svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .market-floor-tab {
@@ -8432,7 +9322,7 @@ onUnmounted(cleanupMapResources)
   border-radius: 9999px;
   padding: 6px 12px;
   background: transparent;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: 700;
@@ -8442,7 +9332,7 @@ onUnmounted(cleanupMapResources)
 }
 
 .market-floor-tab:hover {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
 }
 
 .market-floor-tab.active {
@@ -8454,11 +9344,11 @@ onUnmounted(cleanupMapResources)
 .map-floating-style-switcher {
   display: inline-flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-rgba-255-255-255-0p95);
   backdrop-filter: blur(8px);
   padding: 3px;
   border-radius: 9999px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--bd-rgba-226-232-240-0p9);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
 }
 
@@ -8470,19 +9360,19 @@ onUnmounted(cleanupMapResources)
   font-family: inherit;
   font-size: 0.84rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
   cursor: pointer;
   transition: all 0.18s ease;
   line-height: 1.2;
 }
 
 .map-floating-style-switcher .map-mode-tab:hover {
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .map-floating-style-switcher .map-mode-tab.active {
-  background: #ffffff;
-  color: #2563eb;
+  background: var(--bg-ffffff);
+  color: var(--tx-2563eb);
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
 }
@@ -8491,25 +9381,25 @@ onUnmounted(cleanupMapResources)
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-rgba-255-255-255-0p95);
   backdrop-filter: blur(8px);
   padding: 6px 14px;
   border-radius: 9999px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--bd-rgba-226-232-240-0p9);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
   font-family: inherit;
   font-size: 0.84rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--tx-334155);
   cursor: pointer;
   transition: all 0.18s ease;
   line-height: 1.2;
 }
 
 .map-floating-recenter-btn:hover {
-  background: #ffffff;
-  color: #2563eb;
-  border-color: #93c5fd;
+  background: var(--bg-ffffff);
+  color: var(--tx-2563eb);
+  border-color: var(--bd-93c5fd);
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(37, 99, 235, 0.18);
 }
@@ -8519,7 +9409,7 @@ onUnmounted(cleanupMapResources)
 }
 
 .map-floating-recenter-btn svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   flex-shrink: 0;
 }
 
@@ -8531,18 +9421,18 @@ onUnmounted(cleanupMapResources)
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-rgba-255-255-255-0p95);
   backdrop-filter: blur(8px);
   padding: 4px 10px 4px 12px;
   border-radius: 9999px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--bd-rgba-226-232-240-0p9);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
 }
 
 .floor-preview-label {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .floor-preview-tabs {
@@ -8556,7 +9446,7 @@ onUnmounted(cleanupMapResources)
   border-radius: 9999px;
   border: none;
   background: transparent;
-  color: #475569;
+  color: var(--tx-475569);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 600;
@@ -8565,8 +9455,8 @@ onUnmounted(cleanupMapResources)
 }
 
 .floor-preview-tab:hover {
-  color: #1e293b;
-  background: #f1f5f9;
+  color: var(--tx-1e293b);
+  background: var(--bg-f1f5f9);
 }
 
 .floor-preview-tab.active {
@@ -8580,7 +9470,7 @@ onUnmounted(cleanupMapResources)
 .projects-master-container.is-preview-mode {
   padding: 12px;
   gap: 12px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border-radius: 14px;
 }
 
@@ -8600,9 +9490,9 @@ onUnmounted(cleanupMapResources)
   align-items: center;
   flex-wrap: wrap;
   gap: 14px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   padding: 14px 18px;
-  border-bottom: 1px solid #eef2f6;
+  border-bottom: 1px solid var(--bd-eef2f6);
   border-radius: 16px 16px 0 0;
   width: 100%;
 }
@@ -8618,9 +9508,9 @@ onUnmounted(cleanupMapResources)
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-bfdbfe);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -8644,16 +9534,16 @@ onUnmounted(cleanupMapResources)
 .preview-head-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   line-height: 1.3;
 }
 
 .preview-head-cat-badge {
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-dbeafe);
   padding: 1px 8px;
   border-radius: 6px;
   white-space: nowrap;
@@ -8661,7 +9551,7 @@ onUnmounted(cleanupMapResources)
 
 .preview-head-subtitle {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -8682,7 +9572,7 @@ onUnmounted(cleanupMapResources)
   align-items: center;
   gap: 8px;
   font-size: 0.88rem;
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .preview-info-dot {
@@ -8695,11 +9585,11 @@ onUnmounted(cleanupMapResources)
 .preview-badge-stalls {
   font-size: 0.76rem;
   font-weight: 700;
-  color: #1d4ed8;
-  background: #dbeafe;
+  color: var(--tx-1d4ed8);
+  background: var(--bg-dbeafe);
   padding: 3px 9px;
   border-radius: 6px;
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--bd-bfdbfe);
 }
 
 .preview-legend-row {
@@ -8707,7 +9597,7 @@ onUnmounted(cleanupMapResources)
   align-items: center;
   gap: 14px;
   font-size: 0.78rem;
-  color: #475569;
+  color: var(--tx-475569);
 }
 
 .preview-leg-item {
@@ -8747,8 +9637,8 @@ onUnmounted(cleanupMapResources)
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #ffffff;
-  border: 1.5px solid #bfdbfe;
+  background: var(--bg-ffffff);
+  border: 1.5px solid var(--bd-bfdbfe);
   border-radius: 10px;
   padding: 5px 12px;
   cursor: pointer;
@@ -8759,20 +9649,20 @@ onUnmounted(cleanupMapResources)
 
 .preview-booked-pill-btn:hover {
   border-color: #2563eb;
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(37, 99, 235, 0.16);
 }
 
 .preview-booked-pill-btn.is-active {
-  border-color: #93c5fd;
-  background: #f8fafc;
+  border-color: var(--bd-93c5fd);
+  background: var(--bg-f8fafc);
 }
 
 .return-hint-tag {
   background: #2563eb;
   color: #ffffff;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 6px;
@@ -8792,7 +9682,7 @@ onUnmounted(cleanupMapResources)
   background: rgba(15, 23, 42, 0.92);
   color: #ffffff;
   backdrop-filter: blur(10px);
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border: 1.5px solid var(--bd-rgba-255-255-255-0p2);
   padding: 8px 18px;
   border-radius: 30px;
   font-size: 0.84rem;
@@ -8838,7 +9728,7 @@ onUnmounted(cleanupMapResources)
 }
 
 .floating-stall-codes-badge {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--bg-rgba-255-255-255-0p2);
   border-radius: 4px;
   padding: 1px 6px;
   font-size: 0.76rem;
@@ -8863,7 +9753,7 @@ onUnmounted(cleanupMapResources)
   align-items: center;
   gap: 5px;
   box-shadow: 0 6px 16px rgba(37, 99, 235, 0.45);
-  border: 1.5px solid #ffffff;
+  border: 1.5px solid var(--bd-ffffff);
   white-space: nowrap;
   transition: transform 0.2s ease;
 }
@@ -8905,64 +9795,80 @@ onUnmounted(cleanupMapResources)
 
 
 /* ===== หน้าข้อมูลตลาด: แถบเครื่องมือ + แผงสไลด์จากขวา ===== */
-.ov-rail { position: absolute; top: 44%; right: 0; z-index: 120; display: flex; flex-direction: column; gap: 4px; padding: 5px; border: 1px solid rgba(226, 232, 240, 0.95); border-radius: 14px; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14); transform: translateY(-50%); transition: right 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease; }
+.ov-rail { position: absolute; top: 44%; right: 0; z-index: 120; display: flex; flex-direction: column; gap: 4px; padding: 5px; border: 1px solid var(--bd-rgba-226-232-240-0p95); border-radius: 14px; background: var(--bg-rgba-255-255-255-0p96); backdrop-filter: blur(8px); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14); transform: translateY(-50%); transition: right 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease; }
 .ov-rail.is-shifted { right: min(380px, 92vw); }
 .ov-rail.is-shifted-dashboard { right: min(380px, 92vw); }
 .ov-rail.is-hidden { opacity: 0; pointer-events: none; }
-.ov-rail-btn { position: relative; width: 42px; height: 42px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: #475569; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
-.ov-rail-btn:hover { background: #eff6ff; color: #2563eb; }
-.ov-rail-btn.active { background: #eff6ff; color: #2563eb; }
-.ov-rail-btn:focus-visible { outline: 2px solid #93c5fd; outline-offset: 1px; }
+.ov-rail-btn { position: relative; width: 42px; height: 42px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--tx-475569); cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
+.ov-rail-btn:hover { background: var(--bg-eff6ff); color: var(--tx-2563eb); }
+.ov-rail-btn.active { background: var(--bg-eff6ff); color: var(--tx-2563eb); }
+.ov-rail-btn:focus-visible { outline: 2px solid var(--bd-93c5fd); outline-offset: 1px; }
 .ov-rail-badge { position: absolute; top: 3px; right: 3px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 9999px; background: #2563eb; color: #fff; font-size: 0.75rem; font-weight: 700; line-height: 16px; text-align: center; }
 
-.ov-slide { overscroll-behavior: contain; position: absolute; z-index: 140; top: 0; right: 0; bottom: 0; box-sizing: border-box; width: min(380px, 92vw); display: flex; flex-direction: column; background: #ffffff; border-left: 1px solid #e2e8f0; box-shadow: -12px 0 32px rgba(15, 23, 42, 0.16); }
+.ov-slide { overscroll-behavior: contain; position: absolute; z-index: 140; top: 0; right: 0; bottom: 0; box-sizing: border-box; width: min(380px, 92vw); display: flex; flex-direction: column; background: var(--bg-ffffff); border-left: 1px solid var(--bd-e2e8f0); box-shadow: -12px 0 32px rgba(15, 23, 42, 0.16); }
 .ov-slide.is-dashboard-panel { width: min(380px, 92vw); }
 .ov-slide.is-dashboard-panel .ov-slide-head { padding: 16px 18px; }
-.ov-slide.is-dashboard-panel .ov-slide-title h3 { font-size: 1.125rem; font-weight: 700; color: #0f172a; }
-.ov-slide.is-dashboard-panel .ov-slide-title p { font-size: 0.875rem; color: #64748b; font-weight: 500; margin-top: 2px; }
+.ov-slide.is-dashboard-panel .ov-slide-title h3 { font-size: 1.125rem; font-weight: 700; color: var(--tx-0f172a); }
+.ov-slide.is-dashboard-panel .ov-slide-title p { font-size: 0.875rem; color: var(--tx-64748b); font-weight: 500; margin-top: 2px; }
 .ov-slide.is-dashboard-panel .ov-slide-body { padding: 16px 18px; }
 .ov-slide-enter-active, .ov-slide-leave-active { transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease; }
 .ov-slide-enter-from, .ov-slide-leave-to { transform: translateX(100%); opacity: 0.6; }
-.ov-slide-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid #f1f5f9; }
-.ov-slide-head h3 { margin: 0; color: #0f172a; font-size: 1.125rem; font-weight: 700; }
-.ov-slide-close { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; cursor: pointer; }
-.ov-slide-close:hover { background: #f1f5f9; }
+.ov-slide-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--bd-f1f5f9); }
+.ov-slide-head h3 { margin: 0; color: var(--tx-0f172a); font-size: 1.125rem; font-weight: 700; }
+.ov-slide-close { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--bd-e2e8f0); border-radius: 8px; background: var(--bg-ffffff); color: var(--tx-475569); cursor: pointer; }
+.ov-slide-close:hover { background: var(--bg-f1f5f9); }
 .ov-slide-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 16px 18px; display: flex; flex-direction: column; gap: 16px; -webkit-overflow-scrolling: touch; }
-.ov-slide-foot { flex: 0 0 auto; display: flex; justify-content: space-between; gap: 8px; padding: 12px 18px; border-top: 1px solid #f1f5f9; }
+.ov-slide-foot { flex: 0 0 auto; display: flex; justify-content: space-between; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--bd-f1f5f9); }
 .ov-search { position: relative; display: flex; align-items: center; }
-.ov-search > svg { position: absolute; left: 13px; color: #94a3b8; pointer-events: none; }
-.ov-search input { box-sizing: border-box; width: 100%; height: 42px; padding: 0 38px 0 38px; border: 1px solid #cbd5e1; border-radius: 10px; color: #1e293b; font-family: inherit; font-size: 0.9375rem; font-weight: 500; outline: none; }
+.ov-search > svg { position: absolute; left: 13px; color: var(--tx-94a3b8); pointer-events: none; }
+.ov-search input { box-sizing: border-box; width: 100%; height: 42px; padding: 0 38px 0 38px; border: 1px solid var(--bd-cbd5e1); border-radius: 10px; color: var(--tx-1e293b); font-family: inherit; font-size: 0.9375rem; font-weight: 500; outline: none; }
 .ov-search input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
-.ov-search-clear { position: absolute; right: 8px; width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: #64748b; cursor: pointer; }
-.ov-search-clear:hover { background: #f1f5f9; }
-.ov-hint { margin: 0; color: #64748b; font-size: 0.875rem; font-weight: 500; line-height: 1.5; }
+.ov-search-clear { position: absolute; right: 8px; width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--tx-64748b); cursor: pointer; }
+.ov-search-clear:hover { background: var(--bg-f1f5f9); }
+.ov-applied-search { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: -8px; padding: 8px 10px; border-radius: 9px; background: var(--bg-eff6ff); color: var(--tx-475569); font-size: 0.8125rem; font-weight: 500; }
+.ov-applied-search strong { color: var(--tx-1d4ed8); font-weight: 700; overflow-wrap: anywhere; }
+.ov-applied-search button { flex: 0 0 auto; padding: 0; border: 0; background: transparent; color: var(--tx-2563eb); font-family: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+.ov-applied-search button:hover { text-decoration: underline; }
+.ov-hint { margin: 0; color: var(--tx-64748b); font-size: 0.875rem; font-weight: 500; line-height: 1.5; }
+.ov-search-summary { margin: 0; color: var(--tx-64748b); font-size: 0.875rem; font-weight: 500; }
+.ov-search-summary strong { color: var(--tx-1e293b); font-weight: 700; }
 .ov-result-list, .ov-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.ov-result { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #eef2f6; border-radius: 12px; background: #fff; text-align: left; cursor: pointer; font-family: inherit; }
-.ov-result:hover { background: #f8fafc; border-color: #dbeafe; }
+.ov-result { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--bd-eef2f6); border-radius: 12px; background: var(--bg-ffffff); text-align: left; cursor: pointer; font-family: inherit; }
+.ov-result:hover { background: var(--bg-f8fafc); border-color: var(--bd-dbeafe); }
+.ov-result.focused { border-color: var(--bd-bfdbfe); background: var(--bg-f8fbff); }
+.ov-result.active { border-color: var(--bd-93c5fd); background: var(--bg-eff6ff); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.08); }
 .ov-result-text, .ov-legend-text { display: flex; flex-direction: column; min-width: 0; }
-.ov-result-text strong, .ov-legend-text strong { color: #1e293b; font-size: 0.9375rem; font-weight: 600; }
-.ov-result-text small, .ov-legend-text small { color: #64748b; font-size: 0.8125rem; font-weight: 500; }
+.ov-result-text strong, .ov-legend-text strong { color: var(--tx-1e293b); font-size: 0.9375rem; font-weight: 600; }
+.ov-result-text small, .ov-legend-text small { color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 500; }
+.ov-result-text .ov-result-reference { color: var(--tx-2563eb); font-weight: 600; overflow-wrap: anywhere; }
+.ov-result-text mark { padding: 0 1px; border-radius: 3px; background: var(--bg-fef3c7); color: inherit; }
+.ov-result-badges { display: flex; flex-wrap: wrap; gap: 4px; margin: 3px 0 2px; }
+.ov-result-badge { display: inline-flex; align-items: center; min-height: 20px; padding: 2px 7px; border-radius: 6px; background: var(--bg-f1f5f9); color: var(--tx-475569); font-size: 0.75rem; font-weight: 600; line-height: 1.2; }
+.ov-result-badge.is-booking { background: var(--bg-dbeafe); color: var(--tx-1d4ed8); }
+.ov-result-badge.is-application { background: var(--bg-f3e8ff); color: var(--tx-7e22ce); }
+.ov-result-badge.is-stall { background: var(--bg-dcfce7); color: var(--tx-15803d); }
+.ov-result-badge.is-project { background: var(--bg-f1f5f9); color: var(--tx-475569); }
 .ov-swatch { flex: 0 0 auto; width: 16px; height: 16px; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12); }
-.ov-legend-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 10px; border: 1px solid transparent; border-radius: 10px; background: #f8fafc; text-align: left; font-family: inherit; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease; }
-.ov-legend-item:hover { background: #f1f5f9; }
-.ov-legend-item:focus-visible { outline: 2px solid #93c5fd; outline-offset: 1px; }
-.ov-legend-item.active { border-color: #93c5fd; background: #eff6ff; }
+.ov-legend-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 10px; border: 1px solid transparent; border-radius: 10px; background: var(--bg-f8fafc); text-align: left; font-family: inherit; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease; }
+.ov-legend-item:hover { background: var(--bg-f1f5f9); }
+.ov-legend-item:focus-visible { outline: 2px solid var(--bd-93c5fd); outline-offset: 1px; }
+.ov-legend-item.active { border-color: var(--bd-93c5fd); background: var(--bg-eff6ff); }
 .ov-legend-item.dimmed { opacity: 0.55; }
-.ov-legend-check { flex: 0 0 auto; margin-left: auto; color: #2563eb; }
-.ov-legend-clear { margin: 0 0 10px; padding: 0; border: 0; background: none; color: #2563eb; font-family: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+.ov-legend-check { flex: 0 0 auto; margin-left: auto; color: var(--tx-2563eb); }
+.ov-legend-clear { margin: 0 0 10px; padding: 0; border: 0; background: none; color: var(--tx-2563eb); font-family: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
 .ov-legend-clear:hover { text-decoration: underline; }
 .ov-field { display: flex; flex-direction: column; gap: 6px; }
-.ov-label { color: #475569; font-size: 0.875rem; font-weight: 600; }
-.ov-result-summary { margin: 0; padding: 10px 12px; border-radius: 10px; background: #eff6ff; color: #475569; font-size: 0.875rem; font-weight: 500; }
-.ov-result-summary strong { color: #2563eb; font-weight: 700; }
-.ov-section h4 { margin: 0 0 10px; color: #1e293b; font-size: 1rem; font-weight: 700; }
+.ov-label { color: var(--tx-475569); font-size: 0.875rem; font-weight: 600; }
+.ov-result-summary { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--bg-eff6ff); color: var(--tx-475569); font-size: 0.875rem; font-weight: 500; }
+.ov-result-summary strong { color: var(--tx-2563eb); font-weight: 700; }
+.ov-section h4 { margin: 0 0 10px; color: var(--tx-1e293b); font-size: 1rem; font-weight: 700; }
 .ov-section .ov-hint { margin-bottom: 10px; }
 .ov-basemaps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.ov-basemap { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px 4px 8px; border: 2px solid transparent; border-radius: 12px; background: #f8fafc; color: #475569; font-family: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
-.ov-basemap:hover { background: #f1f5f9; }
-.ov-basemap.active { border-color: #2563eb; background: #eff6ff; color: #2563eb; }
+.ov-basemap { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px 4px 8px; border: 2px solid transparent; border-radius: 12px; background: var(--bg-f8fafc); color: var(--tx-475569); font-family: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+.ov-basemap:hover { background: var(--bg-f1f5f9); }
+.ov-basemap.active { border-color: #2563eb; background: var(--bg-eff6ff); color: var(--tx-2563eb); }
 .ov-basemap-thumb { width: 100%; aspect-ratio: 1; border-radius: 8px; background-size: cover; }
-.ov-basemap-thumb.is-standard { background: linear-gradient(135deg, transparent 46%, #fde68a 47% 53%, transparent 54%), linear-gradient(45deg, transparent 46%, #fff 47% 53%, transparent 54%), #e8eef6; }
+.ov-basemap-thumb.is-standard { background: linear-gradient(135deg, transparent 46%, #fde68a 47% 53%, transparent 54%), linear-gradient(45deg, transparent 46%, var(--bg-ffffff) 47% 53%, transparent 54%), var(--bg-e8eef6); }
 .ov-basemap-thumb.is-satellite { background: radial-gradient(circle at 30% 35%, #3f6b3a 0 22%, transparent 23%), radial-gradient(circle at 70% 65%, #6b5a3a 0 24%, transparent 25%), #1f3a2a; }
 .ov-basemap-thumb.is-dark { background: linear-gradient(135deg, transparent 46%, #475569 47% 53%, transparent 54%), linear-gradient(45deg, transparent 46%, #334155 47% 53%, transparent 54%), #0f172a; }
 @media (max-width: 720px) {
@@ -8976,24 +9882,24 @@ onUnmounted(cleanupMapResources)
 .ov-rail-label { font-size: 0.75rem; font-weight: 600; line-height: 1; letter-spacing: 0.01em; }
 .ov-rail-badge { top: 2px; right: 2px; }
 .ov-slide { border-radius: 18px 0 0 18px; }
-.ov-slide-head { gap: 12px; padding: 18px 18px 14px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); }
-.ov-slide-icon { flex: 0 0 auto; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: #eff6ff; color: #2563eb; }
+.ov-slide-head { gap: 12px; padding: 18px 18px 14px; background: linear-gradient(180deg, var(--bg-f8fbff) 0%, var(--bg-ffffff) 100%); }
+.ov-slide-icon { flex: 0 0 auto; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: var(--bg-eff6ff); color: var(--tx-2563eb); }
 .ov-slide-title { flex: 1 1 auto; min-width: 0; }
 .ov-slide-title h3 { margin: 0; }
-.ov-slide-title p { margin: 2px 0 0; color: #64748b; font-size: 0.8125rem; font-weight: 500; }
+.ov-slide-title p { margin: 2px 0 0; color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 500; }
 .ov-slide-body { gap: 18px; padding: 18px; }
-.ov-slide-foot { padding: 14px 18px; background: #fff; box-shadow: 0 -6px 16px rgba(15, 23, 42, 0.04); }
+.ov-slide-foot { padding: 14px 18px; background: var(--bg-ffffff); box-shadow: 0 -6px 16px rgba(15, 23, 42, 0.04); }
 .ov-slide-foot > * { flex: 1 1 0; }
-.ov-search input { height: 46px; border-radius: 12px; background: #f8fafc; }
-.ov-search input:focus { background: #fff; }
-.ov-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 32px 16px; border: 1px dashed #dbe3ee; border-radius: 14px; background: #f8fafc; text-align: center; }
-.ov-empty-icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: #eff6ff; color: #2563eb; }
-.ov-empty strong { color: #1e293b; font-size: 0.9375rem; font-weight: 700; }
-.ov-empty p { margin: 0; color: #64748b; font-size: 0.875rem; font-weight: 500; line-height: 1.5; }
+.ov-search input { height: 46px; border-radius: 12px; background: var(--bg-f8fafc); }
+.ov-search input:focus { background: var(--bg-ffffff); }
+.ov-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 32px 16px; border: 1px dashed var(--bd-dbe3ee); border-radius: 14px; background: var(--bg-f8fafc); text-align: center; }
+.ov-empty-icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: var(--bg-eff6ff); color: var(--tx-2563eb); }
+.ov-empty strong { color: var(--tx-1e293b); font-size: 0.9375rem; font-weight: 700; }
+.ov-empty p { margin: 0; color: var(--tx-64748b); font-size: 0.875rem; font-weight: 500; line-height: 1.5; }
 .ov-result { border-radius: 14px; transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease; }
 .ov-result:hover { transform: translateX(-2px); }
-.ov-chevron { flex: 0 0 auto; margin-left: auto; color: #94a3b8; }
-.ov-section { padding: 14px; border: 1px solid #eef2f6; border-radius: 16px; background: #fff; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03); }
+.ov-chevron { flex: 0 0 auto; margin-left: auto; color: var(--tx-94a3b8); }
+.ov-section { padding: 14px; border: 1px solid var(--bd-eef2f6); border-radius: 16px; background: var(--bg-ffffff); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03); }
 .ov-basemaps { gap: 8px; }
 .ov-basemap { gap: 8px; padding: 6px 6px 10px; border-radius: 14px; transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease; }
 .ov-basemap:hover { transform: translateY(-1px); }
@@ -9002,8 +9908,8 @@ onUnmounted(cleanupMapResources)
 .ov-legend { gap: 6px; }
 .ov-legend-item { padding: 10px 12px; border-radius: 12px; }
 .ov-swatch { width: 20px; height: 20px; border-radius: 7px; }
-.ov-legend-count { flex: 0 0 auto; margin-left: auto; min-width: 26px; padding: 2px 8px; border-radius: 9999px; background: #e2e8f0; color: #475569; font-size: 0.8125rem; font-weight: 700; text-align: center; }
-.ov-field { padding: 12px; border: 1px solid #eef2f6; border-radius: 14px; background: #f8fafc; }
+.ov-legend-count { flex: 0 0 auto; margin-left: auto; min-width: 26px; padding: 2px 8px; border-radius: 9999px; background: var(--bg-e2e8f0); color: var(--tx-475569); font-size: 0.8125rem; font-weight: 700; text-align: center; }
+.ov-field { padding: 12px; border: 1px solid var(--bd-eef2f6); border-radius: 14px; background: var(--bg-f8fafc); }
 .ov-result-summary { padding: 12px 14px; border-radius: 12px; }
 @media (max-width: 768px) {
   .ov-slide,
@@ -9040,28 +9946,33 @@ onUnmounted(cleanupMapResources)
 
 /* ===== ชั้นข้อมูล: รายการสีโครงการแบบเรียบ อ่านง่าย ===== */
 .ov-section { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-.ov-section + .ov-section { padding-top: 18px; border-top: 1px solid #f1f5f9; }
+.ov-section + .ov-section { padding-top: 18px; border-top: 1px solid var(--bd-f1f5f9); }
 .ov-section h4 { margin: 0 0 4px; font-size: 1rem; }
-.ov-section .ov-hint { margin: 0 0 12px; font-size: 0.8125rem; line-height: 1.5; color: #94a3b8; }
+.ov-section .ov-hint { margin: 0 0 12px; font-size: 0.8125rem; line-height: 1.5; color: var(--tx-94a3b8); }
 .ov-legend { gap: 2px; margin: 0 -8px; }
 .ov-legend-item { padding: 10px 8px; gap: 12px; align-items: center; border: 0; border-radius: 10px; background: transparent; }
-.ov-legend-item:hover { background: #f8fafc; }
-.ov-legend-item.active { background: #eff6ff; }
+.ov-legend-item:hover { background: var(--bg-f8fafc); }
+.ov-legend-item.active { background: var(--bg-eff6ff); }
 .ov-legend-item.dimmed { opacity: 0.5; }
 .ov-legend .ov-swatch { width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.18); }
 .ov-legend-text { flex: 1 1 auto; min-width: 0; gap: 1px; }
-.ov-legend-text strong { color: #1e293b; font-size: 0.9375rem; font-weight: 600; line-height: 1.35; }
-.ov-legend-text small { color: #94a3b8; font-size: 0.8125rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ov-legend-count { min-width: 0; padding: 0; background: none; color: #94a3b8; font-size: 0.875rem; font-weight: 600; }
+.ov-legend-text strong { color: var(--tx-1e293b); font-size: 0.9375rem; font-weight: 600; line-height: 1.35; }
+.ov-legend-text small { color: var(--tx-94a3b8); font-size: 0.8125rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ov-legend-count { min-width: 0; padding: 0; background: none; color: var(--tx-94a3b8); font-size: 0.875rem; font-weight: 600; }
 .ov-legend-item.active .ov-legend-count { display: none; }
 .ov-legend-clear { margin: 0 0 8px; }
 
 /* ตัวกรอง: ไม่ใส่กรอบครอบแต่ละช่อง */
 .ov-field { padding: 0; border: 0; border-radius: 0; background: transparent; }
 .ov-filter-section { display: flex; flex-direction: column; gap: 10px; }
-.ov-filter-section + .ov-filter-section { padding-top: 16px; border-top: 1px solid #f1f5f9; }
-.ov-filter-section h4 { margin: 0; color: #1e293b; font-size: 0.9375rem; font-weight: 700; }
-.ov-filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
+.ov-kpi-filter-chip { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px 9px 12px; border: 1px solid var(--bd-bfdbfe); border-radius: 10px; background: var(--bg-eff6ff); color: var(--tx-475569); font-size: 0.8125rem; font-weight: 500; }
+.ov-kpi-filter-chip strong { color: var(--tx-1d4ed8); font-weight: 700; }
+.ov-kpi-filter-chip button { flex: 0 0 auto; width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--tx-64748b); cursor: pointer; }
+.ov-kpi-filter-chip button:hover { background: var(--bg-dbeafe); color: var(--tx-1d4ed8); }
+.ov-kpi-filter-chip button:focus-visible { outline: 2px solid var(--bd-93c5fd); outline-offset: 2px; }
+.ov-filter-section + .ov-filter-section { padding-top: 16px; border-top: 1px solid var(--bd-f1f5f9); }
+.ov-filter-section h4 { margin: 0; color: var(--tx-1e293b); font-size: 0.9375rem; font-weight: 700; }
+.ov-filter-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
 .ov-filter-grid .ov-label { min-height: 20px; line-height: 1.4; }
 @media (max-width: 420px) {
   .ov-filter-grid { grid-template-columns: 1fr; }
@@ -9073,33 +9984,33 @@ onUnmounted(cleanupMapResources)
 
 .ov-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
 .ov-section-head h4 { margin: 0; }
-.ov-layer-toggle-list { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; }
-.ov-layer-toggle { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 0; background: #fff; color: #64748b; font-family: inherit; text-align: left; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
-.ov-layer-toggle:hover { background: #f8fafc; }
-.ov-layer-toggle:focus-visible { outline: 2px solid #93c5fd; outline-offset: -2px; }
-.ov-layer-toggle.active { color: #2563eb; background: #f8fbff; }
-.ov-layer-icon { flex: 0 0 auto; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: #f1f5f9; color: #64748b; }
-.ov-layer-toggle.active .ov-layer-icon { background: #eff6ff; color: #2563eb; }
+.ov-layer-toggle-list { overflow: visible; border: 0; border-radius: 11px; background: transparent; }
+.ov-layer-toggle { width: 100%; display: flex; align-items: center; gap: 8px; padding: 9px 10px; border: 1px solid var(--bd-e2e8f0); border-radius: 11px; background: var(--bg-ffffff); color: var(--tx-64748b); font-family: inherit; text-align: left; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease; }
+.ov-layer-toggle:hover { background: var(--bg-f8fafc); }
+.ov-layer-toggle:focus-visible { outline: 2px solid var(--bd-93c5fd); outline-offset: 2px; }
+.ov-layer-toggle.active { border-color: var(--bd-bfdbfe); color: var(--tx-1e3a8a); background: var(--bg-f8fbff); }
+.ov-layer-icon { flex: 0 0 auto; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; background: var(--bg-f1f5f9); color: var(--tx-64748b); }
+.ov-layer-toggle.active .ov-layer-icon { background: var(--bg-dbeafe); color: var(--tx-2563eb); }
 .ov-layer-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.ov-layer-text strong { color: #1e293b; font-size: 0.9375rem; font-weight: 600; }
-.ov-layer-text small { color: #64748b; font-size: 0.8125rem; font-weight: 500; }
-.ov-layer-switch { position: relative; flex: 0 0 auto; width: 38px; height: 22px; border-radius: 9999px; background: #cbd5e1; transition: background 0.18s ease; }
-.ov-layer-switch span { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2); transition: transform 0.18s ease; }
+.ov-layer-text strong { color: var(--tx-1e293b); font-size: 0.9375rem; font-weight: 600; }
+.ov-layer-text small { color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 500; }
+.ov-layer-switch { position: relative; flex: 0 0 auto; width: 30px; height: 18px; border-radius: 9999px; background: var(--bg-cbd5e1); transition: background 0.18s ease; }
+.ov-layer-switch span { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg-ffffff); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25); transition: transform 0.18s ease; }
 .ov-layer-toggle.active .ov-layer-switch { background: #2563eb; }
-.ov-layer-toggle.active .ov-layer-switch span { transform: translateX(16px); }
-.ov-chip-clear { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 12px; border: 1px solid #fca5a5; border-radius: 9999px; background: #fff; color: #dc2626; font-family: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease; }
-.ov-chip-clear:hover { background: #fef2f2; }
-.ov-chip-clear:focus-visible { outline: 2px solid #fca5a5; outline-offset: 2px; }
+.ov-layer-toggle.active .ov-layer-switch span { transform: translateX(12px); }
+.ov-chip-clear { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 12px; border: 1px solid var(--bd-fca5a5); border-radius: 9999px; background: var(--bg-ffffff); color: var(--tx-dc2626); font-family: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease; }
+.ov-chip-clear:hover { background: var(--bg-fef2f2); }
+.ov-chip-clear:focus-visible { outline: 2px solid var(--bd-fca5a5); outline-offset: 2px; }
 
 /* ===== สีโครงการ: เลือกได้หลายหมวด ===== */
-.ov-legend { gap: 0; margin: 0; border: 1px solid #eef2f6; border-radius: 14px; overflow: hidden; }
-.ov-legend li + li { border-top: 1px solid #f1f5f9; }
-.ov-legend-item { padding: 12px 14px; border-radius: 0; background: #fff; }
-.ov-legend-item:hover { background: #f8fafc; }
-.ov-legend-item.active { background: #f5f9ff; }
+.ov-legend { gap: 0; margin: 0; border: 1px solid var(--bd-eef2f6); border-radius: 14px; overflow: hidden; }
+.ov-legend li + li { border-top: 1px solid var(--bd-f1f5f9); }
+.ov-legend-item { padding: 12px 14px; border-radius: 0; background: var(--bg-ffffff); }
+.ov-legend-item:hover { background: var(--bg-f8fafc); }
+.ov-legend-item.active { background: var(--bg-f5f9ff); }
 .ov-legend-item.dimmed { opacity: 0.55; }
 .ov-legend-item.active .ov-tile { box-shadow: none; }
-.ov-check { flex: 0 0 auto; width: 20px; height: 20px; display: grid; place-items: center; border: 2px solid #cbd5e1; border-radius: 6px; color: #fff; transition: background 0.15s ease, border-color 0.15s ease; }
+.ov-check { flex: 0 0 auto; width: 20px; height: 20px; display: grid; place-items: center; border: 2px solid var(--bd-cbd5e1); border-radius: 6px; color: #fff; transition: background 0.15s ease, border-color 0.15s ease; }
 .ov-legend-item.active .ov-check { background: #2563eb; border-color: #2563eb; }
 .ov-tile { width: 34px; height: 34px; }
 
@@ -9155,6 +10066,42 @@ onUnmounted(cleanupMapResources)
 /* แผนที่ฐานเหลือ 2 แบบ: ให้เต็มความกว้าง */
 .ov-basemaps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
+/* ชั้นข้อมูล: ลดความสูงของตัวเลือกให้เห็นข้อมูลได้มากขึ้น */
+.ov-section + .ov-section { padding-top: 14px; }
+.ov-basemaps { gap: 10px; }
+.ov-basemap { min-width: 0; gap: 7px; padding: 6px 6px 9px; border-width: 1.5px; }
+.ov-basemap-thumb { height: 88px; aspect-ratio: auto; overflow: hidden; }
+.ov-basemap-thumb::before,
+.ov-basemap-thumb::after { content: ''; position: absolute; pointer-events: none; }
+.ov-basemap-thumb.is-standard::before { inset: 14% -12%; border-top: 5px solid var(--bd-rgba-255-255-255-0p9); border-bottom: 2px solid rgba(148, 163, 184, 0.28); transform: rotate(28deg); }
+.ov-basemap-thumb.is-standard::after { width: 9px; height: 9px; left: 22%; top: 24%; border: 3px solid #2563eb; border-radius: 50% 50% 50% 0; background: var(--bg-ffffff); transform: rotate(-45deg); box-shadow: 42px 38px 0 -2px #fff, 42px 38px 0 1px #64748b; }
+.ov-basemap-thumb.is-satellite { background: radial-gradient(circle at 27% 34%, rgba(74, 124, 64, 0.95) 0 17%, transparent 18%), radial-gradient(circle at 70% 64%, rgba(139, 109, 68, 0.85) 0 19%, transparent 20%), linear-gradient(135deg, transparent 43%, var(--bg-rgba-207-213-188-0p42) 44% 49%, transparent 50%), #183c2b; }
+.ov-basemap-thumb.is-satellite::before { inset: -12% 48% -12% 42%; background: rgba(160, 181, 151, 0.28); transform: rotate(18deg); }
+.ov-basemap-thumb.is-satellite::after { width: 10px; height: 10px; right: 18%; top: 20%; border: 2px solid var(--bd-ffffff); border-radius: 50%; background: #2563eb; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.35); }
+.ov-basemap.active { box-shadow: 0 7px 18px rgba(37, 99, 235, 0.13); }
+.ov-layer-toggle { position: relative; }
+.ov-layer-toggle.active { box-shadow: none; background: var(--bg-f8fbff); }
+.ov-label-layer:focus-visible { outline: 2px solid var(--bd-93c5fd); outline-offset: 2px; }
+.ov-label-layer-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.ov-label-layer { min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 9px 10px; border: 1px solid var(--bd-e2e8f0); border-radius: 11px; background: var(--bg-ffffff); color: var(--tx-64748b); font-family: inherit; font-size: 0.8125rem; font-weight: 600; text-align: left; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease; }
+.ov-label-layer:hover { background: var(--bg-f8fafc); }
+.ov-label-layer.active { border-color: var(--bd-bfdbfe); background: var(--bg-f8fbff); color: var(--tx-1e3a8a); }
+.ov-label-layer-icon { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; background: var(--bg-f1f5f9); color: var(--tx-64748b); }
+.ov-label-layer.active .ov-label-layer-icon { background: var(--bg-dbeafe); color: var(--tx-2563eb); }
+.ov-mini-switch { position: relative; width: 30px; height: 18px; border-radius: 9999px; background: var(--bg-cbd5e1); transition: background 0.15s ease; }
+.ov-mini-switch > span { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg-ffffff); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25); transition: transform 0.15s ease; }
+.ov-label-layer.active .ov-mini-switch { background: #2563eb; }
+.ov-label-layer.active .ov-mini-switch > span { transform: translateX(12px); }
+.ov-legend-actions { display: flex; align-items: center; gap: 8px; }
+.ov-selected-count { color: var(--tx-64748b); font-size: 0.75rem; font-weight: 600; }
+.ov-show-all { padding: 0; border: 0; background: transparent; color: var(--tx-2563eb); font-family: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+.ov-show-all:hover { text-decoration: underline; }
+.ov-show-all:focus-visible { outline: 2px solid var(--bd-93c5fd); outline-offset: 3px; border-radius: 3px; }
+.ov-legend-item { position: relative; box-shadow: inset 0 0 var(--ov-category-color); transition: background 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease; }
+.ov-legend-item.active { background: color-mix(in srgb, var(--ov-category-color) 9%, var(--bg-ffffff)); box-shadow: inset 4px 0 var(--ov-category-color); }
+.ov-legend-item.active .ov-check { border-color: var(--ov-category-color); background: var(--ov-category-color); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ov-category-color) 16%, transparent); }
+.ov-legend-item.active .ov-tile { transform: scale(1.03); }
+
 /* หมุดแผงที่คุณจอง: วงกลมกระพริบอยู่กึ่งกลางไอคอนพอดี ไม่ล้นออกนอกแคปซูล */
 .beacon-pin-bubble { overflow: hidden; }
 .beacon-pin-icon { position: relative; display: inline-grid; place-items: center; flex: 0 0 18px; width: 18px; height: 18px; }
@@ -9165,7 +10112,7 @@ onUnmounted(cleanupMapResources)
   width: 100%;
   height: 100%;
   transform: none;
-  border: 2px solid rgba(255, 255, 255, 0.85);
+  border: 2px solid var(--bd-rgba-255-255-255-0p85);
   animation: beaconPulseCentered 1.8s ease-out infinite;
 }
 @keyframes beaconPulseCentered {

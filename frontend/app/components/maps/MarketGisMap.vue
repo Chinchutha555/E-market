@@ -10,12 +10,13 @@
         </span>
 
         <!-- Zone Selector -->
-        <select v-model="selectedZoneId" class="gis-select" @change="applyFilters">
-          <option value="">ทุกโซน (All Zones)</option>
-          <option v-for="z in zones" :key="z.id" :value="z.id">
-            {{ z.code }} - {{ z.name }}
-          </option>
-        </select>
+        <AppSelect
+          class="gis-zone-select"
+          v-model="selectedZoneId"
+          :options="zoneSelectOptions"
+          placeholder="ทุกโซน"
+          @change="applyFilters"
+        />
 
         <!-- Only Available Checkbox -->
         <AppCheckbox
@@ -82,7 +83,7 @@
             </div>
             <div>
               <span class="gis-label">ค่าเช่ารายเดือน:</span>
-              <strong style="color: #059669; font-size: 1.05rem;">฿{{ Number(selectedStall.monthly_rate).toLocaleString() }}</strong>
+              <strong style="color: var(--tx-059669); font-size: 1.05rem;">฿{{ Number(selectedStall.monthly_rate).toLocaleString() }}</strong>
             </div>
             <div>
               <span class="gis-label">ค่าเช่ารายวัน:</span>
@@ -164,6 +165,7 @@
 
 <script setup lang="ts">
 import { addStandardMapControls } from '~/utils/mapControls'
+import AppSelect from '~/components/AppSelect.vue'
 const { showWarning } = useAppAlert()
 const props = defineProps<{
   zones: any[]
@@ -174,13 +176,20 @@ const emit = defineEmits<{
   (e: 'viewBooking', stall: any): void
 }>()
 
-const { get } = useApi()
+const { apiFetch } = useApi()
 
 let maplibregl: any = null
 let map: any = null
 let hoverPopup: any = null
+let gisRequestController: AbortController | null = null
+let componentRun = 0
+let isUnmounted = false
 
 const selectedZoneId = ref('')
+const zoneSelectOptions = computed(() => [
+  { value: '', label: 'ทุกโซน' },
+  ...props.zones.map((zone: any) => ({ value: zone.id, label: `${zone.code} - ${zone.name}` }))
+])
 const onlyAvailable = ref(false)
 const currentMode = ref<'street' | 'satellite'>('street')
 const selectedStall = ref<any>(null)
@@ -249,17 +258,39 @@ const mapLibreStyle: any = {
 
 onMounted(async () => {
   if (process.client) {
-    maplibregl = await import('maplibre-gl')
+    isUnmounted = false
+    const run = ++componentRun
+    const mapModulePromise = import('maplibre-gl')
+    const dataPromise = loadStallsGeoJson(run)
+    const ml = await mapModulePromise
+    if (isUnmounted || run !== componentRun) return
+    maplibregl = ml.default || ml
     initMap()
-    await loadStallsGeoJson()
+    await dataPromise
   }
 })
 
 onBeforeUnmount(() => {
+  isUnmounted = true
+  componentRun += 1
+  gisRequestController?.abort()
+  gisRequestController = null
+  hoverPopup?.remove()
   if (map) {
     map.remove()
     map = null
   }
+})
+
+onActivated(() => {
+  requestAnimationFrame(() => map?.resize())
+  if (!geojsonData.value) void loadStallsGeoJson(componentRun)
+})
+
+onDeactivated(() => {
+  gisRequestController?.abort()
+  gisRequestController = null
+  hoverPopup?.remove()
 })
 
 const initMap = () => {
@@ -387,14 +418,14 @@ const setupStallsLayers = () => {
       hoverPopup.setLngLat(coordinates).setHTML(`
         <div style="font-family: 'Bai Jamjuree', sans-serif; padding: 4px; font-size: 12px; line-height: 1.4;">
           <div style="font-weight: 700; color: #0f172a; font-size: 13px;">
-            แผง ${p.stall_number} <span style="font-weight: 500; font-size: 11px; color: #64748b;">(โซน ${p.zone_code})</span>
+            แผง ${p.stall_number} <span style="font-weight: 500; font-size: 0.75rem; color: #64748b;">(โซน ${p.zone_code})</span>
           </div>
-          <div style="color: #475569; font-size: 11px; margin-bottom: 2px;">
+          <div style="color: #475569; font-size: 0.75rem; margin-bottom: 2px;">
             ${p.category || p.zone_name || ''}
           </div>
           <div style="display: flex; justify-content: space-between; gap: 8px; margin-top: 4px;">
             <span style="font-weight: 700; color: #059669;">฿${Number(p.monthly_rate).toLocaleString()}/ด.</span>
-            <span style="font-size: 10px; padding: 1px 6px; border-radius: 4px; background: #f1f5f9; color: #334155;">${statusLabel}</span>
+            <span style="font-size: 0.75rem; padding: 1px 6px; border-radius: 4px; background: #f1f5f9; color: #334155;">${statusLabel}</span>
           </div>
         </div>
       `).addTo(map)
@@ -442,14 +473,21 @@ const getFilteredGeoJson = () => {
   }
 }
 
-const loadStallsGeoJson = async () => {
+const loadStallsGeoJson = async (run = componentRun) => {
+  gisRequestController?.abort()
+  gisRequestController = new AbortController()
   try {
-    const data = await get('/stalls/gis-geojson')
+    const data = await apiFetch('/stalls/gis-geojson', {
+      method: 'GET',
+      signal: gisRequestController.signal
+    })
+    if (isUnmounted || run !== componentRun) return
     geojsonData.value = data
     if (map && map.isStyleLoaded()) {
       setupStallsLayers()
     }
   } catch (err) {
+    if ((err as any)?.name === 'AbortError') return
     console.error('Failed to load GIS GeoJSON:', err)
   }
 }
@@ -552,8 +590,12 @@ defineExpose({
   pointer-events: auto;
 }
 
+.gis-zone-select {
+  width: 220px;
+}
+
 .gis-badge {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-rgba-255-255-255-0p95);
   backdrop-filter: blur(12px);
   padding: 8px 16px;
   border-radius: var(--radius-full);
@@ -563,7 +605,7 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   box-shadow: var(--shadow-md);
 }
 
@@ -571,11 +613,11 @@ defineExpose({
 .gis-mode-segmented {
   display: inline-flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-rgba-255-255-255-0p95);
   backdrop-filter: blur(8px);
   padding: 3px;
   border-radius: 9999px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--bd-rgba-226-232-240-0p9);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
 }
 
@@ -587,19 +629,19 @@ defineExpose({
   font-family: inherit;
   font-size: 0.84rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tx-64748b);
   cursor: pointer;
   transition: all 0.18s ease;
   line-height: 1.2;
 }
 
 .gis-mode-tab:hover {
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .gis-mode-tab.active {
-  background: #ffffff;
-  color: #2563eb;
+  background: var(--bg-ffffff);
+  color: var(--tx-2563eb);
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
 }
@@ -608,28 +650,28 @@ defineExpose({
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-rgba-255-255-255-0p95);
   backdrop-filter: blur(8px);
   padding: 6px 14px;
   border-radius: 9999px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--bd-rgba-226-232-240-0p9);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
   font-family: inherit;
   font-size: 0.84rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--tx-334155);
   cursor: pointer;
   transition: all 0.18s ease;
   line-height: 1.2;
 }
 
 .gis-btn svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .gis-btn:hover {
-  background: #ffffff;
-  color: #1e293b;
+  background: var(--bg-ffffff);
+  color: var(--tx-1e293b);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.16);
   transform: translateY(-1px);
 }
@@ -642,13 +684,13 @@ defineExpose({
   width: 380px;
   max-width: calc(100% - 40px);
   z-index: 20;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-card);
   box-shadow: var(--shadow-popup);
   padding: 20px;
   border-radius: var(--radius-xl);
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .gis-card-header {
@@ -656,7 +698,7 @@ defineExpose({
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 14px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   padding-bottom: 10px;
 }
 
@@ -675,9 +717,9 @@ defineExpose({
 }
 
 .gis-booking-alert {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
+  color: var(--tx-2563eb);
   padding: 8px 12px;
   border-radius: var(--radius-sm);
   font-size: 0.78rem;
@@ -690,14 +732,14 @@ defineExpose({
   bottom: 20px;
   right: 20px;
   z-index: 10;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-rgba-255-255-255-0p95);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
   padding: 12px 16px;
   border-radius: var(--radius-md);
   font-size: 0.78rem;
   box-shadow: var(--shadow-md);
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .legend-title {
@@ -718,7 +760,7 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #334155;
+  color: var(--tx-334155);
 }
 
 .legend-color {
@@ -744,7 +786,7 @@ defineExpose({
   .gis-overlay-header {
     position: static;
     padding: 10px 12px;
-    background: #ffffff;
+    background: var(--bg-ffffff);
     border-bottom: 1px solid var(--border-subtle);
   }
   .gis-controls-left, .gis-controls-right {
@@ -753,6 +795,7 @@ defineExpose({
     flex-wrap: wrap;
     gap: 8px;
   }
+  .gis-zone-select { width: 100%; }
   .gis-stall-card {
     position: fixed !important;
     bottom: 0 !important;

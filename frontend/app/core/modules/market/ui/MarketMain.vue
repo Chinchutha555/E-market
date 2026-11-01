@@ -102,11 +102,7 @@
         </header>
 
         <div class="events-list-panel">
-          <div class="events-period-tabs" role="tablist" aria-label="เลือกช่วงเวลาอีเวนต์">
-            <button type="button" role="tab" :aria-selected="eventPeriod === 'today'" :class="{ active: eventPeriod === 'today' }" @click="eventPeriod = 'today'">วันนี้</button>
-            <button type="button" role="tab" :aria-selected="eventPeriod === 'week'" :class="{ active: eventPeriod === 'week' }" @click="eventPeriod = 'week'">สัปดาห์นี้</button>
-            <button type="button" role="tab" :aria-selected="eventPeriod === 'month'" :class="{ active: eventPeriod === 'month' }" @click="eventPeriod = 'month'">เดือนนี้</button>
-          </div>
+          <AppSecondaryTabs v-model="eventPeriod" :options="eventPeriodTabs" aria-label="เลือกช่วงเวลาอีเวนต์" />
 
           <div class="events-list">
             <article v-for="event in filteredMarketEvents" :key="event.name" class="event-list-row">
@@ -263,7 +259,8 @@
                 <rect x="3" y="14" width="7" height="7"></rect>
               </svg>
               <span>รายการตลาด</span>
-              <span class="svc-counter">{{ filteredMarkets.length }}</span>
+              <span v-if="loadingMarkets" class="svc-counter is-loading" aria-label="กำลังโหลดจำนวนตลาด"></span>
+              <span v-else class="svc-counter">{{ filteredMarkets.length }}</span>
             </button>
 
             <button
@@ -283,15 +280,16 @@
         </div>
 
         <!-- VIEW MODE 1: Interactive GIS Map Section (When Map is Selected - No Cards Below) -->
-        <div v-if="viewMode === 'map'" class="market-gis-view-container" style="margin-bottom: 36px;">
+        <div v-show="viewMode === 'map'" class="market-gis-view-container" style="margin-bottom: 36px;">
           <BangkokMarketsGisMap
             :markets="filteredMarkets"
+            :active="viewMode === 'map'"
             @selectMarket="onSelectMarketOnMap"
           />
         </div>
 
         <!-- VIEW MODE 2: 12 MARKET CARDS GRID (When Grid is Selected) -->
-        <template v-else-if="viewMode === 'grid'">
+        <template v-if="viewMode === 'grid'">
           <div v-if="showMarketSkeleton" class="market-cards-3col-grid market-skeleton-grid" role="status" aria-live="polite" aria-label="กำลังโหลดรายการตลาด">
             <div v-for="index in 3" :key="index" class="market-box-card market-skeleton-card" aria-hidden="true">
               <div class="market-skeleton-shape market-skeleton-image"></div>
@@ -471,18 +469,15 @@
 
         <!-- Empty Results Message -->
         <div v-if="filteredMarkets.length === 0 && !loadingMarkets" class="card empty-search-card">
-          <div style="margin-bottom: 12px; color: #94a3b8; display: flex; justify-content: center;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          </div>
-          <h3 style="font-size: 1.15rem; font-weight: 700; color: #0f172a; margin-bottom: 6px;">
-            ไม่พบตลาดตามเงื่อนไขที่ระบุ
-          </h3>
-          <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 18px;">
-            ลองปรับเปลี่ยนคำค้นหา หรือเลือกดูตลาดทั้งหมด 12 แห่งในสังกัด กทม.
-          </p>
-          <button class="btn btn-primary btn-sm" @click="resetFilters">
-            แสดงตลาดทั้งหมด 12 แห่ง
-          </button>
+          <AppEmptyState
+            variant="card"
+            icon="search"
+            title="ไม่พบตลาดตามเงื่อนไข"
+            description="ลองเปลี่ยนคำค้นหาหรือล้างตัวกรองเพื่อดูตลาดทั้งหมด"
+            action-label="แสดงตลาดทั้งหมด"
+            action-variant="primary"
+            @action="resetFilters"
+          />
         </div>
       </div>
     </div>
@@ -496,7 +491,7 @@
 import AppFooter from '~/components/AppFooter.vue'
 import { onBeforeRouteLeave } from 'vue-router'
 
-const { get } = useApi()
+const { get, apiFetch } = useApi()
 const { role } = useAuth()
 const { applyMarketOverride } = useMarketOverrides()
 const route = useRoute()
@@ -564,26 +559,65 @@ const marketEvents = [
   { name: 'Neighborhood Market', date: '8–10 พ.ย. 2568', time: '10:00–22:00 น.', location: 'ตลาดเทวราช เขตดุสิต', available: 3, marketId: 5, periods: ['month'], image: '/images/market_promo_hero.jpg' }
 ]
 const eventPeriod = ref<'today' | 'week' | 'month'>('week')
+const eventPeriodTabs = computed(() => [
+  { value: 'today', label: 'วันนี้', count: marketEvents.filter(event => event.periods.includes('today')).length },
+  { value: 'week', label: 'สัปดาห์นี้', count: marketEvents.filter(event => event.periods.includes('week')).length },
+  { value: 'month', label: 'เดือนนี้', count: marketEvents.filter(event => event.periods.includes('month')).length }
+])
 const filteredMarketEvents = computed(() => marketEvents.filter(event => event.periods.includes(eventPeriod.value)))
 
 // Data State
 const loadingMarkets = ref(true)
 const marketsList = ref<any[]>([])
 const filteredMarkets = ref<any[]>([])
-// ใช้ตรวจ visual skeleton ใน local เท่านั้น: /markets?skeleton=1
-const showMarketSkeleton = computed(() => loadingMarkets.value || (import.meta.dev && route.query.skeleton === '1'))
+let marketsRequestController: AbortController | null = null
+let marketsLoadRun = 0
+let marketsLoadedAt = 0
+const showMarketSkeleton = computed(() => loadingMarkets.value)
 
 const loadData = async () => {
+  if (marketsRequestController || (marketsList.value.length > 0 && Date.now() - marketsLoadedAt < 30_000)) return
+  const run = ++marketsLoadRun
   loadingMarkets.value = true
   try {
-    const marketsRes: any = await get('/markets')
+    let marketsRes: any = null
+    let lastError: unknown = null
+
+    // Retry once so a request opened while the backend is restarting cannot
+    // leave the tenant home page on a permanent skeleton.
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const controller = new AbortController()
+      marketsRequestController = controller
+      const timeoutId = window.setTimeout(() => controller.abort(), 8_000)
+      try {
+        marketsRes = await apiFetch('/markets', {
+          method: 'GET',
+          signal: controller.signal
+        })
+        lastError = null
+        break
+      } catch (err) {
+        lastError = err
+        if (run !== marketsLoadRun) return
+      } finally {
+        window.clearTimeout(timeoutId)
+      }
+    }
+
+    if (lastError) throw lastError
+    if (run !== marketsLoadRun) return
     const list = Array.isArray(marketsRes) ? marketsRes : (Array.isArray(marketsRes?.data) ? marketsRes.data : [])
     marketsList.value = list.map((market: any) => applyMarketOverride(market))
     filteredMarkets.value = marketsList.value
+    marketsLoadedAt = Date.now()
   } catch (err) {
+    if ((err as any)?.name === 'AbortError') return
     console.error('Failed to load markets:', err)
   } finally {
-    loadingMarkets.value = false
+    if (run === marketsLoadRun) {
+      loadingMarkets.value = false
+      marketsRequestController = null
+    }
   }
 }
 
@@ -841,6 +875,9 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  marketsLoadRun += 1
+  marketsRequestController?.abort()
+  marketsRequestController = null
   if (heroCarouselTimer) {
     clearInterval(heroCarouselTimer)
     heroCarouselTimer = null
@@ -873,7 +910,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   border-radius: var(--radius-2xl);
   height: clamp(360px, 28vw, 460px);
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border: 1px solid var(--border-card);
   box-shadow: 0 10px 30px -5px rgba(37, 99, 235, 0.08), 0 4px 12px rgba(15, 23, 42, 0.04);
   position: relative;
@@ -903,7 +940,7 @@ onBeforeUnmount(() => {
 .hero-media-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
+  background: linear-gradient(to right, var(--bg-rgba-0-0-0-0p1) 0%, var(--bg-rgba-0-0-0-0) 100%);
 }
 
 /* Diagonal Cut Red 50% OFF Badge */
@@ -925,7 +962,7 @@ onBeforeUnmount(() => {
 }
 
 .ribbon-text-top {
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   opacity: 0.95;
@@ -951,16 +988,16 @@ onBeforeUnmount(() => {
   flex-direction: column;
   justify-content: center;
   position: relative;
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .campaign-tag-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  background: var(--bg-ecfdf5);
+  color: var(--tx-047857);
+  border: 1px solid var(--bd-a7f3d0);
   padding: 3px 12px;
   border-radius: 20px;
   font-size: 0.75rem;
@@ -970,21 +1007,21 @@ onBeforeUnmount(() => {
 }
 
 .campaign-tag-blue {
-  color: #1d4ed8;
-  background: #eff6ff;
-  border-color: #bfdbfe;
+  color: var(--tx-1d4ed8);
+  background: var(--bg-eff6ff);
+  border-color: var(--bd-bfdbfe);
 }
 
 .campaign-tag-orange {
-  color: #c2410c;
-  background: #fff7ed;
-  border-color: #fed7aa;
+  color: var(--tx-c2410c);
+  background: var(--bg-fff7ed);
+  border-color: var(--bd-fed7aa);
 }
 
 .campaign-tag-purple {
-  color: #7e22ce;
-  background: #faf5ff;
-  border-color: #e9d5ff;
+  color: var(--tx-7e22ce);
+  background: var(--bg-faf5ff);
+  border-color: var(--bd-e9d5ff);
 }
 
 .campaign-dot {
@@ -998,14 +1035,14 @@ onBeforeUnmount(() => {
 .hero-subheading {
   font-size: 1.02rem;
   font-weight: 700;
-  color: #059669;
+  color: var(--tx-059669);
   margin-bottom: 2px;
 }
 
 .hero-main-heading {
   font-size: 2.25rem;
   font-weight: 900;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   line-height: 1.22;
   margin-bottom: 12px;
   letter-spacing: -0.02em;
@@ -1019,7 +1056,7 @@ onBeforeUnmount(() => {
 
 .hero-description {
   font-size: 0.88rem;
-  color: #475569;
+  color: var(--tx-475569);
   line-height: 1.6;
   max-width: 480px;
   margin-bottom: 16px;
@@ -1039,11 +1076,11 @@ onBeforeUnmount(() => {
   gap: 6px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #334155;
-  background: #f8fafc;
+  color: var(--tx-334155);
+  background: var(--bg-f8fafc);
   padding: 4px 10px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 .hero-cta-row {
@@ -1062,8 +1099,8 @@ onBeforeUnmount(() => {
 }
 
 .hero-note {
-  font-size: 0.72rem;
-  color: #94a3b8;
+  font-size: 0.75rem;
+  color: var(--tx-94a3b8);
 }
 
 .hero-accent-shape {
@@ -1091,7 +1128,7 @@ onBeforeUnmount(() => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #cbd5e1;
+  background: var(--bg-cbd5e1);
   transition: all 0.25s ease;
   cursor: pointer;
 }
@@ -1151,7 +1188,7 @@ onBeforeUnmount(() => {
 .events-promo-copy .events-desc-text {
   max-width: 610px;
   margin: 18px 0 20px;
-  color: #52637a;
+  color: var(--tx-52637a);
   font-size: 0.9375rem;
   line-height: 1.75;
 }
@@ -1185,7 +1222,7 @@ onBeforeUnmount(() => {
   padding: 8px 16px;
   border: 1px solid #2563eb;
   border-radius: 9px;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   background: transparent;
   font: inherit;
   font-size: 0.875rem;
@@ -1195,9 +1232,9 @@ onBeforeUnmount(() => {
 }
 
 .events-view-all:hover {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
   border-color: #1d4ed8;
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
 }
 
 .events-period-tabs {
@@ -1206,9 +1243,9 @@ onBeforeUnmount(() => {
   grid-template-columns: repeat(3, minmax(92px, 1fr));
   margin: 16px auto 0;
   padding: 4px;
-  border: 1px solid #dbe4f0;
+  border: 1px solid var(--bd-dbe4f0);
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
   position: relative;
   z-index: 1;
 }
@@ -1219,9 +1256,9 @@ onBeforeUnmount(() => {
   margin: 48px auto 0;
   padding-top: 0;
   overflow: hidden;
-  border: 1px solid #dfe7f1;
+  border: 1px solid var(--bd-dfe7f1);
   border-radius: 18px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.045);
 }
 
@@ -1230,7 +1267,7 @@ onBeforeUnmount(() => {
   padding: 7px 16px;
   border: 0;
   border-radius: 8px;
-  color: #64748b;
+  color: var(--tx-64748b);
   background: transparent;
   font: inherit;
   font-size: 0.875rem;
@@ -1240,8 +1277,8 @@ onBeforeUnmount(() => {
 }
 
 .events-period-tabs button:hover:not(.active) {
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
 }
 
 .events-period-tabs button.active {
@@ -1262,16 +1299,16 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 22px;
   padding: 18px 8px;
-  border-bottom: 1px solid #e8edf4;
+  border-bottom: 1px solid var(--bd-e8edf4);
   transition: background 0.18s ease;
 }
 
 .event-list-row:first-child {
-  border-top: 1px solid #e8edf4;
+  border-top: 1px solid var(--bd-e8edf4);
 }
 
 .event-list-row:hover {
-  background: #fbfdff;
+  background: var(--bg-fbfdff);
 }
 
 .event-list-image {
@@ -1288,7 +1325,7 @@ onBeforeUnmount(() => {
 
 .event-list-content h3 {
   margin: 0 0 9px;
-  color: #172033;
+  color: var(--tx-172033);
   font-size: 1.125rem;
   font-weight: 700;
   line-height: 1.4;
@@ -1300,7 +1337,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px 16px;
   margin-bottom: 7px;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.875rem;
 }
 
@@ -1311,14 +1348,14 @@ onBeforeUnmount(() => {
 }
 
 .event-list-meta svg {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .event-list-meta .event-time-pill {
   padding: 4px 10px;
   border-radius: 999px;
-  color: #0284c7;
-  background: #f0f9ff;
+  color: var(--tx-0284c7);
+  background: var(--bg-f0f9ff);
 }
 
 .event-list-row .event-location-line {
@@ -1339,7 +1376,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  color: #059669;
+  color: var(--tx-059669);
 }
 
 .event-capacity strong {
@@ -1351,28 +1388,28 @@ onBeforeUnmount(() => {
 .event-capacity span {
   padding: 2px 8px;
   border-radius: 999px;
-  color: #047857;
-  background: #ecfdf5;
+  color: var(--tx-047857);
+  background: var(--bg-ecfdf5);
   font-size: 0.75rem;
   font-weight: 700;
 }
 
 .event-capacity.is-low {
-  color: #d97706;
+  color: var(--tx-d97706);
 }
 
 .event-capacity.is-low span {
-  color: #b45309;
-  background: #fffbeb;
+  color: var(--tx-b45309);
+  background: var(--bg-fffbeb);
 }
 
 .event-capacity.is-full {
-  color: #ef4444;
+  color: var(--tx-ef4444);
 }
 
 .event-capacity.is-full span {
-  color: #dc2626;
-  background: #fef2f2;
+  color: var(--tx-dc2626);
+  background: var(--bg-fef2f2);
 }
 
 .events-cards-grid {
@@ -1384,15 +1421,15 @@ onBeforeUnmount(() => {
 .event-showcase-card {
   min-width: 0;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .event-showcase-card:hover {
   transform: translateY(-2px);
-  border-color: #bfdbfe;
+  border-color: var(--bd-bfdbfe);
   box-shadow: 0 10px 24px rgba(37, 99, 235, 0.09);
 }
 
@@ -1420,8 +1457,8 @@ onBeforeUnmount(() => {
   bottom: 12px;
   padding: 5px 10px;
   border-radius: 999px;
-  color: #1e3a8a;
-  background: rgba(255, 255, 255, 0.94);
+  color: var(--tx-1e3a8a);
+  background: var(--bg-rgba-255-255-255-0p94);
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
   font-size: 0.8125rem;
   font-weight: 700;
@@ -1433,7 +1470,7 @@ onBeforeUnmount(() => {
 
 .event-showcase-body h3 {
   margin: 0 0 8px;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-size: 1.125rem;
   font-weight: 700;
   line-height: 1.35;
@@ -1444,7 +1481,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: flex-start;
   gap: 7px;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.875rem;
   line-height: 1.45;
 }
@@ -1452,7 +1489,7 @@ onBeforeUnmount(() => {
 .event-location-line svg {
   flex-shrink: 0;
   margin-top: 2px;
-  color: #ef4444;
+  color: var(--tx-ef4444);
 }
 
 .event-showcase-footer {
@@ -1462,17 +1499,17 @@ onBeforeUnmount(() => {
   gap: 12px;
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 
 .event-availability {
-  color: #15803d;
+  color: var(--tx-15803d);
   font-size: 0.875rem;
   font-weight: 700;
 }
 
 .event-availability.is-full {
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .event-primary-link,
@@ -1499,8 +1536,8 @@ onBeforeUnmount(() => {
 }
 
 .event-disabled-link {
-  color: #94a3b8;
-  background: #f1f5f9;
+  color: var(--tx-94a3b8);
+  background: var(--bg-f1f5f9);
 }
 
 .events-grid-layout {
@@ -1520,9 +1557,9 @@ onBeforeUnmount(() => {
   gap: 6px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #2563eb;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
+  color: var(--tx-2563eb);
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-dbeafe);
   padding: 3px 10px;
   border-radius: 20px;
   margin-bottom: 8px;
@@ -1531,7 +1568,7 @@ onBeforeUnmount(() => {
 .events-main-title {
   font-size: 1.85rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   letter-spacing: -0.02em;
 }
 
@@ -1545,7 +1582,7 @@ onBeforeUnmount(() => {
 
 .events-desc-text {
   font-size: 0.88rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   line-height: 1.6;
   margin-bottom: 18px;
 }
@@ -1584,15 +1621,15 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 14px;
   padding: 12px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .event-row-card:hover {
-  background: #ffffff;
-  border-color: #bfdbfe;
+  background: var(--bg-ffffff);
+  border-color: var(--bd-bfdbfe);
   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.08);
   transform: translateY(-2px);
 }
@@ -1624,7 +1661,7 @@ onBeforeUnmount(() => {
 .event-name {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -1633,7 +1670,7 @@ onBeforeUnmount(() => {
 
 .event-meta-line {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1657,21 +1694,21 @@ onBeforeUnmount(() => {
 }
 
 .stat-zero {
-  background: #f1f5f9;
-  color: #94a3b8;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-94a3b8);
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 .stat-green {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  background: var(--bg-ecfdf5);
+  color: var(--tx-047857);
+  border: 1px solid var(--bd-a7f3d0);
 }
 
 .stat-orange {
-  background: #fffbeb;
-  color: #b45309;
-  border: 1px solid #fde68a;
+  background: var(--bg-fffbeb);
+  color: var(--tx-b45309);
+  border: 1px solid var(--bd-fde68a);
 }
 
 .stat-number {
@@ -1680,7 +1717,7 @@ onBeforeUnmount(() => {
 }
 
 .stat-unit {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 
 .btn-event-act {
@@ -1701,9 +1738,9 @@ onBeforeUnmount(() => {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #475569;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
+  color: var(--tx-475569);
   font-size: 0.82rem;
   font-weight: 600;
   display: flex;
@@ -1714,9 +1751,9 @@ onBeforeUnmount(() => {
 }
 
 .page-btn:hover:not(:disabled) {
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
   color: var(--primary);
-  border-color: #cbd5e1;
+  border-color: var(--bd-cbd5e1);
 }
 
 .page-btn.active {
@@ -1757,9 +1794,9 @@ onBeforeUnmount(() => {
 
 .directory-header-pill {
   display: inline-block;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  color: #1d4ed8;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-dbeafe);
+  color: var(--tx-1d4ed8);
   padding: 4px 14px;
   border-radius: 20px;
   font-size: 0.78rem;
@@ -1770,7 +1807,7 @@ onBeforeUnmount(() => {
 .directory-big-heading {
   font-size: 2.25rem;
   font-weight: 900;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   letter-spacing: -0.02em;
 }
 
@@ -1794,7 +1831,7 @@ onBeforeUnmount(() => {
 
 .directory-sub-caption {
   font-size: 0.95rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 24px;
   max-width: 620px;
   margin-left: auto;
@@ -1810,8 +1847,8 @@ onBeforeUnmount(() => {
   position: relative;
   display: flex;
   align-items: center;
-  background: #ffffff;
-  border: 1.5px solid #cbd5e1;
+  background: var(--bg-ffffff);
+  border: 1.5px solid var(--bd-cbd5e1);
   border-radius: 30px;
   padding: 4px 16px;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
@@ -1826,7 +1863,7 @@ onBeforeUnmount(() => {
 .search-icon-left {
   display: flex;
   align-items: center;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-right: 10px;
 }
 
@@ -1836,22 +1873,22 @@ onBeforeUnmount(() => {
   background: transparent;
   padding: 10px 0;
   font-size: 0.92rem;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   outline: none;
 }
 
 .search-input-field::placeholder {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
 }
 
 .search-clear-btn {
   border: none;
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-475569);
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1860,7 +1897,7 @@ onBeforeUnmount(() => {
 }
 
 .search-clear-btn:hover {
-  background: #cbd5e1;
+  background: var(--bg-cbd5e1);
 }
 
 
@@ -1895,35 +1932,35 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   font-size: 1.3rem;
-  border: 2px solid #e2e8f0;
-  background: #ffffff;
-  color: #64748b;
+  border: 2px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
+  color: var(--tx-64748b);
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
   transition: all 0.22s ease;
 }
 
 .cat-icon-circle.cat-all {
-  color: #475569;
+  color: var(--tx-475569);
 }
 
 .cat-icon-circle.cat-promo {
-  color: #e11d48;
+  color: var(--tx-e11d48);
 }
 
 .cat-icon-circle.cat-new {
-  color: #059669;
+  color: var(--tx-059669);
 }
 
 .cat-icon-circle.cat-metro {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .cat-icon-circle.cat-transit {
-  color: #d97706;
+  color: var(--tx-d97706);
 }
 
 .cat-icon-item:hover .cat-icon-circle {
-  border-color: #cbd5e1;
+  border-color: var(--bd-cbd5e1);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
 }
 
@@ -1943,7 +1980,7 @@ onBeforeUnmount(() => {
 .cat-label {
   font-size: 0.84rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--tx-475569);
   transition: color 0.15s ease;
 }
 
@@ -1963,8 +2000,8 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   padding: 4px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f1f5f9);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 9999px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   gap: 4px;
@@ -1978,7 +2015,7 @@ onBeforeUnmount(() => {
   border-radius: 9999px;
   border: none;
   background: transparent;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.88rem;
   font-weight: 500;
   cursor: pointer;
@@ -1987,13 +2024,13 @@ onBeforeUnmount(() => {
 }
 
 .svc-tab-btn:hover:not(.active) {
-  color: #1e293b;
-  background: rgba(255, 255, 255, 0.6);
+  color: var(--tx-1e293b);
+  background: var(--bg-rgba-255-255-255-0p6);
 }
 
 .svc-tab-btn.active {
-  background: #ffffff;
-  color: #2563eb;
+  background: var(--bg-ffffff);
+  color: var(--tx-2563eb);
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
@@ -2006,14 +2043,32 @@ onBeforeUnmount(() => {
   font-weight: 700;
   padding: 1px 7px;
   border-radius: 12px;
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-475569);
   transition: all 0.2s ease;
 }
 
+.svc-counter.is-loading {
+  width: 30px;
+  height: 22px;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-e2e8f0);
+}
+
+.svc-counter.is-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--bg-rgba-255-255-255-0p8), transparent);
+  animation: marketSkeletonShimmer 1.35s ease-in-out infinite;
+}
+
 .svc-tab-btn.active .svc-counter {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
 }
 
 .market-gis-view-container {
@@ -2034,8 +2089,8 @@ onBeforeUnmount(() => {
 .market-box-card {
   padding: 16px;
   border-radius: 20px;
-  border: 1px solid #eef2f6;
-  background: #ffffff;
+  border: 1px solid var(--bd-eef2f6);
+  background: var(--bg-ffffff);
   box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
@@ -2045,7 +2100,7 @@ onBeforeUnmount(() => {
 .market-box-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 16px 32px -4px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(15, 23, 42, 0.04);
-  border-color: #cbd5e1;
+  border-color: var(--bd-cbd5e1);
 }
 
 .market-skeleton-card {
@@ -2056,7 +2111,7 @@ onBeforeUnmount(() => {
   display: block;
   position: relative;
   overflow: hidden;
-  background: #eef2f7;
+  background: var(--bg-eef2f7);
   border-radius: 8px;
 }
 
@@ -2065,7 +2120,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  background: linear-gradient(90deg, transparent, var(--bg-rgba-255-255-255-0p8), transparent);
   animation: marketSkeletonShimmer 1.35s ease-in-out infinite;
 }
 
@@ -2089,9 +2144,9 @@ onBeforeUnmount(() => {
   gap: 10px;
   padding: 18px 20px;
   margin-top: 10px;
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 14px;
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .market-skeleton-label { width: 136px; height: 15px; }
@@ -2123,7 +2178,7 @@ onBeforeUnmount(() => {
   width: 100%;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
   border-radius: 14px;
   display: block;
 }
@@ -2143,7 +2198,7 @@ onBeforeUnmount(() => {
 .market-img-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0%, transparent 35%, transparent 70%, rgba(0, 0, 0, 0.18) 100%);
+  background: linear-gradient(180deg, var(--bg-rgba-0-0-0-0p12) 0%, transparent 35%, transparent 70%, var(--bg-rgba-0-0-0-0p18) 100%);
 }
 
 .market-avail-badge {
@@ -2174,7 +2229,7 @@ onBeforeUnmount(() => {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--bg-ffffff);
 }
 
 .market-box-body {
@@ -2204,18 +2259,18 @@ onBeforeUnmount(() => {
 .market-card-name {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   line-height: 1.3;
   transition: color 0.15s ease;
 }
 
 .market-card-name:hover {
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 .market-views-pill {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   padding: 5px 12px;
   border-radius: 10px;
   font-size: 0.85rem;
@@ -2231,7 +2286,7 @@ onBeforeUnmount(() => {
   align-items: flex-start;
   gap: 6px;
   font-size: 0.84rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   line-height: 1.5;
   margin-bottom: 14px;
   min-height: calc(0.84rem * 1.5 * 2);
@@ -2247,14 +2302,14 @@ onBeforeUnmount(() => {
 .pin-icon {
   display: inline-flex;
   align-items: center;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   flex-shrink: 0;
   margin-top: 2px;
 }
 
 .market-occupancy-row {
-  background: #f8fafc;
-  border: 1px solid #eef2f6;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-eef2f6);
   border-radius: 12px;
   padding: 12px 14px;
   margin-bottom: 16px;
@@ -2272,7 +2327,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 600;
 }
 
@@ -2289,30 +2344,30 @@ onBeforeUnmount(() => {
 }
 
 .occupancy-total {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-weight: 500;
 }
 
 .avail-text-ok {
-  color: #15803d;
+  color: var(--tx-15803d);
 }
 
 .avail-text-mid {
-  color: #ca8a04;
+  color: var(--tx-ca8a04);
 }
 
 .avail-text-low {
-  color: #ea580c;
+  color: var(--tx-ea580c);
 }
 
 .avail-text-full {
-  color: #dc2626;
+  color: var(--tx-dc2626);
 }
 
 .occupancy-progress-bar {
   width: 100%;
   height: 6px;
-  background: #e2e8f0;
+  background: var(--bg-e2e8f0);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -2343,18 +2398,18 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.72rem;
-  color: #94a3b8;
+  font-size: 0.75rem;
+  color: var(--tx-94a3b8);
   font-weight: 500;
 }
 
 .meta-occupied-text {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 600;
 }
 
 .meta-total-text {
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
 }
 
 .market-price-row {
@@ -2368,7 +2423,7 @@ onBeforeUnmount(() => {
 
 .price-prefix-text {
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-weight: 500;
   margin-right: 6px;
 }
@@ -2376,21 +2431,21 @@ onBeforeUnmount(() => {
 .price-currency {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin-right: 1px;
 }
 
 .price-big-number {
   font-size: 1.9rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   line-height: 1;
   letter-spacing: -0.02em;
 }
 
 .price-suffix-text {
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
   margin-left: 4px;
 }
@@ -2441,9 +2496,9 @@ onBeforeUnmount(() => {
   align-items: center;
   padding: 4px 10px;
   border-radius: 999px;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-dbeafe);
+  color: var(--tx-2563eb);
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
@@ -2451,8 +2506,8 @@ onBeforeUnmount(() => {
 }
 
 .officer-occupancy-box {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 14px;
   padding: 12px 14px;
   margin-bottom: 22px;
@@ -2464,7 +2519,7 @@ onBeforeUnmount(() => {
   align-items: center;
   padding-bottom: 10px;
   margin-bottom: 10px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--bd-e2e8f0);
 }
 
 .officer-occupancy-title {
@@ -2473,17 +2528,17 @@ onBeforeUnmount(() => {
   gap: 6px;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--tx-475569);
 }
 
 .officer-total-stalls {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
 .officer-total-stalls strong {
-  color: #0f172a;
+  color: var(--tx-0f172a);
   font-weight: 700;
 }
 
@@ -2502,7 +2557,7 @@ onBeforeUnmount(() => {
 }
 
 .officer-stat-cell + .officer-stat-cell {
-  border-left: 1px solid #e2e8f0;
+  border-left: 1px solid var(--bd-e2e8f0);
 }
 
 .officer-stat-cell .stat-copy {
@@ -2515,7 +2570,7 @@ onBeforeUnmount(() => {
 
 .officer-stat-cell .stat-label {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 600;
   line-height: 1.4;
 }
@@ -2523,20 +2578,20 @@ onBeforeUnmount(() => {
 .officer-stat-cell .stat-val {
   font-size: 1rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--tx-0f172a);
   line-height: 1.3;
 }
 
 .officer-stat-cell.stat-occupied .stat-val {
-  color: #0f172a;
+  color: var(--tx-0f172a);
 }
 
 .officer-stat-cell.stat-reserved .stat-val {
-  color: #d97706;
+  color: var(--tx-d97706);
 }
 
 .officer-stat-cell.stat-available .stat-val {
-  color: #10b981;
+  color: var(--tx-10b981);
 }
 
 .empty-search-card {

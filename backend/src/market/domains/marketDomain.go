@@ -13,6 +13,8 @@ type UseCase interface {
 	GetMarketZones(marketID int) ([]models.Zone, error)
 	GetGISConfig(idOrSlug string, includeDraft bool) (*responses.MarketGISResponse, error)
 	SaveGISConfig(idOrSlug string, userID int, req requests.UpdateMarketGISRequest) (*responses.MarketGISResponse, error)
+	GetUtilitySettings(idOrSlug string) (*responses.MarketUtilitySettingsResponse, error)
+	SaveUtilitySettings(idOrSlug string, userID int, req requests.UpdateMarketUtilitySettingsRequest) (*responses.MarketUtilitySettingsResponse, error)
 }
 
 type Repository interface {
@@ -22,4 +24,6 @@ type Repository interface {
 	FindZonesByMarketID(marketID int) ([]models.Zone, error)
 	FindGISConfig(marketID int) (*models.MarketGISConfig, error)
 	SaveGISConfig(config *models.MarketGISConfig) error
+	FindUtilitySettings(marketID int) (*models.MarketUtilitySetting, error)
+	SaveUtilitySettings(setting *models.MarketUtilitySetting) error
 }

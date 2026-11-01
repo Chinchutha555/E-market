@@ -85,8 +85,8 @@ const selectOption = (value: string) => {
   display: inline-flex;
   align-items: center;
   padding: 3px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f1f5f9);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
 }
 
@@ -100,9 +100,9 @@ const selectOption = (value: string) => {
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: #64748b;
+  color: var(--tx-64748b);
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
@@ -110,24 +110,24 @@ const selectOption = (value: string) => {
 }
 
 .app-segmented-option:hover:not(.is-active) {
-  color: #334155;
+  color: var(--tx-334155);
 }
 
 .app-segmented-option.is-active {
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--bg-ffffff);
+  color: var(--tx-0f172a);
   font-weight: 700;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
 }
 
 .app-segmented-option:focus-visible {
-  outline: 2px solid #93c5fd;
+  outline: 2px solid var(--bd-93c5fd);
   outline-offset: 1px;
 }
 
 .app-segmented-option svg {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
 }
 </style>

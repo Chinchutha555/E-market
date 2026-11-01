@@ -1,12 +1,16 @@
 package usecases
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
+	"time"
 
 	"emarket-api/logs"
 	"emarket-api/models"
@@ -32,22 +36,52 @@ func resolveMarketJSONPath(slug string) string {
 	return candidates[0]
 }
 
+type baseProjectsCacheEntry struct {
+	modTime  time.Time
+	size     int64
+	projects json.RawMessage
+}
+
+var (
+	baseProjectsCache   = map[string]baseProjectsCacheEntry{}
+	baseProjectsCacheMu sync.Mutex
+)
+
+// อ่านผังโครงการจากไฟล์ JSON โดยแคชผลที่แปลงแล้ว จนกว่าไฟล์จะถูกแก้ไข (ไฟล์ ~1MB/ตลาด อ่าน+แปลงทุกคำขอช้า)
 func loadBaseProjectsFromDisk(slug string) json.RawMessage {
 	jsonPath := resolveMarketJSONPath(slug)
+	info, statErr := os.Stat(jsonPath)
+	if statErr == nil {
+		baseProjectsCacheMu.Lock()
+		entry, ok := baseProjectsCache[jsonPath]
+		baseProjectsCacheMu.Unlock()
+		if ok && entry.modTime.Equal(info.ModTime()) && entry.size == info.Size() {
+			return entry.projects
+		}
+	}
 	rawBytes, err := os.ReadFile(jsonPath)
 	if err != nil {
 		return json.RawMessage("[]")
 	}
-	var marketDoc map[string]interface{}
+	var marketDoc map[string]json.RawMessage
 	if err := json.Unmarshal(rawBytes, &marketDoc); err != nil {
 		return json.RawMessage("[]")
 	}
-	if bpRaw, ok := marketDoc["projects"]; ok {
-		if bpBytes, err := json.Marshal(bpRaw); err == nil && json.Valid(bpBytes) {
-			return json.RawMessage(bpBytes)
+	projects := json.RawMessage("[]")
+	if bpRaw, ok := marketDoc["projects"]; ok && json.Valid(bpRaw) {
+		var compact bytes.Buffer
+		if err := json.Compact(&compact, bpRaw); err == nil {
+			projects = json.RawMessage(compact.Bytes())
+		} else {
+			projects = bpRaw
 		}
 	}
-	return json.RawMessage("[]")
+	if statErr == nil {
+		baseProjectsCacheMu.Lock()
+		baseProjectsCache[jsonPath] = baseProjectsCacheEntry{modTime: info.ModTime(), size: info.Size(), projects: projects}
+		baseProjectsCacheMu.Unlock()
+	}
+	return projects
 }
 
 func mergeProjectsWithBase(baseProjectsRaw json.RawMessage, incomingProjectsRaw json.RawMessage) json.RawMessage {
@@ -185,12 +219,56 @@ func (u *useCase) GetMarketZones(marketID int) ([]models.Zone, error) {
 	return zones, nil
 }
 
+type gisMetaReader interface {
+	FindGISConfigMeta(marketID int) (time.Time, bool, error)
+}
+
+type gisResponseCacheEntry struct {
+	updatedAt time.Time
+	baseSig   string
+	resp      *responses.MarketGISResponse
+}
+
+var (
+	gisResponseCache   = map[string]gisResponseCacheEntry{}
+	gisResponseCacheMu sync.Mutex
+)
+
+// The merged GIS response is several MB; merging it (unmarshal + marshal) on every
+// request took 1-2s. Reuse it until the stored config or the base JSON file changes.
 func (u *useCase) GetGISConfig(idOrSlug string, includeDraft bool) (*responses.MarketGISResponse, error) {
 	market, err := u.repo.FindByIDOrSlug(idOrSlug)
 	if err != nil {
 		return nil, responses.NewAppErr(http.StatusNotFound, "ไม่พบข้อมูลตลาด")
 	}
 	baseProjects := loadBaseProjectsFromDisk(market.Slug)
+	reader, canCache := u.repo.(gisMetaReader)
+	if !canCache {
+		return u.buildGISConfig(market, baseProjects, includeDraft)
+	}
+	updatedAt, _, metaErr := reader.FindGISConfigMeta(market.ID)
+	if metaErr != nil {
+		return u.buildGISConfig(market, baseProjects, includeDraft)
+	}
+	key := fmt.Sprintf("%d:%t", market.ID, includeDraft)
+	baseSig := fmt.Sprintf("%p:%d", baseProjects, len(baseProjects))
+	gisResponseCacheMu.Lock()
+	entry, ok := gisResponseCache[key]
+	gisResponseCacheMu.Unlock()
+	if ok && entry.updatedAt.Equal(updatedAt) && entry.baseSig == baseSig {
+		return entry.resp, nil
+	}
+	resp, err := u.buildGISConfig(market, baseProjects, includeDraft)
+	if err != nil {
+		return nil, err
+	}
+	gisResponseCacheMu.Lock()
+	gisResponseCache[key] = gisResponseCacheEntry{updatedAt: updatedAt, baseSig: baseSig, resp: resp}
+	gisResponseCacheMu.Unlock()
+	return resp, nil
+}
+
+func (u *useCase) buildGISConfig(market *models.Market, baseProjects json.RawMessage, includeDraft bool) (*responses.MarketGISResponse, error) {
 	config, err := u.repo.FindGISConfig(market.ID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return &responses.MarketGISResponse{
@@ -232,4 +310,47 @@ func (u *useCase) SaveGISConfig(idOrSlug string, userID int, req requests.Update
 		return nil, responses.NewInternalServerError()
 	}
 	return gisResponse(config), nil
+}
+
+// ตลาดขนาดใหญ่สามารถมีมิเตอร์หลายพันรายการในเอกสารเดียว จึงต้องเผื่อ payload
+// มากกว่า 2MB เดิม ไม่เช่นนั้นการเพิ่มมิเตอร์แผงเดียวอาจถูกปฏิเสธทั้งเอกสาร
+const maxUtilitySettingsBytes = 10 << 20
+
+func (u *useCase) GetUtilitySettings(idOrSlug string) (*responses.MarketUtilitySettingsResponse, error) {
+	market, err := u.repo.FindByIDOrSlug(idOrSlug)
+	if err != nil {
+		return nil, responses.NewAppErr(http.StatusNotFound, "ไม่พบข้อมูลตลาด")
+	}
+	setting, err := u.repo.FindUtilitySettings(market.ID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// ยังไม่เคยตั้งค่า: ส่ง settings เป็น null ให้ฝั่งหน้าจอใช้ค่าเริ่มต้น
+			return &responses.MarketUtilitySettingsResponse{MarketID: market.ID, Settings: json.RawMessage("null")}, nil
+		}
+		logs.Error(err)
+		return nil, responses.NewInternalServerError()
+	}
+	settings := json.RawMessage(setting.SettingsJSON)
+	if !json.Valid(settings) {
+		settings = json.RawMessage("null")
+	}
+	updatedAt := setting.UpdatedAt
+	return &responses.MarketUtilitySettingsResponse{MarketID: market.ID, Settings: settings, UpdatedBy: setting.UpdatedBy, UpdatedAt: &updatedAt}, nil
+}
+
+func (u *useCase) SaveUtilitySettings(idOrSlug string, userID int, req requests.UpdateMarketUtilitySettingsRequest) (*responses.MarketUtilitySettingsResponse, error) {
+	if !json.Valid(req.Settings) || len(req.Settings) > maxUtilitySettingsBytes {
+		return nil, responses.NewAppErr(http.StatusBadRequest, "ข้อมูลการตั้งค่าอัตราไม่ถูกต้อง")
+	}
+	market, err := u.repo.FindByIDOrSlug(idOrSlug)
+	if err != nil {
+		return nil, responses.NewAppErr(http.StatusNotFound, "ไม่พบข้อมูลตลาด")
+	}
+	setting := &models.MarketUtilitySetting{MarketID: market.ID, SettingsJSON: string(req.Settings), UpdatedBy: &userID}
+	if err := u.repo.SaveUtilitySettings(setting); err != nil {
+		logs.Error(err)
+		return nil, responses.NewInternalServerError()
+	}
+	now := time.Now()
+	return &responses.MarketUtilitySettingsResponse{MarketID: market.ID, Settings: req.Settings, UpdatedBy: &userID, UpdatedAt: &now}, nil
 }

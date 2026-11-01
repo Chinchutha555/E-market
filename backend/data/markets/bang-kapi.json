@@ -97,10 +97,6 @@
         [
           100.6461745,
           13.7681133
-        ],
-        [
-          100.645963,
-          13.7680913
         ]
       ],
       "floors": [
@@ -35276,94 +35272,22 @@
           }
         }
       ]
-    },
+    }
+  ],
+  "siteFeatures": [],
+  "facilities": [
     {
-      "id": "ban-02",
+      "id": "bang-kapi-facility-001",
       "name": "อาคารพาณิชย์",
-      "sectionNumber": "02",
-      "category": "อาคารพาณิชย์",
-      "color": "#6366f1",
-      "stallsAvailable": 19,
-      "totalStalls": 19,
-      "realAreaSqm": 879.88,
-      "centroid": [
-        100.6463127090909,
-        13.766429845454546
-      ],
+      "type": "building",
       "coordinates": [
-        [
-          100.646108,
-          13.7663903
-        ],
-        [
-          100.646117,
-          13.7662909
-        ],
-        [
-          100.6461944,
-          13.7662975
-        ],
-        [
-          100.646233,
-          13.7663008
-        ],
-        [
-          100.6464828,
-          13.7663223
-        ],
-        [
-          100.646478,
-          13.7664562
-        ],
-        [
-          100.6464758,
-          13.7664809
-        ],
-        [
-          100.6464712,
-          13.7665323
-        ],
-        [
-          100.6464667,
-          13.7665823
-        ],
-        [
-          100.6463009,
-          13.766568
-        ],
-        [
-          100.646112,
-          13.7665068
-        ],
-        [
-          100.646108,
-          13.7663903
-        ]
+        100.6463597,
+        13.766533350000001
       ],
-      "floors": [
-        {
-          "id": "1",
-          "name": "ชั้น 1",
-          "shortLabel": "1F",
-          "level": 1
-        }
-      ],
-      "stalls": [
-        {
-          "code": "BKA-02-018",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 50.69,
-          "widthM": 2.0,
-          "depthM": 25.3,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6463047,
               13.7665252
@@ -35392,37 +35316,30 @@
               100.6463047,
               13.7665252
             ]
-          ],
-          "center": [
-            100.6463597,
-            13.766533350000001
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "18",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 0,
-            "name": "อาคารพาณิชย์",
-            "number": 18
-          }
-        },
-        {
-          "code": "BKA-02-019",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 49.12,
-          "widthM": 2.0,
-          "depthM": 24.6,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 18,
+      "sourceProperties": {
+        "FID": 0,
+        "name": "อาคารพาณิชย์",
+        "number": 18
+      }
+    },
+    {
+      "id": "bang-kapi-facility-002",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.64636654999998,
+        13.766565037500001
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6463031,
               13.7665434
@@ -35459,37 +35376,30 @@
               100.6463031,
               13.7665434
             ]
-          ],
-          "center": [
-            100.64636654999998,
-            13.766565037500001
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "19",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 2,
-            "name": "อาคารพาณิชย์",
-            "number": 19
-          }
-        },
-        {
-          "code": "BKA-02-014",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 44.54,
-          "widthM": 2.0,
-          "depthM": 22.3,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 19,
+      "sourceProperties": {
+        "FID": 2,
+        "name": "อาคารพาณิชย์",
+        "number": 19
+      }
+    },
+    {
+      "id": "bang-kapi-facility-003",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.64628934444444,
+        13.76648078888889
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6462597,
               13.7665195
@@ -35530,37 +35440,30 @@
               100.6462597,
               13.7665195
             ]
-          ],
-          "center": [
-            100.64628934444444,
-            13.76648078888889
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "14",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 3,
-            "name": "อาคารพาณิชย์",
-            "number": 14
-          }
-        },
-        {
-          "code": "BKA-02-010",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 37.54,
-          "widthM": 2.0,
-          "depthM": 18.8,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 14,
+      "sourceProperties": {
+        "FID": 3,
+        "name": "อาคารพาณิชย์",
+        "number": 14
+      }
+    },
+    {
+      "id": "bang-kapi-facility-004",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.64613482499999,
+        13.766467724999998
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6461194,
               13.7664254
@@ -35581,37 +35484,30 @@
               100.6461194,
               13.7664254
             ]
-          ],
-          "center": [
-            100.64613482499999,
-            13.766467724999998
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "10",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 6,
-            "name": "อาคารพาณิชย์",
-            "number": 10
-          }
-        },
-        {
-          "code": "BKA-02-013",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 37.83,
-          "widthM": 2.0,
-          "depthM": 18.9,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 10,
+      "sourceProperties": {
+        "FID": 6,
+        "name": "อาคารพาณิชย์",
+        "number": 10
+      }
+    },
+    {
+      "id": "bang-kapi-facility-005",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.6462454,
+        13.766472250000001
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.646221,
               13.7665162
@@ -35640,37 +35536,30 @@
               100.646221,
               13.7665162
             ]
-          ],
-          "center": [
-            100.6462454,
-            13.766472250000001
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "13",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 7,
-            "name": "อาคารพาณิชย์",
-            "number": 13
-          }
-        },
-        {
-          "code": "BKA-02-012",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 37.98,
-          "widthM": 2.0,
-          "depthM": 19.0,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 13,
+      "sourceProperties": {
+        "FID": 7,
+        "name": "อาคารพาณิชย์",
+        "number": 13
+      }
+    },
+    {
+      "id": "bang-kapi-facility-006",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.6462053,
+        13.766473775
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6461823,
               13.7665128
@@ -35691,37 +35580,30 @@
               100.6461823,
               13.7665128
             ]
-          ],
-          "center": [
-            100.6462053,
-            13.766473775
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "12",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 8,
-            "name": "อาคารพาณิชย์",
-            "number": 12
-          }
-        },
-        {
-          "code": "BKA-02-011",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 31.45,
-          "widthM": 2.0,
-          "depthM": 15.7,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 12,
+      "sourceProperties": {
+        "FID": 8,
+        "name": "อาคารพาณิชย์",
+        "number": 12
+      }
+    },
+    {
+      "id": "bang-kapi-facility-007",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.64616995,
+        13.766470725
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6461503,
               13.7665101
@@ -35742,37 +35624,30 @@
               100.6461503,
               13.7665101
             ]
-          ],
-          "center": [
-            100.64616995,
-            13.766470725
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "11",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 9,
-            "name": "อาคารพาณิชย์",
-            "number": 11
-          }
-        },
-        {
-          "code": "BKA-02-004",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 46.38,
-          "widthM": 2.0,
-          "depthM": 23.2,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 11,
+      "sourceProperties": {
+        "FID": 9,
+        "name": "อาคารพาณิชย์",
+        "number": 11
+      }
+    },
+    {
+      "id": "bang-kapi-facility-008",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.64624815,
+        13.7663611
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6462303,
               13.7664008
@@ -35801,37 +35676,30 @@
               100.6462303,
               13.7664008
             ]
-          ],
-          "center": [
-            100.64624815,
-            13.7663611
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "4",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 11,
-            "name": "อาคารพาณิชย์",
-            "number": 4
-          }
-        },
-        {
-          "code": "BKA-02-005",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 46.39,
-          "widthM": 2.0,
-          "depthM": 23.2,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 4,
+      "sourceProperties": {
+        "FID": 11,
+        "name": "อาคารพาณิชย์",
+        "number": 4
+      }
+    },
+    {
+      "id": "bang-kapi-facility-009",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.64628071666668,
+        13.766363900000002
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.646267,
               13.7663569
@@ -35860,37 +35728,30 @@
               100.646267,
               13.7663569
             ]
-          ],
-          "center": [
-            100.64628071666668,
-            13.766363900000002
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "5",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 12,
-            "name": "อาคารพาณิชย์",
-            "number": 5
-          }
-        },
-        {
-          "code": "BKA-02-017",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 54.43,
-          "widthM": 2.0,
-          "depthM": 27.2,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 5,
+      "sourceProperties": {
+        "FID": 12,
+        "name": "อาคารพาณิชย์",
+        "number": 5
+      }
+    },
+    {
+      "id": "bang-kapi-facility-010",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.6463895,
+        13.7665116
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6463054,
               13.7665181
@@ -35911,37 +35772,30 @@
               100.6463054,
               13.7665181
             ]
-          ],
-          "center": [
-            100.6463895,
-            13.7665116
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "17",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 15,
-            "name": "อาคารพาณิชย์",
-            "number": 17
-          }
-        },
-        {
-          "code": "BKA-02-016",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 48.34,
-          "widthM": 2.0,
-          "depthM": 24.2,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 17,
+      "sourceProperties": {
+        "FID": 15,
+        "name": "อาคารพาณิชย์",
+        "number": 17
+      }
+    },
+    {
+      "id": "bang-kapi-facility-011",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.6463918,
+        13.766485900000001
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6463078,
               13.7664909
@@ -35962,37 +35816,30 @@
               100.6463078,
               13.7664909
             ]
-          ],
-          "center": [
-            100.6463918,
-            13.766485900000001
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "16",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 16,
-            "name": "อาคารพาณิชย์",
-            "number": 16
-          }
-        },
-        {
-          "code": "BKA-02-015",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 49.42,
-          "widthM": 2.0,
-          "depthM": 24.7,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 16,
+      "sourceProperties": {
+        "FID": 16,
+        "name": "อาคารพาณิชย์",
+        "number": 16
+      }
+    },
+    {
+      "id": "bang-kapi-facility-012",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.646394,
+        13.766461425
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.64631,
               13.7664667
@@ -36013,37 +35860,30 @@
               100.64631,
               13.7664667
             ]
-          ],
-          "center": [
-            100.646394,
-            13.766461425
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "15",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 17,
-            "name": "อาคารพาณิชย์",
-            "number": 15
-          }
-        },
-        {
-          "code": "BKA-02-009",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 67.46,
-          "widthM": 2.0,
-          "depthM": 33.7,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 15,
+      "sourceProperties": {
+        "FID": 17,
+        "name": "อาคารพาณิชย์",
+        "number": 15
+      }
+    },
+    {
+      "id": "bang-kapi-facility-013",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.64645015,
+        13.766369625
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6464265,
               13.7663175
@@ -36064,37 +35904,30 @@
               100.6464265,
               13.7663175
             ]
-          ],
-          "center": [
-            100.64645015,
-            13.766369625
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "9",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 21,
-            "name": "อาคารพาณิชย์",
-            "number": 9
-          }
-        },
-        {
-          "code": "BKA-02-008",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 46.38,
-          "widthM": 2.0,
-          "depthM": 23.2,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 9,
+      "sourceProperties": {
+        "FID": 21,
+        "name": "อาคารพาณิชย์",
+        "number": 9
+      }
+    },
+    {
+      "id": "bang-kapi-facility-014",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.64640265,
+        13.76636555
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6464175,
               13.7664169
@@ -36115,37 +35948,30 @@
               100.6464175,
               13.7664169
             ]
-          ],
-          "center": [
-            100.64640265,
-            13.76636555
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "8",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 22,
-            "name": "อาคารพาณิชย์",
-            "number": 8
-          }
-        },
-        {
-          "code": "BKA-02-007",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 46.38,
-          "widthM": 2.0,
-          "depthM": 23.2,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 8,
+      "sourceProperties": {
+        "FID": 22,
+        "name": "อาคารพาณิชย์",
+        "number": 8
+      }
+    },
+    {
+      "id": "bang-kapi-facility-015",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.646363975,
+        13.766362225000002
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6463788,
               13.7664136
@@ -36166,37 +35992,30 @@
               100.6463788,
               13.7664136
             ]
-          ],
-          "center": [
-            100.646363975,
-            13.766362225000002
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "7",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 23,
-            "name": "อาคารพาณิชย์",
-            "number": 7
-          }
-        },
-        {
-          "code": "BKA-02-006",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 46.39,
-          "widthM": 2.0,
-          "depthM": 23.2,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 7,
+      "sourceProperties": {
+        "FID": 23,
+        "name": "อาคารพาณิชย์",
+        "number": 7
+      }
+    },
+    {
+      "id": "bang-kapi-facility-016",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.64632184,
+        13.766368599999998
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6463402,
               13.7664103
@@ -36221,37 +36040,30 @@
               100.6463402,
               13.7664103
             ]
-          ],
-          "center": [
-            100.64632184,
-            13.766368599999998
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "6",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 24,
-            "name": "อาคารพาณิชย์",
-            "number": 6
-          }
-        },
-        {
-          "code": "BKA-02-003",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 46.39,
-          "widthM": 2.0,
-          "depthM": 23.2,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 6,
+      "sourceProperties": {
+        "FID": 24,
+        "name": "อาคารพาณิชย์",
+        "number": 6
+      }
+    },
+    {
+      "id": "bang-kapi-facility-017",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.64620922499999,
+        13.7663489
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6462241,
               13.7664003
@@ -36272,37 +36084,30 @@
               100.6462241,
               13.7664003
             ]
-          ],
-          "center": [
-            100.64620922499999,
-            13.7663489
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "3",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 25,
-            "name": "อาคารพาณิชย์",
-            "number": 3
-          }
-        },
-        {
-          "code": "BKA-02-002",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 46.38,
-          "widthM": 2.0,
-          "depthM": 23.2,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 3,
+      "sourceProperties": {
+        "FID": 25,
+        "name": "อาคารพาณิชย์",
+        "number": 3
+      }
+    },
+    {
+      "id": "bang-kapi-facility-018",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.64617055,
+        13.766345574999999
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6461854,
               13.766397
@@ -36323,37 +36128,30 @@
               100.6461854,
               13.766397
             ]
-          ],
-          "center": [
-            100.64617055,
-            13.766345574999999
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "2",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 26,
-            "name": "อาคารพาณิชย์",
-            "number": 2
-          }
-        },
-        {
-          "code": "BKA-02-001",
-          "projectId": "ban-02",
-          "zone": "อาคารพาณิชย์",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 46.39,
-          "widthM": 2.0,
-          "depthM": 23.2,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 2,
+      "sourceProperties": {
+        "FID": 26,
+        "name": "อาคารพาณิชย์",
+        "number": 2
+      }
+    },
+    {
+      "id": "bang-kapi-facility-019",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.64613184999999,
+        13.76634225
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6461467,
               13.7663936
@@ -36374,87 +36172,30 @@
               100.6461467,
               13.7663936
             ]
-          ],
-          "center": [
-            100.64613184999999,
-            13.76634225
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "1",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 27,
-            "name": "อาคารพาณิชย์",
-            "number": 1
-          }
-        }
-      ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 27,
+        "name": "อาคารพาณิชย์",
+        "number": 1
+      }
     },
     {
-      "id": "ban-03",
+      "id": "bang-kapi-facility-020",
       "name": "พื้นที่ด้านซอย 127",
-      "sectionNumber": "03",
-      "category": "พื้นที่ด้านซอย 127",
-      "color": "#ea580c",
-      "stallsAvailable": 2,
-      "totalStalls": 2,
-      "realAreaSqm": 1221.46,
-      "centroid": [
-        100.64635438,
-        13.767371480000003
-      ],
+      "type": "access",
       "coordinates": [
-        [
-          100.6462527,
-          13.7680808
-        ],
-        [
-          100.6463969,
-          13.7667506
-        ],
-        [
-          100.6464376,
-          13.7667538
-        ],
-        [
-          100.6463912,
-          13.7671872
-        ],
-        [
-          100.6462935,
-          13.768085
-        ],
-        [
-          100.6462527,
-          13.7680808
-        ]
+        100.64639405,
+        13.766968649999999
       ],
-      "floors": [
-        {
-          "id": "1",
-          "name": "ชั้น 1",
-          "shortLabel": "1F",
-          "level": 1
-        }
-      ],
-      "stalls": [
-        {
-          "code": "BKA-03-001",
-          "projectId": "ban-03",
-          "zone": "พื้นที่ด้านซอย 127",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 610.73,
-          "widthM": 2.0,
-          "depthM": 305.4,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6463969,
               13.7667506
@@ -36475,37 +36216,30 @@
               100.6463969,
               13.7667506
             ]
-          ],
-          "center": [
-            100.64639405,
-            13.766968649999999
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "1",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": null,
-            "name": "พื้นที่ด้านซอย 127",
-            "number": 1
-          }
-        },
-        {
-          "code": "BKA-03-002",
-          "projectId": "ban-03",
-          "zone": "พื้นที่ด้านซอย 127",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 610.73,
-          "widthM": 2.0,
-          "depthM": 305.4,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": null,
+        "name": "พื้นที่ด้านซอย 127",
+        "number": 1
+      }
+    },
+    {
+      "id": "bang-kapi-facility-021",
+      "name": "พื้นที่ด้านซอย 127",
+      "type": "access",
+      "coordinates": [
+        100.64631902500001,
+        13.76766095
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6463446,
               13.7672369
@@ -36526,83 +36260,30 @@
               100.6463446,
               13.7672369
             ]
-          ],
-          "center": [
-            100.64631902500001,
-            13.76766095
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "2",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": null,
-            "name": "พื้นที่ด้านซอย 127",
-            "number": 2
-          }
-        }
-      ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 2,
+      "sourceProperties": {
+        "FID": null,
+        "name": "พื้นที่ด้านซอย 127",
+        "number": 2
+      }
     },
     {
-      "id": "ban-04",
+      "id": "bang-kapi-facility-022",
       "name": "พื้นที่ด้านซอย 125",
-      "sectionNumber": "04",
-      "category": "พื้นที่ด้านซอย 125",
-      "color": "#0284c7",
-      "stallsAvailable": 1,
-      "totalStalls": 1,
-      "realAreaSqm": 668.07,
-      "centroid": [
+      "type": "access",
+      "coordinates": [
         100.646020975,
         13.7672332
       ],
-      "coordinates": [
-        [
-          100.6459327,
-          13.767859
-        ],
-        [
-          100.6460682,
-          13.7666032
-        ],
-        [
-          100.6461096,
-          13.7666074
-        ],
-        [
-          100.6459734,
-          13.7678632
-        ],
-        [
-          100.6459327,
-          13.767859
-        ]
-      ],
-      "floors": [
-        {
-          "id": "1",
-          "name": "ชั้น 1",
-          "shortLabel": "1F",
-          "level": 1
-        }
-      ],
-      "stalls": [
-        {
-          "code": "BKA-04-001",
-          "projectId": "ban-04",
-          "zone": "พื้นที่ด้านซอย 125",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 668.07,
-          "widthM": 2.0,
-          "depthM": 334.0,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6460682,
               13.7666032
@@ -36623,83 +36304,30 @@
               100.6460682,
               13.7666032
             ]
-          ],
-          "center": [
-            100.646020975,
-            13.7672332
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "1",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": null,
-            "name": "พื้นที่ด้านซอย 125",
-            "number": 1
-          }
-        }
-      ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": null,
+        "name": "พื้นที่ด้านซอย 125",
+        "number": 1
+      }
     },
     {
-      "id": "ban-05",
+      "id": "bang-kapi-facility-023",
       "name": "ห้องสุขา",
-      "sectionNumber": "05",
-      "category": "ห้องสุขา",
-      "color": "#ab77c8",
-      "stallsAvailable": 1,
-      "totalStalls": 1,
-      "realAreaSqm": 4.0,
-      "centroid": [
+      "type": "sanitation",
+      "coordinates": [
         100.6460731,
         13.7681346
       ],
-      "coordinates": [
-        [
-          100.6460361,
-          13.7681518
-        ],
-        [
-          100.6460407,
-          13.7681101
-        ],
-        [
-          100.6461101,
-          13.7681174
-        ],
-        [
-          100.6461055,
-          13.7681591
-        ],
-        [
-          100.6460361,
-          13.7681518
-        ]
-      ],
-      "floors": [
-        {
-          "id": "1",
-          "name": "ชั้น 1",
-          "shortLabel": "1F",
-          "level": 1
-        }
-      ],
-      "stalls": [
-        {
-          "code": "BKA-05-001",
-          "projectId": "ban-05",
-          "zone": "ห้องสุขา",
-          "status": "available",
-          "areaType": "แผงค้ามาตรฐาน",
-          "size": 4.0,
-          "widthM": 2.0,
-          "depthM": 2.0,
-          "entryFee": 27000,
-          "monthlyRent": 1800,
-          "commonFee": 400,
-          "depositFee": 1800,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6461101,
               13.7681174
@@ -36720,83 +36348,30 @@
               100.6461101,
               13.7681174
             ]
-          ],
-          "center": [
-            100.6460731,
-            13.7681346
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "1",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 40,
-            "name": "ห้องสุขา",
-            "number": 1
-          }
-        }
-      ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 40,
+        "name": "ห้องสุขา",
+        "number": 1
+      }
     },
     {
-      "id": "ban-06",
+      "id": "bang-kapi-facility-024",
       "name": "ที่พักขยะ",
-      "sectionNumber": "06",
-      "category": "ที่พักขยะ",
-      "color": "#ab77c8",
-      "stallsAvailable": 1,
-      "totalStalls": 1,
-      "realAreaSqm": 4.0,
-      "centroid": [
+      "type": "sanitation",
+      "coordinates": [
         100.646149925,
         13.768136799999999
       ],
-      "coordinates": [
-        [
-          100.6461177,
-          13.7681487
-        ],
-        [
-          100.646121,
-          13.7681186
-        ],
-        [
-          100.6461821,
-          13.7681249
-        ],
-        [
-          100.6461789,
-          13.768155
-        ],
-        [
-          100.6461177,
-          13.7681487
-        ]
-      ],
-      "floors": [
-        {
-          "id": "1",
-          "name": "ชั้น 1",
-          "shortLabel": "1F",
-          "level": 1
-        }
-      ],
-      "stalls": [
-        {
-          "code": "BKA-06-001",
-          "projectId": "ban-06",
-          "zone": "ที่พักขยะ",
-          "status": "available",
-          "areaType": "แผงค้ามาตรฐาน",
-          "size": 4.0,
-          "widthM": 2.0,
-          "depthM": 2.0,
-          "entryFee": 27000,
-          "monthlyRent": 1800,
-          "commonFee": 400,
-          "depositFee": 1800,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6461789,
               13.768155
@@ -36817,83 +36392,30 @@
               100.6461789,
               13.768155
             ]
-          ],
-          "center": [
-            100.646149925,
-            13.768136799999999
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "1",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 221,
-            "name": "ที่พักขยะ",
-            "number": 1
-          }
-        }
-      ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 221,
+        "name": "ที่พักขยะ",
+        "number": 1
+      }
     },
     {
-      "id": "ban-07",
+      "id": "bang-kapi-facility-025",
       "name": "ที่ทำการ",
-      "sectionNumber": "07",
-      "category": "ที่ทำการ",
-      "color": "#ab77c8",
-      "stallsAvailable": 1,
-      "totalStalls": 1,
-      "realAreaSqm": 4.0,
-      "centroid": [
-        100.64599602499999,
+      "type": "service",
+      "coordinates": [
+        100.64599602500002,
         13.768134
       ],
-      "coordinates": [
-        [
-          100.6459588,
-          13.7681588
-        ],
-        [
-          100.645965,
-          13.7681021
-        ],
-        [
-          100.6460332,
-          13.7681092
-        ],
-        [
-          100.6460271,
-          13.7681659
-        ],
-        [
-          100.6459588,
-          13.7681588
-        ]
-      ],
-      "floors": [
-        {
-          "id": "1",
-          "name": "ชั้น 1",
-          "shortLabel": "1F",
-          "level": 1
-        }
-      ],
-      "stalls": [
-        {
-          "code": "BKA-07-001",
-          "projectId": "ban-07",
-          "zone": "ที่ทำการ",
-          "status": "available",
-          "areaType": "แผงค้ามาตรฐาน",
-          "size": 4.0,
-          "widthM": 2.0,
-          "depthM": 2.0,
-          "entryFee": 27000,
-          "monthlyRent": 1800,
-          "commonFee": 400,
-          "depositFee": 1800,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
             [
               100.6460332,
               13.7681092
@@ -36914,24 +36436,17 @@
               100.6460332,
               13.7681092
             ]
-          ],
-          "center": [
-            100.64599602500002,
-            13.768134
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "name": "1",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 222,
-            "name": "ที่ทำการ",
-            "number": 1
-          }
-        }
-      ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 222,
+        "name": "ที่ทำการ",
+        "number": 1
+      }
     }
-  ],
-  "siteFeatures": []
+  ]
 }

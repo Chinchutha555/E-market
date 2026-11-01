@@ -62,10 +62,6 @@
         [
           100.5024549,
           13.7714731
-        ],
-        [
-          100.5022992,
-          13.7712709
         ]
       ],
       "floors": [
@@ -16394,10 +16390,6 @@
         [
           100.5024106,
           13.7715057
-        ],
-        [
-          100.5022919,
-          13.7713215
         ]
       ],
       "floors": [
@@ -21424,10 +21416,6 @@
         [
           100.5029109,
           13.7716138
-        ],
-        [
-          100.5028519,
-          13.771452
         ]
       ],
       "floors": [
@@ -24090,10 +24078,6 @@
         [
           100.5029468,
           13.7708572
-        ],
-        [
-          100.5029021,
-          13.7707996
         ]
       ],
       "floors": [
@@ -25917,221 +25901,6 @@
       "totalStalls": 33
     },
     {
-      "category": "อาคารพาณิชย์",
-      "centroid": [
-        100.5026933857143,
-        13.7711116
-      ],
-      "color": "#0284c7",
-      "coordinates": [
-        [
-          100.5018555,
-          13.771752
-        ],
-        [
-          100.5018596,
-          13.7716253
-        ],
-        [
-          100.5030884,
-          13.7706651
-        ],
-        [
-          100.5039228,
-          13.7700512
-        ],
-        [
-          100.5040057,
-          13.7701588
-        ],
-        [
-          100.5022478,
-          13.771713
-        ],
-        [
-          100.5018739,
-          13.7718158
-        ],
-        [
-          100.5018555,
-          13.771752
-        ]
-      ],
-      "floors": [
-        {
-          "id": "1",
-          "level": 1,
-          "name": "ชั้น 1",
-          "shortLabel": "1F"
-        }
-      ],
-      "id": "geo-1",
-      "name": "อาคารพาณิชย์",
-      "realAreaSqm": 12,
-      "sectionNumber": "G1",
-      "stalls": [
-        {
-          "areaType": "แผงค้ามาตรฐาน",
-          "center": [
-            100.502043125,
-            13.771547975
-          ],
-          "code": "thewarat-GEO-00001",
-          "commonFee": 400,
-          "coordinates": [
-            [
-              100.5018596,
-              13.7716253
-            ],
-            [
-              100.5019166,
-              13.7716996
-            ],
-            [
-              100.5022264,
-              13.7714701
-            ],
-            [
-              100.5021699,
-              13.7713969
-            ],
-            [
-              100.5018596,
-              13.7716253
-            ]
-          ],
-          "depositFee": 1800,
-          "depthM": 2,
-          "entryFee": 35000,
-          "floor": "1",
-          "floorLevel": 1,
-          "floorName": "ชั้น 1",
-          "monthlyRent": 1800,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "projectId": "geo-1",
-          "size": 4,
-          "status": "available",
-          "widthM": 2,
-          "zone": "อาคารพาณิชย์",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 0,
-            "name": "อาคารพาณิชย์",
-            "zone": "-",
-            "number": 2
-          }
-        },
-        {
-          "areaType": "แผงค้ามาตรฐาน",
-          "center": [
-            100.50205165000001,
-            13.771732525
-          ],
-          "code": "thewarat-GEO-00002",
-          "commonFee": 400,
-          "coordinates": [
-            [
-              100.5022294,
-              13.7716493
-            ],
-            [
-              100.5018555,
-              13.771752
-            ],
-            [
-              100.5018739,
-              13.7718158
-            ],
-            [
-              100.5022478,
-              13.771713
-            ],
-            [
-              100.5022294,
-              13.7716493
-            ]
-          ],
-          "depositFee": 1800,
-          "depthM": 2,
-          "entryFee": 35000,
-          "floor": "1",
-          "floorLevel": 1,
-          "floorName": "ชั้น 1",
-          "monthlyRent": 1800,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "projectId": "geo-1",
-          "size": 4,
-          "status": "available",
-          "widthM": 2,
-          "zone": "อาคารพาณิชย์",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 1,
-            "name": "อาคารพาณิชย์",
-            "zone": "-",
-            "number": 1
-          }
-        },
-        {
-          "areaType": "แผงค้ามาตรฐาน",
-          "center": [
-            100.50347338,
-            13.77048302
-          ],
-          "code": "thewarat-GEO-00449",
-          "commonFee": 400,
-          "coordinates": [
-            [
-              100.5030884,
-              13.7706651
-            ],
-            [
-              100.5031713,
-              13.7707727
-            ],
-            [
-              100.5031787,
-              13.7707673
-            ],
-            [
-              100.5040057,
-              13.7701588
-            ],
-            [
-              100.5039228,
-              13.7700512
-            ],
-            [
-              100.5030884,
-              13.7706651
-            ]
-          ],
-          "depositFee": 1800,
-          "depthM": 2,
-          "entryFee": 35000,
-          "floor": "1",
-          "floorLevel": 1,
-          "floorName": "ชั้น 1",
-          "monthlyRent": 1800,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "projectId": "geo-1",
-          "size": 4,
-          "status": "available",
-          "widthM": 2,
-          "zone": "อาคารพาณิชย์",
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 458,
-            "name": "อาคารพาณิชย์",
-            "zone": "-",
-            "number": 3
-          }
-        }
-      ],
-      "stallsAvailable": 3,
-      "totalStalls": 3
-    },
-    {
       "category": "แผงค้าต้นไม้",
       "centroid": [
         100.50075193333333,
@@ -26162,10 +25931,6 @@
         [
           100.5005565,
           13.7719
-        ],
-        [
-          100.5005532,
-          13.7718938
         ]
       ],
       "floors": [
@@ -26299,10 +26064,6 @@
         [
           100.5016937,
           13.7717199
-        ],
-        [
-          100.5016863,
-          13.7716768
         ]
       ],
       "floors": [
@@ -28443,15 +28204,155 @@
     }
   ],
   "slug": "thewarat",
-  "siteFeatures": [
+  "siteFeatures": [],
+  "facilities": [
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 2,
-        "name": "สุขา",
+      "id": "thewarat-facility-001",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.502043125,
+        13.771547975
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.5018596,
+              13.7716253
+            ],
+            [
+              100.5019166,
+              13.7716996
+            ],
+            [
+              100.5022264,
+              13.7714701
+            ],
+            [
+              100.5021699,
+              13.7713969
+            ],
+            [
+              100.5018596,
+              13.7716253
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 2,
+      "sourceProperties": {
+        "FID": 0,
+        "name": "อาคารพาณิชย์",
+        "zone": "-",
+        "number": 2
+      }
+    },
+    {
+      "id": "thewarat-facility-002",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.50205165000001,
+        13.771732525
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.5022294,
+              13.7716493
+            ],
+            [
+              100.5018555,
+              13.771752
+            ],
+            [
+              100.5018739,
+              13.7718158
+            ],
+            [
+              100.5022478,
+              13.771713
+            ],
+            [
+              100.5022294,
+              13.7716493
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 1,
+        "name": "อาคารพาณิชย์",
         "zone": "-",
         "number": 1
+      }
+    },
+    {
+      "id": "thewarat-facility-003",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.50347338,
+        13.77048302
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.5030884,
+              13.7706651
+            ],
+            [
+              100.5031713,
+              13.7707727
+            ],
+            [
+              100.5031787,
+              13.7707673
+            ],
+            [
+              100.5040057,
+              13.7701588
+            ],
+            [
+              100.5039228,
+              13.7700512
+            ],
+            [
+              100.5030884,
+              13.7706651
+            ]
+          ]
+        ]
       },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 3,
+      "sourceProperties": {
+        "FID": 458,
+        "name": "อาคารพาณิชย์",
+        "zone": "-",
+        "number": 3
+      }
+    },
+    {
+      "id": "thewarat-facility-004",
+      "name": "สุขา",
+      "type": "sanitation",
+      "coordinates": [
+        100.50229751999998,
+        13.771467299999998
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -28482,16 +28383,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 2,
+        "name": "สุขา",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 3,
-        "name": "ที่ทำการ",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-005",
+      "name": "ที่ทำการ",
+      "type": "service",
+      "coordinates": [
+        100.502239925,
+        13.77137675
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -28518,16 +28428,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 3,
+        "name": "ที่ทำการ",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 449,
-        "name": "บ้านพักคนงาน",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-006",
+      "name": "บ้านพักคนงาน",
+      "type": "building",
+      "coordinates": [
+        100.50361975,
+        13.771432925
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -28554,16 +28473,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 449,
+        "name": "บ้านพักคนงาน",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 450,
-        "name": "ตึกแถว 3 ชั้น",
-        "zone": "-",
-        "number": 2
-      },
+      "id": "thewarat-facility-007",
+      "name": "ตึกแถว 3 ชั้น",
+      "type": "building",
+      "coordinates": [
+        100.50316222500001,
+        13.77116885
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -28590,16 +28518,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 2,
+      "sourceProperties": {
+        "FID": 450,
+        "name": "ตึกแถว 3 ชั้น",
+        "zone": "-",
+        "number": 2
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 459,
-        "name": "ตึกแถวชั้นเดียว",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-008",
+      "name": "ตึกแถวชั้นเดียว",
+      "type": "building",
+      "coordinates": [
+        100.50283705,
+        13.771707275
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -28626,16 +28563,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 459,
+        "name": "ตึกแถวชั้นเดียว",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 460,
-        "name": "ตึกแถวกรมศาสนา",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-009",
+      "name": "ตึกแถวกรมศาสนา",
+      "type": "building",
+      "coordinates": [
+        100.50269767500001,
+        13.771755825
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -28662,16 +28608,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 460,
+        "name": "ตึกแถวกรมศาสนา",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "ลานต้นโพธิ์",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-010",
+      "name": "ลานต้นโพธิ์",
+      "type": "common-area",
+      "coordinates": [
+        100.5030410652778,
+        13.770943665277779
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -28970,16 +28925,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": null,
+        "name": "ลานต้นโพธิ์",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 271,
-        "name": "ประตู",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-011",
+      "name": "ประตู",
+      "type": "access",
+      "coordinates": [
+        100.503148875,
+        13.77095725
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -29006,16 +28970,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 271,
+        "name": "ประตู",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 460,
-        "name": "ตึกแถว 3 ชั้น",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-012",
+      "name": "ตึกแถว 3 ชั้น",
+      "type": "building",
+      "coordinates": [
+        100.50313505,
+        13.771544
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -29042,16 +29015,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": 460,
+        "name": "ตึกแถว 3 ชั้น",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "ที่พักขยะ",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-013",
+      "name": "ที่พักขยะ",
+      "type": "sanitation",
+      "coordinates": [
+        100.50326620000001,
+        13.771297425
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -29078,16 +29060,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": null,
+        "name": "ที่พักขยะ",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "สะพานคอนกรีต",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-014",
+      "name": "สะพานคอนกรีต",
+      "type": "access",
+      "coordinates": [
+        100.50200015000001,
+        13.771272375
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -29114,16 +29105,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": null,
+        "name": "สะพานคอนกรีต",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "ท่าน้ำ",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-015",
+      "name": "ท่าน้ำ",
+      "type": "access",
+      "coordinates": [
+        100.50199422499999,
+        13.7713952
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -29150,16 +29150,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": null,
+        "name": "ท่าน้ำ",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "ประตูน้ำ",
-        "zone": "-",
-        "number": 3
-      },
+      "id": "thewarat-facility-016",
+      "name": "ประตูน้ำ",
+      "type": "access",
+      "coordinates": [
+        100.501761925,
+        13.7714957
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -29186,16 +29195,25 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 3,
+      "sourceProperties": {
         "FID": null,
         "name": "ประตูน้ำ",
         "zone": "-",
-        "number": 4
-      },
+        "number": 3
+      }
+    },
+    {
+      "id": "thewarat-facility-017",
+      "name": "ประตูน้ำ",
+      "type": "access",
+      "coordinates": [
+        100.5016993,
+        13.771413825
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -29222,16 +29240,25 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 4,
+      "sourceProperties": {
         "FID": null,
         "name": "ประตูน้ำ",
         "zone": "-",
-        "number": 1
-      },
+        "number": 4
+      }
+    },
+    {
+      "id": "thewarat-facility-018",
+      "name": "ประตูน้ำ",
+      "type": "access",
+      "coordinates": [
+        100.501244875,
+        13.771850925
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -29258,16 +29285,25 @@
             ]
           ]
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
         "FID": null,
         "name": "ประตูน้ำ",
         "zone": "-",
-        "number": 2
-      },
+        "number": 1
+      }
+    },
+    {
+      "id": "thewarat-facility-019",
+      "name": "ประตูน้ำ",
+      "type": "access",
+      "coordinates": [
+        100.50118075,
+        13.7717691
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -29294,16 +29330,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 2,
+      "sourceProperties": {
+        "FID": null,
+        "name": "ประตูน้ำ",
+        "zone": "-",
+        "number": 2
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "สำนักระบายน้ำ",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-020",
+      "name": "สำนักระบายน้ำ",
+      "type": "service",
+      "coordinates": [
+        100.50111384,
+        13.771666299999998
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -29334,16 +29379,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": null,
+        "name": "สำนักระบายน้ำ",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "กรมเจ้าท่า",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-021",
+      "name": "กรมเจ้าท่า",
+      "type": "service",
+      "coordinates": [
+        100.50035818333333,
+        13.771965749999998
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -29378,16 +29432,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": null,
+        "name": "กรมเจ้าท่า",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "ร้านอาหาร",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-022",
+      "name": "ร้านอาหาร",
+      "type": "building",
+      "coordinates": [
+        100.50024852000001,
+        13.771855720000001
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -29418,16 +29481,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": null,
+        "name": "ร้านอาหาร",
+        "zone": "-",
+        "number": 1
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "สวนสาธารณะสำนักระบายน้ำ",
-        "zone": "-",
-        "number": 1
-      },
+      "id": "thewarat-facility-023",
+      "name": "สวนสาธารณะสำนักระบายน้ำ",
+      "type": "common-area",
+      "coordinates": [
+        100.5015058,
+        13.771421799999999
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -29454,6 +29526,15 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": 1,
+      "sourceProperties": {
+        "FID": null,
+        "name": "สวนสาธารณะสำนักระบายน้ำ",
+        "zone": "-",
+        "number": 1
       }
     }
   ]

@@ -89,10 +89,6 @@
         [
           100.4964432,
           13.7346682
-        ],
-        [
-          100.4964387,
-          13.7346483
         ]
       ],
       "floors": [
@@ -6256,10 +6252,6 @@
         [
           100.4964784,
           13.7346606
-        ],
-        [
-          100.496474,
-          13.7346407
         ]
       ],
       "floors": [
@@ -12222,10 +12214,6 @@
         [
           100.4964878,
           13.7347523
-        ],
-        [
-          100.4964631,
-          13.7346431
         ]
       ],
       "floors": [
@@ -17608,10 +17596,6 @@
         [
           100.4965362,
           13.7346481
-        ],
-        [
-          100.4965317,
-          13.7346282
         ]
       ],
       "floors": [
@@ -22618,10 +22602,6 @@
         [
           100.4965105,
           13.7346432
-        ],
-        [
-          100.4965083,
-          13.7346333
         ]
       ],
       "floors": [
@@ -27554,10 +27534,6 @@
         [
           100.4965019,
           13.7346555
-        ],
-        [
-          100.4964974,
-          13.7346356
         ]
       ],
       "floors": [
@@ -32418,10 +32394,6 @@
         [
           100.4962956,
           13.7347517
-        ],
-        [
-          100.4962947,
-          13.7347514
         ]
       ],
       "floors": [
@@ -35035,15 +35007,16 @@
       ]
     }
   ],
-  "siteFeatures": [
+  "siteFeatures": [],
+  "facilities": [
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "สถานธนานุบาลกรุงเทพมหานคร",
-        "zone": "-",
-        "number": "1"
-      },
+      "id": "wongwian-lek-facility-001",
+      "name": "สถานธนานุบาลกรุงเทพมหานคร",
+      "type": "building",
+      "coordinates": [
+        100.49647075,
+        13.734540124999999
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -35070,16 +35043,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": null,
+        "name": "สถานธนานุบาลกรุงเทพมหานคร",
+        "zone": "-",
+        "number": "1"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "สำนักงาน",
-        "zone": "-",
-        "number": "1"
-      },
+      "id": "wongwian-lek-facility-002",
+      "name": "สำนักงาน",
+      "type": "service",
+      "coordinates": [
+        100.49631492500001,
+        13.734777150000001
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -35106,16 +35088,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": null,
+        "name": "สำนักงาน",
+        "zone": "-",
+        "number": "1"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "ห้องเก็บพัสดุ",
-        "zone": "-",
-        "number": "1"
-      },
+      "id": "wongwian-lek-facility-003",
+      "name": "ห้องเก็บพัสดุ",
+      "type": "service",
+      "coordinates": [
+        100.496294975,
+        13.734796199999998
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -35142,16 +35133,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": null,
+        "name": "ห้องเก็บพัสดุ",
+        "zone": "-",
+        "number": "1"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "ห้องสุขา",
-        "zone": "-",
-        "number": "1"
-      },
+      "id": "wongwian-lek-facility-004",
+      "name": "ห้องสุขา",
+      "type": "sanitation",
+      "coordinates": [
+        100.49632112500001,
+        13.734803475
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -35178,16 +35178,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": null,
+        "name": "ห้องสุขา",
+        "zone": "-",
+        "number": "1"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "สุขาหญิง",
-        "zone": "-",
-        "number": "1"
-      },
+      "id": "wongwian-lek-facility-005",
+      "name": "สุขาหญิง",
+      "type": "sanitation",
+      "coordinates": [
+        100.496611525,
+        13.7350463
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -35214,16 +35223,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": null,
+        "name": "สุขาหญิง",
+        "zone": "-",
+        "number": "1"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": null,
-        "name": "สุขาชาย",
-        "zone": "-",
-        "number": "1"
-      },
+      "id": "wongwian-lek-facility-006",
+      "name": "สุขาชาย",
+      "type": "sanitation",
+      "coordinates": [
+        100.49662095,
+        13.73508775
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -35250,6 +35268,15 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": null,
+        "name": "สุขาชาย",
+        "zone": "-",
+        "number": "1"
       }
     }
   ]

@@ -80,35 +80,12 @@
         </div>
 
         <!-- Filter Tabs -->
-        <div class="filter-tabs-row">
-          <button
-            type="button"
-            class="tab-btn"
-            :class="{ active: statusFilter === 'all' }"
-            @click="statusFilter = 'all'; currentPage = 1"
-          >
-            <span>ทั้งหมด</span>
-            <span class="tab-count-pill">{{ typesList.length }}</span>
-          </button>
-          <button
-            type="button"
-            class="tab-btn"
-            :class="{ active: statusFilter === 'active' }"
-            @click="statusFilter = 'active'; currentPage = 1"
-          >
-            <span>เปิดใช้งานอยู่</span>
-            <span class="tab-count-pill pill-success">{{ activeCount }}</span>
-          </button>
-          <button
-            type="button"
-            class="tab-btn"
-            :class="{ active: statusFilter === 'inactive' }"
-            @click="statusFilter = 'inactive'; currentPage = 1"
-          >
-            <span>ปิดการใช้งาน</span>
-            <span class="tab-count-pill">{{ inactiveCount }}</span>
-          </button>
-        </div>
+        <AppSecondaryTabs
+          v-model="statusFilter"
+          :options="typeStatusTabs"
+          aria-label="กรองสถานะประเภทคำร้อง"
+          @change="currentPage = 1"
+        />
 
         <!-- Loading State -->
         <div v-if="loading" class="table-loading-wrap">
@@ -168,11 +145,11 @@
                       :title="t.is_active ? 'คลิกเพื่อปิดใช้งาน' : 'คลิกเพื่อเปิดใช้งาน'"
                       @click="toggleTypeStatus(t)"
                     >
-                      <svg v-if="t.is_active" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #059669;">
+                      <svg v-if="t.is_active" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--tx-059669);">
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" y1="2" x2="12" y2="12"></line>
                       </svg>
-                      <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #94a3b8;">
+                      <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--tx-94a3b8);">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
                       </svg>
@@ -211,19 +188,17 @@
         </div>
 
         <!-- Empty State -->
-        <div v-else class="empty-state-box">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-          </svg>
-          <div class="empty-title">ไม่พบประเภทคำร้องตามเงื่อนไขที่ค้นหา</div>
-          <div class="empty-subtitle">ลองเปลี่ยนคำค้นหา หรือกดปุ่มด้านล่างเพื่อเพิ่มประเภทคำร้องใหม่</div>
-          <AppButton v-if="isAdminOrStaff" variant="primary" size="sm" style="margin-top: 14px;" @click="openCreateModal">
-            เพิ่มประเภทคำร้องใหม่
-          </AppButton>
-        </div>
+        <AppEmptyState
+          v-else
+          variant="table"
+          icon="search"
+          title="ไม่พบประเภทคำร้อง"
+          description="ลองเปลี่ยนคำค้นหา หรือเพิ่มประเภทคำร้องใหม่"
+        >
+          <template v-if="isAdminOrStaff" #actions>
+            <AppButton variant="primary" size="sm" @click="openCreateModal">เพิ่มประเภทคำร้องใหม่</AppButton>
+          </template>
+        </AppEmptyState>
 
         <!-- Pagination Footer -->
         <AppPagination
@@ -244,28 +219,12 @@
     >
       <div class="modal-content type-modal-box">
         <!-- Modal Header -->
-        <div class="modal-header">
-          <div class="modal-header-title-wrap">
-            <div class="modal-icon-badge modal-icon-primary">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="12" y1="18" x2="12" y2="12"></line>
-                <line x1="9" y1="15" x2="15" y2="15"></line>
-              </svg>
-            </div>
-            <div>
-              <h3 class="modal-title">{{ editingItem ? 'แก้ไขประเภทคำร้อง' : 'เพิ่มประเภทคำร้องใหม่' }}</h3>
-              <div class="modal-subtitle">{{ editingItem ? 'ปรับปรุงหัวข้อและรายละเอียดประเภทคำร้อง' : 'กำหนดหัวข้อคำร้องสำหรับให้ผู้ใช้เลือกยื่นคำร้องทั่วไป' }}</div>
-            </div>
-          </div>
-          <button class="btn-modal-close" @click="closeModal" aria-label="ปิด">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
+        <AppModalHeader
+          :title="editingItem ? 'แก้ไขประเภทคำร้อง' : 'เพิ่มประเภทคำร้องใหม่'"
+          :subtitle="editingItem ? 'ปรับปรุงหัวข้อและรายละเอียดประเภทคำร้อง' : 'กำหนดหัวข้อคำร้องสำหรับให้ผู้ใช้เลือกยื่นคำร้องทั่วไป'"
+          icon="document"
+          @close="closeModal"
+        />
 
         <!-- Modal Body Form -->
         <div class="modal-body">
@@ -277,7 +236,7 @@
           <!-- Title -->
           <div class="form-group">
             <label class="form-label" for="type-title">
-              ชื่อประเภทคำร้อง / เรื่องที่ขอ <span class="text-danger">*</span>
+              ชื่อประเภทคำร้อง / เรื่องที่ขอ <span class="req-star" aria-hidden="true">*</span>
             </label>
             <input
               id="type-title"
@@ -414,6 +373,11 @@ const form = ref({
 // Counts
 const activeCount = computed(() => typesList.value.filter(t => t.is_active).length)
 const inactiveCount = computed(() => typesList.value.filter(t => !t.is_active).length)
+const typeStatusTabs = computed(() => [
+  { value: 'all', label: 'ทั้งหมด', count: typesList.value.length },
+  { value: 'active', label: 'เปิดใช้งานอยู่', count: activeCount.value },
+  { value: 'inactive', label: 'ปิดการใช้งาน', count: inactiveCount.value }
+])
 
 // Filtered Types
 const filteredTypes = computed(() => {
@@ -593,15 +557,15 @@ onMounted(() => {
   display: inline-block;
   font-family: monospace;
   font-size: 0.75rem; /* 12px */
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-475569);
   padding: 1px 6px;
   border-radius: 4px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
 }
 .text-hint {
   font-weight: 400;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   font-size: 0.75rem; /* 12px */
 }
 /* Breadcrumb */
@@ -611,38 +575,38 @@ onMounted(() => {
   gap: 8px;
   margin-bottom: 16px;
   font-size: 0.8125rem; /* 13px */
-  color: #64748b;
+  color: var(--tx-64748b);
 }
 
 .breadcrumb-back-link {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 500;
   text-decoration: none;
   transition: color 0.15s ease;
 }
 
 .breadcrumb-back-link:hover {
-  color: #1d4ed8;
+  color: var(--tx-1d4ed8);
   text-decoration: underline;
 }
 
 .breadcrumb-separator {
-  color: #cbd5e1;
+  color: var(--tx-cbd5e1);
 }
 
 .breadcrumb-current {
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-weight: 600;
 }
 
 /* Card Container */
 .table-card-container {
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border-radius: 16px;
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   padding: 24px 28px;
   margin-bottom: 32px;
@@ -667,8 +631,8 @@ onMounted(() => {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -678,14 +642,14 @@ onMounted(() => {
 .table-card-title {
   font-size: 1.25rem; /* 20px */
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
   line-height: 1.3;
 }
 
 .table-card-subtitle {
   font-size: 0.8125rem; /* 13px */
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 2px;
 }
 
@@ -701,12 +665,12 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
   padding: 0 12px;
   height: 40px;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   min-width: 220px;
 }
 
@@ -714,7 +678,7 @@ onMounted(() => {
   border: none;
   outline: none;
   font-size: 0.875rem; /* 14px */
-  color: #1e293b;
+  color: var(--tx-1e293b);
   width: 100%;
   font-family: inherit;
   background: transparent;
@@ -724,9 +688,9 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #64748b;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
+  color: var(--tx-64748b);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -735,9 +699,9 @@ onMounted(() => {
 }
 
 .btn-refresh:hover {
-  background: #f8fafc;
-  color: #1e293b;
-  border-color: #cbd5e1;
+  background: var(--bg-f8fafc);
+  color: var(--tx-1e293b);
+  border-color: var(--bd-cbd5e1);
 }
 
 /* Filter Tabs */
@@ -745,7 +709,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 18px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   margin-bottom: 20px;
 }
 
@@ -758,18 +722,18 @@ onMounted(() => {
   border: none;
   font-size: 0.875rem; /* 14px */
   font-weight: 500;
-  color: #64748b;
+  color: var(--tx-64748b);
   cursor: pointer;
   position: relative;
   transition: color 0.15s ease;
 }
 
 .tab-btn:hover {
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .tab-btn.active {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   font-weight: 600;
 }
 
@@ -789,20 +753,20 @@ onMounted(() => {
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 9999px;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
 }
 
 .tab-count-pill.pill-success {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 
 /* Loading */
 .table-loading-wrap {
   text-align: center;
   padding: 50px 0;
-  color: #64748b;
+  color: var(--tx-64748b);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -812,7 +776,7 @@ onMounted(() => {
 
 .spin-icon {
   animation: spin 1s linear infinite;
-  color: #2563eb;
+  color: var(--tx-2563eb);
 }
 
 @keyframes spin {
@@ -823,7 +787,7 @@ onMounted(() => {
 .types-table-wrap {
   overflow-x: auto;
   border-radius: 12px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--bd-f1f5f9);
 }
 
 .types-table {
@@ -833,25 +797,25 @@ onMounted(() => {
 }
 
 .types-table thead th {
-  background: #ffffff;
-  color: #64748b;
+  background: var(--bg-ffffff);
+  color: var(--tx-64748b);
   font-size: 0.8125rem; /* 13px */
   font-weight: 600;
   padding: 14px 16px;
   text-align: left;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
   white-space: nowrap;
 }
 
 .types-table tbody td {
   padding: 16px 16px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #334155;
+  border-bottom: 1px solid var(--bd-f1f5f9);
+  color: var(--tx-334155);
   vertical-align: middle;
 }
 
 .types-table tbody tr:hover {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
 }
 
 .sort-order-badge {
@@ -861,8 +825,8 @@ onMounted(() => {
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-475569);
   font-weight: 700;
   font-size: 0.75rem; /* 12px */
 }
@@ -870,21 +834,21 @@ onMounted(() => {
 .code-pill {
   font-family: monospace;
   font-size: 0.8125rem; /* 13px */
-  background: #f8fafc;
-  color: #0f172a;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-f8fafc);
+  color: var(--tx-0f172a);
+  border: 1px solid var(--bd-e2e8f0);
   padding: 3px 8px;
   border-radius: 6px;
 }
 
 .type-title-text {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-size: 0.9375rem; /* 15px */
 }
 
 .type-desc-text {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-size: 0.8125rem; /* 13px */
   max-width: 380px;
   line-height: 1.4;
@@ -907,8 +871,8 @@ onMounted(() => {
 }
 
 .pill-active {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
 }
 
 .pill-active .status-dot {
@@ -916,8 +880,8 @@ onMounted(() => {
 }
 
 .pill-inactive {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
 }
 
 .pill-inactive .status-dot {
@@ -936,8 +900,8 @@ onMounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 7px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+  border: 1px solid var(--bd-e2e8f0);
+  background: var(--bg-ffffff);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -946,8 +910,8 @@ onMounted(() => {
 }
 
 .btn-action-icon:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--bg-f8fafc);
+  border-color: var(--bd-cbd5e1);
 }
 
 .btn-action-outline {
@@ -959,48 +923,48 @@ onMounted(() => {
   font-size: 0.8125rem; /* 13px */
   font-weight: 500;
   cursor: pointer;
-  background: #ffffff;
+  background: var(--bg-ffffff);
   transition: all 0.15s ease;
 }
 
 .btn-edit {
-  border: 1px solid #cbd5e1;
-  color: #334155;
+  border: 1px solid var(--bd-cbd5e1);
+  color: var(--tx-334155);
 }
 
 .btn-edit:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-  color: #0f172a;
+  background: var(--bg-f8fafc);
+  border-color: var(--bd-94a3b8);
+  color: var(--tx-0f172a);
 }
 
 .btn-delete {
-  border: 1px solid #fecaca;
-  color: #dc2626;
+  border: 1px solid var(--bd-fecaca);
+  color: var(--tx-dc2626);
 }
 
 .btn-delete:hover {
-  background: #fef2f2;
-  border-color: #f87171;
+  background: var(--bg-fef2f2);
+  border-color: var(--bd-f87171);
 }
 
 /* Empty State */
 .empty-state-box {
   text-align: center;
   padding: 60px 20px;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
 }
 
 .empty-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--tx-334155);
   margin-top: 12px;
 }
 
 .empty-subtitle {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 4px;
 }
 
@@ -1018,12 +982,12 @@ onMounted(() => {
 }
 
 .type-modal-box {
-  background: #ffffff;
+  background: var(--bg-ffffff);
   border-radius: 16px;
   width: 100%;
   max-width: 520px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
-  border: 1px solid #eef2f6;
+  border: 1px solid var(--bd-eef2f6);
   overflow: hidden;
 }
 
@@ -1032,7 +996,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 18px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd-f1f5f9);
 }
 
 .modal-header-title-wrap {
@@ -1052,21 +1016,21 @@ onMounted(() => {
 }
 
 .modal-icon-primary {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
 }
 
 .modal-title {
   font-size: 1.0625rem; /* 17px */
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
   line-height: 1.3;
 }
 
 .modal-subtitle {
   font-size: 0.8125rem; /* 13px */
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 2px;
 }
 
@@ -1074,7 +1038,7 @@ onMounted(() => {
   background: transparent;
   border: none;
   cursor: pointer;
-  color: #94a3b8;
+  color: var(--tx-94a3b8);
   padding: 6px;
   border-radius: 6px;
   display: flex;
@@ -1084,8 +1048,8 @@ onMounted(() => {
 }
 
 .btn-modal-close:hover {
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--bg-f1f5f9);
+  color: var(--tx-334155);
 }
 
 .modal-body {
@@ -1096,9 +1060,9 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #fef2f2;
-  border: 1px solid #fee2e2;
-  color: #dc2626;
+  background: var(--bg-fef2f2);
+  border: 1px solid var(--bd-fee2e2);
+  color: var(--tx-dc2626);
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 0.8125rem;
@@ -1119,21 +1083,21 @@ onMounted(() => {
   display: block;
   font-size: 0.8125rem; /* 13px */
   font-weight: 600;
-  color: #334155;
+  color: var(--tx-334155);
   margin-bottom: 6px;
 }
 
 .text-danger {
-  color: #dc2626;
+  color: var(--tx-dc2626);
 }
 
 .form-input {
   width: 100%;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 0.875rem; /* 14px */
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-family: inherit;
   outline: none;
   box-sizing: border-box;
@@ -1147,11 +1111,11 @@ onMounted(() => {
 
 .form-textarea {
   width: 100%;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 0.875rem; /* 14px */
-  color: #1e293b;
+  color: var(--tx-1e293b);
   font-family: inherit;
   outline: none;
   box-sizing: border-box;
@@ -1166,10 +1130,10 @@ onMounted(() => {
 }
 
 .status-toggle-wrap {
-  background: #f8fafc;
+  background: var(--bg-f8fafc);
   padding: 12px 14px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
   margin-top: 8px;
   margin-bottom: 8px;
 }
@@ -1189,12 +1153,12 @@ onMounted(() => {
 .toggle-title {
   font-size: 0.875rem; /* 14px */
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
 }
 
 .toggle-desc {
   font-size: 0.75rem; /* 12px */
-  color: #64748b;
+  color: var(--tx-64748b);
   margin-top: 2px;
 }
 
@@ -1204,7 +1168,7 @@ onMounted(() => {
   justify-content: flex-end;
   gap: 10px;
   padding: 14px 24px;
-  background: #f8fafc;
-  border-top: 1px solid #f1f5f9;
+  background: var(--bg-f8fafc);
+  border-top: 1px solid var(--bd-f1f5f9);
 }
 </style>

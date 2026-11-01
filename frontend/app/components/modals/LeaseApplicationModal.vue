@@ -1,25 +1,12 @@
 <template>
   <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
     <div class="modal-content" style="max-width: 660px;">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-          </svg>
-          <div>
-            <h3 style="font-size: 1.15rem; font-weight: 700;">ยื่นคำร้องขอเช่าแผงค้า (Lease Application)</h3>
-            <div style="font-size: 0.8rem; color: var(--primary);">
-              แผงเลขที่: {{ targetStallNumber }} (อ้างอิงการจอง: {{ booking?.booking_number || '-' }})
-            </div>
-          </div>
-        </div>
-        <button class="btn-logout" @click="$emit('close')" aria-label="ปิด">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
+      <AppModalHeader
+        title="ยื่นคำร้องขอเช่าแผงค้า"
+        :subtitle="`แผง ${targetStallNumber} · อ้างอิงการจอง ${booking?.booking_number || '-'}`"
+        icon="document"
+        @close="$emit('close')"
+      />
 
       <!-- Success State -->
       <div v-if="isSuccess" class="modal-body" style="text-align: center; padding: 40px 20px;">
@@ -50,9 +37,9 @@
         <div class="modal-body">
           <!-- Financial Summary calculated from remaining active stalls -->
           <div
-            style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px;"
+            style="background: var(--bg-eff6ff); border: 1px solid var(--bd-bfdbfe); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px;"
           >
-            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: 0.85rem; color: #1e3a8a;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: 0.85rem; color: var(--tx-1e3a8a);">
               <div>
                 <span>แผงค้าที่ยื่นคำร้อง: </span>
                 <strong>{{ targetStallNumber }} ({{ selectedStallRecords.length }} แผง)</strong>
@@ -60,7 +47,7 @@
               <div style="display: flex; gap: 14px; flex-wrap: wrap;">
                 <span>ค่าเช่ารวม: <strong>฿{{ calculatedMonthlyRent.toLocaleString() }}/เดือน</strong></span>
                 <span>เงินมัดจำรวม: <strong>฿{{ calculatedDeposit.toLocaleString() }}</strong></span>
-                <span>รวมแรกเข้า: <strong style="color: #1d4ed8;">฿{{ (calculatedMonthlyRent + calculatedDeposit).toLocaleString() }}</strong></span>
+                <span>รวมแรกเข้า: <strong style="color: var(--tx-1d4ed8);">฿{{ (calculatedMonthlyRent + calculatedDeposit).toLocaleString() }}</strong></span>
               </div>
             </div>
           </div>
@@ -156,119 +143,17 @@
             </div>
           </div>
 
-          <!-- ลำดับที่ 6: สำเนาบัตรประชาชน (Modern Document Attachment UI) -->
-          <div class="form-group upload-section-container">
-            <div class="upload-header-bar">
-              <label class="upload-label" for="app_id_copy">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-                  <circle cx="8" cy="10" r="2"></circle>
-                  <line x1="14" y1="9" x2="18" y2="9"></line>
-                  <line x1="14" y1="13" x2="18" y2="13"></line>
-                  <line x1="6" y1="16" x2="18" y2="16"></line>
-                </svg>
-                <span>สำเนาบัตรประชาชน (ID Card Copy)</span>
-              </label>
-              <span class="upload-badge-spec">PDF, JPG หรือ PNG (ไม่เกิน 3 MB)</span>
-            </div>
-
-            <input
-              ref="idCardInputRef"
-              id="app_id_copy"
-              type="file"
-              class="sr-only"
-              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-              @change="onIDCardCopyChange"
-            />
-
-            <!-- การ์ดพรีวิวไฟล์เมื่อเลือกเอกสารแล้ว -->
-            <div v-if="idCardCopy" class="id-card-preview-box">
-              <div class="preview-thumb-wrap">
-                <img v-if="idCardPreviewUrl" :src="idCardPreviewUrl" alt="ID Card Preview" class="preview-thumb-img" />
-                <div v-else class="preview-pdf-badge">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                  </svg>
-                  <span>PDF</span>
-                </div>
-              </div>
-
-              <div class="preview-details">
-                <div class="preview-filename" :title="idCardCopy.name">{{ idCardCopy.name }}</div>
-                <div class="preview-meta">
-                  <span class="meta-size">{{ formatFileSize(idCardCopy.size) }}</span>
-                  <span class="meta-check">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    <span>พร้อมแนบไฟล์</span>
-                  </span>
-                </div>
-              </div>
-
-              <div class="preview-actions">
-                <button type="button" class="btn-preview-change" @click="triggerFileInput" title="เปลี่ยนไฟล์">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 2v6h-6"></path>
-                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
-                    <path d="M3 22v-6h6"></path>
-                    <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
-                  </svg>
-                  <span>เปลี่ยน</span>
-                </button>
-                <button type="button" class="btn-preview-delete" @click="removeIDCardFile" title="ลบไฟล์">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <!-- กล่อง Dropzone แบบคลีนเมื่อยังไม่ได้เลือกไฟล์ -->
-            <div
-              v-else
-              class="id-card-dropzone"
-              :class="{ 'is-drag-over': isDragging, 'has-error': !!idCardCopyError }"
-              @click="triggerFileInput"
-              @dragover.prevent="isDragging = true"
-              @dragleave.prevent="isDragging = false"
-              @drop.prevent="handleFileDrop"
-            >
-              <div class="dropzone-icon-box">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="17 8 12 3 7 8"></polyline>
-                  <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-              </div>
-              <div class="dropzone-prompt">
-                <div class="prompt-title">
-                  <span class="prompt-link">คลิกเพื่อเลือกไฟล์</span> หรือลากไฟล์มาวางที่นี่
-                </div>
-                <div class="prompt-desc">แนบสำเนาบัตรประจำตัวประชาชน พร้อมรับรองสำเนาถูกต้อง</div>
-              </div>
-              <div class="dropzone-cta-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <span>เลือกไฟล์</span>
-              </div>
-            </div>
-
-            <!-- ข้อความแจ้งเตือน Error -->
-            <div v-if="idCardCopyError" class="upload-error-msg">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
-              <span>{{ idCardCopyError }}</span>
-            </div>
-          </div>
+          <AppFileUpload
+            v-model="idCardCopy"
+            class="form-group"
+            label="สำเนาบัตรประชาชน (ID Card Copy)"
+            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+            :max-size-mb="3"
+            hint="PDF, JPG หรือ PNG ขนาดไม่เกิน 3MB"
+            description="แนบสำเนาบัตรประจำตัวประชาชน พร้อมรับรองสำเนาถูกต้อง"
+            :error="idCardCopyError"
+            @error="idCardCopyError = $event"
+          />
 
           <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--primary); margin: 16px 0 12px;">
             2. ข้อมูลร้านค้าและสินค้าที่ขอจำหน่าย
@@ -316,6 +201,7 @@
 </template>
 
 <script setup lang="ts">
+import AppFileUpload from '~/components/AppFileUpload.vue'
 const props = defineProps<{
   show: boolean
   booking: any
@@ -333,71 +219,11 @@ const { showError } = useAppAlert()
 const submitting = ref(false)
 const idCardCopy = ref<File | null>(null)
 const idCardCopyError = ref('')
-const idCardInputRef = ref<HTMLInputElement | null>(null)
-const isDragging = ref(false)
-const idCardPreviewUrl = ref('')
-
-const triggerFileInput = () => {
-  idCardInputRef.value?.click()
-}
-
-const handleFileSelect = (file: File | null) => {
-  idCardCopyError.value = ''
-  if (idCardPreviewUrl.value) {
-    URL.revokeObjectURL(idCardPreviewUrl.value)
-    idCardPreviewUrl.value = ''
-  }
-  if (!file) {
-    idCardCopy.value = null
-    return
-  }
-  if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type) || file.size > 3 * 1024 * 1024) {
-    idCardCopy.value = null
-    if (idCardInputRef.value) idCardInputRef.value.value = ''
-    idCardCopyError.value = 'กรุณาเลือกไฟล์ PDF, JPG หรือ PNG ขนาดไม่เกิน 3 MB'
-    return
-  }
-  idCardCopy.value = file
-  if (file.type.startsWith('image/')) {
-    idCardPreviewUrl.value = URL.createObjectURL(file)
-  }
-}
-
-const onIDCardCopyChange = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0] || null
-  handleFileSelect(file)
-}
-
-const handleFileDrop = (event: DragEvent) => {
-  isDragging.value = false
-  const file = event.dataTransfer?.files?.[0] || null
-  handleFileSelect(file)
-}
 
 const removeIDCardFile = () => {
-  if (idCardPreviewUrl.value) {
-    URL.revokeObjectURL(idCardPreviewUrl.value)
-    idCardPreviewUrl.value = ''
-  }
   idCardCopy.value = null
   idCardCopyError.value = ''
-  if (idCardInputRef.value) idCardInputRef.value.value = ''
 }
-
-const formatFileSize = (bytes: number) => {
-  if (!bytes || bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
-}
-
-onBeforeUnmount(() => {
-  if (idCardPreviewUrl.value) {
-    URL.revokeObjectURL(idCardPreviewUrl.value)
-  }
-})
 
 const readIDCardCopy = (file: File) => new Promise<string>((resolve, reject) => {
   const reader = new FileReader()
@@ -686,14 +512,14 @@ const handleSubmit = async () => {
   gap: 6px;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin: 0;
 }
 
 .upload-badge-spec {
   font-size: 0.75rem;
-  color: #64748b;
-  background: #f1f5f9;
+  color: var(--tx-64748b);
+  background: var(--bg-f1f5f9);
   padding: 3px 8px;
   border-radius: 6px;
   font-weight: 500;
@@ -703,8 +529,8 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #f8fafc;
-  border: 1.5px dashed #cbd5e1;
+  background: var(--bg-f8fafc);
+  border: 1.5px dashed var(--bd-cbd5e1);
   border-radius: 12px;
   padding: 14px 16px;
   cursor: pointer;
@@ -713,22 +539,22 @@ const handleSubmit = async () => {
 
 .id-card-dropzone:hover,
 .id-card-dropzone.is-drag-over {
-  background: #eff6ff;
+  background: var(--bg-eff6ff);
   border-color: #2563eb;
   transform: translateY(-1px);
 }
 
 .id-card-dropzone.has-error {
-  background: #fef2f2;
-  border-color: #f87171;
+  background: var(--bg-fef2f2);
+  border-color: var(--bd-f87171);
 }
 
 .dropzone-icon-box {
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -749,19 +575,19 @@ const handleSubmit = async () => {
 .prompt-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   margin-bottom: 2px;
 }
 
 .prompt-link {
-  color: #2563eb;
+  color: var(--tx-2563eb);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .prompt-desc {
   font-size: 0.8125rem;
-  color: #64748b;
+  color: var(--tx-64748b);
   line-height: 1.4;
 }
 
@@ -769,9 +595,9 @@ const handleSubmit = async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #334155;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-cbd5e1);
+  color: var(--tx-334155);
   font-size: 0.8125rem;
   font-weight: 600;
   padding: 7px 13px;
@@ -784,8 +610,8 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #ffffff;
-  border: 1px solid #bfdbfe;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-bfdbfe);
   border-radius: 12px;
   padding: 10px 14px;
   box-shadow: 0 2px 6px rgba(37, 99, 235, 0.05);
@@ -796,12 +622,12 @@ const handleSubmit = async () => {
   height: 46px;
   border-radius: 8px;
   overflow: hidden;
-  background: #f1f5f9;
+  background: var(--bg-f1f5f9);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--bd-e2e8f0);
 }
 
 .preview-thumb-img {
@@ -815,8 +641,8 @@ const handleSubmit = async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #dc2626;
-  background: #fee2e2;
+  color: var(--tx-dc2626);
+  background: var(--bg-fee2e2);
   width: 100%;
   height: 100%;
   gap: 1px;
@@ -839,7 +665,7 @@ const handleSubmit = async () => {
 .preview-filename {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--tx-1e293b);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -853,7 +679,7 @@ const handleSubmit = async () => {
 }
 
 .meta-size {
-  color: #64748b;
+  color: var(--tx-64748b);
   font-weight: 500;
 }
 
@@ -861,9 +687,9 @@ const handleSubmit = async () => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #16a34a;
+  color: var(--tx-16a34a);
   font-weight: 600;
-  background: #ecfdf5;
+  background: var(--bg-ecfdf5);
   padding: 1px 7px;
   border-radius: 6px;
 }
@@ -879,9 +705,9 @@ const handleSubmit = async () => {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #2563eb;
+  background: var(--bg-eff6ff);
+  border: 1px solid var(--bd-bfdbfe);
+  color: var(--tx-2563eb);
   font-size: 0.8125rem;
   font-weight: 600;
   padding: 6px 10px;
@@ -891,7 +717,7 @@ const handleSubmit = async () => {
 }
 
 .btn-preview-change:hover {
-  background: #dbeafe;
+  background: var(--bg-dbeafe);
 }
 
 .btn-preview-delete {
@@ -900,16 +726,16 @@ const handleSubmit = async () => {
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: #ffffff;
-  border: 1px solid #fecaca;
-  color: #ef4444;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-fecaca);
+  color: var(--tx-ef4444);
   border-radius: 7px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-preview-delete:hover {
-  background: #fee2e2;
+  background: var(--bg-fee2e2);
 }
 
 .upload-error-msg {
@@ -918,9 +744,9 @@ const handleSubmit = async () => {
   gap: 6px;
   margin-top: 6px;
   font-size: 0.8125rem;
-  color: #dc2626;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  color: var(--tx-dc2626);
+  background: var(--bg-fef2f2);
+  border: 1px solid var(--bd-fecaca);
   padding: 6px 10px;
   border-radius: 7px;
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -34,6 +35,14 @@ func (h *Handler) List(c *gin.Context) {
 	default:
 		c.AbortWithStatus(http.StatusForbidden)
 		return
+	}
+	if rawMarketID := strings.TrimSpace(c.Query("market_id")); rawMarketID != "" {
+		marketID, err := strconv.Atoi(rawMarketID)
+		if err != nil || marketID <= 0 {
+			c.JSON(http.StatusBadRequest, responses.FailRespone(responses.NewAppErr(http.StatusBadRequest, "รหัสตลาดไม่ถูกต้อง")))
+			return
+		}
+		q = q.Where("market_id = ?", marketID)
 	}
 	var debts []models.Debt
 	if err := q.Order("id DESC").Find(&debts).Error; err != nil {

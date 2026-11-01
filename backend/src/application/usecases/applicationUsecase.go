@@ -375,7 +375,9 @@ func (u *useCase) UpdateStatus(id int, userID int, req requests.UpdateApplicatio
 
 	if app.StallIdent != "" {
 		if req.Status == "approved" {
-			_ = u.repo.UpdateStallStatus(app.StallIdent, "occupied")
+			// คำร้องที่อนุมัติแล้วเป็นเพียงการกันแผงไว้เพื่อจัดทำสัญญา
+			// แผงจะเป็น occupied เมื่อสัญญามีผลเท่านั้น
+			_ = u.repo.UpdateStallStatus(app.StallIdent, "reserved")
 		} else if req.Status == "rejected" {
 			_ = u.repo.UpdateStallStatus(app.StallIdent, "available")
 		}

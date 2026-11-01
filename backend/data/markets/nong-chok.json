@@ -81,10 +81,6 @@
         [
           100.8663116,
           13.8560768
-        ],
-        [
-          100.8663062,
-          13.8560407
         ]
       ],
       "floors": [
@@ -8080,12 +8076,12 @@
       "sectionNumber": "02",
       "category": "อาหารสด เนื้อสัตว์ ผักสด และอาหารทะเล",
       "color": "#0284c7",
-      "stallsAvailable": 98,
-      "totalStalls": 98,
-      "realAreaSqm": 3721.1,
+      "stallsAvailable": 91,
+      "totalStalls": 91,
+      "realAreaSqm": 2370.17,
       "centroid": [
-        100.8664201,
-        13.85614581111111
+        100.86637940000001,
+        13.856003755555555
       ],
       "coordinates": [
         [
@@ -8113,20 +8109,16 @@
           13.8563969
         ],
         [
-          100.8664156,
-          13.8568264
+          100.8662735,
+          13.8565686
         ],
         [
-          100.8663272,
-          13.8568395
+          100.8662232,
+          13.8565762
         ],
         [
-          100.8660728,
-          13.8566138
-        ],
-        [
-          100.8659463,
-          13.8558201
+          100.8659526,
+          13.8558564
         ]
       ],
       "floors": [
@@ -8138,93 +8130,6 @@
         }
       ],
       "stalls": [
-        {
-          "code": "NON-02-001",
-          "projectId": "non-02",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 99.31,
-          "widthM": 2.0,
-          "depthM": 49.7,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.8662711,
-              13.8561604
-            ],
-            [
-              100.8662849,
-              13.8561586
-            ],
-            [
-              100.8662872,
-              13.8561583
-            ],
-            [
-              100.8662772,
-              13.8560866
-            ],
-            [
-              100.8661634,
-              13.8561017
-            ],
-            [
-              100.8661734,
-              13.8561733
-            ],
-            [
-              100.8661749,
-              13.8561731
-            ],
-            [
-              100.8661886,
-              13.8561713
-            ],
-            [
-              100.8662024,
-              13.8561695
-            ],
-            [
-              100.8662161,
-              13.8561677
-            ],
-            [
-              100.8662299,
-              13.8561658
-            ],
-            [
-              100.8662436,
-              13.856164
-            ],
-            [
-              100.8662574,
-              13.8561622
-            ],
-            [
-              100.8662711,
-              13.8561604
-            ]
-          ],
-          "center": [
-            100.86622846923076,
-            13.856154807692304
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 0,
-            "name": "ร้านสหกรณ์",
-            "zone": "-",
-            "number": "1"
-          }
-        },
         {
           "code": "NON-02-001-D02",
           "projectId": "non-02",
@@ -8288,57 +8193,6 @@
           "sourceProperties": {
             "FID": 3,
             "name": "แผงค้าเกษตร",
-            "zone": "-",
-            "number": "1"
-          }
-        },
-        {
-          "code": "NON-02-001-D03",
-          "projectId": "non-02",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 398.89,
-          "widthM": 2.0,
-          "depthM": 199.4,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.8665496,
-              13.8559727
-            ],
-            [
-              100.8666137,
-              13.8563791
-            ],
-            [
-              100.8666938,
-              13.856367
-            ],
-            [
-              100.8666298,
-              13.8559606
-            ],
-            [
-              100.8665496,
-              13.8559727
-            ]
-          ],
-          "center": [
-            100.866621725,
-            13.85616985
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": 4,
-            "name": "ศาลาภู่อารีย์",
             "zone": "-",
             "number": "1"
           }
@@ -10178,261 +10032,6 @@
             "name": "ร้านค้า",
             "zone": "-",
             "number": "8"
-          }
-        },
-        {
-          "code": "NON-02-001-D05",
-          "projectId": "non-02",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 202.45,
-          "widthM": 2.0,
-          "depthM": 101.2,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.8663272,
-              13.8568395
-            ],
-            [
-              100.8664156,
-              13.8568264
-            ],
-            [
-              100.8663868,
-              13.8566398
-            ],
-            [
-              100.8662979,
-              13.856653
-            ],
-            [
-              100.8663272,
-              13.8568395
-            ]
-          ],
-          "center": [
-            100.866356875,
-            13.856739675
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": null,
-            "name": "สะพานข้ามคลองแสนแสบ",
-            "zone": "-",
-            "number": "1"
-          }
-        },
-        {
-          "code": "NON-02-001-D06",
-          "projectId": "non-02",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 162.57,
-          "widthM": 2.0,
-          "depthM": 81.3,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.8660728,
-              13.8566138
-            ],
-            [
-              100.8661738,
-              13.8565988
-            ],
-            [
-              100.8661544,
-              13.8564678
-            ],
-            [
-              100.8660524,
-              13.8564829
-            ],
-            [
-              100.8660728,
-              13.8566138
-            ]
-          ],
-          "center": [
-            100.86611334999999,
-            13.856540825
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": null,
-            "name": "อาคารพาณิชย์",
-            "zone": "-",
-            "number": "1"
-          }
-        },
-        {
-          "code": "NON-02-002-D03",
-          "projectId": "non-02",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 162.57,
-          "widthM": 2.0,
-          "depthM": 81.3,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.8660411,
-              13.8564039
-            ],
-            [
-              100.8661421,
-              13.856389
-            ],
-            [
-              100.8661227,
-              13.8562579
-            ],
-            [
-              100.8660207,
-              13.856273
-            ],
-            [
-              100.8660411,
-              13.8564039
-            ]
-          ],
-          "center": [
-            100.86608165000001,
-            13.85633095
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": null,
-            "name": "อาคารพาณิชย์",
-            "zone": "-",
-            "number": "2"
-          }
-        },
-        {
-          "code": "NON-02-003-D03",
-          "projectId": "non-02",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 162.57,
-          "widthM": 2.0,
-          "depthM": 81.3,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.8660163,
-              13.8562538
-            ],
-            [
-              100.8661173,
-              13.8562389
-            ],
-            [
-              100.8660979,
-              13.8561079
-            ],
-            [
-              100.865996,
-              13.8561229
-            ],
-            [
-              100.8660163,
-              13.8562538
-            ]
-          ],
-          "center": [
-            100.866056875,
-            13.856180875
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": null,
-            "name": "อาคารพาณิชย์",
-            "zone": "-",
-            "number": "3"
-          }
-        },
-        {
-          "code": "NON-02-004-D02",
-          "projectId": "non-02",
-          "zone": "โซนหลัก (ชั้น 1)",
-          "status": "available",
-          "areaType": "ร้านค้า/อาคารพาณิชย์",
-          "size": 162.57,
-          "widthM": 2.0,
-          "depthM": 81.3,
-          "entryFee": 52500,
-          "monthlyRent": 3500,
-          "commonFee": 400,
-          "depositFee": 3500,
-          "photo": "/images/stall_3d_perspective.jpg",
-          "coordinates": [
-            [
-              100.8659828,
-              13.8560463
-            ],
-            [
-              100.8660838,
-              13.8560313
-            ],
-            [
-              100.8660644,
-              13.8559003
-            ],
-            [
-              100.8659625,
-              13.8559154
-            ],
-            [
-              100.8659828,
-              13.8560463
-            ]
-          ],
-          "center": [
-            100.866023375,
-            13.855973325
-          ],
-          "floor": "1",
-          "floorName": "ชั้น 1",
-          "floorLevel": 1,
-          "polygonHoles": [],
-          "sourceProperties": {
-            "FID": null,
-            "name": "อาคารพาณิชย์",
-            "zone": "-",
-            "number": "4"
           }
         },
         {
@@ -13431,10 +13030,6 @@
         [
           100.8663117,
           13.8564062
-        ],
-        [
-          100.8662851,
-          13.8560255
         ]
       ],
       "floors": [
@@ -17655,10 +17250,6 @@
         [
           100.866425,
           13.8565953
-        ],
-        [
-          100.866424,
-          13.8565885
         ]
       ],
       "floors": [
@@ -21091,15 +20682,374 @@
       ]
     }
   ],
-  "siteFeatures": [
+  "siteFeatures": [],
+  "facilities": [
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 20,
-        "name": "สำนักงานตลาด",
+      "id": "nong-chok-facility-001",
+      "name": "ร้านสหกรณ์",
+      "type": "building",
+      "coordinates": [
+        100.86622846923076,
+        13.856154807692304
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.8662711,
+              13.8561604
+            ],
+            [
+              100.8662849,
+              13.8561586
+            ],
+            [
+              100.8662872,
+              13.8561583
+            ],
+            [
+              100.8662772,
+              13.8560866
+            ],
+            [
+              100.8661634,
+              13.8561017
+            ],
+            [
+              100.8661734,
+              13.8561733
+            ],
+            [
+              100.8661749,
+              13.8561731
+            ],
+            [
+              100.8661886,
+              13.8561713
+            ],
+            [
+              100.8662024,
+              13.8561695
+            ],
+            [
+              100.8662161,
+              13.8561677
+            ],
+            [
+              100.8662299,
+              13.8561658
+            ],
+            [
+              100.8662436,
+              13.856164
+            ],
+            [
+              100.8662574,
+              13.8561622
+            ],
+            [
+              100.8662711,
+              13.8561604
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": 0,
+        "name": "ร้านสหกรณ์",
         "zone": "-",
         "number": "1"
       },
+      "projectId": "non-02"
+    },
+    {
+      "id": "nong-chok-facility-002",
+      "name": "ศาลาภู่อารีย์",
+      "type": "common-area",
+      "coordinates": [
+        100.866621725,
+        13.85616985
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.8665496,
+              13.8559727
+            ],
+            [
+              100.8666137,
+              13.8563791
+            ],
+            [
+              100.8666938,
+              13.856367
+            ],
+            [
+              100.8666298,
+              13.8559606
+            ],
+            [
+              100.8665496,
+              13.8559727
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": 4,
+        "name": "ศาลาภู่อารีย์",
+        "zone": "-",
+        "number": "1"
+      },
+      "projectId": "non-02"
+    },
+    {
+      "id": "nong-chok-facility-003",
+      "name": "สะพานข้ามคลองแสนแสบ",
+      "type": "access",
+      "coordinates": [
+        100.866356875,
+        13.856739675
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.8663272,
+              13.8568395
+            ],
+            [
+              100.8664156,
+              13.8568264
+            ],
+            [
+              100.8663868,
+              13.8566398
+            ],
+            [
+              100.8662979,
+              13.856653
+            ],
+            [
+              100.8663272,
+              13.8568395
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": null,
+        "name": "สะพานข้ามคลองแสนแสบ",
+        "zone": "-",
+        "number": "1"
+      },
+      "projectId": "non-02"
+    },
+    {
+      "id": "nong-chok-facility-004",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.86611334999999,
+        13.856540825
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.8660728,
+              13.8566138
+            ],
+            [
+              100.8661738,
+              13.8565988
+            ],
+            [
+              100.8661544,
+              13.8564678
+            ],
+            [
+              100.8660524,
+              13.8564829
+            ],
+            [
+              100.8660728,
+              13.8566138
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": null,
+        "name": "อาคารพาณิชย์",
+        "zone": "-",
+        "number": "1"
+      },
+      "projectId": "non-02"
+    },
+    {
+      "id": "nong-chok-facility-005",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.86608165000001,
+        13.85633095
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.8660411,
+              13.8564039
+            ],
+            [
+              100.8661421,
+              13.856389
+            ],
+            [
+              100.8661227,
+              13.8562579
+            ],
+            [
+              100.8660207,
+              13.856273
+            ],
+            [
+              100.8660411,
+              13.8564039
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "2",
+      "sourceProperties": {
+        "FID": null,
+        "name": "อาคารพาณิชย์",
+        "zone": "-",
+        "number": "2"
+      },
+      "projectId": "non-02"
+    },
+    {
+      "id": "nong-chok-facility-006",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.866056875,
+        13.856180875
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.8660163,
+              13.8562538
+            ],
+            [
+              100.8661173,
+              13.8562389
+            ],
+            [
+              100.8660979,
+              13.8561079
+            ],
+            [
+              100.865996,
+              13.8561229
+            ],
+            [
+              100.8660163,
+              13.8562538
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "3",
+      "sourceProperties": {
+        "FID": null,
+        "name": "อาคารพาณิชย์",
+        "zone": "-",
+        "number": "3"
+      },
+      "projectId": "non-02"
+    },
+    {
+      "id": "nong-chok-facility-007",
+      "name": "อาคารพาณิชย์",
+      "type": "building",
+      "coordinates": [
+        100.866023375,
+        13.855973325
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              100.8659828,
+              13.8560463
+            ],
+            [
+              100.8660838,
+              13.8560313
+            ],
+            [
+              100.8660644,
+              13.8559003
+            ],
+            [
+              100.8659625,
+              13.8559154
+            ],
+            [
+              100.8659828,
+              13.8560463
+            ]
+          ]
+        ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "4",
+      "sourceProperties": {
+        "FID": null,
+        "name": "อาคารพาณิชย์",
+        "zone": "-",
+        "number": "4"
+      },
+      "projectId": "non-02"
+    },
+    {
+      "id": "nong-chok-facility-008",
+      "name": "สำนักงานตลาด",
+      "type": "service",
+      "coordinates": [
+        100.86619445,
+        13.8559074
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -21126,16 +21076,25 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": 20,
+        "name": "สำนักงานตลาด",
+        "zone": "-",
+        "number": "1"
       }
     },
     {
-      "type": "Feature",
-      "properties": {
-        "FID": 55,
-        "name": "บ่อบำบัดน้ำเสีย",
-        "zone": "-",
-        "number": "1"
-      },
+      "id": "nong-chok-facility-009",
+      "name": "บ่อบำบัดน้ำเสีย",
+      "type": "sanitation",
+      "coordinates": [
+        100.86678075,
+        13.85644315
+      ],
       "geometry": {
         "type": "Polygon",
         "coordinates": [
@@ -21162,6 +21121,15 @@
             ]
           ]
         ]
+      },
+      "floorId": "1",
+      "sourceZone": "-",
+      "number": "1",
+      "sourceProperties": {
+        "FID": 55,
+        "name": "บ่อบำบัดน้ำเสีย",
+        "zone": "-",
+        "number": "1"
       }
     }
   ]

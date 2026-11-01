@@ -34,3 +34,10 @@ type CreateContractRequest struct {
 type ReviewContractRequest struct {
 	Reason string `json:"reason"`
 }
+
+// UpdateContractWorkflowRequest อัปเดตสถานะติดตามสัญญา (ส่งเฉพาะฟิลด์ที่ต้องการเปลี่ยน; ส่งสตริงว่างเพื่อล้างสถานะ)
+type UpdateContractWorkflowRequest struct {
+	RenewalStatus *string `json:"renewal_status"`
+	ReturnStatus  *string `json:"return_status"`
+	LegalStatus   *string `json:"legal_status"`
+}

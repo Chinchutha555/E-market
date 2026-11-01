@@ -41,6 +41,9 @@ func toContractResponse(c *models.Contract) responses.ContractResponse {
 		MonthlyRental:   c.MonthlyRental,
 		SecurityDeposit: c.SecurityDeposit,
 		Status:          c.ContractState,
+		RenewalStatus:   c.RenewalStatus,
+		ReturnStatus:    c.ReturnStatus,
+		LegalStatus:     c.LegalStatus,
 		CreatedAt:       c.CreatedAt,
 	}
 }
@@ -212,4 +215,48 @@ func (u *useCase) TerminateContract(id int, userID int) error {
 		return responses.NewInternalServerError()
 	}
 	return nil
+}
+
+// ค่าที่อนุญาตของสถานะติดตามสัญญา (ตรงกับที่แดชบอร์ดและตัวกรองหน้าข้อมูลตลาดอ่าน)
+var (
+	allowedRenewalStatuses = map[string]bool{"": true, "pending": true, "reviewing": true, "approved": true, "declined": true}
+	allowedReturnStatuses  = map[string]bool{"": true, "notified": true, "pending_return": true, "inspection": true, "returned": true, "overdue": true}
+	allowedLegalStatuses   = map[string]bool{"": true, "legal_review": true, "in_progress": true, "enforcement": true, "closed": true}
+)
+
+func (u *useCase) UpdateContractWorkflow(id int, userID int, req requests.UpdateContractWorkflowRequest) (*responses.ContractResponse, error) {
+	updates := map[string]interface{}{}
+	set := func(column string, value *string, allowed map[string]bool, label string) error {
+		if value == nil {
+			return nil
+		}
+		v := strings.TrimSpace(*value)
+		if !allowed[v] {
+			return responses.NewAppErr(http.StatusBadRequest, "สถานะ"+label+"ไม่ถูกต้อง")
+		}
+		updates[column] = v
+		return nil
+	}
+	if err := set("renewal_status", req.RenewalStatus, allowedRenewalStatuses, "การต่อสัญญา"); err != nil {
+		return nil, err
+	}
+	if err := set("return_status", req.ReturnStatus, allowedReturnStatuses, "การส่งคืนแผง"); err != nil {
+		return nil, err
+	}
+	if err := set("legal_status", req.LegalStatus, allowedLegalStatuses, "การดำเนินคดี"); err != nil {
+		return nil, err
+	}
+	if len(updates) == 0 {
+		return nil, responses.NewAppErr(http.StatusBadRequest, "ไม่มีข้อมูลที่ต้องการอัปเดต")
+	}
+	contract, err := u.repo.UpdateWorkflow(id, userID, updates)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, responses.NewAppErr(http.StatusNotFound, "ไม่พบข้อมูลสัญญา")
+		}
+		logs.Error(err)
+		return nil, responses.NewInternalServerError()
+	}
+	res := toContractResponse(contract)
+	return &res, nil
 }

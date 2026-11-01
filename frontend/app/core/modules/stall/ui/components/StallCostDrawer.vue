@@ -23,15 +23,15 @@
           <fieldset class="cd-meter">
             <legend>มิเตอร์น้ำ</legend>
             <div class="cd-row"><span>เลขก่อนหน้า</span><strong>{{ bill.prevWater.toLocaleString('th-TH') }}</strong></div>
-            <label>เลขปัจจุบัน<AppInput v-model="form.water" type="number" placeholder="กรอกเลขมิเตอร์" :error="waterError" /></label>
-            <div class="cd-row"><span>ใช้ไป</span><strong>{{ units(form.water, bill.prevWater) }} หน่วย × ฿{{ rates.water }}</strong></div>
+            <label>เลขปัจจุบัน<AppInput v-model="form.water" type="number" placeholder="กรอกเลขมิเตอร์" :error="waterFieldError" /></label>
+            <div class="cd-row"><span>ใช้ไป</span><strong>{{ units(form.water, bill.prevWater) }} หน่วย × ฿{{ chargeRuleOf(code, 'water').rate }}</strong></div>
           </fieldset>
 
           <fieldset class="cd-meter">
             <legend>มิเตอร์ไฟ</legend>
             <div class="cd-row"><span>เลขก่อนหน้า</span><strong>{{ bill.prevElectric.toLocaleString('th-TH') }}</strong></div>
-            <label>เลขปัจจุบัน<AppInput v-model="form.electric" type="number" placeholder="กรอกเลขมิเตอร์" :error="electricError" /></label>
-            <div class="cd-row"><span>ใช้ไป</span><strong>{{ units(form.electric, bill.prevElectric) }} หน่วย × ฿{{ rates.electric }}</strong></div>
+            <label>เลขปัจจุบัน<AppInput v-model="form.electric" type="number" placeholder="กรอกเลขมิเตอร์" :error="electricFieldError" /></label>
+            <div class="cd-row"><span>ใช้ไป</span><strong>{{ units(form.electric, bill.prevElectric) }} หน่วย × ฿{{ chargeRuleOf(code, 'electric').rate }}</strong></div>
           </fieldset>
 
           <div class="cd-total">
@@ -89,11 +89,11 @@
       <template v-if="kind === 'utility' && bill">
         <AppButton variant="secondary" @click="$emit('close')">ปิด</AppButton>
         <AppButton v-if="(bill.status === 'pending' || bill.status === 'overdue') && !dirty" variant="success" @click="markUtilityPaid(bill.stall)">บันทึกชำระ</AppButton>
-        <AppButton v-else variant="primary" :disabled="!utilityValid" @click="saveUtility">{{ bill.status === 'unrecorded' ? 'บันทึกและออกบิล' : 'บันทึกการแก้ไข' }}</AppButton>
+        <AppButton v-else variant="primary" @click="saveUtility">{{ bill.status === 'unrecorded' ? 'บันทึกและออกบิล' : 'บันทึกการแก้ไข' }}</AppButton>
       </template>
       <template v-else-if="kind === 'temp' && stallInfo && !stallInfo.occupied">
         <AppButton variant="secondary" @click="$emit('close')">ปิด</AppButton>
-        <AppButton variant="primary" :disabled="!!conflict" @click="issueTemp">ออกบิล</AppButton>
+        <AppButton variant="primary" @click="issueTemp">ออกบิล</AppButton>
       </template>
       <AppButton v-else variant="secondary" @click="$emit('close')">ปิด</AppButton>
     </footer>
@@ -104,7 +104,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import AppButton from '~/components/AppButton.vue'
 import AppInput from '~/components/AppInput.vue'
-import { BILL_STATUS_LABEL, useStallBilling } from '../../composables/useStallBilling'
+import { BILL_STATUS_LABEL, chargeFor, chargeRuleOf, useStallBilling } from '../../composables/useStallBilling'
 
 // ข้อมูลเป็นข้อมูลจำลอง (mock) ยังไม่เชื่อม API
 const props = defineProps<{
@@ -116,14 +116,16 @@ const props = defineProps<{
 const emit = defineEmits<{ close: []; issued: [code: string] }>()
 
 const {
-  rates, getUtility, saveUtilityReadings, markUtilityPaid,
+  getUtility, saveUtilityReadings, markUtilityPaid,
   tempBillsOf, tempDays, tempTotal, tempConflict, issueTempBill, markTempPaid
 } = useStallBilling()
 
 // ---------- utility ----------
 const bill = computed(() => (props.kind === 'utility' ? getUtility(props.code) : null))
 const form = reactive({ water: '', electric: '' })
+const utilitySubmitted = ref(false)
 const resetForm = () => {
+  utilitySubmitted.value = false
   form.water = bill.value?.currWater == null ? '' : String(bill.value.currWater)
   form.electric = bill.value?.currElectric == null ? '' : String(bill.value.currElectric)
 }
@@ -132,15 +134,20 @@ watch(() => [props.code, props.kind], resetForm, { immediate: true })
 const units = (curr: string, prev: number) => (curr === '' ? '-' : Math.max(0, Number(curr) - prev))
 const waterError = computed(() => (form.water !== '' && bill.value && Number(form.water) < bill.value.prevWater ? 'เลขปัจจุบันต้องไม่น้อยกว่าเลขก่อนหน้า' : ''))
 const electricError = computed(() => (form.electric !== '' && bill.value && Number(form.electric) < bill.value.prevElectric ? 'เลขปัจจุบันต้องไม่น้อยกว่าเลขก่อนหน้า' : ''))
+const waterFieldError = computed(() => utilitySubmitted.value ? (form.water === '' ? 'กรุณากรอกเลขมิเตอร์น้ำปัจจุบัน' : waterError.value) : '')
+const electricFieldError = computed(() => utilitySubmitted.value ? (form.electric === '' ? 'กรุณากรอกเลขมิเตอร์ไฟปัจจุบัน' : electricError.value) : '')
 const utilityValid = computed(() => form.water !== '' && form.electric !== '' && !waterError.value && !electricError.value)
 const utilityPreview = computed(() => {
   if (!bill.value || !utilityValid.value) return 0
-  return (Number(form.water) - bill.value.prevWater) * rates.water + (Number(form.electric) - bill.value.prevElectric) * rates.electric
+  const water = chargeFor(chargeRuleOf(props.code, 'water'), Number(form.water) - bill.value.prevWater) ?? 0
+  const electric = chargeFor(chargeRuleOf(props.code, 'electric'), Number(form.electric) - bill.value.prevElectric) ?? 0
+  return water + electric
 })
 const dirty = computed(() =>
   !!bill.value && (form.water !== String(bill.value.currWater ?? '') || form.electric !== String(bill.value.currElectric ?? ''))
 )
 const saveUtility = () => {
+  utilitySubmitted.value = true
   if (!bill.value || !utilityValid.value) return
   saveUtilityReadings(bill.value.stall, Number(form.water), Number(form.electric))
   resetForm()
@@ -185,38 +192,38 @@ const issueTemp = () => {
 </script>
 
 <style scoped>
-.cd-drawer { position: absolute; z-index: 65; top: calc(var(--mp-top, 114px) + 58px); right: 68px; bottom: 18px; box-sizing: border-box; width: min(380px, calc(100% - 36px)); display: flex; flex-direction: column; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 18px 44px rgba(15, 23, 42, .22); overflow: hidden; }
-.cd-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid #f1f5f9; }
-.cd-eyebrow { color: #2563eb; font-size: .8125rem; font-weight: 600; }
-.cd-head h3 { margin: 2px 0 0; color: #0f172a; font-size: 1.125rem; font-weight: 700; }
-.cd-close { flex: 0 0 auto; width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; cursor: pointer; }
-.cd-close:hover { background: #f1f5f9; }
+.cd-drawer { position: absolute; z-index: 65; top: calc(var(--mp-top, 114px) + 58px); right: 68px; bottom: 18px; box-sizing: border-box; width: min(380px, calc(100% - 36px)); display: flex; flex-direction: column; background: var(--bg-ffffff); border: 1px solid var(--bd-e2e8f0); border-radius: 16px; box-shadow: 0 18px 44px rgba(15, 23, 42, .22); overflow: hidden; }
+.cd-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid var(--bd-f1f5f9); }
+.cd-eyebrow { color: var(--tx-2563eb); font-size: .8125rem; font-weight: 600; }
+.cd-head h3 { margin: 2px 0 0; color: var(--tx-0f172a); font-size: 1.125rem; font-weight: 700; }
+.cd-close { flex: 0 0 auto; width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--bd-e2e8f0); border-radius: 8px; background: var(--bg-ffffff); color: var(--tx-475569); cursor: pointer; }
+.cd-close:hover { background: var(--bg-f1f5f9); }
 .cd-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; -webkit-overflow-scrolling: touch; }
-.cd-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid #f1f5f9; }
-.cd-tenant { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1px solid #eef2f6; border-radius: 12px; background: #f8fafc; }
-.cd-tenant small { display: block; color: #64748b; font-size: .8125rem; font-weight: 500; }
-.cd-tenant strong { color: #1e293b; font-size: .9375rem; font-weight: 700; }
-.cd-meter { margin: 0; padding: 12px 14px 14px; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
-.cd-meter legend { padding: 0 6px; color: #334155; font-size: .875rem; font-weight: 700; }
-.cd-meter label, .cd-field { display: flex; flex-direction: column; gap: 6px; color: #475569; font-size: .875rem; font-weight: 600; }
-.cd-row { display: flex; justify-content: space-between; gap: 8px; color: #64748b; font-size: .875rem; font-weight: 500; }
-.cd-row strong { color: #1e293b; font-weight: 700; }
+.cd-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--bd-f1f5f9); }
+.cd-tenant { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1px solid var(--bd-eef2f6); border-radius: 12px; background: var(--bg-f8fafc); }
+.cd-tenant small { display: block; color: var(--tx-64748b); font-size: .8125rem; font-weight: 500; }
+.cd-tenant strong { color: var(--tx-1e293b); font-size: .9375rem; font-weight: 700; }
+.cd-meter { margin: 0; padding: 12px 14px 14px; border: 1px solid var(--bd-e2e8f0); border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
+.cd-meter legend { padding: 0 6px; color: var(--tx-334155); font-size: .875rem; font-weight: 700; }
+.cd-meter label, .cd-field { display: flex; flex-direction: column; gap: 6px; color: var(--tx-475569); font-size: .875rem; font-weight: 600; }
+.cd-row { display: flex; justify-content: space-between; gap: 8px; color: var(--tx-64748b); font-size: .875rem; font-weight: 500; }
+.cd-row strong { color: var(--tx-1e293b); font-weight: 700; }
 .cd-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.cd-total { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 12px; background: #eff6ff; color: #475569; font-size: .9375rem; font-weight: 600; }
-.cd-total strong { color: #2563eb; font-size: 1.25rem; font-weight: 800; }
+.cd-total { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 12px; background: var(--bg-eff6ff); color: var(--tx-475569); font-size: .9375rem; font-weight: 600; }
+.cd-total strong { color: var(--tx-2563eb); font-size: 1.25rem; font-weight: 800; }
 .cd-note { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: .875rem; font-weight: 500; line-height: 1.5; }
-.cd-note.is-warn { background: #fef3c7; color: #b45309; }
-.cd-sub { margin: 4px 0 -4px; color: #1e293b; font-size: .9375rem; font-weight: 700; }
-.cd-existing h4 { margin: 0 0 8px; color: #1e293b; font-size: .9375rem; font-weight: 700; }
-.cd-existing-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+.cd-note.is-warn { background: var(--bg-fef3c7); color: var(--tx-b45309); }
+.cd-sub { margin: 4px 0 -4px; color: var(--tx-1e293b); font-size: .9375rem; font-weight: 700; }
+.cd-existing h4 { margin: 0 0 8px; color: var(--tx-1e293b); font-size: .9375rem; font-weight: 700; }
+.cd-existing-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--bd-f1f5f9); }
 .cd-existing-row > div { flex: 1 1 140px; min-width: 0; }
-.cd-existing-row strong { display: block; color: #1e293b; font-size: .875rem; font-weight: 700; }
-.cd-existing-row small { color: #94a3b8; font-size: .8125rem; font-weight: 500; }
+.cd-existing-row strong { display: block; color: var(--tx-1e293b); font-size: .875rem; font-weight: 700; }
+.cd-existing-row small { color: var(--tx-94a3b8); font-size: .8125rem; font-weight: 500; }
 .cd-badge { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: .8125rem; font-weight: 600; white-space: nowrap; }
-.cd-badge.is-pending { background: #fef3c7; color: #d97706; }
-.cd-badge.is-paid { background: #dcfce7; color: #15803d; }
-.cd-badge.is-overdue { background: #fee2e2; color: #dc2626; }
-.cd-badge.is-unrecorded { background: #f1f5f9; color: #64748b; }
+.cd-badge.is-pending { background: var(--bg-fef3c7); color: var(--tx-d97706); }
+.cd-badge.is-paid { background: var(--bg-dcfce7); color: var(--tx-15803d); }
+.cd-badge.is-overdue { background: var(--bg-fee2e2); color: var(--tx-dc2626); }
+.cd-badge.is-unrecorded { background: var(--bg-f1f5f9); color: var(--tx-64748b); }
 @media (max-width: 1000px) { .cd-drawer { top: calc(var(--mp-top-2row, 208px) + 54px); } }
 @media (max-width: 720px) { .cd-drawer { top: auto; right: 10px; left: 10px; bottom: 10px; width: auto; max-height: 70%; } }
 </style>

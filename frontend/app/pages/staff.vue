@@ -37,7 +37,7 @@ definePageMeta({
 
 <style scoped>
 .staff-entry-skeleton { padding: 40px; display: grid; gap: 16px; }
-.staff-entry-skeleton span { display: block; height: 76px; border-radius: 16px; background: linear-gradient(90deg,#eef2f7 25%,#f8fafc 50%,#eef2f7 75%); background-size: 200% 100%; animation: staff-shimmer 1.4s infinite; }
+.staff-entry-skeleton span { display: block; height: 76px; border-radius: 16px; background: linear-gradient(90deg,var(--bg-eef2f7) 25%,var(--bg-f8fafc) 50%,var(--bg-eef2f7) 75%); background-size: 200% 100%; animation: staff-shimmer 1.4s infinite; }
 .staff-entry-skeleton span:last-child { height: 520px; }
 @keyframes staff-shimmer { to { background-position: -200% 0; } }
 </style>
