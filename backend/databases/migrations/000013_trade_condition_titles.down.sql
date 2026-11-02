@@ -1,0 +1,1 @@
+ALTER TABLE market_trade_conditions DROP COLUMN title;

@@ -31,7 +31,7 @@ func (h *Handler) List(c *gin.Context) {
 		} else {
 			q = q.Where("market_id IN ?", ids)
 		}
-	case "admin", "bureau_director":
+	case "admin", "bureau_director", "finance":
 	default:
 		c.AbortWithStatus(http.StatusForbidden)
 		return
@@ -82,4 +82,38 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 	c.JSON(201, responses.SuccessResponse(debt, 201))
+}
+
+func (h *Handler) Pay(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, responses.FailRespone(responses.NewAppErr(http.StatusBadRequest, "รหัสรายการหนี้ไม่ถูกต้อง")))
+		return
+	}
+	var debt models.Debt
+	if err := h.db.Where("id = ?", id).First(&debt).Error; err != nil {
+		c.JSON(http.StatusNotFound, responses.FailRespone(responses.NewAppErr(http.StatusNotFound, "ไม่พบรายการหนี้")))
+		return
+	}
+	role, userID := middlewares.GetUserRole(c), middlewares.GetUserID(c)
+	if role == "tenant" && debt.TenantID != userID {
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+	if err := h.db.Model(&debt).Update("status", "paid").Error; err != nil {
+		c.JSON(http.StatusInternalServerError, responses.FailRespone(responses.NewAppErr(http.StatusInternalServerError, "ไม่สามารถบันทึกการชำระหนี้")))
+		return
+	}
+	var remaining int64
+	h.db.Model(&models.Debt{}).Where("tenant_id = ? AND status = 'outstanding'", debt.TenantID).Count(&remaining)
+	if remaining == 0 {
+		_ = h.db.Model(&models.Application{}).
+			Where("created_by = ? AND application_state = 'debt_pending'", debt.TenantID).
+			Updates(map[string]interface{}{
+				"application_state": "pending_officer",
+				"review_note":       "ผู้เช่าชำระหนี้ค้างเรียบร้อยแล้ว ส่งให้เจ้าหน้าที่ตรวจสอบอีกครั้ง",
+			}).Error
+	}
+	debt.Status = "paid"
+	c.JSON(http.StatusOK, responses.SuccessResponse(debt, http.StatusOK))
 }

@@ -116,6 +116,9 @@ const homeLink = computed(() => user.value?.role === 'staff' && assignedMarket.v
 const roleLabel = computed(() => {
   if (user.value?.role === 'tenant') return 'ผู้เช่าแผงค้า'
   if (user.value?.role === 'staff') return assignedMarket.value ? `เจ้าหน้าที่${assignedMarket.value.name}` : 'เจ้าหน้าที่ตลาด'
+  if (user.value?.role === 'finance') return 'เจ้าหน้าที่ฝ่ายการคลัง'
+  if (user.value?.role === 'market_director') return 'ผู้อำนวยการตลาด'
+  if (user.value?.role === 'bureau_director') return 'ผู้อำนวยการสำนักตลาด'
   return 'ผู้ดูแลระบบตลาด กทม. (Admin)'
 })
 

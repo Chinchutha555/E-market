@@ -39,6 +39,9 @@ func DirectorSignature(db *gorm.DB, director string) gin.HandlerFunc {
 			return
 		}
 		data, kind := app.MarketDirectorSignature, app.MarketDirectorSignatureType
+		if director == "finance" {
+			data, kind = app.FinanceSignature, app.FinanceSignatureType
+		}
 		if director == "bureau" {
 			data, kind = app.BureauDirectorSignature, app.BureauDirectorSignatureType
 		}

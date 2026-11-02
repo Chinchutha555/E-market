@@ -26,7 +26,7 @@ func (h *Handler) scopedQuery(c *gin.Context) *gorm.DB {
 	switch role {
 	case "staff":
 		return query.Where("recipient_role IN ?", []string{"officer", "staff"})
-	case "tenant", "market_director", "bureau_director", "admin":
+	case "tenant", "market_director", "bureau_director", "admin", "finance":
 		return query.Where("recipient_role = ?", role)
 	default:
 		return query.Where("1 = 0")

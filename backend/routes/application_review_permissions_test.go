@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -49,7 +50,7 @@ func TestApplicationReviewerPermissions(t *testing.T) {
 	otp := ""
 	call := func(user models.User, action string) int {
 		token, _ := helpers.GenerateToken(user.ID, user.Username, user.Role)
-		payload, _ := json.Marshal(map[string]string{"action": action, "otp": otp, "comment": "checked", "signature_base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="})
+		payload, _ := json.Marshal(map[string]interface{}{"officer_review": map[string]interface{}{"stall_status": "none"}, "market_director_review": map[string]interface{}{"debt_status": "none"}, "bureau_director_review": map[string]interface{}{"decision": action}, "action": action, "otp": otp, "comment": "checked", "signature_base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="})
 		req := httptest.NewRequest("POST", "/api/v1/applications/"+strconv.Itoa(app.ID)+"/action", bytes.NewReader(payload))
 		req.Header.Set("Authorization", "Bearer "+token)
 		req.Header.Set("Content-Type", "application/json")
@@ -136,6 +137,12 @@ func TestApplicationReviewerPermissions(t *testing.T) {
 	var saved models.Application
 	if err := db.First(&saved, app.ID).Error; err != nil {
 		t.Fatal(err)
+	}
+	if strings.TrimSpace(saved.MarketDirectorReviewJSON) != "" || !strings.Contains(saved.BureauDirectorReviewJSON, "approve") {
+		t.Fatal("market director should not record debt review; bureau decision must be saved")
+	}
+	if !strings.Contains(saved.OfficerReviewJSON, "stall_status") {
+		t.Fatal("officer review was not persisted")
 	}
 	if saved.ApplicationState != "approved" || len(saved.OfficerSignature) == 0 || len(saved.MarketDirectorSignature) == 0 || len(saved.BureauDirectorSignature) == 0 {
 		t.Fatal("approval or reviewer signatures were not saved")

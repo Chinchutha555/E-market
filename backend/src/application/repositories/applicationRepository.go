@@ -3,6 +3,7 @@ package repositories
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"emarket-api/models"
@@ -55,24 +56,29 @@ func (r *repository) fillRentalTypes(apps []models.Application) error {
 		return nil
 	}
 	var bookings []models.Booking
-	if err := r.conn.Select("id", "rental_type", "booking_no").Where("id IN ?", ids).Find(&bookings).Error; err != nil {
+	if err := r.conn.Select("id", "rental_type", "rental_type_label", "requires_contract", "booking_no").Where("id IN ?", ids).Find(&bookings).Error; err != nil {
 		return err
 	}
-	numbers := make(map[int]string, len(bookings))
-	types := make(map[int]string, len(bookings))
+	numbers, types, codes := map[int]string{}, map[int]string{}, map[int]string{}
+	requirements := map[int]*bool{}
 	for _, booking := range bookings {
-		numbers[booking.ID] = booking.BookingNo
-		if booking.RentalType == "trial" || booking.RentalType == "temporary" || booking.RentalType == "contract" {
+		numbers[booking.ID], codes[booking.ID], requirements[booking.ID] = booking.BookingNo, booking.RentalType, booking.RequiresContract
+		if booking.RentalType != "" {
 			types[booking.ID] = booking.RentalType
+			if booking.RentalType != "trial" && booking.RentalType != "temporary" && booking.RentalType != "contract" && booking.RentalTypeLabel != "" {
+				types[booking.ID] = booking.RentalTypeLabel
+			}
 		}
 	}
 	for i := range apps {
-		if apps[i].BookingID != nil {
-			apps[i].BookingNumber = numbers[*apps[i].BookingID]
+		if apps[i].BookingID == nil {
+			continue
 		}
-		if apps[i].BookingID != nil && (apps[i].ProposedRentType == "" || apps[i].ProposedRentType == "monthly") {
-			if value := types[*apps[i].BookingID]; value != "" {
-				apps[i].ProposedRentType = value
+		id := *apps[i].BookingID
+		apps[i].BookingNumber, apps[i].RequiresContract = numbers[id], requirements[id]
+		if apps[i].ProposedRentType == "" || apps[i].ProposedRentType == "monthly" || apps[i].ProposedRentType == codes[id] {
+			if types[id] != "" {
+				apps[i].ProposedRentType = types[id]
 			}
 		}
 	}
@@ -152,6 +158,7 @@ func (r *repository) FindByID(id int) (*models.Application, error) {
 	app.DocumentNumber = items[0].DocumentNumber
 	app.ProposedRentType = items[0].ProposedRentType
 	app.BookingNumber = items[0].BookingNumber
+	app.RequiresContract = items[0].RequiresContract
 	return &app, nil
 }
 
@@ -188,18 +195,69 @@ func (r *repository) Create(app *models.Application) error {
 	}
 
 	return r.conn.Transaction(func(tx *gorm.DB) error {
-		if app.BookingID != nil && (app.ProposedRentType == "" || app.ProposedRentType == "monthly") {
+		if app.BookingID != nil {
 			var booking models.Booking
-			if err := tx.Select("id", "rental_type").Where("id = ?", *app.BookingID).First(&booking).Error; err == nil {
-				if booking.RentalType == "trial" || booking.RentalType == "temporary" || booking.RentalType == "contract" {
+			if err := tx.Where("id = ?", *app.BookingID).First(&booking).Error; err == nil {
+				if booking.RentalType != "" {
 					app.ProposedRentType = booking.RentalType
+				}
+				options := models.BookingDurationOptions(&booking)
+				if booking.TradeOptionsJSON == "" && booking.MarketID != nil && booking.RentalType != "" {
+					var setting models.MarketTradeCondition
+					err := tx.Where("market_id = ? AND trade_type = ?", *booking.MarketID, booking.RentalType).First(&setting).Error
+					if err == nil {
+						if configured := setting.DurationOptions(); len(configured) > 0 {
+							options = configured
+						}
+					} else if err != gorm.ErrRecordNotFound {
+						return err
+					}
+				}
+				if len(options) > 0 {
+					if app.TradeOptionID == "" && len(options) == 1 {
+						app.TradeOptionID = options[0].ID
+					}
+					var selected *models.TradeDurationOption
+					for i := range options {
+						if options[i].ID == app.TradeOptionID {
+							selected = &options[i]
+							break
+						}
+					}
+					if selected == nil {
+						return responses.NewAppErr(422, "กรุณาเลือกระยะเวลาที่เจ้าหน้าที่กำหนด")
+					}
+					app.TradeDuration, app.TradeDurationUnit = selected.Duration, selected.Unit
+					app.RequestedStartDate = ""
+					app.TradeStartDate = ""
+					app.TradeEndDate = ""
+
+					switch selected.Unit {
+					case "years":
+						app.LeaseTermMonths = selected.Duration * 12
+					case "months":
+						app.LeaseTermMonths = selected.Duration
+					case "days":
+						app.LeaseTermMonths = 0
+					default:
+						return responses.NewAppErr(422, "ระยะเวลาไม่ถูกต้อง")
+					}
+				} else if booking.RentalType != "" {
+					return responses.NewAppErr(422, "ไม่พบระยะเวลาที่เจ้าหน้าที่กำหนด กรุณาติดต่อเจ้าหน้าที่")
 				}
 			} else if err != gorm.ErrRecordNotFound {
 				return err
 			}
 		}
+
 		if err := tx.Create(app).Error; err != nil {
 			return err
+		}
+		if app.TradeDuration > 0 && app.TradeDurationUnit == "days" {
+			app.LeaseTermMonths = 0
+			if err := tx.Model(app).UpdateColumn("lease_term_months", 0).Error; err != nil {
+				return err
+			}
 		}
 
 		// Only link bookings and update stall status for stall_lease applications
@@ -361,6 +419,45 @@ func (r *repository) Update(app *models.Application) error {
 		if err := tx.Save(app).Error; err != nil {
 			return err
 		}
+		if app.ApplicationState == "debt_pending" && app.MarketDirectorReviewJSON != "" && app.CreatedBy != nil && *app.CreatedBy > 0 {
+			var review models.MarketDirectorReview
+			if json.Unmarshal([]byte(app.MarketDirectorReviewJSON), &review) == nil && review.DebtStatus == "has" && review.DebtAmount > 0 {
+				mktID := 1
+				if app.MarketID != nil && *app.MarketID > 0 {
+					mktID = *app.MarketID
+				}
+				desc := fmt.Sprintf("หนี้ค้างชำระตามคำร้อง %s (แผง %s)", app.ApplicationNo, app.StallIdent)
+				var existingCount int64
+				tx.Model(&models.Debt{}).Where("tenant_id = ? AND description = ? AND status = 'outstanding'", *app.CreatedBy, desc).Count(&existingCount)
+				if existingCount == 0 {
+					createdBy := 0
+					if app.UpdatedBy != nil {
+						createdBy = *app.UpdatedBy
+					}
+					_ = tx.Create(&models.Debt{
+						TenantID:     *app.CreatedBy,
+						MarketID:     mktID,
+						Description:  desc,
+						AmountSatang: int64(review.DebtAmount*100 + 0.5),
+						Status:       "outstanding",
+						CreatedBy:    createdBy,
+					}).Error
+				}
+				_ = tx.Create(&models.Notification{
+					RecipientRole:   "tenant",
+					RecipientUserID: app.CreatedBy,
+					RecipientName:   app.ApplicantName,
+					Type:            "debt_pending",
+					StatusCode:      "debt_pending",
+					StatusLabel:     "รอชำระหนี้ค้าง",
+					Title:           fmt.Sprintf("พบหนี้ค้างชำระ คำร้อง %s", app.ApplicationNo),
+					Message:         fmt.Sprintf("ฝ่ายการคลังตรวจพบหนี้ค้างชำระ จำนวน %.2f บาท กรุณาชำระหนี้ค้างก่อนส่งให้เจ้าหน้าที่ตรวจสอบอีกครั้ง", review.DebtAmount),
+					StallNumber:     app.StallIdent,
+					MarketName:      app.MarketName,
+					TargetURL:       fmt.Sprintf("/applications/%d", app.ID),
+				}).Error
+			}
+		}
 		if app.ApplicationState == "approved" {
 			var market models.Market
 			if app.MarketID != nil {
@@ -370,8 +467,86 @@ func (r *repository) Update(app *models.Application) error {
 			if err := tx.Create(&n).Error; err != nil {
 				return err
 			}
+			if app.ApplicationType == "stall_lease" && (app.RequiresContract == nil || *app.RequiresContract) && app.CreatedBy != nil {
+				var existing int64
+				if err := tx.Model(&models.Contract{}).Where("application_id = ? AND status = 'A'", app.ID).Count(&existing).Error; err != nil {
+					return err
+				}
+				if existing == 0 {
+					contractNo := fmt.Sprintf("CTR-%s-%06d", now.Format("20060102"), now.UnixMicro()%1000000)
+					templateKind := "standard"
+					rentalType := strings.ToLower(strings.TrimSpace(app.ProposedRentType))
+					if strings.Contains(rentalType, "trial") || strings.Contains(rentalType, "ทดลอง") {
+						templateKind = "trial"
+					} else if strings.Contains(rentalType, "temporary") || strings.Contains(rentalType, "ชั่วคราว") {
+						templateKind = "temporary"
+					}
+					var template models.MarketContractTemplate
+					if app.MarketID != nil {
+						query := tx.Where("market_id = ? AND is_active = ?", *app.MarketID, true)
+						if err := query.Where("contract_kind = ?", templateKind).Order("sort_order ASC, id ASC").First(&template).Error; err == gorm.ErrRecordNotFound && templateKind != "standard" {
+							_ = tx.Where("market_id = ? AND is_active = ? AND contract_kind = ?", *app.MarketID, true, "standard").Order("sort_order ASC, id ASC").First(&template).Error
+						}
+						if template.ID == 0 {
+							_ = tx.Where("market_id = ? AND is_active = ?", *app.MarketID, true).Order("sort_order ASC, id ASC").First(&template).Error
+						}
+					}
+					tenantName, tenantPhone, tenantEmail := app.ApplicantName, app.ApplicantPhone, app.ApplicantEmail
+					var tenant models.User
+					if tx.Select("full_name", "phone", "email").First(&tenant, *app.CreatedBy).Error == nil {
+						if strings.TrimSpace(tenantName) == "" {
+							tenantName = tenant.FullName
+						}
+						if strings.TrimSpace(tenantPhone) == "" {
+							tenantPhone = tenant.Phone
+						}
+						if strings.TrimSpace(tenantEmail) == "" {
+							tenantEmail = tenant.Email
+						}
+					}
+					tenantIDCard := app.ApplicantIDCard
+					if strings.TrimSpace(tenantIDCard) == "" && app.BookingID != nil {
+						var booking models.Booking
+						if tx.Select("applicant_id_card").First(&booking, *app.BookingID).Error == nil {
+							tenantIDCard = booking.ApplicantIdCard
+						}
+					}
+					draft := models.Contract{
+						ContractTemplateID: &template.ID, ContractTemplateCode: template.Code,
+						ContractTemplateTitle: template.Title, ContractTemplateKind: template.ContractKind,
+						ContractTemplateDescription: template.Description,
+						ContractNumber:              contractNo, ApplicationID: &app.ID, StallID: app.StallID,
+						StallIdent: app.StallIdent, MarketID: app.MarketID, TenantUserID: app.CreatedBy,
+						TenantName: tenantName, TenantPhone: tenantPhone,
+						TenantIDCard: tenantIDCard, TenantEmail: tenantEmail,
+						TenantAddress: app.ApplicantAddress, ShopName: app.ShopName,
+						BusinessType: app.ProductCategory, BillingCycle: "monthly", TermsAndConditions: template.Description,
+						ContractState: "draft", Status: "A", CreatedAt: now, UpdatedAt: now,
+					}
+					if app.UpdatedBy != nil {
+						draft.CreatedBy, draft.UpdatedBy = app.UpdatedBy, app.UpdatedBy
+					}
+					if err := tx.Create(&draft).Error; err != nil {
+						return err
+					}
+				}
+				contractNotification := models.Notification{
+					RecipientRole: "officer",
+					Type:          "contract_draft",
+					StatusCode:    "draft",
+					StatusLabel:   "พร้อมร่างสัญญา",
+					Title:         "คำร้องได้รับอนุมัติแล้ว",
+					Message:       "คำร้องผ่านการอนุมัติจาก ผอ.สำนักแล้ว กรุณาร่างสัญญาเช่า",
+					MarketName:    market.Name,
+					StallNumber:   app.StallIdent,
+					TargetURL:     "/contracts?status=draft",
+				}
+				if err := tx.Create(&contractNotification).Error; err != nil {
+					return err
+				}
+			}
 		}
-		if app.StallIdent != "" && app.ApplicationState == "rejected" {
+		if app.StallIdent != "" && (app.ApplicationState == "rejected" || app.ApplicationState == "cancelled") {
 			var linkedBookings []models.Booking
 			tx.Model(&models.Booking{}).
 				Where("stall_ident = ? AND status = 'A' AND booking_status IN ('lease_applied', 'interested')", app.StallIdent).
@@ -394,7 +569,7 @@ func (r *repository) Update(app *models.Application) error {
 				})
 				tlBytes, _ := json.Marshal(tl)
 				_ = tx.Model(&models.Booking{}).Where("id = ?", bk.ID).Updates(map[string]interface{}{
-					"booking_status":   "rejected",
+					"booking_status":   app.ApplicationState,
 					"queue_number":     0,
 					"rejection_reason": reasonNote,
 					"note":             reasonNote,

@@ -8,6 +8,24 @@ type ContractFilter struct {
 	Search     string `form:"search"`
 	Page       string `form:"page"`
 	Limit      string `form:"limit"`
+	ViewerRole string `form:"-"`
+}
+
+type SaveContractDraftRequest struct {
+	TenantEmail        string  `json:"tenant_email"`
+	TenantAddress      string  `json:"tenant_address"`
+	BusinessType       string  `json:"business_type"`
+	BillingCycle       string  `json:"billing_cycle"`
+	TermsAndConditions string  `json:"terms_and_conditions"`
+	TenantName         string  `json:"tenant_name"`
+	TenantPhone        string  `json:"tenant_phone"`
+	TenantIDCard       string  `json:"tenant_id_card"`
+	ShopName           string  `json:"shop_name"`
+	StartDate          string  `json:"start_date"`
+	EndDate            string  `json:"end_date"`
+	MonthlyRental      float64 `json:"monthly_rental"`
+	SecurityDeposit    float64 `json:"security_deposit"`
+	AdvancePayment     float64 `json:"advance_payment"`
 }
 
 type CreateContractRequest struct {

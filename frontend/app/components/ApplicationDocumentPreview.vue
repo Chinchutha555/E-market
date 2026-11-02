@@ -20,7 +20,7 @@
         </template>
         <template v-else>
         <div class="document-tools"><div class="zoom-controls"><AppButton size="sm" variant="outline" :disabled="zoom <= 70" @click="zoom = Math.max(70, zoom - 10)">−</AppButton><span>{{ zoom }}%</span><AppButton size="sm" variant="outline" :disabled="zoom >= 180" @click="zoom = Math.min(180, zoom + 10)">+</AppButton><AppButton size="sm" variant="ghost" @click="zoom = 100">ขนาดปกติ</AppButton></div></div>
-        <p v-if="signatureLoadError" class="signature-load-error" role="alert">{{ signatureLoadError }} <button type="button" @click="loadReviewSignatures(application)">ลองอีกครั้ง</button></p>
+
         <div class="document-scroll">
           <article ref="documentPaper" class="document-paper" :style="{ zoom: zoom / 100 }">
 <template v-if="application.application_type !== 'general'">
@@ -43,9 +43,25 @@
               <p>ข้าพเจ้าได้อ่านและเข้าใจหลักเกณฑ์ เงื่อนไข และวิธีการให้เช่า ทั้งหมดแล้วทุกประการ</p>
               <div class="document-sign">ลงชื่อ <span class="fill-line signature">{{ savedSignature }}</span> ผู้ขอสิทธิ์<br><span class="tenant-name">( {{ application.applicant_name || '..................................................' }} )</span></div>
             </section>
-            <section class="document-section"><strong>2. ส่วนของเจ้าหน้าที่</strong><br><strong>2.1 งานผลประโยชน์และเร่งรัดหนี้สิน/ผู้จัดการตลาด</strong><div class="document-indent">□ ไม่มีแผงค้า<br>□ มีแผงค้า จำนวน ............ แผง เลขที่ ........................ โครงการ ........................ ประเภท ........................<br>□ สัญญาอื่น ๆ (เช่า) สำนักงานตลาดกรุงเทพมหานคร<br>□ อื่น ๆ ..............................................................................................<br>□ คุณสมบัติและเอกสารถูกต้องครบถ้วน ได้แก่ ลงทะเบียนรับเรื่อง/ใบจองจากระบบ ........................</div><div class="document-sign">ลงชื่อ <span class="officer-signature"><img v-if="reviewerSignatures[0].url" :src="reviewerSignatures[0].url" alt="ลายเซ็นเจ้าหน้าที่" /><span v-else>..................................................</span></span> เจ้าหน้าที่<br>(..................................................) .......... / .......... / ..........</div><div class="document-divider"></div><strong>2.2 งานการคลัง/ฝ่ายการคลัง</strong><div class="document-indent">□ ไม่มีหนี้ค้างชำระ<br>□ มีหนี้ค้าง จำนวน ........................ บาท</div><div class="document-sign">ลงชื่อ <span class="officer-signature"><img v-if="reviewerSignatures[1].url" :src="reviewerSignatures[1].url" alt="ลายเซ็น ผอ.ตลาด" /><span v-else>..................................................</span></span> เจ้าหน้าที่<br>(..................................................) .......... / .......... / ..........</div></section>
-            <section class="document-section"><strong>3. ผู้มีอำนาจอนุมัติ</strong><div class="document-indent">□ อนุมัติ &nbsp;&nbsp; □ ไม่อนุมัติ &nbsp;&nbsp; □ อื่น ๆ ................................................<br>□ สำนักงาน เลขระบบ วันที่ ............................</div><div class="document-sign">ลงชื่อ <span class="officer-signature"><img v-if="reviewerSignatures[2].url" :src="reviewerSignatures[2].url" alt="ลายเซ็น ผอ.สำนักตลาด" /><span v-else>..................................................</span></span> ผู้มีอำนาจอนุมัติ<br>(..................................................) .......... / .......... / ..........</div></section>
+            <section class="document-section"><strong>2. ส่วนของเจ้าหน้าที่</strong><br><strong>2.1 งานผลประโยชน์และเร่งรัดหนี้สิน/ผู้จัดการตลาด</strong>
+              <div class="document-indent">
+                <div><span class="form-check" :class="{ marked: officerReview?.stall_status === 'none' }"></span> ไม่มีแผงค้า</div>
+                <div><span class="form-check" :class="{ marked: officerReview?.stall_status === 'has' }"></span> มีแผงค้า จำนวน {{ officerReview?.stall_status === 'has' ? officerReview.stall_count : '............' }} แผง เลขที่ {{ officerReview?.stall_numbers || '........................' }} โครงการ {{ officerReview?.project || '........................' }} ประเภท {{ officerReview?.trade_type || '........................' }}</div>
+                <div><span class="form-check" :class="{ marked: officerReview?.other_contract }"></span> สัญญาอื่น ๆ กับสำนักงานตลาดกรุงเทพมหานคร</div>
+                <div><span class="form-check" :class="{ marked: officerReview?.other_checked }"></span> อื่น ๆ เช่น มีเรื่องร้องเรียน/ถูกเพิกถอนสิทธิ/ถูกคัดสิทธิ/ถูกบอกเลิกสัญญา {{ officerReview?.other_details || '........................................' }}</div>
+                <div><span class="form-check" :class="{ marked: officerReview?.documents_complete }"></span> คุณสมบัติและเอกสารถูกต้องครบถ้วน ได้แก่ ลงทะเบียนเรียบร้อย/ใบจองจากระบบ {{ officerReview?.booking_reference || '........................' }}</div>
+              </div><div class="document-sign">ลงชื่อ <span class="officer-signature"><img v-if="reviewerSignatures[0].url" :src="reviewerSignatures[0].url" alt="ลายเซ็นเจ้าหน้าที่" /><span v-else>..................................................</span></span> เจ้าหน้าที่<br>(..................................................) .......... / .......... / ..........</div><div class="document-divider"></div><strong>2.2 งานการคลัง/ฝ่ายการคลัง</strong>
+              <div class="document-indent">
+                <div><span class="form-check" :class="{ marked: marketReview?.debt_status === 'none' }"></span> ไม่มีหนี้ค้างชำระ</div>
+                <div><span class="form-check" :class="{ marked: marketReview?.debt_status === 'has' }"></span> มีหนี้ค้าง จำนวน {{ marketReview?.debt_status === 'has' ? Number(marketReview.debt_amount).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '........................' }} บาท</div>
+              </div><div class="document-sign">ลงชื่อ <span class="officer-signature"><img v-if="reviewerSignatures[1].url" :src="reviewerSignatures[1].url" alt="ลายเซ็นฝ่ายการคลัง" /><span v-else>..................................................</span></span> เจ้าหน้าที่ฝ่ายการคลัง<br>(..................................................) .......... / .......... / ..........</div></section>
+            <section class="document-section"><strong>3. ผู้มีอำนาจอนุมัติ</strong>
+              <div class="document-indent">
+                <div><span class="form-check" :class="{ marked: bureauReview?.decision === 'approve' }"></span> อนุมัติ &nbsp;&nbsp; <span class="form-check" :class="{ marked: bureauReview?.decision === 'reject' }"></span> ไม่อนุมัติ</div>
+                <div><span class="form-check" :class="{ marked: bureauReview?.office_checked }"></span> สำนักงาน เลขระบบ {{ bureauReview?.system_number || '........................' }} วันที่ {{ formatReviewDate(bureauReview?.document_date) }}</div>
+              </div><div class="document-sign">ลงชื่อ <span class="officer-signature"><img v-if="reviewerSignatures[3].url" :src="reviewerSignatures[3].url" alt="ลายเซ็น ผอ.สำนักตลาด" /><span v-else>..................................................</span></span> ผอ.สำนักตลาด<br>(..................................................) .......... / .......... / ..........</div></section>
             <section class="document-section"><strong>4. งานการคลัง/ผู้จัดการตลาด</strong><div class="document-indent">□ จัดเก็บเงิน จำนวน ........................ บาท<br>ตามใบเสร็จรับเงินเล่มที่ ............... เลขที่ ............... วันที่ ............... ที่แบบ ...............<br>□ ส่งเจ้าของเรื่อง วันที่ ............................</div><div class="document-sign">ลงชื่อ .................................................. เจ้าหน้าที่<br>(..................................................) .......... / .......... / ..........</div></section>
+            <div class="document-sign document-bottom-sign">ลงชื่อ <span class="officer-signature"><img v-if="reviewerSignatures[2].url" :src="reviewerSignatures[2].url" alt="ลายเซ็น ผอ.ตลาด" /><span v-else>..................................................</span></span> ผอ.ตลาด<br>(..................................................) .......... / .......... / ..........</div>
             </template>
             <template v-else>
               <div class="document-number">เลขที่คำร้อง {{ application.application_number }}</div>
@@ -65,7 +81,7 @@
             </div>
           </article>
         </div>
-        <footer class="document-footer"><AppButton v-if="!isTenant" variant="primary" size="md" :disabled="signaturesLoading || !!signatureLoadError || downloadingPdf" :loading="downloadingPdf" @click="downloadPdf">ดาวน์โหลด PDF</AppButton><AppButton v-if="isTenant && !savedSignature" variant="primary" size="md" @click="openSigning">ลงนามคำร้อง</AppButton><span v-else-if="savedSignature" class="signed-note">ลงนามแล้ว</span><AppButton variant="secondary" size="md" @click="$emit('close')">ปิด</AppButton></footer>
+        <footer class="document-footer"><AppButton v-if="!isTenant" variant="primary" size="md" :disabled="signaturesLoading || downloadingPdf" :loading="downloadingPdf" @click="downloadPdf">ดาวน์โหลด PDF</AppButton><AppButton v-if="isTenant && !savedSignature" variant="primary" size="md" @click="openSigning">ลงนามคำร้อง</AppButton><span v-else-if="savedSignature" class="signed-note">ลงนามแล้ว</span><AppButton variant="secondary" size="md" @click="$emit('close')">ปิด</AppButton></footer>
         </template>
       </section>
     </div>
@@ -126,7 +142,15 @@ const downloadSignedFile = () => {
 }
 watch(() => props.application, app => { if (import.meta.client) void loadSignedFile(app) }, { immediate: true })
 onBeforeUnmount(() => { signedFileRequest++; clearSignedFile() })
-const reviewerSignatures = ref([{ role: 'officer', label: 'เจ้าหน้าที่', url: '' }, { role: 'market', label: 'ผอ.ตลาด', url: '' }, { role: 'bureau', label: 'ผอ.สำนักตลาด', url: '' }])
+const officerReview = computed(() => props.application?.officer_review || null)
+const marketReview = computed(() => props.application?.market_director_review || null)
+const bureauReview = computed(() => props.application?.bureau_director_review || null)
+const formatReviewDate = (value?: string) => {
+  if (!value) return '........................'
+  const date = new Date(value + 'T00:00:00Z')
+  return Number.isFinite(date.getTime()) ? new Intl.DateTimeFormat('th-TH-u-ca-buddhist-nu-latn', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(date) : value
+}
+const reviewerSignatures = ref([{ role: 'officer', label: 'เจ้าหน้าที่', url: '' }, { role: 'finance', label: 'ฝ่ายการคลัง', url: '' }, { role: 'market', label: 'ผอ.ตลาด', url: '' }, { role: 'bureau', label: 'ผอ.สำนักตลาด', url: '' }])
 const signaturesLoading = ref(false)
 const signatureLoadError = ref('')
 let reviewRequest = 0
@@ -138,11 +162,13 @@ const loadReviewSignatures = async (app: any) => {
   if (!app?.id || app.has_signed_document) { signaturesLoading.value = false; return }
   const state = String(app.status || app.application_state || '')
   const flags = [
-    app.has_officer_signature === true || ['pending_market_director', 'pending_bureau_director', 'approved', 'contract_pending', 'completed'].includes(state),
-    app.has_market_director_signature === true || ['pending_bureau_director', 'approved', 'contract_pending', 'completed'].includes(state),
-    app.has_bureau_director_signature === true || ['approved', 'contract_pending', 'completed'].includes(state)
+    app.has_officer_signature === true,
+    app.has_finance_signature === true,
+    app.has_market_director_signature === true,
+    app.has_bureau_director_signature === true
   ]
   const results = await Promise.allSettled(reviewerSignatures.value.map(async (item, index) => {
+    if (!flags[index]) return
     try {
       const blob = await apiFetch<Blob>('/applications/' + app.id + '/' + item.role + '-signature', { responseType: 'blob' })
       if (request !== reviewRequest) return
@@ -156,7 +182,7 @@ const loadReviewSignatures = async (app: any) => {
     } catch (err: any) {
       const statusCode = err?.statusCode || err?.status || err?.response?.status
       if (statusCode === 404 && !flags[index]) return
-      if (statusCode === 404) throw new Error('ไม่พบลายเซ็น' + item.label + 'ที่บันทึกในคำร้อง')
+      if (statusCode === 404) return
       throw new Error('โหลดลายเซ็น' + item.label + 'ไม่สำเร็จ กรุณาลองอีกครั้ง')
     }
   }))
@@ -166,7 +192,7 @@ const loadReviewSignatures = async (app: any) => {
   if (failures.length) signatureLoadError.value = failures.map(result => result.reason?.message || 'โหลดลายเซ็นไม่สำเร็จ').join(' · ')
 }
 const downloadPdf = async () => {
-  if (!documentPaper.value || signaturesLoading.value || signatureLoadError.value || downloadingPdf.value) return
+  if (!documentPaper.value || signaturesLoading.value || downloadingPdf.value) return
   downloadingPdf.value = true
   try {
     await document.fonts.ready
@@ -243,14 +269,14 @@ const checked = (type: string) => props.application?.proposed_rent_type === type
 .document-header, .document-footer { display: flex; align-items: center; padding: 14px 20px; gap: 12px; }
 .document-header { justify-content: space-between; border-bottom: 1px solid var(--bd-e2e8f0); } .document-header h2 { margin: 0; font-size: var(--font-size-lg); color: var(--tx-1e293b); }
 .document-close { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 8px; background: var(--bg-f1f5f9); color: var(--tx-475569); cursor: pointer; }
-.signature-load-error { margin: 12px 20px; color: #dc2626; font-size: 0.875rem; }
+.signature-load-error { margin: 12px 20px; color: #dc2626; font-size: var(--font-size-sm); }
 .signature-load-error button { color: #2563eb; text-decoration: underline; }
 .document-tools { display: flex; justify-content: center; padding: 8px 16px; border-bottom: 1px solid var(--bd-e2e8f0); }
 .zoom-controls { display: flex; align-items: center; gap: 8px; color: var(--tx-475569); font-size: var(--font-size-sm); }
 .zoom-controls span { min-width: 48px; text-align: center; }
 .signed-file-body { flex: 1 1 auto; min-height: 0; overflow: auto; background: #f1f5f9; }
 .signed-file-body iframe { display: block; width: 100%; height: min(70vh, 800px); border: 0; }
-.signed-file-message { padding: 24px; color: #64748b; font-size: 0.9375rem; text-align: center; }
+.signed-file-message { padding: 24px; color: #64748b; font-size: var(--font-size-base); text-align: center; }
 .signed-image-wrap { display: flex; justify-content: center; padding: 20px; }
 .signed-image-wrap img { max-width: 100%; height: auto; object-fit: contain; }
 .document-scroll { flex: 1; overflow: auto; padding: 24px; background: var(--bg-f1f5f9); }
@@ -261,13 +287,13 @@ const checked = (type: string) => props.application?.proposed_rent_type === type
 .fill-line { display: inline-block; min-height: 1.2em; min-width: 80px; padding: 0 3px; border-bottom: 1px dotted #475569; text-align: center; font-weight: 600; } .fill-line.signature { min-width: 170px; }
 .form-check { display: inline-block; position: relative; width: 13px; height: 13px; border: 1px solid #334155; vertical-align: middle; }
 .form-check.marked::after { content: ''; position: absolute; width: 5px; height: 8px; left: 3px; top: 0; border: solid #111; border-width: 0 2px 2px 0; transform: rotate(45deg); }
-.document-sign { text-align: right; margin-top: 8px; } .tenant-name { display: inline-block; width: 250px; text-align: center; } .officer-signature { display: inline-flex; width: 170px; min-height: 24px; justify-content: center; align-items: flex-end; vertical-align: bottom; } .officer-signature img { max-width: 165px; max-height: 55px; object-fit: contain; } .document-divider { border-top: 1px solid var(--bd-cbd5e1); margin: 12px -12px; }
+.document-sign { text-align: right; margin-top: 8px; } .document-bottom-sign { margin-top: 12px; } .tenant-name { display: inline-block; width: 250px; text-align: center; } .officer-signature { display: inline-flex; width: 170px; min-height: 24px; justify-content: center; align-items: flex-end; vertical-align: bottom; } .officer-signature img { max-width: 165px; max-height: 55px; object-fit: contain; } .document-divider { border-top: 1px solid var(--bd-cbd5e1); margin: 12px -12px; }
 .signed-note { margin-right: auto; color: var(--tx-15803d); font-size: var(--font-size-sm); font-weight: 600; }
 .sign-overlay { position: fixed; inset: 0; z-index: 2100; display: grid; place-items: center; padding: 16px; background: rgba(15,23,42,.45); } .sign-dialog { width: min(450px,100%); max-height:min(90vh,90dvh); display:flex; flex-direction:column; overflow:hidden; background: var(--bg-ffffff); border-radius: 20px; } .sign-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:24px 28px}.sign-dialog label { display: block; margin: 0 0 6px; font-size: var(--font-size-sm); font-weight: 600; } .sign-actions { flex:0 0 auto;display: flex; justify-content: flex-end; gap: 10px; padding:16px 28px; border-top:1px solid var(--bd-e2e8f0); background:var(--bg-f8fafc); }
 .document-footer { justify-content: flex-end; border-top: 1px solid var(--bd-e2e8f0); }
 @media (max-width: 600px) { .signed-file-body { flex: 1 1 auto; min-height: 0; overflow: auto; background: #f1f5f9; }
 .signed-file-body iframe { display: block; width: 100%; height: min(70vh, 800px); border: 0; }
-.signed-file-message { padding: 24px; color: #64748b; font-size: 0.9375rem; text-align: center; }
+.signed-file-message { padding: 24px; color: #64748b; font-size: var(--font-size-base); text-align: center; }
 .signed-image-wrap { display: flex; justify-content: center; padding: 20px; }
 .signed-image-wrap img { max-width: 100%; height: auto; object-fit: contain; }
 .document-scroll { padding: 12px; } .document-paper { padding: 18px; } }
@@ -278,7 +304,7 @@ const checked = (type: string) => props.application?.proposed_rent_type === type
   .document-tools, .document-footer, :deep(.app-modal-header), .sign-overlay { display: none !important; }
   .signed-file-body { flex: 1 1 auto; min-height: 0; overflow: auto; background: #f1f5f9; }
 .signed-file-body iframe { display: block; width: 100%; height: min(70vh, 800px); border: 0; }
-.signed-file-message { padding: 24px; color: #64748b; font-size: 0.9375rem; text-align: center; }
+.signed-file-message { padding: 24px; color: #64748b; font-size: var(--font-size-base); text-align: center; }
 .signed-image-wrap { display: flex; justify-content: center; padding: 20px; }
 .signed-image-wrap img { max-width: 100%; height: auto; object-fit: contain; }
 .document-scroll { overflow: visible; padding: 0; background: white; }

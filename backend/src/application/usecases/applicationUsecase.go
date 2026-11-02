@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,6 +16,13 @@ import (
 	"emarket-api/src/application/domains"
 	"gorm.io/gorm"
 )
+
+func normalizedApplicationState(s string) string {
+	if s == "" || s == "submitted" {
+		return "pending_officer"
+	}
+	return s
+}
 
 type useCase struct {
 	repo domains.Repository
@@ -30,11 +38,11 @@ func toApplicationResponse(a *models.Application) responses.ApplicationResponse 
 		monthlyRate = 3600
 	}
 	periodMonths := a.LeaseTermMonths
-	if periodMonths <= 0 {
+	if periodMonths <= 0 && a.TradeDurationUnit != "days" {
 		periodMonths = 12
 	}
 	startDate := a.RequestedStartDate
-	if startDate == "" {
+	if startDate == "" && a.TradeOptionID == "" {
 		startDate = a.CreatedAt.AddDate(0, 0, 7).Format("2006-01-02")
 	}
 
@@ -53,7 +61,39 @@ func toApplicationResponse(a *models.Application) responses.ApplicationResponse 
 		subject = a.ShopName
 	}
 
+	var marketDirectorReview *models.MarketDirectorReview
+	if a.MarketDirectorReviewJSON != "" {
+		var review models.MarketDirectorReview
+		if json.Unmarshal([]byte(a.MarketDirectorReviewJSON), &review) == nil {
+			marketDirectorReview = &review
+		}
+	}
+	var bureauDirectorReview *models.BureauDirectorReview
+	if a.BureauDirectorReviewJSON != "" {
+		var review models.BureauDirectorReview
+		if json.Unmarshal([]byte(a.BureauDirectorReviewJSON), &review) == nil {
+			bureauDirectorReview = &review
+		}
+	}
+	var officerReview *models.OfficerReview
+	if a.OfficerReviewJSON != "" {
+		var review models.OfficerReview
+		if json.Unmarshal([]byte(a.OfficerReviewJSON), &review) == nil {
+			officerReview = &review
+		}
+	}
 	return responses.ApplicationResponse{
+		DirectorReviewSupported:    true,
+		MarketDirectorReview:       marketDirectorReview,
+		BureauDirectorReview:       bureauDirectorReview,
+		OfficerReviewSupported:     true,
+		OfficerReview:              officerReview,
+		TradeOptionID:              a.TradeOptionID,
+		TradeStartDate:             a.TradeStartDate,
+		TradeEndDate:               a.TradeEndDate,
+		TradeDuration:              a.TradeDuration,
+		TradeDurationUnit:          a.TradeDurationUnit,
+		RequiresContract:           a.RequiresContract,
 		ID:                         a.ID,
 		ApplicationNo:              a.ApplicationNo,
 		ApplicationNumber:          a.ApplicationNo,
@@ -64,6 +104,7 @@ func toApplicationResponse(a *models.Application) responses.ApplicationResponse 
 		DocumentNumber:             a.DocumentNumber,
 		TenantSignature:            a.TenantSignature,
 		HasOfficerSignature:        len(a.OfficerSignature) > 0,
+		HasFinanceSignature:        len(a.FinanceSignature) > 0,
 		HasMarketDirectorSignature: len(a.MarketDirectorSignature) > 0,
 		HasBureauDirectorSignature: len(a.BureauDirectorSignature) > 0,
 		HasSignedDocument:          len(a.SignedDocument) > 0,
@@ -92,7 +133,7 @@ func toApplicationResponse(a *models.Application) responses.ApplicationResponse 
 		RequestedPeriodMonths:      periodMonths,
 		MonthlyRate:                monthlyRate,
 		StallMonthlyRate:           monthlyRate,
-		Status:                     a.ApplicationState,
+		Status:                     normalizedApplicationState(a.ApplicationState),
 		OfficerComment:             a.OfficerComment,
 		MarketDirectorComment:      a.MarketDirectorComment,
 		BureauDirectorComment:      a.BureauDirectorComment,
@@ -252,7 +293,7 @@ func (u *useCase) CreateApplication(userID int, req requests.CreateApplicationRe
 		monthlyRate = 3600
 	}
 	startDate := strings.TrimSpace(req.RequestedStartDate)
-	if startDate == "" {
+	if startDate == "" && req.TradeOptionID == "" {
 		startDate = time.Now().AddDate(0, 0, 7).Format("2006-01-02")
 	}
 
@@ -304,6 +345,7 @@ func (u *useCase) CreateApplication(userID int, req requests.CreateApplicationRe
 
 	app := models.Application{
 		ApplicationNo:      appNo,
+		TradeOptionID:      strings.TrimSpace(req.TradeOptionID),
 		ApplicationType:    appType,
 		Subject:            subject,
 		BookingID:          parsedBookingID,
@@ -335,6 +377,10 @@ func (u *useCase) CreateApplication(userID int, req requests.CreateApplicationRe
 	}
 
 	if err := u.repo.Create(&app); err != nil {
+		var appErr *responses.AppErr
+		if errors.As(err, &appErr) {
+			return nil, appErr
+		}
 		logs.Error(err)
 		return nil, responses.NewInternalServerError()
 	}
@@ -355,9 +401,22 @@ func (u *useCase) UpdateStatus(id int, userID int, req requests.UpdateApplicatio
 
 	now := time.Now()
 	app.ApplicationState = req.Status
+	if req.MarketDirectorReviewJSON != nil {
+		app.MarketDirectorReviewJSON = *req.MarketDirectorReviewJSON
+	}
+	if req.BureauDirectorReviewJSON != nil {
+		app.BureauDirectorReviewJSON = *req.BureauDirectorReviewJSON
+	}
+	if req.OfficerReviewJSON != nil {
+		app.OfficerReviewJSON = *req.OfficerReviewJSON
+	}
 	if len(req.OfficerSignature) > 0 {
 		app.OfficerSignature = req.OfficerSignature
 		app.OfficerSignatureType = req.OfficerSignatureType
+	}
+	if len(req.FinanceSignature) > 0 {
+		app.FinanceSignature = req.FinanceSignature
+		app.FinanceSignatureType = req.FinanceSignatureType
 	}
 	if len(req.MarketDirectorSignature) > 0 {
 		app.MarketDirectorSignature = req.MarketDirectorSignature
@@ -392,7 +451,7 @@ func (u *useCase) UpdateStatus(id int, userID int, req requests.UpdateApplicatio
 			// คำร้องที่อนุมัติแล้วเป็นเพียงการกันแผงไว้เพื่อจัดทำสัญญา
 			// แผงจะเป็น occupied เมื่อสัญญามีผลเท่านั้น
 			_ = u.repo.UpdateStallStatus(app.StallIdent, "reserved")
-		} else if req.Status == "rejected" {
+		} else if req.Status == "rejected" || req.Status == "cancelled" {
 			_ = u.repo.UpdateStallStatus(app.StallIdent, "available")
 		}
 	}
@@ -416,7 +475,7 @@ func (u *useCase) Action(id int, userID int, req requests.ApplicationActionReque
 		comment = strings.TrimSpace(req.Reason)
 	}
 
-	if app.ApplicationState == "pending_officer" {
+	if app.ApplicationState == "pending_officer" || app.ApplicationState == "submitted" {
 		action := strings.ToLower(strings.TrimSpace(req.Action))
 		if (action == "return_revision" || action == "reject") && comment == "" {
 			return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาระบุหมายเหตุ")
@@ -434,6 +493,22 @@ func (u *useCase) Action(id int, userID int, req requests.ApplicationActionReque
 		}
 		var signature []byte
 		var signatureType string
+		var officerReviewJSON *string
+		if action == "approve" && (app.ApplicationType == "stall_lease" || (app.ApplicationType == "" && app.StallIdent != "" && app.StallIdent != "-")) {
+			var reviewErr error
+			officerReviewJSON, reviewErr = encodeOfficerReview(req.OfficerReview)
+			if reviewErr != nil {
+				return nil, reviewErr
+			}
+			if req.OfficerReview.OtherChecked || req.OfficerReview.StallStatus == "other" {
+				status = "cancelled"
+				if comment == "" {
+					comment = "ยกเลิกคำร้องจากผลตรวจสอบของเจ้าหน้าที่"
+				}
+			} else if req.OfficerReview.StallStatus == "has" {
+				status = "pending_debt_check"
+			}
+		}
 		if action == "approve" {
 			var signatureErr error
 			signature, signatureType, signatureErr = decodeApprovalSignature(req.SignatureBase64)
@@ -441,26 +516,73 @@ func (u *useCase) Action(id int, userID int, req requests.ApplicationActionReque
 				return nil, signatureErr
 			}
 		}
-		return u.UpdateStatus(id, userID, requests.UpdateApplicationStatusRequest{Status: status, Reason: comment, OfficerComment: comment, OfficerSignature: signature, OfficerSignatureType: signatureType})
+		return u.UpdateStatus(id, userID, requests.UpdateApplicationStatusRequest{Status: status, Reason: comment, OfficerComment: comment, OfficerSignature: signature, OfficerSignatureType: signatureType, OfficerReviewJSON: officerReviewJSON})
+	}
+	if app.ApplicationState == "pending_debt_check" || app.ApplicationState == "debt_pending" {
+		if strings.ToLower(strings.TrimSpace(req.Action)) != "approve" {
+			return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "ฝ่ายการคลังต้องบันทึกผลตรวจสอบหนี้")
+		}
+		review, reviewErr := encodeMarketDirectorReview(req.MarketDirectorReview)
+		if reviewErr != nil {
+			return nil, reviewErr
+		}
+		signature, signatureType, signatureErr := decodeApprovalSignature(req.SignatureBase64)
+		if signatureErr != nil {
+			return nil, signatureErr
+		}
+		nextStatus := "pending_market_director"
+		reason := "ฝ่ายการคลังตรวจสอบแล้ว ไม่มีหนี้ค้างชำระ ส่งต่อ ผอ.ตลาด"
+		if req.MarketDirectorReview.DebtStatus == "has" {
+			nextStatus = "debt_pending"
+			reason = fmt.Sprintf("ฝ่ายการคลังตรวจพบหนี้ค้างชำระ จำนวน %.2f บาท กรุณาชำระหนี้ค้างก่อนส่งให้เจ้าหน้าที่ตรวจสอบอีกครั้ง", req.MarketDirectorReview.DebtAmount)
+		}
+		return u.UpdateStatus(id, userID, requests.UpdateApplicationStatusRequest{
+			Status: nextStatus, Reason: reason, MarketDirectorReviewJSON: review,
+			FinanceSignature: signature, FinanceSignatureType: signatureType,
+		})
 	}
 	if app.ApplicationState != "pending_market_director" && app.ApplicationState != "pending_bureau_director" {
 		return nil, responses.NewAppErr(http.StatusConflict, "คำร้องไม่ได้อยู่ในขั้นที่สามารถพิจารณาได้")
 	}
 	action := strings.ToLower(strings.TrimSpace(req.Action))
+	isBureau := app.ApplicationState == "pending_bureau_director"
+	isStallReview := app.ApplicationType == "stall_lease" || (app.ApplicationType == "" && app.StallIdent != "" && app.StallIdent != "-")
+	if isBureau {
+		if action != "approve" && action != "reject" {
+			return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "ผอ.สำนักเลือกได้เฉพาะอนุมัติหรือไม่อนุมัติ")
+		}
+		// Temporary mock for the approval prototype; replace with a real OTP challenge.
+		if req.OTP != "123456" {
+			return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "รหัส OTP ไม่ถูกต้อง")
+		}
+		if action == "reject" && comment == "" {
+			comment = "ผอ.สำนักไม่อนุมัติคำร้อง"
+		}
+	}
 	if (action == "return_revision" || action == "reject") && comment == "" {
-		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาระบุหมายเหตุ")
+		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณาระบุเหตุผล")
 	}
 	updateReq := requests.UpdateApplicationStatusRequest{Reason: comment}
+	if isBureau {
+		input := req.BureauDirectorReview
+		if input == nil && !isStallReview {
+			input = &models.BureauDirectorReview{Decision: action}
+		}
+		review, reviewErr := encodeBureauDirectorReview(input)
+		if reviewErr != nil {
+			return nil, reviewErr
+		}
+		if input.Decision != action {
+			return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "ผลพิจารณาไม่ตรงกับคำสั่ง")
+		}
+		updateReq.BureauDirectorReviewJSON = review
+	}
 	if action == "approve" {
 		signature, signatureType, signatureErr := decodeApprovalSignature(req.SignatureBase64)
 		if signatureErr != nil {
 			return nil, signatureErr
 		}
-		if app.ApplicationState == "pending_bureau_director" {
-			// Temporary mock for the approval prototype; replace with email verification.
-			if req.OTP != "123456" {
-				return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "รหัส OTP ทดสอบไม่ถูกต้อง")
-			}
+		if isBureau {
 			updateReq.BureauDirectorSignature, updateReq.BureauDirectorSignatureType = signature, signatureType
 		} else {
 			updateReq.MarketDirectorSignature, updateReq.MarketDirectorSignatureType = signature, signatureType

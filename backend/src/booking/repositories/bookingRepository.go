@@ -1053,3 +1053,11 @@ func (r *repository) CreateNotification(notif *models.Notification) error {
 func (r *repository) CreateNotifications(notifs []models.Notification) error {
 	return r.conn.Create(&notifs).Error
 }
+
+func (r *repository) FindTradeCondition(marketID int, code string) (*models.MarketTradeCondition, error) {
+	var condition models.MarketTradeCondition
+	if err := r.conn.Where("market_id = ? AND trade_type = ?", marketID, code).First(&condition).Error; err != nil {
+		return nil, err
+	}
+	return &condition, nil
+}

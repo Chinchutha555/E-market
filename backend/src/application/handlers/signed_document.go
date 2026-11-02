@@ -52,6 +52,20 @@ func SignedDocumentUpload(db *gorm.DB) gin.HandlerFunc {
 			}
 			if app.CreatedBy != nil && app.ApplicationType != "general" {
 				n := models.Notification{RecipientRole: "tenant", RecipientUserID: app.CreatedBy, Type: "contract_ready", StatusCode: "completed", StatusLabel: "พร้อมทำสัญญา", Title: "คำร้องเสร็จสมบูรณ์", Message: "เอกสารคำร้องครบแล้ว กรุณาจัดทำสัญญาเช่า", TargetURL: fmt.Sprintf("/contracts?new_for_stall=%s&app_id=%d", url.QueryEscape(app.StallIdent), app.ID)}
+				if app.BookingID != nil {
+					var booking models.Booking
+					lookupErr := tx.Select("id", "requires_contract").First(&booking, *app.BookingID).Error
+					if lookupErr != nil && !errors.Is(lookupErr, gorm.ErrRecordNotFound) {
+						return lookupErr
+					}
+					if lookupErr == nil && booking.RequiresContract != nil && !*booking.RequiresContract {
+						n.Type = "application_completed"
+						n.StatusLabel = "ดำเนินการเสร็จแล้ว"
+						n.Title = "คำร้องเสร็จสมบูรณ์"
+						n.Message = "เอกสารคำร้องครบแล้ว ไม่ต้องทำสัญญา"
+						n.TargetURL = "/applications"
+					}
+				}
 				if err := tx.Create(&n).Error; err != nil {
 					return err
 				}

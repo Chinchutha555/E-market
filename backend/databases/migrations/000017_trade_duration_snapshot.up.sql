@@ -1,0 +1,4 @@
+ALTER TABLE booking ADD COLUMN trade_duration INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE booking ADD COLUMN trade_duration_unit VARCHAR(10) NOT NULL DEFAULT '';
+ALTER TABLE application ADD COLUMN trade_duration INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE application ADD COLUMN trade_duration_unit VARCHAR(10) NOT NULL DEFAULT '';

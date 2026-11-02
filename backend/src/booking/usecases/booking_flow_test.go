@@ -1,6 +1,7 @@
 package usecases_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -21,7 +22,7 @@ func newBookingFlow(t *testing.T) (*gorm.DB, *bookingHarness) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := db.AutoMigrate(&models.User{}, &models.Market{}, &models.Stall{}, &models.Booking{}, &models.BookingStall{}, &models.Waitlist{}, &models.Notification{}, &models.Contract{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Market{}, &models.MarketTradeCondition{}, &models.Stall{}, &models.Booking{}, &models.BookingStall{}, &models.Waitlist{}, &models.Notification{}, &models.Contract{}); err != nil {
 		t.Fatal(err)
 	}
 	users := []models.User{{ID: 101, Username: "tenant-a", Password: "x", FullName: "ผู้เช่า A", Phone: "0800000001", Role: "tenant", Status: "A"}, {ID: 102, Username: "tenant-b", Password: "x", FullName: "ผู้เช่า B", Phone: "0800000002", Role: "tenant", Status: "A"}, {ID: 103, Username: "tenant-c", Password: "x", FullName: "ผู้เช่า C", Phone: "0800000003", Role: "tenant", Status: "A"}}
@@ -330,10 +331,14 @@ func TestThreePeopleBookingCancelPromotesSecondAndMovesThirdUp(t *testing.T) {
 
 func TestConfirmRentalOnlyUpdatesSelectedStall(t *testing.T) {
 	db, _ := newBookingFlow(t)
+	marketID := 1
+	if err := db.Create(&models.MarketTradeCondition{MarketID: marketID, TradeType: "contract", Title: "Contract", MinDuration: 1, MaxDuration: 12, Unit: "months"}).Error; err != nil {
+		t.Fatal(err)
+	}
 	creator := 101
 	rows := []models.Booking{
-		{BookingNo: "CONFIRM-1", StallIdent: "C-01", AppointmentGroupID: "confirm-group", ApplicantName: "Tenant", ApplicantPhone: "0800000000", VisitDate: "2026-11-01", VisitTime: "09:00", BookingStatus: "approved", Status: "A", CreatedBy: &creator},
-		{BookingNo: "CONFIRM-2", StallIdent: "C-02", AppointmentGroupID: "confirm-group", ApplicantName: "Tenant", ApplicantPhone: "0800000000", VisitDate: "2026-11-01", VisitTime: "09:00", BookingStatus: "approved", Status: "A", CreatedBy: &creator},
+		{MarketID: &marketID, BookingNo: "CONFIRM-1", StallIdent: "C-01", AppointmentGroupID: "confirm-group", ApplicantName: "Tenant", ApplicantPhone: "0800000000", VisitDate: "2026-11-01", VisitTime: "09:00", BookingStatus: "approved", Status: "A", CreatedBy: &creator},
+		{MarketID: &marketID, BookingNo: "CONFIRM-2", StallIdent: "C-02", AppointmentGroupID: "confirm-group", ApplicantName: "Tenant", ApplicantPhone: "0800000000", VisitDate: "2026-11-01", VisitTime: "09:00", BookingStatus: "approved", Status: "A", CreatedBy: &creator},
 	}
 	if err := db.Create(&rows).Error; err != nil {
 		t.Fatal(err)
@@ -355,5 +360,55 @@ func TestConfirmRentalOnlyUpdatesSelectedStall(t *testing.T) {
 	db.First(&two, rows[1].ID)
 	if one.BookingStatus != "approved" || one.RentalType != "" || two.BookingStatus != "interested" || two.RentalType != "contract" {
 		t.Fatalf("unexpected bookings: first=%s/%s second=%s/%s", one.BookingStatus, one.RentalType, two.BookingStatus, two.RentalType)
+	}
+}
+
+func TestConfirmRentalUsesMarketTradeType(t *testing.T) {
+	db, _ := newBookingFlow(t)
+	marketID, otherID, creator := 1, 2, 101
+	optionsJSON, err := json.Marshal([]models.TradeDurationOption{{ID: "one", Duration: 1, Unit: "months"}, {ID: "three", Duration: 3, Unit: "months"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	noContract := false
+	conditions := []models.MarketTradeCondition{
+		{MarketID: marketID, TradeType: "custom1", Title: "Weekend", OptionsJSON: string(optionsJSON), RequiresContract: &noContract, MinDuration: 1, MaxDuration: 5, Unit: "days"},
+		{MarketID: otherID, TradeType: "custom2", Title: "Other market", MinDuration: 1, MaxDuration: 5, Unit: "days"},
+	}
+	if err := db.Create(&conditions).Error; err != nil {
+		t.Fatal(err)
+	}
+	booking := models.Booking{MarketID: &marketID, BookingNo: "CUSTOM-1", StallIdent: "C-11", ApplicantName: "Tenant", ApplicantPhone: "0800000000", VisitDate: "2026-11-01", VisitTime: "09:00", BookingStatus: "approved", Status: "A", CreatedBy: &creator}
+	if err := db.Create(&booking).Error; err != nil {
+		t.Fatal(err)
+	}
+	uc := bookinguc.NewUseCase(bookingrepo.NewRepository(db))
+	req := requests.UpdateBookingStatusRequest{Status: "interested", StallIdent: "C-11", RentalType: "custom2", ActorRole: "staff", ByOfficer: true}
+	if _, err := uc.UpdateStatus(booking.ID, 1, req); err == nil {
+		t.Fatal("accepted type from another market")
+	}
+	req.RentalType = "custom1"
+	if _, err := uc.UpdateStatus(booking.ID, 1, req); err != nil {
+		t.Fatal(err)
+	}
+	var got models.Booking
+	if err := db.First(&got, booking.ID).Error; err != nil {
+		t.Fatal(err)
+	}
+	if got.RequiresContract == nil || *got.RequiresContract {
+		t.Fatal("contract requirement snapshot was not saved")
+	}
+	if len(models.BookingDurationOptions(&got)) != 2 {
+		t.Fatal("duration options were not snapshotted")
+	}
+	if err := db.Model(&models.MarketTradeCondition{}).Where("market_id = ? AND trade_type = ?", marketID, "custom1").Update("options_json", "").Error; err != nil {
+		t.Fatal(err)
+	}
+	response, err := uc.GetBookingByID(booking.ID, 1, "staff")
+	if err != nil || len(response.TradeOptions) != 2 {
+		t.Fatalf("booking options changed after settings edit: %#v %v", response, err)
+	}
+	if got.RentalType != "custom1" || got.RentalTypeLabel != "Weekend" {
+		t.Fatalf("got type %q / %q", got.RentalType, got.RentalTypeLabel)
 	}
 }

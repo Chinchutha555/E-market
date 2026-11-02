@@ -1,0 +1,1 @@
+ALTER TABLE booking ADD COLUMN rental_type_label VARCHAR(255) NOT NULL DEFAULT '';

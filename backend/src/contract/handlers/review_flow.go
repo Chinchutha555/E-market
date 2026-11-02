@@ -240,6 +240,10 @@ func ContractAsset(db *gorm.DB) gin.HandlerFunc {
 			c.AbortWithStatus(404)
 			return
 		}
+		if contract.ContractState == "draft" && middlewares.GetUserRole(c) != "staff" {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
 		var data []byte
 		var kind string
 		switch c.Param("kind") {
