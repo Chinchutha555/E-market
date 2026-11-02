@@ -555,7 +555,7 @@ onMounted(() => {
 }
 .type-code-tag {
   display: inline-block;
-  font-family: monospace;
+  font-family: inherit;
   font-size: var(--font-size-xs); /* 12px */
   background: var(--bg-f1f5f9);
   color: var(--tx-475569);
@@ -564,7 +564,7 @@ onMounted(() => {
   border: 1px solid var(--bd-e2e8f0);
 }
 .text-hint {
-  font-weight: 400;
+  font-weight: 500;
   color: var(--tx-94a3b8);
   font-size: var(--font-size-xs); /* 12px */
 }
@@ -832,7 +832,7 @@ onMounted(() => {
 }
 
 .code-pill {
-  font-family: monospace;
+  font-family: inherit;
   font-size: var(--font-size-xs); /* 13px */
   background: var(--bg-f8fafc);
   color: var(--tx-0f172a);

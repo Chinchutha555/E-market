@@ -3,8 +3,19 @@ package models
 import "time"
 
 type Application struct {
+	MarketDirectorReviewJSON    string     `gorm:"column:market_director_review_json;type:text" json:"-"`
+	BureauDirectorReviewJSON    string     `gorm:"column:bureau_director_review_json;type:text" json:"-"`
+	OfficerReviewJSON           string     `gorm:"column:officer_review_json;type:text" json:"-"`
+	TradeOptionID               string     `gorm:"size:20;column:trade_option_id" json:"trade_option_id"`
+	TradeStartDate              string     `gorm:"size:10;column:trade_start_date" json:"trade_start_date"`
+	TradeEndDate                string     `gorm:"size:10;column:trade_end_date" json:"trade_end_date"`
+	TradeDuration               int        `gorm:"column:trade_duration" json:"trade_duration"`
+	TradeDurationUnit           string     `gorm:"size:10;column:trade_duration_unit" json:"trade_duration_unit"`
+	RequiresContract            *bool      `gorm:"-" json:"requires_contract"`
 	SignedDocument              []byte     `gorm:"column:signed_document" json:"-"`
 	SignedDocumentType          string     `gorm:"column:signed_document_type" json:"-"`
+	FinanceSignature            []byte     `gorm:"column:finance_signature" json:"-"`
+	FinanceSignatureType        string     `gorm:"column:finance_signature_type" json:"-"`
 	MarketDirectorSignature     []byte     `gorm:"column:market_director_signature" json:"-"`
 	MarketDirectorSignatureType string     `gorm:"column:market_director_signature_type" json:"-"`
 	BureauDirectorSignature     []byte     `gorm:"column:bureau_director_signature" json:"-"`
@@ -42,7 +53,7 @@ type Application struct {
 	OfficerComment              string     `gorm:"type:text;column:officer_comment" json:"officer_comment"`
 	MarketDirectorComment       string     `gorm:"type:text;column:market_director_comment" json:"market_director_comment"`
 	BureauDirectorComment       string     `gorm:"type:text;column:bureau_director_comment" json:"bureau_director_comment"`
-	ApplicationState            string     `gorm:"size:50;default:'submitted';column:application_state" json:"application_state"`
+	ApplicationState            string     `gorm:"size:50;default:'pending_officer';column:application_state" json:"application_state"`
 	ReviewedAt                  *time.Time `gorm:"column:reviewed_at" json:"reviewed_at"`
 	ReviewNote                  string     `gorm:"type:text;column:review_note" json:"review_note"`
 	Status                      string     `gorm:"type:char(1);default:'A';column:status" json:"status"`

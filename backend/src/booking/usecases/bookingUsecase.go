@@ -374,11 +374,27 @@ func (u *useCase) toBookingResponse(b *models.Booking) responses.BookingResponse
 		}
 	}
 
+	tradeOptions := models.BookingDurationOptions(b)
+	if b.TradeOptionsJSON == "" && b.MarketID != nil && b.RentalType != "" {
+		if condition, err := u.repo.FindTradeCondition(*b.MarketID, b.RentalType); err == nil {
+			if configured := condition.DurationOptions(); len(configured) > 0 {
+				tradeOptions = configured
+			}
+			if len(tradeOptions) > 0 {
+				b.TradeDuration, b.TradeDurationUnit = tradeOptions[0].Duration, tradeOptions[0].Unit
+			}
+		}
+	}
 	return responses.BookingResponse{
+		PeriodDatesDeferred:         true,
+		TradeOptions:                tradeOptions,
+		TradeDuration:               b.TradeDuration,
+		TradeDurationUnit:           b.TradeDurationUnit,
 		ID:                          b.ID,
 		BookingNo:                   b.BookingNo,
 		BookingNumber:               b.BookingNo,
 		RentalType:                  b.RentalType,
+		RentalTypeLabel:             b.RentalTypeLabel,
 		StallID:                     b.StallID,
 		StallIdent:                  b.StallIdent,
 		StallNumber:                 b.StallIdent,
@@ -1214,10 +1230,35 @@ func (u *useCase) applyStatusToBookingRow(booking *models.Booking, userID int, r
 		targetStatus = "interested"
 	}
 	if targetStatus == "interested" && req.RentalType != "" {
-		if req.RentalType != "temporary" && req.RentalType != "contract" && req.RentalType != "trial" {
-			return responses.NewAppErr(http.StatusBadRequest, "ประเภทการค้าไม่ถูกต้อง")
+		if booking.MarketID == nil || *booking.MarketID <= 0 {
+			return responses.NewAppErr(http.StatusBadRequest, "ไม่พบตลาดของการจอง")
 		}
-		booking.RentalType = req.RentalType
+		condition, err := u.repo.FindTradeCondition(*booking.MarketID, strings.TrimSpace(req.RentalType))
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return responses.NewAppErr(http.StatusBadRequest, "ประเภทการค้าไม่อยู่ในการตั้งค่าของตลาด")
+			}
+			logs.Error(err)
+			return responses.NewInternalServerError()
+		}
+		booking.RequiresContract = condition.RequiresContract
+		options := condition.DurationOptions()
+		if len(options) == 0 {
+			return responses.NewAppErr(http.StatusBadRequest, "ประเภทการค้านี้ยังไม่ได้กำหนดระยะเวลา")
+		}
+		encoded, err := json.Marshal(options)
+		if err != nil {
+			return responses.NewInternalServerError()
+		}
+		booking.TradeOptionsJSON = string(encoded)
+		booking.TradeDuration = condition.MaxDuration
+		booking.TradeDurationUnit = condition.Unit
+		booking.RentalType = condition.TradeType
+		booking.RentalTypeLabel = condition.Title
+		if strings.TrimSpace(booking.RentalTypeLabel) == "" {
+			legacyLabels := map[string]string{"trial": "ทดลองขาย", "temporary": "ทำการค้าแบบชั่วคราว", "contract": "ทำการค้าแบบมีสัญญา"}
+			booking.RentalTypeLabel = legacyLabels[condition.TradeType]
+		}
 	}
 	booking.BookingStatus = targetStatus
 	booking.UpdatedBy = &userID

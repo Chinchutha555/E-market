@@ -76,9 +76,9 @@ const submit = async () => {
 <style scoped>
 .document-step { display: flex; align-items: flex-start; gap: 14px; padding: 4px 0 20px; }
 .document-step + .document-step { padding-top: 20px; border-top: 1px solid #e2e8f0; }
-.step-number { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; border-radius: 50%; background: #eff6ff; color: #2563eb; font-size: 0.875rem; font-weight: 700; }
+.step-number { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; border-radius: 50%; background: #eff6ff; color: #2563eb; font-size: var(--font-size-sm); font-weight: 700; }
 .step-content { min-width: 0; flex: 1; }
-.step-content h3 { margin: 2px 0 4px; color: #1e293b; font-size: 1rem; font-weight: 700; }
-.step-content p { margin: 0 0 14px; color: #64748b; font-size: 0.9375rem; line-height: 1.5; }
-.submit-error { margin: 0; color: #dc2626; font-size: 0.875rem; }
+.step-content h3 { margin: 2px 0 4px; color: #1e293b; font-size: var(--font-size-md); font-weight: 700; }
+.step-content p { margin: 0 0 14px; color: #64748b; font-size: var(--font-size-base); line-height: 1.5; }
+.submit-error { margin: 0; color: #dc2626; font-size: var(--font-size-sm); }
 </style>

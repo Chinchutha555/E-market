@@ -82,9 +82,9 @@ const confirm = () => {
 <style scoped>
 .mock-notice { margin: 0 0 20px; padding: 12px 14px; color: #1e3a8a; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; }
 .otp-inputs { display: flex; gap: 8px; }
-.otp-inputs input { width: 48px; min-width: 0; height: 52px; border: 1px solid #cbd5e1; border-radius: 8px; text-align: center; font: inherit; font-size: 1.25rem; font-weight: 600; color: #1e293b; }
+.otp-inputs input { width: 48px; min-width: 0; height: 52px; border: 1px solid #cbd5e1; border-radius: 8px; text-align: center; font: inherit; font-size: var(--font-size-xl); font-weight: 600; color: #1e293b; }
 .otp-inputs input:focus { outline: 2px solid #93c5fd; border-color: #2563eb; }
 .otp-inputs input[aria-invalid="true"] { border-color: #ef4444; }
-.otp-error { margin: 8px 0 0; color: #dc2626; font-size: 0.8125rem; }
+.otp-error { margin: 8px 0 0; color: #dc2626; font-size: var(--font-size-xs); }
 @media (max-width: 420px) { .otp-inputs { gap: 5px; } .otp-inputs input { flex: 1; width: 0; } }
 </style>

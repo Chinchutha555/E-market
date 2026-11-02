@@ -23,6 +23,9 @@ func NewRepository(db *gorm.DB) domains.Repository {
 func (r *repository) FindAll(filter requests.ContractFilter) ([]models.Contract, error) {
 	var contracts []models.Contract
 	query := r.conn.Model(&models.Contract{}).Where("status = 'A'")
+	if filter.ViewerRole != "staff" {
+		query = query.Where("contract_state <> ?", "draft")
+	}
 	if filter.MarketID != 0 {
 		query = query.Where("market_id = ?", filter.MarketID)
 	}
@@ -43,6 +46,44 @@ func (r *repository) FindAll(filter requests.ContractFilter) ([]models.Contract,
 
 	err := query.Order("id DESC").Find(&contracts).Error
 	return contracts, err
+}
+
+func (r *repository) SaveDraft(id int, userID int, req requests.SaveContractDraftRequest) (*models.Contract, error) {
+	updates := map[string]interface{}{
+		"tenant_email": req.TenantEmail, "tenant_address": req.TenantAddress,
+		"business_type": req.BusinessType, "billing_cycle": req.BillingCycle,
+		"terms_and_conditions": req.TermsAndConditions, "tenant_name": req.TenantName,
+		"tenant_phone": req.TenantPhone, "tenant_id_card": req.TenantIDCard,
+		"shop_name": req.ShopName, "start_date": req.StartDate, "end_date": req.EndDate,
+		"monthly_rental": req.MonthlyRental, "security_deposit": req.SecurityDeposit,
+		"advance_payment": req.AdvancePayment, "contract_state": "tenant_review",
+		"updated_by": userID, "updated_at": time.Now(),
+	}
+	var contract models.Contract
+	err := r.conn.Transaction(func(tx *gorm.DB) error {
+		result := tx.Model(&models.Contract{}).Where("id = ? AND status = 'A' AND contract_state = 'draft'", id).Updates(updates)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected != 1 {
+			var count int64
+			tx.Model(&models.Contract{}).Where("id = ? AND status = 'A'", id).Count(&count)
+			if count == 0 {
+				return gorm.ErrRecordNotFound
+			}
+			return domains.ErrInvalidContractState
+		}
+		if err := tx.First(&contract, id).Error; err != nil {
+			return err
+		}
+		return tx.Create(&models.Notification{
+			RecipientRole: "tenant", RecipientUserID: contract.TenantUserID,
+			Type: "contract_ready", StatusCode: "tenant_review", StatusLabel: "รอตรวจสัญญา",
+			Title: "แบบร่างสัญญาพร้อมตรวจสอบ", Message: "เจ้าหน้าที่จัดทำแบบร่างสัญญาแล้ว กรุณาตรวจสอบรายละเอียด",
+			StallNumber: contract.StallIdent, TargetURL: "/contracts",
+		}).Error
+	})
+	return &contract, err
 }
 
 func (r *repository) FindByID(id int) (*models.Contract, error) {
@@ -102,7 +143,7 @@ func (r *repository) Create(contract *models.Contract) error {
 			}
 			targetAppState := "completed"
 			result := tx.Model(&models.Application{}).
-				Where("id = ? AND application_state IN ('completed', 'contract_pending') AND stall_ident = ? AND status = ?", *contract.ApplicationID, contract.StallIdent, "A").
+				Where("id = ? AND application_state IN ('approved', 'completed', 'contract_pending') AND stall_ident = ? AND status = ?", *contract.ApplicationID, contract.StallIdent, "A").
 				Update("application_state", targetAppState)
 			if result.Error != nil {
 				return result.Error

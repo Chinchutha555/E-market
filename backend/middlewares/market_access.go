@@ -135,7 +135,7 @@ func RequireResourceAccess(db *gorm.DB, kind string) gin.HandlerFunc {
 			forbidMarket(c)
 			return
 		}
-		if GetUserRole(c) == "bureau_director" && (kind == "application" || kind == "contract") {
+		if (GetUserRole(c) == "bureau_director" || GetUserRole(c) == "finance") && (kind == "application" || kind == "contract") {
 			c.Next()
 			return
 		}
@@ -227,7 +227,7 @@ func StaffMarketIDs(db *gorm.DB, userID int) ([]int, error) {
 }
 
 func CanManageMarket(db *gorm.DB, userID int, role string, marketID int) bool {
-	if role == "admin" {
+	if role == "admin" || role == "finance" {
 		return true
 	}
 	if (role != "staff" && role != "market_director") || userID <= 0 || marketID <= 0 {

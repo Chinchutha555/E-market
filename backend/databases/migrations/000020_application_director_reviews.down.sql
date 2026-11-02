@@ -1,0 +1,2 @@
+ALTER TABLE application DROP COLUMN bureau_director_review_json;
+ALTER TABLE application DROP COLUMN market_director_review_json;

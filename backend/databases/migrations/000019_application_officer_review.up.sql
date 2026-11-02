@@ -1,0 +1,1 @@
+ALTER TABLE application ADD COLUMN officer_review_json TEXT NOT NULL DEFAULT '';

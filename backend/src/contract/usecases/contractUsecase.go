@@ -26,7 +26,10 @@ func NewUseCase(repo domains.Repository) domains.UseCase {
 
 func toContractResponse(c *models.Contract) responses.ContractResponse {
 	return responses.ContractResponse{
-		TenantEmail: c.TenantEmail, TenantAddress: c.TenantAddress, BusinessType: c.BusinessType, BillingCycle: c.BillingCycle, TermsAndConditions: c.TermsAndConditions, AdvancePayment: c.AdvancePayment,
+		ContractTemplateID: c.ContractTemplateID, ContractTemplateCode: c.ContractTemplateCode,
+		ContractTemplateTitle: c.ContractTemplateTitle, ContractTemplateKind: c.ContractTemplateKind,
+		ContractTemplateDescription: c.ContractTemplateDescription,
+		TenantEmail:                 c.TenantEmail, TenantAddress: c.TenantAddress, BusinessType: c.BusinessType, BillingCycle: c.BillingCycle, TermsAndConditions: c.TermsAndConditions, AdvancePayment: c.AdvancePayment,
 		HasTenantSignature: len(c.TenantSignature) > 0, HasOfficerSignature: len(c.OfficerSignature) > 0, HasMarketSignature: len(c.MarketDirectorSignature) > 0, HasBureauSignature: len(c.BureauDirectorSignature) > 0, HasDocument: len(c.SupportingDocument) > 0, ReviewReason: c.ReviewReason,
 		ID:              c.ID,
 		ContractNumber:  c.ContractNumber,
@@ -65,13 +68,42 @@ func (u *useCase) GetContracts(filter requests.ContractFilter) ([]responses.Cont
 	return res, nil
 }
 
-func (u *useCase) GetContractByID(id int) (*responses.ContractResponse, error) {
+func (u *useCase) GetContractByID(id int, viewerRole string) (*responses.ContractResponse, error) {
 	contract, err := u.repo.FindByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, responses.NewAppErr(http.StatusNotFound, "ไม่พบข้อมูลสัญญา")
 		}
 		logs.Error(err)
+		return nil, responses.NewInternalServerError()
+	}
+	if contract.ContractState == "draft" && viewerRole != "staff" {
+		return nil, responses.NewAppErr(http.StatusForbidden, "แบบร่างสัญญาดูได้เฉพาะเจ้าหน้าที่")
+	}
+	res := toContractResponse(contract)
+	return &res, nil
+}
+
+func (u *useCase) SaveDraft(id int, userID int, req requests.SaveContractDraftRequest) (*responses.ContractResponse, error) {
+	if strings.TrimSpace(req.TenantName) == "" || strings.TrimSpace(req.TenantPhone) == "" || strings.TrimSpace(req.TenantIDCard) == "" || strings.TrimSpace(req.ShopName) == "" {
+		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "กรุณากรอกข้อมูลผู้เช่าและร้านค้าให้ครบ")
+	}
+	start, startErr := time.Parse("2006-01-02", strings.TrimSpace(req.StartDate))
+	end, endErr := time.Parse("2006-01-02", strings.TrimSpace(req.EndDate))
+	if startErr != nil || endErr != nil || end.Before(start) {
+		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "วันเริ่มต้นและวันสิ้นสุดสัญญาไม่ถูกต้อง")
+	}
+	if req.MonthlyRental <= 0 || req.SecurityDeposit < 0 || req.AdvancePayment < 0 {
+		return nil, responses.NewAppErr(http.StatusUnprocessableEntity, "จำนวนเงินในสัญญาไม่ถูกต้อง")
+	}
+	contract, err := u.repo.SaveDraft(id, userID, req)
+	if err != nil {
+		if errors.Is(err, domains.ErrInvalidContractState) {
+			return nil, responses.NewAppErr(http.StatusConflict, "สัญญานี้ไม่อยู่ในสถานะแบบร่าง")
+		}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, responses.NewAppErr(http.StatusNotFound, "ไม่พบสัญญา")
+		}
 		return nil, responses.NewInternalServerError()
 	}
 	res := toContractResponse(contract)

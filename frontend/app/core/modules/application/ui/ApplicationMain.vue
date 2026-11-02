@@ -594,8 +594,8 @@
                     </div>
 
                     <div class="collapsed-actions-group">
-                      <AppButton v-if="canReview(app)" class="app-action-revision" variant="outline" size="sm" @click.stop="openRejectModal(app, 'return_revision')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>ส่งกลับแก้ไข</AppButton>
-                      <AppButton v-if="canReview(app)" class="app-action-reject" variant="danger-outline" size="sm" @click.stop="openRejectModal(app, 'reject')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></template>ไม่อนุมัติ</AppButton>
+                      <AppButton v-if="canReview(app) && !['pending_bureau_director', 'pending_debt_check', 'debt_pending'].includes(app.status)" class="app-action-revision" variant="outline" size="sm" @click.stop="openRejectModal(app, 'return_revision')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>ส่งกลับแก้ไข</AppButton>
+                      <AppButton v-if="canReview(app) && !['pending_debt_check', 'debt_pending'].includes(app.status)" class="app-action-reject" variant="danger-outline" size="sm" @click.stop="openRejectModal(app, 'reject')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></template>ไม่อนุมัติ</AppButton>
                       <ApplicationActionsMenu size="sm" :show-document="false" :show-id-copy="app.has_id_card_copy" :can-review="false" :show-reject="false" @document="documentPreviewApplication = app" @id-copy="downloadIDCardCopy(app)" @revision="openRejectModal(app, 'return_revision')" @reject="openRejectModal(app, 'reject')" />
                       <AppButton
                         v-if="canTenantEdit(app)"
@@ -625,7 +625,7 @@
                         <span>รายละเอียด</span>
                       </AppButton>
 
-                      <template v-if="canReview(app) && app.status === 'pending_officer'">
+                      <template v-if="canReview(app) && (app.status === 'pending_officer' || app.status === 'submitted')">
                         <AppButton
                           variant="primary"
                           size="sm"
@@ -636,6 +636,18 @@
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                           </template>
                           <span>อนุมัติ</span>
+                        </AppButton>
+                      </template>
+                      <template v-else-if="canReview(app) && (app.status === 'pending_debt_check' || app.status === 'debt_pending')">
+                        <AppButton variant="primary" size="sm" @click.stop="processApproval(app, 'ฝ่ายการคลังตรวจสอบหนี้ค้างชำระแล้ว')" title="อนุมัติ">
+                          <template #prefix><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></template>
+                          <span>อนุมัติ</span>
+                        </AppButton>
+                      </template>
+                      <template v-else-if="isTenant && app.status === 'debt_pending'">
+                        <AppButton variant="primary" size="sm" @click.stop="payDebtAndResubmit(app)" title="ชำระหนี้ค้างและส่งให้เจ้าหน้าที่ตรวจสอบอีกครั้ง">
+                          <template #prefix><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></template>
+                          <span>ชำระหนี้และส่งตรวจอีกครั้ง</span>
                         </AppButton>
                       </template>
                       <template v-else-if="canReview(app) && app.status === 'pending_market_director'">
@@ -664,7 +676,7 @@
                           <span>ผอ.สำนัก อนุมัติ</span>
                         </AppButton>
                       </template>
-                      <template v-else-if="app.status === 'completed' && isStallLease(app) && role === 'tenant'">
+                      <template v-else-if="['approved', 'completed'].includes(app.status) && isStallLease(app) && app.requires_contract !== false && role === 'tenant'">
                         <NuxtLink
                           :to="'/contracts?new_for_stall=' + encodeURIComponent(app.stall_number || app.stall_id || '') + '&app_id=' + app.id"
                           class="btn-collapsed-primary"
@@ -685,7 +697,7 @@
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </NuxtLink>
                       </template>
-                      <template v-else-if="app.status === 'completed' && !app.has_signed_document">
+                      <template v-else-if="app.status === 'completed' && app.requires_contract !== false && !app.has_signed_document">
                         <NuxtLink
                           :to="'/contracts?stall=' + encodeURIComponent(app.stall_number || app.stall_id || '')"
                           class="btn-collapsed-primary"
@@ -713,12 +725,14 @@
                           <div class="step-label-text">
                             {{ app.status === 'revision_required'
                                 ? (isTenant ? 'แก้ไขคำร้องขอเช่า' : 'รอผู้เช่าแก้ไขคำร้อง')
-                                : 'ยื่นคำร้องขอเช่า'
+                                : app.status === 'debt_pending'
+                                  ? (isTenant ? 'ชำระหนี้ค้างชำระ' : 'รอผู้เช่าชำระหนี้ค้าง')
+                                  : 'ยื่นคำร้องขอเช่า'
                             }}
                           </div>
                         </div>
 
-                        <div class="stepper-connector" :class="{ filled: isAppStepCompleted(app.status, 2) || (isAppStepCompleted(app.status, 1) && app.status !== 'revision_required') }"></div>
+                        <div class="stepper-connector" :class="{ filled: isAppStepCompleted(app.status, 2) || (isAppStepCompleted(app.status, 1) && app.status !== 'revision_required' && app.status !== 'debt_pending') }"></div>
 
                         <!-- Step 2: จนท. ตรวจสอบ/หนี้ -->
                         <div class="stepper-step" :class="{ completed: isAppStepCompleted(app.status, 2), active: isAppStepActive(app.status, 2) }">
@@ -762,7 +776,7 @@
                           <span>{{ isStallLease(app) ? 'วันที่ขอเริ่มสัญญา' : 'วันที่ยื่นคำร้อง' }}</span>
                         </div>
                         <div class="info-value-row">
-                          <span class="info-value-text">{{ formatThaiStartDate(app.requested_start_date || app.created_at) }}</span>
+                          <span class="info-value-text">{{ app.trade_option_id && !app.requested_start_date ? 'รอกำหนดวันเริ่มสัญญา' : formatThaiStartDate(app.requested_start_date || app.created_at) }}</span>
                           <span v-if="getDaysRemainingBadge(app.requested_start_date)" class="days-remaining-pill">
                             {{ getDaysRemainingBadge(app.requested_start_date) }}
                           </span>
@@ -779,6 +793,7 @@
                           <span class="info-value-text">{{ isStallLease(app) ? 'ขอเช่าแผง' : (app.subject || app.shop_name || 'คำร้องทั่วไป') }}</span>
                         </div>
                         <div v-if="isStallLease(app) && getRentalTypeLabel(app.proposed_rent_type)" class="cell-sub-meeting-point">{{ getRentalTypeLabel(app.proposed_rent_type) }}<template v-if="app.proposed_rent_type === 'contract' && (app.requested_period_months || app.lease_term_months)"> ({{ formatLeaseDuration(app.requested_period_months || app.lease_term_months) }})</template></div>
+                        <div v-if="isStallLease(app) && app.requires_contract != null" class="cell-sub-meeting-point">{{ app.requires_contract ? 'ต้องทำสัญญา' : 'ไม่ต้องทำสัญญา' }}</div>
                         <div v-if="isStallLease(app) && app.stall_monthly_rate" class="cell-sub-meeting-point">
                           <span>{{ Number(app.stall_monthly_rate).toLocaleString('th-TH') }} บาท/เดือน</span>
                         </div>
@@ -867,8 +882,8 @@
                       </div>
 
                       <div class="footer-right-actions">
-                        <AppButton v-if="canReview(app)" class="app-action-revision" variant="outline" size="md" @click.stop="openRejectModal(app, 'return_revision')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>ส่งกลับแก้ไข</AppButton>
-                        <AppButton v-if="canReview(app)" class="app-action-reject" variant="danger-outline" size="md" @click.stop="openRejectModal(app, 'reject')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></template>ไม่อนุมัติ</AppButton>
+                        <AppButton v-if="canReview(app) && !['pending_bureau_director', 'pending_debt_check', 'debt_pending'].includes(app.status)" class="app-action-revision" variant="outline" size="md" @click.stop="openRejectModal(app, 'return_revision')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>ส่งกลับแก้ไข</AppButton>
+                        <AppButton v-if="canReview(app) && !['pending_debt_check', 'debt_pending'].includes(app.status)" class="app-action-reject" variant="danger-outline" size="md" @click.stop="openRejectModal(app, 'reject')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></template>ไม่อนุมัติ</AppButton>
                         <ApplicationActionsMenu size="md" :show-document="false" :show-id-copy="false" :can-review="false" :show-reject="false" @document="documentPreviewApplication = app" @id-copy="downloadIDCardCopy(app)" @revision="openRejectModal(app, 'return_revision')" @reject="openRejectModal(app, 'reject')" />
                         <AppButton
                           v-if="canTenantEdit(app)"
@@ -900,7 +915,7 @@
                         </AppButton>
 
                         <!-- Step 1: Officer Review -->
-                        <template v-if="canReview(app) && app.status === 'pending_officer'">
+                        <template v-if="canReview(app) && (app.status === 'pending_officer' || app.status === 'submitted')">
                           <AppButton
                             variant="primary"
                             size="md"
@@ -914,6 +929,33 @@
                           </AppButton>
                         </template>
 
+                        <!-- Step 1.5: Finance Debt Review -->
+                        <template v-else-if="canReview(app) && (app.status === 'pending_debt_check' || app.status === 'debt_pending')">
+                          <AppButton
+                            variant="primary"
+                            size="md"
+                            @click.stop="processApproval(app, 'ฝ่ายการคลังตรวจสอบหนี้ค้างชำระแล้ว')"
+                            title="ฝ่ายการคลังตรวจสอบหนี้และอนุมัติ"
+                          >
+                            <template #prefix>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </template>
+                            <span>อนุมัติ</span>
+                          </AppButton>
+                        </template>
+                        <template v-else-if="isTenant && app.status === 'debt_pending'">
+                          <AppButton
+                            variant="primary"
+                            size="md"
+                            @click.stop="payDebtAndResubmit(app)"
+                            title="ชำระหนี้ค้างและส่งให้เจ้าหน้าที่ตรวจสอบอีกครั้ง"
+                          >
+                            <template #prefix>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </template>
+                            <span>ชำระหนี้และส่งตรวจอีกครั้ง</span>
+                          </AppButton>
+                        </template>
                         <!-- Step 2: Market Director Review -->
                         <template v-else-if="canReview(app) && app.status === 'pending_market_director'">
                           <AppButton
@@ -945,7 +987,7 @@
                         </template>
 
                         <!-- Final Step: Approved -> Contract button styled with blue theme -->
-                        <template v-else-if="app.status === 'completed' && isStallLease(app) && role === 'tenant'">
+                        <template v-else-if="['approved', 'completed'].includes(app.status) && isStallLease(app) && app.requires_contract !== false && role === 'tenant'">
                           <NuxtLink
                             :to="'/contracts?new_for_stall=' + encodeURIComponent(app.stall_number || app.stall_id || '') + '&app_id=' + app.id"
                             class="btn-action-primary-solid"
@@ -966,7 +1008,7 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                           </NuxtLink>
                         </template>
-                        <template v-else-if="app.status === 'completed' && !app.has_signed_document">
+                        <template v-else-if="app.status === 'completed' && app.requires_contract !== false && !app.has_signed_document">
                           <NuxtLink
                             :to="'/contracts?stall=' + encodeURIComponent(app.stall_number || app.stall_id || '')"
                             class="btn-action-primary-solid"
@@ -1029,6 +1071,7 @@
                         <AppButton variant="outline" size="sm" title="ดูตัวอย่างเอกสารคำร้อง" @click.stop="documentPreviewApplication = app"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>ตัวอย่างเอกสาร</AppButton>
                     <span v-if="isStallLease(app)" class="badge-type badge-type-stall">ขอเช่าแผง</span>
                     <span v-else class="badge-type badge-type-general">คำร้องทั่วไป</span>
+                    <span v-if="isStallLease(app) && app.requires_contract != null" class="badge-type badge-type-stall">{{ app.requires_contract ? 'ต้องทำสัญญา' : 'ไม่ต้องทำสัญญา' }}</span>
                   </div>
                   <div style="font-size: var(--font-size-xs); color: var(--tx-94a3b8); margin-top: 2px;">
                     {{ app.created_at?.slice(0, 10) }}
@@ -1040,7 +1083,7 @@
                       แผง {{ app.stall_number }}
                     </span>
                     <div style="font-size: var(--font-size-xs); color: var(--tx-64748b); margin-top: 2px;">
-                      ฿{{ Number(app.stall_monthly_rate).toLocaleString() }}/ด. ({{ app.requested_period_months }} เดือน)
+                      ฿{{ Number(app.stall_monthly_rate).toLocaleString() }}/ด. ({{ formatApplicationDuration(app) }})
                     </div>
                   </template>
                   <template v-else>
@@ -1069,7 +1112,7 @@
                     </div>
                   </template>
                 </td>
-                <td style="color: var(--tx-475569);">{{ app.requested_start_date || app.created_at?.slice(0, 10) }}</td>
+                <td style="color: var(--tx-475569);">{{ app.trade_option_id && !app.requested_start_date ? 'รอกำหนดวันเริ่มสัญญา' : (app.requested_start_date || app.created_at?.slice(0, 10)) }}</td>
                 <td>
                   <span class="status-pill-badge" :class="getStatusPillClass(app.status)">
                     {{ getStatusBadgeLabel(app.status) }}
@@ -1111,11 +1154,11 @@
                 </td>
                 <td style="text-align: right;">
                   <div class="table-actions-cell">
-                    <AppButton v-if="canReview(app)" class="app-action-revision" variant="outline" size="sm" @click.stop="openRejectModal(app, 'return_revision')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>ส่งกลับแก้ไข</AppButton>
-                    <AppButton v-if="canReview(app)" class="app-action-reject" variant="danger-outline" size="sm" @click.stop="openRejectModal(app, 'reject')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></template>ไม่อนุมัติ</AppButton>
+                    <AppButton v-if="canReview(app) && !['pending_bureau_director', 'pending_debt_check', 'debt_pending'].includes(app.status)" class="app-action-revision" variant="outline" size="sm" @click.stop="openRejectModal(app, 'return_revision')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>ส่งกลับแก้ไข</AppButton>
+                    <AppButton v-if="canReview(app) && !['pending_debt_check', 'debt_pending'].includes(app.status)" class="app-action-reject" variant="danger-outline" size="sm" @click.stop="openRejectModal(app, 'reject')"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></template>ไม่อนุมัติ</AppButton>
                     <!-- Step 1: Officer Review -->
                     <button
-                      v-if="canReview(app) && app.status === 'pending_officer'"
+                      v-if="canReview(app) && (app.status === 'pending_officer' || app.status === 'submitted')"
                       class="btn-table-action btn-table-primary"
                       @click="processApproval(app, 'เจ้าหน้าที่ตรวจสอบเอกสารครบถ้วน ส่งต่อ ผอ.ตลาด')"
                       title="เจ้าหน้าที่ตรวจสอบ"
@@ -1124,6 +1167,25 @@
                       <span>ตรวจแล้ว</span>
                     </button>
 
+                    <!-- Step 1.5: Finance Debt Review -->
+                    <button
+                      v-else-if="canReview(app) && (app.status === 'pending_debt_check' || app.status === 'debt_pending')"
+                      class="btn-table-action btn-table-primary"
+                      @click="processApproval(app, 'ฝ่ายการคลังตรวจสอบหนี้ค้างชำระแล้ว')"
+                      title="ฝ่ายการคลังตรวจสอบหนี้และอนุมัติ"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span>อนุมัติ</span>
+                    </button>
+                    <button
+                      v-else-if="isTenant && app.status === 'debt_pending'"
+                      class="btn-table-action btn-table-primary"
+                      @click="payDebtAndResubmit(app)"
+                      title="ชำระหนี้ค้างและส่งให้เจ้าหน้าที่ตรวจสอบอีกครั้ง"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span>ชำระหนี้/ส่งตรวจ</span>
+                    </button>
                     <!-- Step 2: Market Director Review -->
                     <button
                       v-else-if="canReview(app) && app.status === 'pending_market_director'"
@@ -1148,7 +1210,7 @@
 
                     <!-- Final: Approved -> Generate Contract (Only for stall lease) -->
                     <NuxtLink
-                      v-else-if="app.status === 'completed' && isStallLease(app) && role === 'tenant'"
+                      v-else-if="['approved', 'completed'].includes(app.status) && isStallLease(app) && app.requires_contract !== false && role === 'tenant'"
                       :to="'/contracts?new_for_stall=' + encodeURIComponent(app.stall_number || app.stall_id || '') + '&app_id=' + app.id"
                       class="btn-table-action btn-table-primary"
                       title="จัดทำสัญญาเช่า"
@@ -1166,7 +1228,7 @@
                       <span>ดูสัญญา (รอตรวจ)</span>
                     </NuxtLink>
                     <NuxtLink
-                      v-else-if="app.status === 'completed' && !app.has_signed_document"
+                      v-else-if="app.status === 'completed' && app.requires_contract !== false && !app.has_signed_document"
                       :to="'/contracts?stall=' + encodeURIComponent(app.stall_number || app.stall_id || '')"
                       class="btn-table-action btn-table-view"
                       title="ดูสัญญาเช่า"
@@ -1511,10 +1573,11 @@
             </div>
 
             <div class="form-row">
-              <div class="form-group">
+              <div v-if="!revisionTarget?.trade_option_id" class="form-group">
                 <label class="form-label" for="rev_requested_start_date">วันที่ประสงค์เริ่มเช่า <b class="req-star">*</b></label>
                 <AppInput
                   id="rev_requested_start_date"
+                  :disabled="!!revisionTarget?.trade_start_date"
                   v-model="revisionForm.requested_start_date"
                   type="date"
                   :error="revisionErrors.requested_start_date"
@@ -1523,12 +1586,8 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label">ระยะเวลาขอเช่า (เดือน) <b class="req-star">*</b></label>
-                <AppSelect
-                  v-model="revisionForm.lease_term_months"
-                  :options="revisionPeriodOptions"
-                  placeholder="เลือกระยะเวลาขอเช่า"
-                />
+                <label class="form-label">ระยะเวลาขอเช่า</label>
+                <div class="revision-term-value">{{ formatApplicationDuration(revisionTarget) }}</div>
               </div>
             </div>
 
@@ -1659,6 +1718,8 @@
   </Teleport>
   <ApplicationDocumentPreview :application="documentPreviewApplication" @close="documentPreviewApplication = null" @signed="Object.assign(documentPreviewApplication, $event)" />
   <ApplicationDocumentManager :application="documentManagerApplication" @close="documentManagerApplication = null" @completed="onDocumentsCompleted" />
+  <DirectorReviewModal :open="!!directorReviewTarget" :kind="directorReviewTarget?.kind || 'market'" :initial-decision="directorReviewTarget?.decision" :application="directorReviewTarget?.app" @cancel="directorReviewTarget = null" @confirm="confirmDirectorReview" />
+  <OfficerReviewModal :open="!!officerReviewTarget" :application="officerReviewTarget?.app" @cancel="officerReviewTarget = null" @confirm="confirmOfficerReview" />
   <OfficerSignatureModal :open="!!signatureTarget" @cancel="signatureTarget = null" @confirm="submitOfficerApproval" />
   <ApplicationMockOtpModal :open="!!otpTarget" @cancel="otpTarget = null" @confirm="submitMockOtp" />
 </template>
@@ -1689,7 +1750,8 @@ const onDocumentsCompleted = async () => {
 }
 const canReview = (app: any) => {
   const currentRole = role.value || authStore.role || ''
-  return (app.status === 'pending_officer' && currentRole === 'staff') ||
+  return ((app.status === 'pending_officer' || app.status === 'submitted') && currentRole === 'staff') ||
+    ((app.status === 'pending_debt_check' || (app.status === 'debt_pending' && !app.has_finance_signature)) && currentRole === 'finance') ||
     (app.status === 'pending_market_director' && currentRole === 'market_director') ||
     (app.status === 'pending_bureau_director' && currentRole === 'bureau_director')
 }
@@ -1756,15 +1818,7 @@ const revisionForm = reactive({
   product_category: '',
   details: '',
   requested_start_date: '',
-  lease_term_months: 12
 })
-const revisionPeriodOptions = [
-  { value: 3, label: '3 เดือน (ทดลองขาย)' },
-  { value: 6, label: '6 เดือน' },
-  { value: 12, label: '1 ปี (มาตรฐาน)' },
-  { value: 24, label: '2 ปี' }
-]
-
 const revisionErrors = reactive({
   applicant_name: '',
   applicant_id_card: '',
@@ -1810,7 +1864,7 @@ const validateRevisionField = (field: keyof typeof revisionErrors) => {
   } else if (field === 'product_category') {
     revisionErrors.product_category = revisionForm.product_category.trim() ? '' : 'กรุณาระบุประเภทสินค้าที่จะจำหน่าย'
   } else if (field === 'requested_start_date') {
-    revisionErrors.requested_start_date = revisionForm.requested_start_date ? '' : 'กรุณาเลือกวันที่ประสงค์เริ่มเช่า'
+    revisionErrors.requested_start_date = revisionTarget.value?.trade_option_id || revisionForm.requested_start_date ? '' : 'กรุณาเลือกวันที่ประสงค์เริ่มเช่า'
   }
 }
 
@@ -1874,7 +1928,6 @@ const openRevision = (app: any) => {
   revisionForm.product_category = app.product_category || app.product_type || ''
   revisionForm.details = app.details || ''
   revisionForm.requested_start_date = app.requested_start_date ? String(app.requested_start_date).slice(0, 10) : ''
-  revisionForm.lease_term_months = Number(app.lease_term_months || app.requested_period_months || 12)
 }
 
 const closeRevision = () => {
@@ -1904,9 +1957,7 @@ const submitRevision = async () => {
       ...revisionForm,
       applicant_age: age,
       id_card_copy_base64: idCardCopyBase64,
-      product_type: revisionForm.product_category,
-      lease_term_months: Number(revisionForm.lease_term_months) || 12,
-      requested_period_months: Number(revisionForm.lease_term_months) || 12
+      product_type: revisionForm.product_category
     }
     await post(`/applications/${revisionTarget.value.id}/resubmit`, payload)
     const appNo = revisionTarget.value.application_number || revisionTarget.value.application_no || ''
@@ -1989,6 +2040,14 @@ const toggleCardExpanded = (id: number | string) => {
   openAppCards.value[id] = !current
 }
 
+const formatApplicationDuration = (app: any): string => {
+  const units: Record<string, string> = { days: 'วัน', months: 'เดือน', years: 'ปี' }
+  const count = Number(app?.trade_duration)
+  if (count > 0 && units[app?.trade_duration_unit]) return count + ' ' + units[app.trade_duration_unit]
+  const months = Number(app?.requested_period_months || app?.lease_term_months || 0)
+  return months > 0 ? months + ' เดือน' : '-'
+}
+
 const formatLeaseDuration = (value: number | string) => {
   const months = Number(value)
   return months > 0 && months % 12 === 0 ? `${months / 12} ปี` : `${months} เดือน`
@@ -1996,7 +2055,8 @@ const formatLeaseDuration = (value: number | string) => {
 
 const getRentalTypeLabel = (value: unknown) => {
   const labels: Record<string, string> = { trial: 'ทดลองขาย', temporary: 'ทำการค้าแบบชั่วคราว', contract: 'ทำการค้าแบบมีสัญญา' }
-  return labels[String(value || '').toLowerCase()] || ''
+  const raw = String(value || '').trim()
+  return labels[raw.toLowerCase()] || (['monthly', 'daily', 'yearly', 'annual'].includes(raw.toLowerCase()) ? '' : raw)
 }
 
 // แยกแยะประเภทคำร้อง: คำร้องขอเช่าแผง vs คำร้องทั่วไป
@@ -2010,7 +2070,7 @@ const isStallLease = (app: any): boolean => {
 const canTenantEdit = (app: any): boolean => {
   if (!isTenant.value || !isStallLease(app)) return false
   const s = String(app.status || app.application_state || '').toLowerCase()
-  return s === 'revision_required' || s === 'rejected'
+  return s === 'revision_required' || (s === 'rejected' && app.bureau_director_review?.decision !== 'reject')
 }
 
 const isGeneralApp = (app: any): boolean => !isStallLease(app)
@@ -2375,8 +2435,8 @@ const getDaysRemainingBadge = (dt?: string): string => {
 
 // Stepper Logic (4 Steps)
 const isAppStepCompleted = (status: string, step: number): boolean => {
-  // เมื่อเอกสารคำร้องถูกตีกลับมาแก้ไข (revision_required) สเต็ปที่ 1 ยังไม่เสร็จสิ้น ต้องรอให้ผู้เช่าส่งกลับ
-  if (status === 'revision_required') {
+  // เมื่อเอกสารคำร้องถูกตีกลับมาแก้ไข (revision_required) หรือมีหนี้ค้างรอผู้เช่าชำระ (debt_pending) สเต็ปที่ 1 ยังไม่เสร็จสิ้น
+  if (status === 'revision_required' || status === 'debt_pending') {
     return false
   }
   if (step === 1) return true
@@ -2393,13 +2453,13 @@ const isAppStepCompleted = (status: string, step: number): boolean => {
 }
 
 const isAppStepActive = (status: string, step: number): boolean => {
-  // เมื่อถูกส่งกลับแก้ไข สเต็ปด้านบนต้องเป็น Step ที่ 1 (ไม่ใช่ 2)
-  if (status === 'revision_required') {
+  // เมื่อถูกส่งกลับแก้ไข หรือรอผู้เช่าชำระหนี้ค้าง สเต็ปด้านบนต้องเป็น Step ที่ 1 (ไม่ใช่ 2)
+  if (status === 'revision_required' || status === 'debt_pending') {
     return step === 1
   }
   if (step === 1) return false
   if (step === 2) {
-    return ['pending_officer', 'pending_debt_check', 'debt_pending'].includes(status)
+    return ['submitted', 'pending_officer', 'pending_debt_check'].includes(status)
   }
   if (step === 3) {
     return status === 'pending_market_director'
@@ -2413,6 +2473,7 @@ const isAppStepActive = (status: string, step: number): boolean => {
 // Status Badges, Colors, and Tones
 const getStatusBadgeLabel = (status: string): string => {
   switch (status) {
+    case 'submitted':
     case 'pending_officer':
       return isTenant.value ? 'รอเจ้าหน้าที่ตรวจเอกสาร' : 'รอเจ้าหน้าที่ตรวจสอบ'
     case 'pending_debt_check':
@@ -2433,6 +2494,8 @@ const getStatusBadgeLabel = (status: string): string => {
       return isTenant.value ? 'ต้องแก้ไขเอกสาร' : 'ส่งกลับให้ผู้เช่าแก้ไข'
     case 'rejected':
       return 'ไม่อนุมัติ'
+    case 'cancelled':
+      return 'ยกเลิกแล้ว'
     default:
       return status || 'รอดำเนินการ'
   }
@@ -2440,6 +2503,7 @@ const getStatusBadgeLabel = (status: string): string => {
 
 const getStatusPillClass = (status: string): string => {
   switch (status) {
+    case 'submitted':
     case 'pending_officer':
     case 'pending_debt_check':
     case 'debt_pending':
@@ -2457,6 +2521,8 @@ const getStatusPillClass = (status: string): string => {
       return 'pill-amber'
     case 'rejected':
       return 'pill-red'
+    case 'cancelled':
+      return 'pill-gray'
     default:
       return 'pill-gray'
   }
@@ -2464,6 +2530,7 @@ const getStatusPillClass = (status: string): string => {
 
 const getCardBorderClass = (status: string): string => {
   switch (status) {
+    case 'submitted':
     case 'pending_officer':
     case 'pending_debt_check':
     case 'debt_pending':
@@ -2516,8 +2583,14 @@ const getApplicationProgressText = (app: any): string => {
         ? 'อยู่ระหว่างรอเจ้าหน้าที่ตลาดตรวจสอบเอกสารความถูกต้อง'
         : 'รอเจ้าหน้าที่ตรวจสอบเอกสารและความถูกต้อง (สามารถอนุมัติส่งต่อ, ส่งกลับแก้ไข หรือไม่อนุมัติ)'
     case 'pending_debt_check':
-    case 'debt_pending':
-      return 'อยู่ระหว่างรอตรวจสอบประวัติหนี้ค้างชำระค่าเช่า'
+      return 'อยู่ระหว่างรอฝ่ายการคลังตรวจสอบประวัติหนี้ค้างชำระค่าเช่า'
+    case 'debt_pending': {
+      const debtAmt = Number(app.market_director_review?.debt_amount || 0)
+      const amtText = debtAmt > 0 ? ` จำนวน ${debtAmt.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท` : ''
+      return isTenant.value
+        ? `ฝ่ายการคลังตรวจพบหนี้ค้างชำระ${amtText} กรุณาชำระหนี้ค้างก่อนส่งให้เจ้าหน้าที่ตรวจสอบอีกครั้ง`
+        : `ส่งกลับผู้เช่าชำระหนี้ค้างชำระ${amtText} (รอผู้เช่าชำระหนี้ก่อนส่งให้เจ้าหน้าที่ตรวจสอบอีกครั้ง)`
+    }
     case 'pending_market_director':
       return 'เจ้าหน้าที่ตรวจสอบแล้ว รอ ผอ.ตลาด พิจารณาให้ความเห็นชอบ'
     case 'pending_bureau_director':
@@ -2530,7 +2603,7 @@ const getApplicationProgressText = (app: any): string => {
       return 'บันทึกเอกสารลงนามแล้ว'
     case 'rejected':
       return isTenant.value
-        ? `คำร้องไม่ผ่านการอนุมัติ: ${app.review_note || app.bureau_director_comment || app.market_director_comment || app.officer_comment || 'ไม่ผ่านเกณฑ์การพิจารณา'} (สามารถกดแก้ไขคำร้องเพื่อยื่นใหม่ได้)`
+        ? `คำร้องไม่ผ่านการอนุมัติ: ${app.review_note || app.bureau_director_comment || app.market_director_comment || app.officer_comment || 'ไม่ผ่านเกณฑ์การพิจารณา'} ${app.bureau_director_review?.decision === 'reject' ? '(คำร้องปิดแล้ว)' : '(สามารถกดแก้ไขคำร้องเพื่อยื่นใหม่ได้)'}`
         : `ไม่อนุมัติคำร้อง: ${app.review_note || app.bureau_director_comment || app.market_director_comment || app.officer_comment || 'ไม่ผ่านเกณฑ์การพิจารณา'}`
     default:
       return 'อยู่ระหว่างดำเนินการตามขั้นตอน'
@@ -2541,12 +2614,13 @@ const getApplicationProgressText = (app: any): string => {
 const getActionActorInfo = (app: any) => {
   const status = app.status || app.application_state
   switch (status) {
+    case 'submitted':
     case 'pending_officer':
       return { role: 'เจ้าหน้าที่ตลาด', actionText: 'รอ จนท. ตรวจสอบ', tagClass: 'actor-tag-officer-pending' }
     case 'pending_debt_check':
-      return { role: 'เจ้าหน้าที่การคลัง/ตลาด', actionText: 'รอ ตรวจสอบหนี้ค้าง', tagClass: 'actor-tag-officer' }
+      return { role: 'เจ้าหน้าที่ฝ่ายการคลัง', actionText: 'รอ ฝ่ายการคลังตรวจหนี้', tagClass: 'actor-tag-officer' }
     case 'debt_pending':
-      return { role: 'ผอ.ตลาด / การคลัง', actionText: 'รอ เคลียร์หนี้ค้างชำระ', tagClass: 'actor-tag-warning' }
+      return { role: 'ผู้เช่า', actionText: 'รอ ผู้เช่าชำระหนี้ค้าง', tagClass: 'actor-tag-warning' }
     case 'pending_market_director':
       return { role: 'ผอ.ตลาด', actionText: 'รอ ผอ.ตลาด', tagClass: 'actor-tag-director' }
     case 'pending_bureau_director':
@@ -2601,40 +2675,125 @@ const getAllCommentsList = (app: any) => {
 }
 
 // Approval and Actions
-const signatureTarget = ref<{ app: any; comment: string } | null>(null)
-const otpTarget = ref<{ app: any; comment: string; signature: string } | null>(null)
+const officerReviewTarget = ref<{ app: any; comment: string } | null>(null)
+const directorReviewTarget = ref<{ app: any; comment: string; kind: 'market' | 'bureau'; decision?: 'approve' | 'reject' } | null>(null)
+const signatureTarget = ref<{ app: any; comment: string; review?: any; directorReview?: any } | null>(null)
+const confirmOfficerReview = (review: any) => {
+  if (!officerReviewTarget.value) return
+  signatureTarget.value = { ...officerReviewTarget.value, review }
+  officerReviewTarget.value = null
+}
+const otpTarget = ref<{ app: any; comment: string; signature: string; directorReview?: any; action: 'approve' | 'reject' } | null>(null)
+const confirmDirectorReview = (directorReview: any) => {
+  const target = directorReviewTarget.value
+  if (!target) return
+  directorReviewTarget.value = null
+  if (target.kind === 'bureau' && directorReview.decision === 'reject') otpTarget.value = { app: target.app, comment: 'ผอ.สำนักไม่อนุมัติคำร้อง', signature: '', directorReview, action: 'reject' }
+  else signatureTarget.value = { app: target.app, comment: target.comment, directorReview }
+}
 const submitMockOtp = async (otp: string) => {
   const target = otpTarget.value
   if (!target) return
   otpTarget.value = null
-  await processApproval(target.app, target.comment, target.signature, otp)
+  if (target.action === 'reject') {
+    try {
+      await post('/applications/' + target.app.id + '/action', { action: 'reject', comment: target.comment, bureau_director_review: target.directorReview, otp })
+      await loadApplications()
+      await showSuccess('ไม่อนุมัติและปิดคำร้องแล้ว', 'สำเร็จ')
+    } catch (err: any) { await showError(err?.data?.detail || err?.data?.message || 'ไม่สามารถดำเนินการได้') }
+    return
+  }
+  await processApproval(target.app, target.comment, target.signature, otp, undefined, target.directorReview)
 }
 const submitOfficerApproval = async (signature: string) => {
   const target = signatureTarget.value
   if (!target) return
   signatureTarget.value = null
-  await processApproval(target.app, target.comment, signature)
+  await processApproval(target.app, target.comment, signature, '', target.review, target.directorReview)
 }
-const processApproval = async (app: any, defaultComment: string, signature = '', otp = '') => {
-  if (!signature) { signatureTarget.value = { app, comment: defaultComment }; return }
-  if (app.status === 'pending_bureau_director' && !otp) { otpTarget.value = { app, comment: defaultComment, signature }; return }
+const processApproval = async (app: any, defaultComment: string, signature = '', otp = '', review?: any, directorReview?: any) => {
+  if (!signature) {
+    if ((app.status === 'pending_officer' || app.status === 'submitted') && isStallLease(app)) {
+      if (!app.officer_review_supported) { await showError('ยังไม่สามารถบันทึกข้อมูลตรวจสอบได้ กรุณาลองใหม่ภายหลัง'); return }
+      officerReviewTarget.value = { app, comment: defaultComment }
+    }
+    else if (app.status === 'pending_debt_check' || app.status === 'debt_pending') {
+      if (app.director_review_supported === false) { await showError('ยังไม่สามารถบันทึกข้อมูลตรวจสอบได้ กรุณาลองใหม่ภายหลัง'); return }
+      directorReviewTarget.value = { app, comment: defaultComment, kind: 'market' }
+    }
+    else if (app.status === 'pending_bureau_director' && isStallLease(app)) {
+      directorReviewTarget.value = { app, comment: defaultComment, kind: 'bureau', decision: 'approve' }
+    } else signatureTarget.value = { app, comment: defaultComment }
+    return
+  }
+  if (app.status === 'pending_bureau_director' && !otp) { otpTarget.value = { app, comment: defaultComment, signature, directorReview, action: 'approve' }; return }
+  const isFinanceHasDebt = ['pending_debt_check', 'debt_pending'].includes(app.status) && directorReview?.debt_status === 'has'
+  const isFinanceNoDebt = ['pending_debt_check', 'debt_pending'].includes(app.status) && directorReview?.debt_status === 'none'
+  const confirmMsg = isFinanceHasDebt
+    ? `ยืนยันบันทึกผลตรวจพบหนี้ค้างชำระ จำนวน ${Number(directorReview?.debt_amount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท และส่งกลับให้ผู้เช่าชำระหนี้ก่อนหรือไม่?`
+    : isFinanceNoDebt
+      ? `ยืนยันผลตรวจสอบไม่มีหนี้ค้างชำระ และส่งต่อคำร้องเลขที่ ${app.application_number} ให้ ผอ.ตลาด พิจารณาหรือไม่?`
+      : `ยืนยันการอนุมัติคำร้องเลขที่ ${app.application_number} หรือไม่?`
   const confirmed = otp ? true : await showConfirm(
-    `ยืนยันการอนุมัติคำร้องเลขที่ ${app.application_number} หรือไม่?`,
-    { title: 'ยืนยันการอนุมัติ', type: 'info', confirmText: 'อนุมัติคำร้อง', cancelText: 'ยกเลิก' }
+    confirmMsg,
+    {
+      title: isFinanceHasDebt ? 'ยืนยันแจ้งหนี้ค้างชำระผู้เช่า' : 'ยืนยันการอนุมัติ',
+      type: isFinanceHasDebt ? 'warning' : 'info',
+      confirmText: isFinanceHasDebt ? 'ส่งกลับผู้เช่าชำระหนี้' : 'อนุมัติคำร้อง',
+      cancelText: 'ยกเลิก'
+    }
   )
   if (!confirmed) return
+
+  const finalComment = isFinanceHasDebt
+    ? `ฝ่ายการคลังตรวจพบหนี้ค้างชำระ จำนวน ${Number(directorReview?.debt_amount || 0).toFixed(2)} บาท ส่งกลับผู้เช่าชำระหนี้ก่อน`
+    : isFinanceNoDebt
+      ? 'ฝ่ายการคลังตรวจสอบแล้ว ไม่มีหนี้ค้างชำระ ส่งต่อ ผอ.ตลาด'
+      : defaultComment
 
   try {
     await post(`/applications/${app.id}/action`, {
       action: 'approve',
-      comment: defaultComment,
+      comment: finalComment,
       signature_base64: signature,
+      officer_review: review,
+      market_director_review: ['pending_debt_check', 'debt_pending'].includes(app.status) ? directorReview : undefined,
+      bureau_director_review: app.status === 'pending_bureau_director' ? directorReview : undefined,
       otp
     })
     await loadApplications()
-    await showSuccess('บันทึกการอนุมัติเรียบร้อยแล้ว', 'อนุมัติสำเร็จ')
+    await showSuccess(
+      isFinanceHasDebt
+        ? 'บันทึกผลตรวจหนี้ค้างชำระแล้ว ระบบได้ส่งกลับให้ผู้เช่าชำระหนี้ก่อนส่งให้เจ้าหน้าที่ตรวจสอบอีกครั้ง'
+        : isFinanceNoDebt
+          ? 'บันทึกผลตรวจสอบไม่มีหนี้ค้างชำระ และส่งต่อให้ ผอ.ตลาด เรียบร้อยแล้ว'
+          : 'บันทึกการอนุมัติเรียบร้อยแล้ว',
+      'ดำเนินการสำเร็จ'
+    )
   } catch (err: any) {
     await showError(err?.data?.detail || err?.data?.message || 'เกิดข้อผิดพลาดในการอนุมัติ', 'เกิดข้อผิดพลาด')
+  }
+}
+
+const payDebtAndResubmit = async (app: any) => {
+  const debtAmt = Number(app.market_director_review?.debt_amount || 0)
+  const amtText = debtAmt > 0 ? ` จำนวน ${debtAmt.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท` : ''
+  const confirmed = await showConfirm(
+    `ยืนยันการชำระหนี้ค้างชำระ${amtText} สำหรับคำร้องเลขที่ ${app.application_number} และส่งกลับให้เจ้าหน้าที่ตรวจสอบอีกครั้งหรือไม่?`,
+    {
+      title: 'ยืนยันการชำระหนี้ค้างชำระ',
+      type: 'info',
+      confirmText: 'ชำระหนี้และส่งตรวจ',
+      cancelText: 'ยกเลิก'
+    }
+  )
+  if (!confirmed) return
+  try {
+    await post(`/applications/${app.id}/pay-debt`, {})
+    await loadApplications()
+    await showSuccess('ชำระหนี้ค้างเรียบร้อยแล้ว ระบบได้ส่งคำร้องให้เจ้าหน้าที่ตรวจสอบอีกครั้ง', 'ชำระหนี้สำเร็จ')
+  } catch (err: any) {
+    await showError(err?.data?.detail || err?.data?.message || 'ไม่สามารถบันทึกการชำระหนี้ได้', 'เกิดข้อผิดพลาด')
   }
 }
 
@@ -2681,7 +2840,13 @@ const quickRejectReasons = [
   'ประเภทสินค้าไม่สอดคล้องกับโซนการค้าของแผง'
 ]
 
-const openRejectModal = (app: any, action: 'reject' | 'return_revision' = 'reject') => {
+const openRejectModal = async (app: any, action: 'reject' | 'return_revision' = 'reject') => {
+  if (app.status === 'pending_bureau_director') {
+    if (action !== 'reject') return
+    if (!app.director_review_supported) { await showError('ยังไม่สามารถบันทึกข้อมูลตรวจสอบได้ กรุณาลองใหม่ภายหลัง'); return }
+    otpTarget.value = { app, comment: 'ผอ.สำนักไม่อนุมัติคำร้อง', signature: '', directorReview: { decision: 'reject', other_details: '', office_checked: false, system_number: '', document_date: '' }, action: 'reject' }
+    return
+  }
   rejectAction.value = action
   targetAppForReject.value = app
   rejectComment.value = ''
@@ -2985,6 +3150,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 
 <style scoped>
+.revision-term-value{min-height:42px;box-sizing:border-box;display:flex;align-items:center;padding:9px 14px;border:1px solid var(--bd-e2e8f0);border-radius:10px;background:var(--bg-f8fafc);color:var(--tx-334155);font-size:var(--font-size-base);font-weight:600}
 .top-row-right { flex-wrap: wrap; }
 .collapsed-actions-group :deep(.app-action-revision), .footer-right-actions :deep(.app-action-revision), .table-actions-cell :deep(.app-action-revision) { order: 1; }
 .collapsed-actions-group :deep(.app-action-reject), .footer-right-actions :deep(.app-action-reject), .table-actions-cell :deep(.app-action-reject) { order: 2; }
@@ -3024,8 +3190,8 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .section-title {
-  font-size: 1.375rem;
-  font-weight: 800;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
   color: var(--tx-0f172a);
   letter-spacing: -0.02em;
   margin: 0;
@@ -3679,6 +3845,9 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 14px;
 }
 
+.project-stall-entry { border: 1px solid var(--bd-eef2f6); border-radius: 12px; overflow: hidden; background: var(--bg-ffffff); gap: 0; }
+.officer-project-header { padding: 14px 20px; background: var(--bg-ffffff); border: none; border-radius: 0; }
+.market-accordion-body { padding: 14px 18px 18px 18px; background: var(--bg-f8fafc); border-top: 1px solid var(--bd-eef2f6); }
 /* Booking Item Card (Application) */
 .booking-item-card {
   background: var(--bg-ffffff);
@@ -4510,13 +4679,13 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 8px;
   margin: 0 0 14px;
   color: var(--primary);
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
 }
 .general-types-error {
   margin: 6px 0 0;
   color: #dc2626;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
 }
 .general-modal-body {
   overflow-y: auto;
@@ -5778,7 +5947,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .main-page-title {
-  font-size: 1.55rem;
+  font-size: var(--font-size-2xl);
   font-weight: 700;
   color: var(--tx-0f172a);
   letter-spacing: -0.01em;
@@ -5798,6 +5967,10 @@ watch(() => route.query.booking, (value, previous) => {
   flex-wrap: wrap;
 }
 
+.skeleton-loading-container { background: var(--bg-ffffff); border: 1px solid var(--bd-e2e8f0); border-radius: 16px; padding: 24px 28px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); }
+.skeleton-header { height: 28px; width: 220px; border-radius: 8px; background: var(--bg-f1f5f9); margin-bottom: 20px; }
+.skeleton-cards-grid { display: flex; flex-direction: column; gap: 14px; }
+.skeleton-card { height: 140px; border-radius: 12px; background: var(--bg-f8fafc); border: 1px solid var(--bd-eef2f6); }
 .table-card-container {
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-e2e8f0);
@@ -6202,7 +6375,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 .details-lead-text {
   color: var(--tx-334155);
-  font-weight: 400;
+  font-weight: 500;
   word-break: break-word;
 }
 </style>

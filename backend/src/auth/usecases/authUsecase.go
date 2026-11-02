@@ -28,7 +28,7 @@ func (u *useCase) toUserResponse(user *models.User) responses.UserResponse {
 		Role: user.Role, Email: user.Email, Phone: user.Phone,
 		Status: user.Status, CreatedAt: user.CreatedAt,
 	}
-	if user.Role == "staff" {
+	if user.Role == "staff" || user.Role == "finance" || user.Role == "market_director" {
 		if markets, err := u.repo.FindAssignedMarkets(user.ID); err == nil {
 			for _, market := range markets {
 				res.AssignedMarkets = append(res.AssignedMarkets, responses.AssignedMarketResponse{

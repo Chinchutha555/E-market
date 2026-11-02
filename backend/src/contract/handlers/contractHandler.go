@@ -46,6 +46,7 @@ func respondError(c *gin.Context, err error) {
 func (h *Handler) GetContracts(c *gin.Context) {
 	var filter requests.ContractFilter
 	_ = c.ShouldBindQuery(&filter)
+	filter.ViewerRole = middlewares.GetUserRole(c)
 
 	res, err := h.useCase.GetContracts(filter)
 	if err != nil {
@@ -70,7 +71,26 @@ func (h *Handler) GetContractByID(c *gin.Context) {
 		return
 	}
 
-	res, err := h.useCase.GetContractByID(id)
+	res, err := h.useCase.GetContractByID(id, middlewares.GetUserRole(c))
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, responses.SuccessResponse(res, http.StatusOK))
+}
+
+func (h *Handler) SaveDraft(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		respondError(c, responses.NewAppErr(http.StatusBadRequest, "รหัสสัญญาไม่ถูกต้อง"))
+		return
+	}
+	var req requests.SaveContractDraftRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondError(c, err)
+		return
+	}
+	res, err := h.useCase.SaveDraft(id, middlewares.GetUserID(c), req)
 	if err != nil {
 		respondError(c, err)
 		return

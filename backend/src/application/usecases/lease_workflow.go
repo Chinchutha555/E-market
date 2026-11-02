@@ -12,6 +12,9 @@ var errLeaseDebtNotVerified = errors.New("debt must be verified as clear")
 // leaseTransition describes only the requested transition. The caller must
 // check identity and market access and persist it atomically with notifications.
 func leaseTransition(state, action, role, comment string, debtClear bool) (string, error) {
+	if state == "submitted" {
+		state = "pending_officer"
+	}
 	if (action == "return_revision" || action == "reject") && strings.TrimSpace(comment) == "" {
 		return "", errLeaseReasonRequired
 	}
@@ -19,7 +22,7 @@ func leaseTransition(state, action, role, comment string, debtClear bool) (strin
 		return "pending_officer", nil
 	}
 	required := map[string]string{"pending_officer": "staff", "pending_market_director": "market_director", "pending_bureau_director": "bureau_director"}
-	if required[state] == "" || role != required[state] {
+	if required[state] == "" || (role != required[state] && !(state == "pending_market_director" && role == "finance")) {
 		return "", errInvalidLeaseTransition
 	}
 	switch action {

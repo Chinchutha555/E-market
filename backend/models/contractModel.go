@@ -3,6 +3,11 @@ package models
 import "time"
 
 type Contract struct {
+	ContractTemplateID          *int    `gorm:"column:contract_template_id" json:"contract_template_id"`
+	ContractTemplateCode        string  `gorm:"size:40;column:contract_template_code" json:"contract_template_code"`
+	ContractTemplateTitle       string  `gorm:"size:255;column:contract_template_title" json:"contract_template_title"`
+	ContractTemplateKind        string  `gorm:"size:30;column:contract_template_kind" json:"contract_template_kind"`
+	ContractTemplateDescription string  `gorm:"type:text;column:contract_template_description" json:"contract_template_description"`
 	TenantEmail                 string  `gorm:"column:tenant_email" json:"-"`
 	TenantAddress               string  `gorm:"column:tenant_address" json:"-"`
 	BusinessType                string  `gorm:"column:business_type" json:"-"`

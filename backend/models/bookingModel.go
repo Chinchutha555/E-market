@@ -3,6 +3,10 @@ package models
 import "time"
 
 type Booking struct {
+	TradeOptionsJSON   string     `gorm:"column:trade_options_json;type:text" json:"-"`
+	TradeDuration      int        `gorm:"column:trade_duration" json:"trade_duration"`
+	TradeDurationUnit  string     `gorm:"size:10;column:trade_duration_unit" json:"trade_duration_unit"`
+	RequiresContract   *bool      `gorm:"column:requires_contract" json:"requires_contract"`
 	ID                 int        `gorm:"primaryKey;autoIncrement" json:"id"`
 	BookingNo          string     `gorm:"size:50;unique;not null;column:booking_no" json:"booking_no"`
 	StallID            *int       `gorm:"column:stall_id" json:"stall_id"`
@@ -22,6 +26,7 @@ type Booking struct {
 	MeetingPoint       string     `gorm:"size:255;column:meeting_point" json:"meeting_point"`
 	EscortOfficer      string     `gorm:"size:255;column:escort_officer" json:"escort_officer"`
 	RentalType         string     `gorm:"size:30;column:rental_type" json:"rental_type"`
+	RentalTypeLabel    string     `gorm:"size:255;column:rental_type_label" json:"rental_type_label"`
 	OfficerNotes       string     `gorm:"type:text;column:officer_notes" json:"officer_notes"`
 	RejectionReason    string     `gorm:"type:text;column:rejection_reason" json:"rejection_reason"`
 	Note               string     `gorm:"type:text;column:note" json:"note"`

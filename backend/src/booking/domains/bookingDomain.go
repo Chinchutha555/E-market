@@ -24,6 +24,7 @@ type UseCase interface {
 }
 
 type Repository interface {
+	FindTradeCondition(marketID int, code string) (*models.MarketTradeCondition, error)
 	ProcessWaitlistLifecycle() error
 	GetPolicySettings(marketID int, marketName string) (leaseDays int, offerHours int, resolvedMarketID int, resolvedMarketName string)
 	UpdatePolicySettings(marketID int, marketName string, leaseDays int, offerHours int) (*responses.BookingPolicySettingsResponse, error)

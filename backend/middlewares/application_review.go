@@ -25,10 +25,12 @@ func RequireApplicationReviewer(db *gorm.DB) gin.HandlerFunc {
 		role := GetUserRole(c)
 		allowed := false
 		switch app.ApplicationState {
-		case "pending_officer":
+		case "pending_officer", "submitted":
 			allowed = role == "staff" && (app.MarketID == nil || CanManageMarket(db, GetUserID(c), role, *app.MarketID))
 		case "pending_market_director":
 			allowed = role == "market_director" && (app.MarketID == nil || CanManageMarket(db, GetUserID(c), role, *app.MarketID))
+		case "pending_debt_check", "debt_pending":
+			allowed = role == "finance" && (app.MarketID == nil || CanManageMarket(db, GetUserID(c), role, *app.MarketID))
 		case "pending_bureau_director":
 			allowed = role == "bureau_director"
 		}

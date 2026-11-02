@@ -36,7 +36,10 @@ func InitSQLite(dbPath string) (*gorm.DB, error) {
 }
 
 func AutoMigrate(db *gorm.DB) error {
-	return db.AutoMigrate(
+	// Normalize legacy 'submitted' states to 'pending_officer'
+	_ = db.Model(&models.Application{}).Where("application_state = ? OR application_state = ''", "submitted").Update("application_state", "pending_officer").Error
+
+	if err := db.AutoMigrate(
 		&models.User{},
 		&models.MarketStaffAssignment{},
 		&models.Market{},
@@ -45,6 +48,8 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.StallAuditLog{},
 		&models.MarketGISConfig{},
 		&models.MarketUtilitySetting{},
+		&models.MarketTradeCondition{},
+		&models.MarketContractTemplate{},
 		&models.Booking{},
 		&models.BookingStall{},
 		&models.Waitlist{},
@@ -55,5 +60,23 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.MaintenanceRecord{},
 		&models.Contract{},
 		&models.Item{},
-	)
+	); err != nil {
+		return err
+	}
+
+	var jjTemplateCount int64
+	db.Model(&models.MarketContractTemplate{}).Where("market_id = ? AND code = ?", 1, "jj_semi_permanent_lease").Count(&jjTemplateCount)
+	if jjTemplateCount == 0 {
+		_ = db.Create(&models.MarketContractTemplate{
+			MarketID:     1,
+			Code:         "jj_semi_permanent_lease",
+			Title:        "สัญญาให้เช่าแผงค้าภายในบริเวณตลาดนัดจตุจักร (แผงค้ากึ่งถาวร)",
+			ContractKind: "standard",
+			Description:  "บันทึกข้อตกลงสัญญาให้เช่าแผงค้ากึ่งถาวรภายในบริเวณตลาดนัดจตุจักร สำนักงานตลาดกรุงเทพมหานคร กำหนดระยะเวลา 1 ปี",
+			IsActive:     true,
+			SortOrder:    1,
+		}).Error
+	}
+
+	return nil
 }

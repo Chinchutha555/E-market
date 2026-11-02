@@ -1,0 +1,1 @@
+-- SQLite deployments keep snapshot columns when rolling back to preserve issued contracts.

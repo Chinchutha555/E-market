@@ -20,6 +20,8 @@ export const useAuth = () => {
 		isAuthenticated: computed(() => authStore.isLoggedIn),
 		role: computed(() => authStore.role),
 		isAdmin: computed(() => authStore.role === "admin"),
+		isStaff: computed(() => authStore.role === "staff" || authStore.role === "officer"),
+		isFinance: computed(() => authStore.role === "finance"),
 		isTenant: computed(() => authStore.role === "tenant"),
 		initAuth,
 		login: authStore.login,
