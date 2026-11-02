@@ -267,7 +267,7 @@ const subBookingSelectOptions = computed(() => {
   const allCodes = selectableSubBookings.value.map((s: any) => s.stall_number).join(', ')
   const items = selectableSubBookings.value.map((s: any) => ({
     value: s.id,
-    label: `เฉพาะแผง ${s.stall_number}${s.stall_zone_name ? ` (${s.stall_zone_name})` : ''} — ฿${Number(s.stall_monthly_rate || 3600).toLocaleString()}/เดือน`
+    label: `เฉพาะแผง ${stallShortNumber(s.stall_number)}${s.stall_zone_name ? ` (${s.stall_zone_name})` : ''} — ฿${Number(s.stall_monthly_rate || 3600).toLocaleString()}/เดือน`
   }))
   if (selectableSubBookings.value.length > 1) {
     return [

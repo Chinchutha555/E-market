@@ -203,7 +203,7 @@
             <tbody>
               <tr v-for="c in paginatedContracts" :key="c.id">
                 <td><strong class="table-code-blue">{{ c.contract_number }}</strong><div class="cell-sub-cycle">วันที่ {{ formatContractDate(c.created_at) }}</div></td>
-                <td><span class="badge badge-occupied">{{ c.stall_ident || '-' }}</span><div class="cell-sub-category">{{ contractMarket(c) }}</div></td>
+                <td><span class="badge badge-occupied">{{ stallShortNumber(c.stall_ident) || '-' }}</span><div class="cell-sub-category">{{ contractMarket(c) }}</div></td>
                 <td><div class="cell-shop-name">{{ c.shop_name || '-' }}</div><div class="cell-sub-category">{{ c.business_type || '-' }}</div></td>
                 <td><div class="cell-tenant-name">{{ c.tenant_name || '-' }}</div><a v-if="c.tenant_phone" :href="'tel:' + c.tenant_phone" class="cell-phone-link">{{ c.tenant_phone }}</a></td>
                 <td><div class="cell-duration-text">{{ formatContractDate(c.start_date) }} – {{ formatContractDate(c.end_date) }}</div></td>
@@ -249,7 +249,7 @@
                     </button>
                   </div>
                 </div>
-                <div class="flow-meta"><span>แผง <strong>{{ c.stall_ident || '-' }}</strong></span><span>{{ contractProject(c) }}</span><span>{{ contractMarket(c) }}</span><span>{{ c.tenant_name || '-' }} <a v-if="c.tenant_phone" :href="'tel:' + c.tenant_phone">{{ c.tenant_phone }}</a></span></div>
+                <div class="flow-meta"><span>แผง <strong>{{ stallShortNumber(c.stall_ident) || '-' }}</strong></span><span>{{ contractProject(c) }}</span><span>{{ contractMarket(c) }}</span><span>{{ c.tenant_name || '-' }} <a v-if="c.tenant_phone" :href="'tel:' + c.tenant_phone">{{ c.tenant_phone }}</a></span></div>
                 <div v-show="isContractCardOpen(c.id)" class="flow-card-body">
                   <div class="flow-stepper" aria-label="ขั้นตอนสัญญา">
                     <div v-for="(step, index) in contractStepLabels" :key="step" class="flow-step" :class="contractStepClass(c, index)">
@@ -493,7 +493,7 @@
 
               <div class="section-title">ข้อ ๑. วัตถุประสงค์และสถานที่เช่า</div>
               <p>
-                ผู้ให้เช่าตกลงให้เช่า และผู้เช่าตกลงเช่าพื้นที่แผงค้าเลขที่ <strong>{{ currentDoc.stall ? currentDoc.stall.stall_number : (currentDoc.stall_ident || currentDoc.stall_id) }}</strong> 
+                ผู้ให้เช่าตกลงให้เช่า และผู้เช่าตกลงเช่าพื้นที่แผงค้าเลขที่ <strong>{{ stallShortNumber(currentDoc.stall ? currentDoc.stall.stall_number : (currentDoc.stall_ident || currentDoc.stall_id)) }}</strong> 
                 เพื่อประกอบกิจการร้านค้า <strong>"{{ currentDoc.business_name || currentDoc.shop_name || 'ร้านค้า' }}"</strong> จำหน่ายสินค้าประเภท <strong>{{ currentDoc.business_type || 'ทั่วไป' }}</strong>
               </p>
 

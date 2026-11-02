@@ -56,7 +56,7 @@
             </div>
             <div>
               <div style="font-weight: 700; color: var(--tx-92400e); font-size: var(--font-size-base);">
-                คิวสำรองลำดับที่ {{ booking.queue_position || booking.queue_number || 1 }} ของแผง {{ booking.stall_number }}
+                คิวสำรองลำดับที่ {{ booking.queue_position || booking.queue_number || 1 }} ของแผง {{ stallShortNumber(booking.stall_number) }}
               </div>
               <div style="font-size: var(--font-size-xs); color: var(--tx-b45309); margin-top: 3px; line-height: 1.45;">
                 <span v-if="(booking.queue_position || booking.queue_number || 1) === 1">
@@ -89,7 +89,7 @@
           <div class="modal-info-grid">
             <div>ตลาด: <strong style="color: var(--tx-0f172a);">{{ booking.market_name }}</strong></div>
             <div>โครงการ: <strong style="color: var(--tx-1e293b);">{{ booking.project_name || 'โครงการ 01' }}</strong></div>
-            <div>เลขที่แผง: <strong style="color: var(--tx-2563eb); font-size: var(--font-size-lg);">{{ booking.stall_number }} <span v-if="booking.stall_count && booking.stall_count > 1" style="font-size: var(--font-size-xs); font-weight: 600; color: var(--tx-64748b);">(รวม {{ booking.stall_count }} แผง)</span></strong></div>
+            <div>เลขที่แผง: <strong style="color: var(--tx-2563eb); font-size: var(--font-size-lg);">{{ stallShortNumber(booking.stall_number) }} <span v-if="booking.stall_count && booking.stall_count > 1" style="font-size: var(--font-size-xs); font-weight: 600; color: var(--tx-64748b);">(รวม {{ booking.stall_count }} แผง)</span></strong></div>
             <div>โซนตลาด: <strong style="color: var(--tx-334155);">{{ booking.stall_zone_name || '-' }}</strong></div>
             <div>อัตราค่าเช่า: <strong style="color: var(--tx-059669);">฿{{ Number(booking.stall_monthly_rate || 0).toLocaleString() }}/เดือน</strong></div>
           </div>

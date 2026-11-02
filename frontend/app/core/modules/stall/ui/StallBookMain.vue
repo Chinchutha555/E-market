@@ -157,7 +157,7 @@
                       <strong>ถึงคิวของคุณแล้ว</strong>
                       <span class="waitlist-claim-badge">ได้รับสิทธิ์</span>
                     </div>
-                    <span>แผง {{ activeWaitlistOffer.stall_number || activeWaitlistOffer.stall_ident }} ถูกกันไว้ให้คุณ{{ waitlistOfferDeadlineText }}</span>
+                    <span>แผง {{ stallShortNumber(activeWaitlistOffer.stall_number || activeWaitlistOffer.stall_ident) }} ถูกกันไว้ให้คุณ{{ waitlistOfferDeadlineText }}</span>
                   </div>
                 </div>
 
@@ -336,7 +336,7 @@
                   aria-label="กรุณาเลือกแผง"
                 >
                   <header class="msed-header">
-                    <strong>แผงที่เลือก (0)</strong>
+                    <strong>{{ pausedViewStall ? 'รายละเอียดแผง' : 'แผงที่เลือก (0)' }}</strong>
                     <span>{{ selectedProject.name }}</span>
                   </header>
                   <div class="msed-content">
@@ -347,6 +347,37 @@
                       title="โครงการนี้เต็มแล้ว"
                       description="ขณะนี้มีผู้เช่าครบทุกแผง จึงยังไม่สามารถทำรายการจองได้"
                     />
+                    <div v-else-if="pausedViewStall" class="msed-paused-card">
+                      <div class="msed-paused-head">
+                        <strong>แผง {{ stallDisplayNumber(pausedViewStall) }}</strong>
+                        <span class="msed-paused-pill">{{ isPausedStall(pausedViewStall) ? 'ปิดรับจอง' : 'มีผู้เช่า' }}</span>
+                        <button type="button" class="ssc-remove msed-paused-close" title="ปิด" aria-label="ปิดรายละเอียดแผง" @click="pausedViewStall = null">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                      </div>
+                      <div class="msed-paused-photo" @click="openPhotoPreview(pausedViewStall)">
+                        <img :src="getStallPhotos(pausedViewStall)[0]" alt="ภาพแผง" />
+                      </div>
+                      <div class="msed-paused-metrics">
+                        <div><span>ขนาด</span><strong>{{ pausedViewStall.size }} <small>ตร.ม.</small></strong></div>
+                        <div><span>ค่าเช่า</span><strong>฿{{ pausedViewStall.monthlyRent.toLocaleString() }}<small>/เดือน</small></strong></div>
+                        <div><span>แรกเข้า</span><strong>฿{{ pausedViewStall.entryFee.toLocaleString() }}</strong></div>
+                      </div>
+                      <div class="msed-paused-note">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <span>{{ isPausedStall(pausedViewStall) ? 'ปิดรับจองชั่วคราว ยังจองไม่ได้ในตอนนี้' : 'มีผู้เช่าแล้ว ดูรายละเอียดได้อย่างเดียว' }}</span>
+                      </div>
+                      <template v-if="isPausedStall(pausedViewStall)">
+                        <div v-if="isInterested(pausedViewStall)" class="msed-interest-saved">
+                          <span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                            บันทึกเป็นแผงที่สนใจแล้ว
+                          </span>
+                          <button type="button" @click="toggleInterested(pausedViewStall)">นำออก</button>
+                        </div>
+                        <AppButton v-else variant="primary" size="md" full-width @click="toggleInterested(pausedViewStall)">บันทึกเป็นแผงที่สนใจ</AppButton>
+                      </template>
+                    </div>
                     <AppEmptyState
                       v-else
                       variant="card"
@@ -355,10 +386,27 @@
                       description="คลิกแผงบนผังเพื่อดูรายละเอียดและเพิ่มเข้ารายการจอง"
                     >
                       <template #details>
+                        <div v-if="interestedStalls.length" class="msed-interest-list">
+                          <span class="msed-interest-title">แผงที่สนใจของฉัน</span>
+                          <button
+                            v-for="item in interestedStalls"
+                            :key="interestKey(item)"
+                            type="button"
+                            class="msed-interest-row"
+                            @click="openInterestedStall(item)"
+                          >
+                            <span class="msed-interest-main">
+                              <strong>แผง {{ stallDisplayNumber(item) }}</strong>
+                              <small>{{ item.zone || item.projectName || '' }}</small>
+                            </span>
+                            <span class="msed-interest-badge" :class="{ 'is-open': !item.pausedByOfficer && item.status === 'available' }">{{ item.pausedByOfficer ? 'ปิดรับจอง' : (item.status === 'available' ? 'ว่างแล้ว' : 'ไม่ว่าง') }}</span>
+                          </button>
+                        </div>
                         <div class="msed-status-list">
                           <div><i class="is-available"></i><span><strong>แผงสีเขียว</strong> จองได้ทันที</span></div>
                           <div><i class="is-reserved"></i><span><strong>แผงสีเหลือง</strong> ลงทะเบียนคิวสำรอง</span></div>
                           <div><i class="is-occupied"></i><span><strong>แผงสีดำ</strong> มีผู้เช่าแล้ว</span></div>
+                          <div><i class="is-paused"></i><span><strong>แผงสีเทา</strong> ปิดรับจอง</span></div>
                         </div>
                       </template>
                     </AppEmptyState>
@@ -2001,13 +2049,14 @@ const stallSelectionKey = (stall: StallModel): string => stall.selectionId || st
 // Keep map props referentially stable. Inline .map()/Object.keys() expressions
 // created new arrays on every parent render and made the GIS component rebuild
 // its stall GeoJSON even when the actual selection had not changed.
-const mapSelectedStallCodes = computed(() => selectedStalls.value.map(stall => stall.code))
-const mapSelectedStallKeys = computed(() => selectedStalls.value.map(stallSelectionKey))
+// แผงที่กดดูอย่างเดียว (ปิดรับจอง/มีผู้เช่า) ก็ไฮไลต์บนแผนที่เหมือนแผงที่เลือก แต่ไม่นับเป็นรายการจอง
+const mapSelectedStallCodes = computed(() => selectedStalls.value.length > 0 ? selectedStalls.value.map(stall => stall.code) : (pausedViewStall.value ? [pausedViewStall.value.code] : []))
+const mapSelectedStallKeys = computed(() => selectedStalls.value.length > 0 ? selectedStalls.value.map(stallSelectionKey) : (pausedViewStall.value ? [stallSelectionKey(pausedViewStall.value)] : []))
 const mapBookedStallCodes = computed(() => Object.keys(myActiveBookingsByStall.value))
 const stallDisplayNumber = (stall?: any): string => {
   if (!stall) return '-'
   const sourceNumber = stall.sourceProperties?.number ?? stall.sourceProperties?.Number
-  return String(sourceNumber ?? stall.name ?? stall.code ?? '-').trim() || '-'
+  return String(sourceNumber ?? '').trim() || stallShortNumber(stall.code) || String(stall.name ?? '').trim() || '-'
 }
 
 // Current Selection Status ('available' or 'reserved')
@@ -2015,6 +2064,8 @@ const currentSelectionStatus = computed<'available' | 'reserved' | null>(() => {
   if (selectedStalls.value.length === 0) return null
   return selectedStalls.value[0].status === 'reserved' ? 'reserved' : 'available'
 })
+// แผงว่างที่เปิดรับจองเท่านั้นที่เลือกร่วมกับแผงว่างอื่นได้ (ปิดรับจองไม่นับเป็นว่าง)
+const isBookableAvailable = (s: StallModel) => s.status === 'available' && !isPausedStall(s)
 
 const selectedWaitingEntry = computed<any | null>(() => {
   const code = selectedStalls.value[0]?.code
@@ -2298,7 +2349,10 @@ const handleExitProject = () => {
 // Stall clicked inside a project polygon on the GIS map
 const handleMapStallSelect = (stall: StallModel) => {
   const backendStall = backendStallsByIdent.value[stall.code]
-  const effectiveStatus = backendStall ? normalizeBackendStallStatus(getBackendRecordStatus(backendStall), backendStall) : stall.status
+  // แผงที่เจ้าหน้าที่ปิดรับจองต้องคงสถานะ "ไม่ว่าง" ไว้ ห้ามให้สถานะจากฐานข้อมูลแผงทับ
+  const effectiveStatus = (stall as any).pausedByOfficer === true
+    ? stall.status
+    : (backendStall ? normalizeBackendStallStatus(getBackendRecordStatus(backendStall), backendStall) : stall.status)
   const resolvedProjectId = stall.projectId || selectedProject.value?.id || bookedProject.value?.id
   const resolvedZone = stall.zone || backendStall?.project_name || selectedProject.value?.name || bookedProject.value?.name || ''
   selectStall({ ...stall, zone: resolvedZone, projectId: resolvedProjectId, status: effectiveStatus, backendId: backendStall?.id })
@@ -2530,14 +2584,57 @@ const closeSuccessModal = () => {
   }
 }
 
+const pausedViewStall = ref<StallModel | null>(null)
+const isPausedStall = (stall?: StallModel | null) => (stall as any)?.pausedByOfficer === true
+// แผงที่สนใจ: เก็บในเครื่องผู้ใช้ (ยังไม่ส่งเซิร์ฟเวอร์ และยังไม่มีการแจ้งเตือน)
+// เก็บข้อมูลแผงไว้ด้วย เพื่อแสดงรายการได้โดยไม่ต้องรอโหลดผัง
+const INTERESTED_KEY = 'emarket-interested-stalls-v2'
+type InterestedEntry = { key: string; marketId: string; stall: any }
+const readInterested = (): InterestedEntry[] => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(INTERESTED_KEY) || '[]')
+    return Array.isArray(parsed) ? parsed.filter(item => item && typeof item.key === 'string' && item.stall) : []
+  } catch { return [] }
+}
+const interestedEntries = ref<InterestedEntry[]>(readInterested())
+const interestKey = (stall: StallModel) => `${currentMarketId.value}:${String(stall.code).toUpperCase()}`
+const isInterested = (stall?: StallModel | null) => Boolean(stall) && interestedEntries.value.some(item => item.key === interestKey(stall!))
+const interestedStalls = computed(() => interestedEntries.value.filter(item => item.marketId === currentMarketId.value).map(item => item.stall))
+const pickInterestFields = (stall: StallModel) => {
+  // ตัดพิกัดและรูปทรงออก เก็บเฉพาะข้อมูลที่ใช้แสดงการ์ด
+  const { coordinates, polygonHoles, center, ...rest } = stall as any
+  return JSON.parse(JSON.stringify({ ...rest, pausedByOfficer: isPausedStall(stall) }))
+}
+const toggleInterested = (stall: StallModel) => {
+  const key = interestKey(stall)
+  interestedEntries.value = isInterested(stall)
+    ? interestedEntries.value.filter(item => item.key !== key)
+    : [...interestedEntries.value, { key, marketId: currentMarketId.value, stall: pickInterestFields(stall) }]
+  try { localStorage.setItem(INTERESTED_KEY, JSON.stringify(interestedEntries.value)) } catch { /* ignore */ }
+}
+// เปิดการ์ดจากรายการแผงที่สนใจ (ข้อมูลตามตอนที่บันทึก)
+const openInterestedStall = (stall: any) => {
+  selectedStalls.value = []
+  pausedViewStall.value = stall as StallModel
+}
+watch(() => selectedStalls.value.length, (count) => { if (count > 0) pausedViewStall.value = null })
+watch(selectedProject, () => { pausedViewStall.value = null })
 const selectStall = (s: StallModel) => {
   if (isMarketFull.value) {
     showWarning(`ตลาด${currentMarketName.value} มีผู้เช่าเต็มแล้ว ขณะนี้ยังไม่สามารถเลือกหรือจองแผงได้`, 'ตลาดนี้เต็มแล้ว')
     return
   }
-  if (s.status === 'occupied') {
+  if (s.status === 'occupied' || isPausedStall(s)) {
+    // แผงมีผู้เช่า/ปิดรับจอง: ดูรายละเอียดได้ แต่จองไม่ได้
+    pausedViewStall.value = s
+    if (selectedStalls.value.length > 0) {
+      showWarning(isPausedStall(s)
+        ? `แผง ${stallShortNumber(s.code)} ปิดรับจองชั่วคราว ยังเพิ่มเข้ารายการจองไม่ได้`
+        : `แผง ${stallShortNumber(s.code)} มีผู้เช่าแล้ว ยังเพิ่มเข้ารายการจองไม่ได้`)
+    }
     return
   }
+  pausedViewStall.value = null
   // Toggle off if clicking an already selected stall
   const selectedKey = stallSelectionKey(s)
   const existingIdx = selectedStalls.value.findIndex(item => stallSelectionKey(item) === selectedKey)
@@ -2576,13 +2673,17 @@ const selectStall = (s: StallModel) => {
     return
   }
 
+  // แผงว่างที่ปิดรับจองเลือกไม่ได้: ถือเป็นกรณีไม่ว่าง
+  if (isPausedStall(s)) {
+    showWarning(`แผง ${stallShortNumber(s.code)} ปิดรับจองชั่วคราว จึงเลือกเพิ่มเข้ารายการจองไม่ได้`)
+    return
+  }
   // Rule 1 & 2: แผงติดจองไม่สามารถเพิ่มเข้าใบจองได้ และ Waiting list ผูกกับแผงรายแผง ไม่ใช่ตะกร้าหลายแผง
+  // ห้ามเลือกแผงว่างปนกับแผงติดจองในรายการจองเดียวกัน
   if (currentSelectionStatus.value && s.status !== currentSelectionStatus.value) {
-    if (s.status === 'reserved') {
-      showWarning('แผงติดจองไม่สามารถเพิ่มเข้าใบจองได้ กรุณาดำเนินการจองแผงว่างที่เลือกไว้ให้เสร็จสิ้นหรือล้างรายการเดิมก่อน', 'ไม่สามารถเพิ่มแผงติดจองเข้าใบจองได้')
-    } else {
-      showWarning('ไม่สามารถเลือกแผงว่างปนกับแผงที่กำลังจะเข้าคิวรอได้ กรุณากดรอคิวแผงนี้หรือนำแผงติดจองออกก่อน', 'สถานะแผงไม่ตรงกัน')
-    }
+    showWarning(s.status === 'reserved'
+      ? `เลือกแผงติดจอง (แผง ${stallShortNumber(s.code)}) พร้อมแผงว่างไม่ได้ ให้นำแผงว่างออกก่อน หรือจองแผงว่างให้เสร็จแล้วค่อยเข้าคิวแผงติดจอง`
+      : `เลือกแผงว่าง (แผง ${stallShortNumber(s.code)}) พร้อมแผงติดจองไม่ได้ ให้นำแผงติดจองออกก่อน`)
     return
   }
   if (!s.projectId && selectedProject.value?.id) {
@@ -2684,7 +2785,7 @@ const cancelConflictModal = () => {
 
 const getStallClass = (s: StallModel) => {
   const isSelected = isStallSelected(s.code)
-  const isConflict = currentSelectionStatus.value && s.status !== currentSelectionStatus.value && s.status !== 'occupied'
+  const isConflict = currentSelectionStatus.value && (isPausedStall(s) || (s.status !== currentSelectionStatus.value && s.status !== 'occupied'))
   let isDimmed = onlyAvailable.value && s.status !== 'available'
   if (zoneFilter.value === 'hotspot') {
     const isHotspot = s.code === '20A' || s.code === '20B' || s.code.endsWith('A') || s.code.endsWith('N')
@@ -3234,6 +3335,36 @@ onUnmounted(unbindBookingPageListeners)
 .msed-status-list i.is-available { background: #10b981; }
 .msed-status-list i.is-reserved { background: #f59e0b; }
 .msed-status-list i.is-occupied { background: #475569; }
+.msed-status-list i.is-paused { background: #94a3b8; }
+.msed-paused-card { width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; padding: 12px; text-align: left; border: 1px solid var(--bd-e2e8f0); border-radius: 12px; background: var(--bg-ffffff); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); }
+.msed-paused-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.msed-paused-head > strong { flex: 1; min-width: 0; }
+.msed-paused-close { flex-shrink: 0; }
+.msed-paused-head > strong { color: var(--tx-0f172a); font-size: var(--font-size-lg); font-weight: 700; }
+.msed-paused-pill { padding: 3px 10px; border-radius: 6px; background: var(--bg-f1f5f9); color: var(--tx-64748b); font-size: var(--font-size-xs); font-weight: 600; }
+.msed-paused-photo { height: 112px; border-radius: 10px; overflow: hidden; border: 1px solid var(--bd-e2e8f0); background: #0f172a; cursor: pointer; }
+.msed-paused-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.msed-paused-metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 10px 6px; text-align: center; background: var(--bg-f8fafc); border: 1px solid var(--bd-e2e8f0); border-radius: 10px; }
+.msed-paused-metrics > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.msed-paused-metrics > div + div { border-left: 1px solid var(--bd-e2e8f0); }
+.msed-paused-metrics span { font-size: var(--font-size-xs); font-weight: 600; color: var(--tx-64748b); }
+.msed-paused-metrics strong { font-size: var(--font-size-lg); font-weight: 800; color: var(--tx-0f172a); line-height: 1.25; }
+.msed-paused-metrics small { display: block; font-size: var(--font-size-xs); font-weight: 500; color: var(--tx-64748b); }
+.msed-paused-note { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border: 1px solid var(--bd-e2e8f0); border-radius: 10px; background: var(--bg-f8fafc); color: var(--tx-475569); font-size: var(--font-size-sm); font-weight: 600; line-height: 1.4; }
+.msed-paused-note svg { flex-shrink: 0; color: var(--tx-64748b); }
+.msed-interest-saved { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 1px solid var(--bd-bbf7d0); border-radius: 10px; background: var(--bg-f0fdf4); color: var(--tx-15803d); font-size: var(--font-size-sm); font-weight: 600; }
+.msed-interest-saved > span { display: inline-flex; align-items: center; gap: 6px; }
+.msed-interest-saved button { border: 0; background: transparent; color: var(--tx-64748b); font: inherit; font-size: var(--font-size-xs); font-weight: 600; text-decoration: underline; cursor: pointer; }
+.msed-paused-count { margin: 0; text-align: center; color: var(--tx-64748b); font-size: var(--font-size-xs); font-weight: 500; }
+.msed-interest-list { width: 100%; display: flex; flex-direction: column; gap: 6px; margin-top: 18px; text-align: left; }
+.msed-interest-title { font-size: var(--font-size-sm); font-weight: 700; color: var(--tx-334155); }
+.msed-interest-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 10px 12px; border: 1px solid var(--bd-e2e8f0); border-radius: 10px; background: var(--bg-ffffff); cursor: pointer; font: inherit; text-align: left; }
+.msed-interest-row:hover { border-color: var(--bd-bfdbfe); background: var(--bg-eff6ff); }
+.msed-interest-main { display: flex; flex-direction: column; min-width: 0; }
+.msed-interest-main strong { color: var(--tx-0f172a); font-size: var(--font-size-sm); font-weight: 700; }
+.msed-interest-main small { color: var(--tx-64748b); font-size: var(--font-size-xs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msed-interest-badge { flex-shrink: 0; padding: 3px 9px; border-radius: 6px; background: var(--bg-f1f5f9); color: var(--tx-64748b); font-size: var(--font-size-xs); font-weight: 600; }
+.msed-interest-badge.is-open { background: var(--bg-dcfce7); color: var(--tx-15803d); }
 .msed-status-list strong { color: var(--tx-334155); font-weight: 800; }
 
 /* Form input disabled style */

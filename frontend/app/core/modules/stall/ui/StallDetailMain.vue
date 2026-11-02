@@ -43,7 +43,7 @@
                   <span class="eyebrow">{{ marketName }}</span>
                   <span class="status-badge" :class="`status-${stall.stall_status || stall.status || 'available'}`">{{ statusLabel }}</span>
                 </div>
-                <h1>แผง {{ stall.ident || stall.stall_ident }}{{ stall.name ? ` (${stall.name})` : '' }}</h1>
+                <h1>แผง {{ stallShortNumber(stall.ident || stall.stall_ident) }}{{ stall.name ? ` (${stall.name})` : '' }}</h1>
                 <p>{{ stall.project_name || 'ไม่ระบุโครงการ' }} · โซน {{ stall.zone_name || stall.zone_id || '-' }} · {{ formattedFloor }}</p>
               </div>
               <div class="header-actions">
@@ -136,11 +136,11 @@
             <div class="panel-heading">
               <div>
                 <h2>ข้อมูลโครงสร้างและรายละเอียดแผงเช่า</h2>
-                <p>รายละเอียดโครงสร้าง ขนาดพื้นที่ หมวดสินค้า และอัตราค่าธรรมเนียมของแผง {{ stall.ident || stall.stall_ident }}</p>
+                <p>รายละเอียดโครงสร้าง ขนาดพื้นที่ หมวดสินค้า และอัตราค่าธรรมเนียมของแผง {{ stallShortNumber(stall.ident || stall.stall_ident) }}</p>
               </div>
             </div>
             <dl class="fact-grid">
-              <div><dt>รหัสแผงค้า</dt><dd>{{ stall.ident || stall.stall_ident }}</dd></div>
+              <div><dt>รหัสแผงค้า</dt><dd>{{ stallShortNumber(stall.ident || stall.stall_ident) }}</dd></div>
               <div><dt>โครงการ / อาคาร</dt><dd>{{ stall.project_name || 'ไม่ระบุ' }}</dd></div>
               <div><dt>โซน / ระดับชั้น</dt><dd>โซน {{ stall.zone_name || stall.zone_id || '-' }} / {{ formattedFloor }}</dd></div>
               <div><dt>ขนาดกว้าง × ลึก</dt><dd>{{ stall.width || 2 }} × {{ stall.depth || 2.5 }} ม. ({{ stallAreaSqm }} ตร.ม.)</dd></div>

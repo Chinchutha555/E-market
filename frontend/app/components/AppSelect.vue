@@ -66,6 +66,8 @@ const props = withDefaults(defineProps<{
   error?: boolean | string
   // multiple = เลือกได้หลายค่า (modelValue เป็นอาร์เรย์) เมนูไม่ปิดหลังเลือก
   multiple?: boolean
+  // หน่วยของรายการ ใช้สรุปตอน multiple เลือกหลายค่า เช่น unit="โครงการ" -> "เลือก 3 โครงการ"
+  unit?: string
   // inline = แสดงรายการในฟอร์มเลย ไม่ใช่ป๊อปอัป (เหมาะกับ multiple ที่ต้องเห็นตัวเลือกพร้อมกัน)
   inline?: boolean
   // searchable = มีช่องค้นหาในเมนู (เหมาะกับรายการยาว)
@@ -131,7 +133,10 @@ const selectedOption = computed(() => {
 const selectedLabel = computed(() => {
   if (!props.multiple) return selectedOption.value?.label || ''
   const labels = normalizedOptions.value.filter(o => selectedValues.value.includes(String(o.value))).map(o => o.label)
-  if (labels.length <= 2) return labels.join(', ')
+  if (labels.length <= 1) return labels.join(', ')
+  // มีหน่วยระบุ (เช่น โครงการ) สรุปเป็น "เลือก 3 โครงการ" ไม่ให้ยาวล้นช่อง
+  if (props.unit) return `เลือก ${labels.length} ${props.unit}`
+  if (labels.length === 2) return labels.join(', ')
   return `${labels[0]}, ${labels[1]} และอีก ${labels.length - 2}`
 })
 

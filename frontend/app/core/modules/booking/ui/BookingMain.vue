@@ -458,7 +458,7 @@
                     <div class="cell-sub-date">{{ getBookingProjectName(b) }}</div>
                   </td>
                   <td>
-                    <strong>{{ b.stall_number }}</strong>
+                    <strong>{{ stallShortNumber(b.stall_number) }}</strong>
                     <div class="cell-sub-date">{{ getBookingStallCountLabel(b) }}</div>
                   </td>
                   <td>
@@ -683,7 +683,7 @@
                       <div class="compact-meta-item compact-meta-stall" :title="b.stall_number">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                         <span>แผงค้า</span>
-                        <strong>{{ getBookingStallItems(b).length > 1 ? `${getBookingDisplayStallCount(b)} แผง` : b.stall_number }}</strong>
+                        <strong>{{ getBookingStallItems(b).length > 1 ? `${getBookingDisplayStallCount(b)} แผง` : stallShortNumber(b.stall_number) }}</strong>
                       </div>
 
                       <div class="compact-meta-item" :title="`โครงการ ${getBookingProjectName(b)}`">
@@ -722,7 +722,7 @@
                           :style="isStallTerminal(sub.status) ? 'opacity: 0.65; background: var(--bg-f8fafc);' : ''"
                         >
                           <div class="msa-stall-info">
-                            <span class="msa-stall-code">แผง {{ sub.stall_number }}</span>
+                            <span class="msa-stall-code">แผง {{ stallShortNumber(sub.stall_number) }}</span>
                             <span v-if="getStallProjectName(sub, b)" class="msa-stall-zone">{{ getStallProjectName(sub, b) }}</span>
                             <span
                               v-if="isStallTerminal(sub.status)"
@@ -919,7 +919,7 @@
                         </div>
                         <div class="info-value-row">
                           <span class="stall-count-pill">
-                            <span class="stall-code-strong">{{ getBookingStallItems(b).length > 1 ? `${getBookingDisplayStallCount(b)} แผง` : b.stall_number }}</span>
+                            <span class="stall-code-strong">{{ getBookingStallItems(b).length > 1 ? `${getBookingDisplayStallCount(b)} แผง` : stallShortNumber(b.stall_number) }}</span>
                           </span>
                         </div>
                       </div>
@@ -1059,7 +1059,7 @@
             >
               <div>
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                  <strong>แผง {{ item.stall_number }}</strong>
+                  <strong>แผง {{ stallShortNumber(item.stall_number) }}</strong>
                   <span
                     v-if="item.status === 'offered'"
                     class="status-pill-badge pill-blue"
@@ -1544,14 +1544,14 @@
                     <div class="compact-meta-item compact-meta-stall" :title="b.stall_number">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                       <span>แผงค้า</span>
-                      <strong>{{ getBookingStallItems(b).length > 1 ? `${getBookingDisplayStallCount(b)} แผง` : b.stall_number }}</strong>
+                      <strong>{{ getBookingStallItems(b).length > 1 ? `${getBookingDisplayStallCount(b)} แผง` : stallShortNumber(b.stall_number) }}</strong>
                       <button
                         v-if="getBookingStallItems(b).length <= 1 && getStallQueueCount(b.stall_number) > 0"
                         type="button"
                         class="msa-btn"
                         style="background: var(--bg-eff6ff); color: var(--tx-1d4ed8); border: 1px solid var(--bd-93c5fd); display: inline-flex; align-items: center; gap: 5px; font-weight: 700; padding: 2px 9px; font-size: var(--font-size-xs); margin-left: 4px; cursor: pointer;"
                         @click.stop="openStallQueueModal(b.stall_number, b.market_name)"
-                        :title="`คลิกดูรายชื่อผู้จองและผู้รอคิวแผง ${b.stall_number} (${getStallQueueCount(b.stall_number)} ราย)`"
+                        :title="`คลิกดูรายชื่อผู้จองและผู้รอคิวแผง ${stallShortNumber(b.stall_number)} (${getStallQueueCount(b.stall_number)} ราย)`"
                       >
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                         <span>{{ getStallQueueCount(b.stall_number) }}</span>
@@ -1594,7 +1594,7 @@
                         :style="isStallTerminal(sub.status) ? 'opacity: 0.65; background: var(--bg-f8fafc);' : ''"
                       >
                         <div class="msa-stall-info">
-                          <span class="msa-stall-code">แผง {{ sub.stall_number }}</span>
+                          <span class="msa-stall-code">แผง {{ stallShortNumber(sub.stall_number) }}</span>
                           <span v-if="getStallProjectName(sub, b)" class="msa-stall-zone">{{ getStallProjectName(sub, b) }}</span>
                           <span
                             v-if="isStallTerminal(sub.status)"
@@ -1611,7 +1611,7 @@
                             class="msa-btn"
                             style="background: var(--bg-eff6ff); color: var(--tx-1d4ed8); border: 1px solid var(--bd-93c5fd); display: inline-flex; align-items: center; gap: 5px; font-weight: 700; cursor: pointer;"
                             @click.stop="openStallQueueModal(sub.stall_number, sub.market_name || b.market_name)"
-                            :title="`คลิกดูรายชื่อผู้จองและผู้รอคิวแผง ${sub.stall_number} (${getStallQueueCount(sub.stall_number)} ราย)`"
+                            :title="`คลิกดูรายชื่อผู้จองและผู้รอคิวแผง ${stallShortNumber(sub.stall_number)} (${getStallQueueCount(sub.stall_number)} ราย)`"
                           >
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                             <span>{{ getStallQueueCount(sub.stall_number) }}</span>
@@ -1845,7 +1845,7 @@
                       </div>
                       <div class="info-value-row">
                         <span class="stall-count-pill">
-                          <span class="stall-code-strong">{{ getBookingStallItems(b).length > 1 ? `${getBookingDisplayStallCount(b)} แผง` : b.stall_number }}</span>
+                          <span class="stall-code-strong">{{ getBookingStallItems(b).length > 1 ? `${getBookingDisplayStallCount(b)} แผง` : stallShortNumber(b.stall_number) }}</span>
                         </span>
                       </div>
                     </div>
@@ -2089,7 +2089,7 @@
                       </td>
                       <td>
                         <div style="font-weight: 700; color: var(--tx-1e293b);">
-                          แผง {{ b.stall_number }}
+                          แผง {{ stallShortNumber(b.stall_number) }}
                           <span style="font-weight: 500; color: var(--tx-64748b); font-size: var(--font-size-xs);">
                             ({{ getBookingStallCountLabel(b) }})
                           </span>
@@ -2104,7 +2104,7 @@
                             @click.stop="openStallQueueModal(sub.stall_number, sub.market_name || b.market_name)"
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                            <span>{{ sub.stall_number }}: {{ getStallQueueCount(sub.stall_number) }}</span>
+                            <span>{{ stallShortNumber(sub.stall_number) }}: {{ getStallQueueCount(sub.stall_number) }}</span>
                           </button>
                         </div>
                       </td>
@@ -2248,7 +2248,7 @@
                   >
                     <div class="officer-queue-card-header">
                       <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <strong>แผง {{ wg.stallNumber }}</strong>
+                        <strong>แผง {{ stallShortNumber(wg.stallNumber) }}</strong>
                         <span v-if="wg.offeredItem" class="status-pill-badge pill-blue" style="font-size: var(--font-size-xs); padding: 2px 8px;">
                           กำลังเสนอสิทธิ์ให้ {{ wg.offeredItem.tenant_name }} (เหลือ {{ formatRemainingOfferTime(wg.offeredItem) }} • หมดเขต {{ formatOfferExpiresAtText(wg.offeredItem) }})
                         </span>
@@ -2320,7 +2320,7 @@
               >
                 <div>
                   <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <strong>แผง {{ item.stall_number || item.stall_ident }}</strong>
+                    <strong>แผง {{ stallShortNumber(item.stall_number || item.stall_ident) }}</strong>
                     <span
                       class="status-pill-badge"
                       :class="item.status === 'cancelled' ? 'pill-red' : (item.status === 'expired' ? 'pill-amber' : 'pill-gray')"
@@ -2388,7 +2388,7 @@
                 <AppCheckbox
                   v-model="approvedApproveStallNumbers"
                   :value="sub.stall_number"
-                  :label="`แผง ${sub.stall_number}${sub.project_name || sub.stall_zone_name ? ` (${sub.project_name || sub.stall_zone_name})` : ''}`"
+                  :label="`แผง ${stallShortNumber(sub.stall_number)}${sub.project_name || sub.stall_zone_name ? ` (${sub.project_name || sub.stall_zone_name})` : ''}`"
                 />
                 <span
                   class="status-pill-badge"
@@ -2468,7 +2468,7 @@
     <!-- 3. Select Slot Modal -->
     <div v-if="showSelectSlotModal && targetBooking" class="modal-overlay" @click.self="showSelectSlotModal = false">
       <div class="modal-content" style="max-width: 480px;">
-        <AppModalHeader title="เลือกวันและเวลานัดชมแผง" :subtitle="`แผง ${targetBooking.stall_number}`" icon="calendar" @close="showSelectSlotModal = false" />
+        <AppModalHeader title="เลือกวันและเวลานัดชมแผง" :subtitle="`แผง ${stallShortNumber(targetBooking.stall_number)}`" icon="calendar" @close="showSelectSlotModal = false" />
         <div class="modal-body">
           <div class="form-group" style="margin-bottom: 14px;">
             <label class="form-label">เลือกวันที่เปิดให้เข้าชมแผง <span class="req-star" aria-hidden="true">*</span></label>
@@ -2521,7 +2521,7 @@
     <!-- 6. Stall Queue Chain Modal (Officer View Only - ผังคิวการจองแผงค้า) -->
     <div v-if="showStallQueueModal" class="modal-overlay" @click.self="showStallQueueModal = false">
       <div class="modal-content modal-queue-chain" @click.stop>
-        <AppModalHeader :title="`คิวแผงค้า ${selectedStallNumber}`" :subtitle="selectedStallMarketName" icon="grid" @close="showStallQueueModal = false" />
+        <AppModalHeader :title="`คิวแผงค้า ${stallShortNumber(selectedStallNumber)}`" :subtitle="selectedStallMarketName" icon="grid" @close="showStallQueueModal = false" />
 
         <!-- Modal Sub-Tabs: Active vs History -->
         <div class="modal-subtabs-row">
@@ -2768,6 +2768,7 @@ import {
   getAppointmentRoundKey
 } from '../../stall/composables/useMarketVisitSchedule'
 import { getMarketGisConfig } from '../../stall/data/markets_registry'
+import { getBookingStatusLabel, getBookingStatusTone } from '../utils/bookingStatus'
 import { useNotifications } from '~/composables/useNotifications'
 
 const route = useRoute()
@@ -3148,7 +3149,7 @@ const handleAdvanceStallWaitlist = async (stallNumber: string) => {
 const withdrawWaitlistByOfficer = async (q: any) => {
   if (!q?.id) return
   const confirmed = await showConfirm(
-    `ต้องการนำคุณ ${q.tenant_name} ออกจากคิวรอแผง ${q.stall_number} ใช่หรือไม่?`,
+    `ต้องการนำคุณ ${q.tenant_name} ออกจากคิวรอแผง ${stallShortNumber(q.stall_number)} ใช่หรือไม่?`,
     {
       title: 'นำรายชื่อออกจากคิว',
       type: 'warning',
@@ -4147,7 +4148,7 @@ const officerStallGroups = computed<OfficerStallGroup[]>(() => {
     const stallNumber = (b.stall_number || 'ไม่ระบุแผง').trim()
     const marketName = b.market_name || (officerSelectedMarket.value === 'all' ? 'ทุกตลาด' : officerSelectedMarket.value) || 'ตลาดนัดจตุจักร'
     const projectName = b.project_name || ''
-    const stallKey = `${marketName}::${projectName}::${stallNumber}`
+    const stallKey = `${b.market_id || marketName}::${projectName}::${stallNumber}`
     if (!map.has(stallKey)) {
       map.set(stallKey, {
         stallNumber,
@@ -4214,7 +4215,8 @@ const officerProjectGroups = computed<OfficerProjectGroup[]>(() => {
   filteredOfficerBookings.value.forEach(b => {
     const marketName = b.market_name || (officerSelectedMarket.value === 'all' ? 'ทุกตลาด' : officerSelectedMarket.value) || 'ตลาดนัดจตุจักร'
     const projectName = getBookingProjectName(b)?.trim() || 'โครงการ 01'
-    const projectKey = `${marketName}::${projectName}`
+    // จัดกลุ่มด้วยรหัสตลาด ไม่ใช่ชื่อตลาด: บางใบจองไม่มีชื่อตลาด (market_name ว่าง) ทำให้โครงการเดียวกันแตกเป็นสองกลุ่ม
+    const projectKey = `${b.market_id || marketName}::${projectName}`
     if (!map.has(projectKey)) {
       map.set(projectKey, {
         key: projectKey,
@@ -4230,6 +4232,7 @@ const officerProjectGroups = computed<OfficerProjectGroup[]>(() => {
     }
 
     const project = map.get(projectKey)!
+    if (b.market_name && project.marketName !== b.market_name) project.marketName = b.market_name
     project.bookings.push(b)
     project.bookingCount += 1
     if (['pending', 'pending_approval', 'pending_slot', 'approved', 'interested'].includes(b.status)) {
@@ -4959,43 +4962,9 @@ const getTenantCuePillClass = (status: string) => {
 }
 
 // Status Badges & Descriptions
-const getStatusBadgeLabel = (status: string) => {
-  switch (status) {
-    case 'pending_approval':
-    case 'pending': return 'รอเจ้าหน้าที่อนุมัติ'
-    case 'pending_slot': return 'รอเลือกวันนัดชม'
-    case 'approved': return 'นัดหมายสำเร็จ'
-    case 'interested': return 'รอผู้เช่ายื่นคำร้อง'
-    case 'waiting_queue': return 'รอคิว'
-    case 'lease_applied':
-    case 'completed': return 'ยื่นคำร้องสำเร็จ'
-    case 'rejected':
-    case 'cancelled': return 'ยกเลิก'
-    case 'not_interested': return 'สละสิทธิ์'
-    case 'no_show': return 'ไม่มาตามนัด (ยกเลิก)'
-    case 'terminated': return 'สิ้นสุดสัญญาเช่า'
-    default: return 'นัดหมายสำเร็จ'
-  }
-}
+const getStatusBadgeLabel = (status: string) => getBookingStatusLabel(status)
 
-const getStatusPillClass = (status: string) => {
-  switch (status) {
-    case 'lease_applied':
-    case 'completed': return 'pill-purple'
-    case 'approved': return 'pill-green'
-    case 'interested': return 'pill-blue'
-    case 'pending_approval':
-    case 'pending':
-    case 'pending_slot': return 'pill-amber'
-    case 'waiting_queue': return 'pill-sky'
-    case 'cancelled':
-    case 'rejected':
-    case 'no_show':
-    case 'not_interested':
-    case 'terminated': return 'pill-gray'
-    default: return 'pill-purple'
-  }
-}
+const getStatusPillClass = (status: string) => `pill-${getBookingStatusTone(status)}`
 
 const getCardBorderClass = (status: string) => {
   switch (status) {
@@ -5152,10 +5121,10 @@ const handleOfficerCancel = async (b: any) => {
   const activeCount = getBookingActiveStallCount(b)
   const title = isQueue ? 'ยืนยันยกเลิกการต่อคิว' : isInterested ? 'ยืนยันยกเลิกใบจองทั้งใบ' : 'ยืนยันยกเลิกนัดหมายทั้งใบ'
   const message = isQueue
-    ? `คุณต้องการ "ยกเลิกการต่อคิว" ของคุณ ${b.tenant_name} (แผง ${b.stall_number} คิวสำรองที่ ${b.queue_position || b.queue_number || 1}) ใช่หรือไม่?\n(ระบบจะนำชื่อออกจากคิวและปรับลำดับคิวข้างหลังขึ้นมาแทน)`
+    ? `คุณต้องการ "ยกเลิกการต่อคิว" ของคุณ ${b.tenant_name} (แผง ${stallShortNumber(b.stall_number)} คิวสำรองที่ ${b.queue_position || b.queue_number || 1}) ใช่หรือไม่?\n(ระบบจะนำชื่อออกจากคิวและปรับลำดับคิวข้างหลังขึ้นมาแทน)`
     : isInterested
-      ? `คุณต้องการยกเลิกใบจอง / บันทึกการสละสิทธิ์ของคุณ ${b.tenant_name} (${activeCount > 1 ? `รวม ${activeCount} แผง: ` : 'แผง '}${b.stall_number}) ใช่หรือไม่?\n(หากต้องการยกเลิกเฉพาะบางแผง สามารถกดปุ่ม "ยกเลิกแผงนี้" แยกรายแผงในการ์ดได้)`
-      : `คุณต้องการ "ยกเลิกนัดหมายทั้งใบจอง" ของคุณ ${b.tenant_name} (${activeCount > 1 ? `รวม ${activeCount} แผง: ` : 'แผง '}${b.stall_number}) ใช่หรือไม่?\n(หากต้องการยกเลิกเฉพาะบางแผง สามารถกดปุ่ม "ยกเลิกแผงนี้" แยกรายแผงในการ์ดได้)`
+      ? `คุณต้องการยกเลิกใบจอง / บันทึกการสละสิทธิ์ของคุณ ${b.tenant_name} (${activeCount > 1 ? `รวม ${activeCount} แผง: ` : 'แผง '}${stallShortNumber(b.stall_number)}) ใช่หรือไม่?\n(หากต้องการยกเลิกเฉพาะบางแผง สามารถกดปุ่ม "ยกเลิกแผงนี้" แยกรายแผงในการ์ดได้)`
+      : `คุณต้องการ "ยกเลิกนัดหมายทั้งใบจอง" ของคุณ ${b.tenant_name} (${activeCount > 1 ? `รวม ${activeCount} แผง: ` : 'แผง '}${stallShortNumber(b.stall_number)}) ใช่หรือไม่?\n(หากต้องการยกเลิกเฉพาะบางแผง สามารถกดปุ่ม "ยกเลิกแผงนี้" แยกรายแผงในการ์ดได้)`
 
   const confirmed = await showConfirm(message, {
     title,
@@ -5202,9 +5171,9 @@ const handleCancelSingleStallBooking = async (subBooking: any, reason: string, p
   const isOfficerPendingReject = currentRole.value === 'officer' && ['pending', 'pending_approval', 'pending_slot'].includes(subBooking.status)
   const actionLabel = isOfficerPendingReject ? 'ปฏิเสธนัดหมายเฉพาะแผง' : 'ยกเลิกเฉพาะแผง'
   const confirmed = await showConfirm(
-    `คุณต้องการ${actionLabel} ${subBooking.stall_number} ใช่หรือไม่?\n(ระบบจะปล่อยสิทธิ์เฉพาะแผง ${subBooking.stall_number} ให้ผู้รอคิวลำดับแรกหรือปล่อยว่าง ส่วนแผงอื่นในใบจองนี้ยังคงอยู่ตามปกติ)`,
+    `คุณต้องการ${actionLabel} ${stallShortNumber(subBooking.stall_number)} ใช่หรือไม่?\n(ระบบจะปล่อยสิทธิ์เฉพาะแผง ${stallShortNumber(subBooking.stall_number)} ให้ผู้รอคิวลำดับแรกหรือปล่อยว่าง ส่วนแผงอื่นในใบจองนี้ยังคงอยู่ตามปกติ)`,
     {
-      title: `ยืนยัน${actionLabel} ${subBooking.stall_number}`,
+      title: `ยืนยัน${actionLabel} ${stallShortNumber(subBooking.stall_number)}`,
       type: 'warning',
       confirmText: isOfficerPendingReject ? 'ยืนยันปฏิเสธแผงนี้' : 'ยืนยันยกเลิกแผงนี้',
       cancelText: 'ย้อนกลับ'
@@ -5228,7 +5197,7 @@ const handleCancelSingleStallBooking = async (subBooking: any, reason: string, p
         })
       }
       await loadBookings()
-      await showSuccess(`${actionLabel} ${subBooking.stall_number} เรียบร้อยแล้ว แผงที่เหลือในใบจองยังคงดำเนินการต่อได้ตามปกติ`, 'สำเร็จ')
+      await showSuccess(`${actionLabel} ${stallShortNumber(subBooking.stall_number)} เรียบร้อยแล้ว แผงที่เหลือในใบจองยังคงดำเนินการต่อได้ตามปกติ`, 'สำเร็จ')
     } catch (err: any) {
       await showError(err?.data?.detail || 'เกิดข้อผิดพลาด', 'ข้อผิดพลาด')
     }
@@ -5241,9 +5210,9 @@ const handleCancelBooking = async (b: any, reason: string) => {
   const isMultiStall = activeCount > 1
   const confirmed = await showConfirm(
     isQueue
-      ? `คุณต้องการสละสิทธิ์การต่อคิวแผง ${b.stall_number} (คิวสำรองที่ ${b.queue_position || b.queue_number || 1}) หรือไม่?\n(หากสละสิทธิ์ คิวจะถูกปล่อยและไม่สามารถกู้คืนได้)`
+      ? `คุณต้องการสละสิทธิ์การต่อคิวแผง ${stallShortNumber(b.stall_number)} (คิวสำรองที่ ${b.queue_position || b.queue_number || 1}) หรือไม่?\n(หากสละสิทธิ์ คิวจะถูกปล่อยและไม่สามารถกู้คืนได้)`
       : isMultiStall
-        ? `คุณต้องการยกเลิกใบจองรหัส ${formatBookingNumber(b.booking_number)} ทั้งหมด ${activeCount} แผงที่เหลือ (${b.stall_number}) หรือไม่?\n(หากต้องการยกเลิกเฉพาะบางแผง สามารถกดปุ่ม "ยกเลิกแผงนี้" แยกรายแผงในการ์ดได้)`
+        ? `คุณต้องการยกเลิกใบจองรหัส ${formatBookingNumber(b.booking_number)} ทั้งหมด ${activeCount} แผงที่เหลือ (${stallShortNumber(b.stall_number)}) หรือไม่?\n(หากต้องการยกเลิกเฉพาะบางแผง สามารถกดปุ่ม "ยกเลิกแผงนี้" แยกรายแผงในการ์ดได้)`
         : `คุณต้องการยกเลิกรายการนี้หรือไม่? ${b.holding_stall ? '(หากยกเลิก แผงจะถูกเสนอสิทธิ์ให้ผู้รอคิวลำดับถัดไปทันที)' : ''}`,
     {
       title: isQueue ? 'ยืนยันสละสิทธิ์คิวสำรอง' : isMultiStall ? `ยืนยันยกเลิกใบจองทั้งใบ (${activeCount} แผง)` : 'ยืนยันยกเลิกการจอง',
@@ -5713,7 +5682,7 @@ onMounted(async () => {
 
 .tracking-container {
   width: 100%;
-  max-width: 1600px;
+  max-width: none;
   margin: 0 auto;
   padding: 24px 32px 48px;
   box-sizing: border-box;
@@ -6597,7 +6566,7 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   min-width: 0;
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   line-height: 1.35;
   white-space: nowrap;
 }
@@ -10065,5 +10034,4 @@ onMounted(async () => {
   .main-white-card.primary-tab-content-card { padding: 16px; }
   .market-accordion-body { padding: 10px; }
 }
-
 </style>

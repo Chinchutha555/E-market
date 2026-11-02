@@ -54,6 +54,8 @@
               <span class="filter-field-label">โซน / โครงการ</span>
               <AppSelect
                 v-model="zoneFilter"
+                multiple
+                unit="โครงการ"
                 :options="zoneOptions"
                 placeholder="ทุกโซน"
               />
@@ -87,8 +89,8 @@
               />
             </div>
 
-            <div v-if="managementMode" class="filter-field-group">
-              <span class="filter-field-label">ความพร้อมของข้อมูล</span>
+            <div class="filter-field-group">
+              <span class="filter-field-label">การรับจอง</span>
               <AppSelect
                 v-model="readinessFilter"
                 :options="readinessOptions"
@@ -603,7 +605,9 @@
             'is-expanding-to-stall': expandProjectPanel,
             'is-returning-from-stall': returnProjectPanel,
             'is-exiting-project': isProjectPanelExiting,
-            'is-sheet-expanded': isProjectSheetExpanded
+            'is-sheet-expanded': isProjectSheetExpanded,
+            'has-custom-body': !!$slots['project-body'],
+            'has-bottom-toolbar': managementMode && !inspectOnly
           }"
           :style="projectSheetHeight !== null ? {
             height: `${projectSheetHeight}px !important`,
@@ -652,8 +656,15 @@
           </div>
 
           <div class="smp-title-row">
+            <button type="button" class="smp-sheet-close-btn" aria-label="ย้อนกลับ ดูผังรวมตลาด" title="ย้อนกลับ" @click="closeProjectSheet">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
             <span class="smp-dot" :style="{ backgroundColor: activeProject.color }"></span>
             <h3 class="smp-title">{{ activeProject.name }}</h3>
+            <AppButton v-if="managementMode && !isOverviewPage && !inspectOnly" class="smp-edit-project-btn" size="sm" variant="outline" aria-label="แก้ไขข้อมูลโครงการ" @click="emit('requestEditProject', activeProject.id)">
+              <template #prefix><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></template>
+              แก้ไข
+            </AppButton>
           </div>
           <div class="smp-category">{{ activeProject.category }}</div>
 
@@ -766,12 +777,17 @@
             <button type="button" class="smp-stat is-occupied" :class="{ 'is-active': appliedAvailabilityFilter === 'occupied' }" :aria-pressed="appliedAvailabilityFilter === 'occupied'" :disabled="statusDataLoading" @click="setProjectStatusQuickFilter('occupied')">
               <span class="smp-stat-label">มีผู้เช่า</span>
               <span v-if="statusDataLoading" class="smp-stat-skeleton" aria-hidden="true"></span>
-              <strong v-else>{{ activeLayout.occupied.toLocaleString('th-TH') }}</strong>
+              <strong v-else>{{ (activeLayout.occupied - (managementMode ? 0 : pausedAsOccupiedCount)).toLocaleString('th-TH') }}</strong>
+            </button>
+            <button type="button" class="smp-stat is-paused" :class="{ 'is-active': appliedReadinessFilter === 'paused' }" :aria-pressed="appliedReadinessFilter === 'paused'" :disabled="statusDataLoading" @click="setProjectBookingQuickFilter('paused')">
+              <span class="smp-stat-label">ปิดรับจอง <small class="smp-stat-note">แยกจากสถานะ</small></span>
+              <span v-if="statusDataLoading" class="smp-stat-skeleton" aria-hidden="true"></span>
+              <strong v-else>{{ pausedStallCount.toLocaleString('th-TH') }}</strong>
             </button>
           </div>
 
           <!-- อัตราการเช่าพื้นที่ (Occupancy Progress Bar) -->
-          <div v-if="managementMode" class="smp-occ-card" :class="{ 'is-map-colors': isOverviewPage }">
+          <div v-if="managementMode && isOverviewPage" class="smp-occ-card is-map-colors">
             <div class="smp-occ-header">
               <div class="smp-occ-title-group">
                 <span class="smp-occ-title">อัตราการเช่าพื้นที่</span>
@@ -793,7 +809,7 @@
           </div>
 
           <!-- ข้อมูลโครงการ: ขนาดพื้นที่ & ขนาดแผงมาตรฐาน -->
-          <div class="smp-project-info-grid" :class="{ 'is-list': isOverviewPage || !managementMode }">
+          <div class="smp-project-info-grid is-list">
             <div class="smp-info-pill">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path>
@@ -809,18 +825,8 @@
               </svg>
               <div class="smp-info-text">
                 <small>ขนาดแผงมาตรฐาน</small>
-                <strong><span>2.5 × 2.0</span><em>ม. (5 ตร.ม.)</em></strong>
+                <strong><span>{{ standardStallWidth.toFixed(1) }} × {{ standardStallDepth.toFixed(1) }}</span><em>ม. ({{ Number((standardStallWidth * standardStallDepth).toFixed(1)) }} ตร.ม.)</em></strong>
               </div>
-            </div>
-          </div>
-
-          <!-- สัญลักษณ์สีสถานะแผงบนผัง -->
-          <div v-if="managementMode && !isOverviewPage" class="smp-legend">
-            <span class="smp-legend-title">สัญลักษณ์สีแผงค้า</span>
-            <div class="smp-legend-items">
-              <div><span class="smp-sw sw-available"></span>ว่างพร้อมเช่า</div>
-              <div><span class="smp-sw sw-reserved"></span>ติดจอง / คิวสำรอง</div>
-              <div><span class="smp-sw sw-occupied"></span>มีผู้เช่าแล้ว</div>
             </div>
           </div>
 
@@ -1023,7 +1029,7 @@
                     <div class="ov-filter-grid">
                       <div class="ov-field">
                         <span class="ov-label">โครงการ / โซน</span>
-                        <AppSelect v-model="zoneFilter" :options="zoneOptions" placeholder="ทั้งหมด" />
+                        <AppSelect v-model="zoneFilter" multiple unit="โครงการ" :options="zoneOptions" placeholder="ทุกโครงการ" />
                       </div>
                       <div class="ov-field">
                         <span class="ov-label">ชั้น</span>
@@ -1044,7 +1050,11 @@
                         <AppSelect v-model="sizeFilter" :options="sizeOptions" placeholder="ทุกขนาด" />
                       </div>
                       <div class="ov-field">
-                        <span class="ov-label">ความครบถ้วนของข้อมูล</span>
+                        <span class="ov-label">สถานะแผง</span>
+                        <AppSelect v-model="availabilityFilter" :options="availabilityOptions" placeholder="ทุกสถานะ" />
+                      </div>
+                      <div class="ov-field">
+                        <span class="ov-label">การรับจอง</span>
                         <AppSelect v-model="readinessFilter" :options="readinessOptions" placeholder="ทั้งหมด" />
                       </div>
                     </div>
@@ -1278,6 +1288,8 @@ const props = withDefaults(defineProps<{
   dashboardTitle?: string
   dashboardSubtitle?: string
   activeFilterCodes?: string[] | null
+  /** โหมดจดมิเตอร์: รหัสแผง -> สถานะการจด (ไม่มีรหัสในรายการ = ไม่มีบิลให้จด) ค่า null = ไม่ใช่โหมดจดมิเตอร์ */
+  meterStates?: Record<string, string> | null
   operationalFilterMeta?: Record<string, StallOperationalFilterMeta>
   statusDataLoading?: boolean
 }>(), {
@@ -1312,6 +1324,7 @@ const props = withDefaults(defineProps<{
   dashboardTitle: '',
   dashboardSubtitle: '',
   activeFilterCodes: null,
+  meterStates: null,
   operationalFilterMeta: () => ({}),
   statusDataLoading: false
 })
@@ -1322,6 +1335,8 @@ const emit = defineEmits<{
   (e: 'updateProjectPolygon', project: ProjectZone): void
   (e: 'updateStallPolygon', project: ProjectZone, stall: any): void
   (e: 'requestAddProject', coordinates: [number, number][]): void
+  (e: 'requestEditProject', projectId: string): void
+  (e: 'filtered-summary', summary: { active: boolean; total: number; available: number; reserved: number; occupied: number; paused: number; codes: Set<string> }): void
   (e: 'requestAddStallLayout', project: ProjectZone, coordinates: [number, number][], floorId: string, dimensions?: { widthM: number; depthM: number }): void
   (e: 'requestAddFacility', coordinates: [number, number], projectId?: string): void
   (e: 'requestDeleteFacility', facility: MarketFacility): void
@@ -1372,8 +1387,8 @@ const rentFilter = ref<'all' | 'under-2000' | '2000-3000' | 'over-3000'>('all')
 type StallSizeFilter = 'all' | 'up-to-5' | '5-to-10' | 'over-10'
 const sizeFilter = ref<StallSizeFilter>('all')
 const availabilityFilter = ref<'available' | 'reserved' | 'occupied' | 'action_required' | 'all'>('all')
-const zoneFilter = ref('all')
-const readinessFilter = ref<'all' | 'ready' | 'missing-stalls' | 'incomplete-stalls'>('all')
+const zoneFilter = ref<string[]>([])
+const readinessFilter = ref<'all' | 'open' | 'paused'>('all')
 type ContractStatusFilter = 'all' | 'active' | 'expiring' | 'expired'
 type ExpiryFilter = 'all' | '30' | '60' | '90' | 'custom'
 type BookingRangeFilter = 'all' | '7' | '30' | '90' | 'custom'
@@ -1408,8 +1423,8 @@ const appliedSearchQuery = ref('')
 const appliedRentFilter = ref<'all' | 'under-2000' | '2000-3000' | 'over-3000'>('all')
 const appliedSizeFilter = ref<StallSizeFilter>('all')
 const appliedAvailabilityFilter = ref<'available' | 'reserved' | 'occupied' | 'action_required' | 'all'>('all')
-const appliedZoneFilter = ref('all')
-const appliedReadinessFilter = ref<'all' | 'ready' | 'missing-stalls' | 'incomplete-stalls'>('all')
+const appliedZoneFilter = ref<string[]>([])
+const appliedReadinessFilter = ref<'all' | 'open' | 'paused'>('all')
 const appliedFloorFilter = ref('all')
 const appliedContractStatusFilter = ref<ContractStatusFilter>('all')
 const appliedContractExpiryFilter = ref<ExpiryFilter>('all')
@@ -1423,6 +1438,21 @@ const appliedReturnStatusFilter = ref<ReturnFilter>('all')
 const appliedLegalStatusFilter = ref<LegalFilter>('all')
 const appliedMaintenanceStatusFilter = ref<MaintenanceFilter>('all')
 const appliedRequestTypeFilter = ref<RequestTypeFilter>('all')
+
+const standardStallWidth = computed(() => Number(activeProject.value?.standardStallWidthM) || 2.5)
+const standardStallDepth = computed(() => Number(activeProject.value?.standardStallDepthM) || 2)
+// แผงว่างที่เจ้าหน้าที่ปิดรับจอง (ไม่นับรวมใน "ว่างพร้อมเช่า")
+const isStallPaused = (stall: MapStall) => (stall as any).pausedByOfficer === true || stall.bookable === false
+const pausedStallCount = computed(() => (activeLayout.value?.stalls || []).filter(isStallPaused).length)
+// ฝั่งผู้เช่า แผงปิดรับจองถูกแปลงเป็น "ไม่ว่าง" เพื่อกันการจอง จึงต้องหักออกจากการ์ด "มีผู้เช่า"
+const pausedAsOccupiedCount = computed(() => (activeLayout.value?.stalls || []).filter(stall => (stall as any).pausedByOfficer === true).length)
+// การรับจอง (เปิด/ปิด) เป็นคนละมิติกับสถานะแผง
+const setProjectBookingQuickFilter = (value: 'open' | 'paused') => {
+  const next = appliedReadinessFilter.value === value ? 'all' : value
+  readinessFilter.value = next
+  appliedReadinessFilter.value = next
+  refreshSources()
+}
 
 const setProjectStatusQuickFilter = (status: 'available' | 'reserved' | 'occupied' | 'all') => {
   const nextStatus = status !== 'all' && appliedAvailabilityFilter.value === status ? 'all' : status
@@ -1749,16 +1779,20 @@ const findStallStatusOverride = (stallCode: string): 'available' | 'reserved' | 
 // Apply the authoritative market-level state before any counter, color,
 // filter, tooltip or click handler consumes a stall layout.
 const applyMarketStatus = (layout: ProjectStallLayout): ProjectStallLayout => {
-  if (!props.marketFull && Object.keys(props.stallStatusOverrides).length === 0) {
+  const hasPausedStall = !props.managementMode && layout.stalls.some(stall => stall.bookable === false)
+  if (!props.marketFull && !hasPausedStall && Object.keys(props.stallStatusOverrides).length === 0) {
     return layout
   }
   const stalls = layout.stalls.map(stall => {
     const override = findStallStatusOverride(stall.code)
+    const status = props.marketFull
+      ? ('occupied' as const)
+      : (override || stall.status || 'available')
+    // แผงที่เจ้าหน้าที่ปิดรับจอง: ฝั่งผู้เช่าเลือกจองไม่ได้ (นับเป็นไม่ว่าง)
     return {
       ...stall,
-      status: props.marketFull
-        ? ('occupied' as const)
-        : (override || stall.status || 'available')
+      status: hasPausedStall && stall.bookable === false && status === 'available' ? ('occupied' as const) : status,
+      pausedByOfficer: hasPausedStall && stall.bookable === false && status === 'available'
     }
   })
   const available = stalls.filter(stall => stall.status === 'available').length
@@ -1943,6 +1977,7 @@ const matchesStallFiltersWith = (
     if (size === '5-to-10' && (areaSqM <= 5 || areaSqM > 10)) return false
     if (size === 'over-10' && areaSqM <= 10) return false
   }
+  if (!stallMatchesReadiness(stall, appliedReadinessFilter.value)) return false
   const floorId = String(stall.floor ?? stall.floorLevel ?? '')
   if (operational.floor !== 'all' && floorId !== operational.floor) return false
 
@@ -2020,17 +2055,31 @@ const projectHasMatchingStallWith = (
 ) => {
   // With no stall-level filter every project already matches. Avoid walking
   // and cloning thousands of stall polygons on every project hover.
-  if (rent === 'all' && availability === 'all' && size === 'all' && !hasOperationalFilter(operational) && activeFilterCodeSet.value === null) return true
+  if (rent === 'all' && availability === 'all' && size === 'all' && !hasOperationalFilter(operational) && activeFilterCodeSet.value === null && appliedReadinessFilter.value === 'all') return true
   const projectLayout = getProjectLayout(project)
   return Boolean(projectLayout?.stalls.some(stall => matchesStallFiltersWith(stall, rent, availability, size, operational)))
 }
 
-const getProjectReadiness = (project: ProjectZone): 'ready' | 'missing-stalls' | 'incomplete-stalls' => {
-  const stalls = getProjectLayout(project).stalls
-  if (!stalls.length) return 'missing-stalls'
-  return stalls.some(stall => !stall.code || !Number(stall.widthM) || !Number(stall.depthM) || !Number(stall.monthlyRent))
-    ? 'incomplete-stalls'
-    : 'ready'
+// เปิดจองล่วงหน้า: สัญญาเหลือไม่เกินกี่วันและยังไม่มีการยื่นต่อ
+const ADVANCE_BOOKING_WINDOW_DAYS = 60
+
+const getStallBookingState = (stall: MapStall): 'ready' | 'advance' | 'not-ready' | 'paused' | 'closed' => {
+  if (!stall.code || !Number(stall.widthM) || !Number(stall.depthM) || !Number(stall.monthlyRent)) return 'not-ready'
+  if (stall.bookable === false) return 'paused'
+  if (stall.status === 'available') return 'ready'
+  const meta = props.operationalFilterMeta[String(stall.code).trim().toUpperCase()]
+  if (stall.status === 'occupied' && meta) {
+    if (meta.renewalStatus === 'declined') return 'advance'
+    const days = Number(meta.contractExpiryDays)
+    if (!meta.renewalStatus && Number.isFinite(days) && days >= 0 && days <= ADVANCE_BOOKING_WINDOW_DAYS) return 'advance'
+  }
+  return 'closed'
+}
+
+// ตัวกรองความพร้อมให้จอง: เปิดรับจอง = จองได้ทันทีหรือจองล่วงหน้า, ปิดรับจอง = เจ้าหน้าที่ปิดเอง
+const stallMatchesReadiness = (stall: MapStall, filter: 'all' | 'open' | 'paused') => {
+  if (filter === 'all') return true
+  return filter === 'open' ? !isStallPaused(stall) : isStallPaused(stall)
 }
 
 const projectMatchesAllFiltersWith = (
@@ -2040,14 +2089,14 @@ const projectMatchesAllFiltersWith = (
   rent: typeof rentFilter.value,
   availability: typeof availabilityFilter.value,
   size: StallSizeFilter,
-  zone = 'all',
+  zone: string[] = [],
   readiness: typeof readinessFilter.value = 'all',
   operational: OperationalFilterSelection = appliedOperationalFilters()
 ) => {
   const matchesCategory = (!category || project.category === category) &&
     (legendCategories.value.length === 0 || legendCategories.value.includes(project.category))
-  const matchesZone = zone === 'all' || project.id === zone
-  const matchesReadiness = readiness === 'all' || getProjectReadiness(project) === readiness
+  const matchesZone = zone.length === 0 || zone.includes(project.id)
+  const matchesReadiness = readiness === 'all' || getProjectLayout(project).stalls.some(stall => stallMatchesReadiness(stall, readiness))
   return matchesCategory && matchesZone && matchesReadiness && matchesSearchWith(project, query) && projectHasMatchingStallWith(project, rent, availability, size, operational)
 }
 
@@ -2089,14 +2138,14 @@ const previewFilteredStallCount = computed(() => overviewProjects.value.reduce((
 }, 0))
 
 const hasActiveFilters = computed(() => Boolean(
-  appliedCategoryFilter.value || appliedSearchQuery.value.trim() || appliedRentFilter.value !== 'all' || appliedAvailabilityFilter.value !== 'all' || appliedSizeFilter.value !== 'all' || appliedZoneFilter.value !== 'all' || appliedReadinessFilter.value !== 'all' || hasOperationalFilter(appliedOperationalFilters())
+  appliedCategoryFilter.value || appliedSearchQuery.value.trim() || appliedRentFilter.value !== 'all' || appliedAvailabilityFilter.value !== 'all' || appliedSizeFilter.value !== 'all' || appliedZoneFilter.value.length > 0 || appliedReadinessFilter.value !== 'all' || hasOperationalFilter(appliedOperationalFilters())
 ))
 const advancedFilterCount = computed(() => [
   appliedCategoryFilter.value,
   appliedRentFilter.value !== 'all',
   appliedSizeFilter.value !== 'all',
-  !props.isOverviewPage && appliedAvailabilityFilter.value !== 'all',
-  appliedZoneFilter.value !== 'all',
+  appliedAvailabilityFilter.value !== 'all',
+  appliedZoneFilter.value.length > 0,
   appliedReadinessFilter.value !== 'all',
   appliedFloorFilter.value !== 'all',
   appliedContractExpiryFilter.value !== 'all',
@@ -2108,6 +2157,29 @@ const advancedFilterCount = computed(() => [
   appliedRequestTypeFilter.value !== 'all'
 ].filter(Boolean).length)
 const hasAdvancedFilters = computed(() => advancedFilterCount.value > 0)
+
+// สรุปจำนวนแผงตามตัวกรองที่ใช้อยู่ ส่งให้หน้าแม่เพื่อให้การ์ดตัวเลขด้านบนตามตัวกรอง (นับทั้งตลาดเมื่อมีตัวกรอง)
+const filteredStatusSummary = computed(() => {
+  const summary = { active: false, total: 0, available: 0, reserved: 0, occupied: 0, paused: 0, codes: new Set<string>() }
+  if (!hasActiveFilters.value && !hasAdvancedFilters.value) return summary
+  summary.active = true
+  overviewProjects.value.forEach((project) => {
+    if (!projectMatchesAllFilters(project)) return
+    getEffectiveFloorLayoutsForProject(project).forEach((layout) => {
+      layout.stalls.forEach((stall) => {
+        if (!matchesStallFilters(stall)) return
+        summary.total += 1
+        summary.codes.add(String(stall.code || '').trim().toUpperCase())
+        if (isStallPaused(stall)) summary.paused += 1
+        if (stall.status === 'reserved') summary.reserved += 1
+        else if (stall.status === 'occupied') summary.occupied += 1
+        else summary.available += 1
+      })
+    })
+  })
+  return summary
+})
+watch(filteredStatusSummary, (summary) => { emit('filtered-summary', summary) }, { immediate: true })
 
 // Category legend (read-only): สี → หมวดหมู่ → เลขโครงการ
 const categoryStats = computed(() => {
@@ -2132,10 +2204,10 @@ const categoryOptions = computed<SelectOption[]>(() => [
 ])
 
 const zoneOptions = computed<SelectOption[]>(() => [
-  { value: 'all', label: `ทุกโซน (${projects.value.length} โซน)` },
   ...projects.value.map(project => ({
     value: project.id,
-    label: `${project.sectionNumber ? `โครงการ ${project.sectionNumber} · ` : ''}${project.name}`
+    // ชื่อโครงการมักมีเลขอยู่แล้ว (เช่น "โครงการที่ 14") ไม่ต่อเลขซ้ำ
+    label: project.sectionNumber && !String(project.name).includes(String(project.sectionNumber)) ? `โครงการ ${project.sectionNumber} · ${project.name}` : String(project.name)
   }))
 ])
 
@@ -2226,9 +2298,8 @@ const requestTypeOptions: SelectOption[] = [
 
 const readinessOptions: SelectOption[] = [
   { value: 'all', label: 'ทั้งหมด' },
-  { value: 'ready', label: 'พร้อมเผยแพร่' },
-  { value: 'missing-stalls', label: 'ยังไม่มีแผงในโซน' },
-  { value: 'incomplete-stalls', label: 'ข้อมูลแผงไม่ครบ' },
+  { value: 'open', label: 'เปิดรับจอง' },
+  { value: 'paused', label: 'ปิดรับจอง' },
 ]
 
 const handleCategoryChange = (val: string | number) => {
@@ -2875,7 +2946,7 @@ const handleStallCardHover = (stall: MapStall) => {
   if (!map || !hoverPopup) return
   setHoveredStall(stall)
   const isMyBooked = !props.previewMode && (props.myBookedStallCodes || []).includes(stall.code)
-  const canClick = props.managementMode || (stall.status !== 'occupied' && !isMyBooked)
+  const canClick = props.managementMode || !isMyBooked
   map.getCanvas().style.cursor = canClick ? 'pointer' : 'not-allowed'
   showPopupForStall(stall)
 }
@@ -2888,7 +2959,6 @@ const handleStallCardLeave = () => {
 }
 
 const handleStallCardClick = (stall: MapStall) => {
-  if (stall.status === 'occupied' && !props.managementMode) return
   emit('selectStall', stall)
 }
 
@@ -3256,6 +3326,8 @@ const getStallsGeoJson = () => {
     features: (layout?.stalls || []).map((s, idx) => {
       const isSearchMatch = Boolean(appliedSearchQuery.value.trim()) && stallMatchesSearchWith(s, appliedSearchQuery.value)
       const isSelected = isStallSelected(s)
+      // โหมดจดมิเตอร์: แผงที่ไม่มีบิลให้จดใช้สถานะ none (จางลง) ไม่ใช้สีสถานะแผง
+      const meterState = props.meterStates ? (props.meterStates[String(s.code || '').trim().toUpperCase()] || 'none') : ''
       return {
         type: 'Feature',
         id: idx + 1,
@@ -3270,7 +3342,9 @@ const getStallsGeoJson = () => {
           code: s.code,
           label: getStallMapLabel(s),
           status: s.status,
+          isPaused: (s as any).pausedByOfficer === true || (s.bookable === false && s.status === 'available'),
           isSelected,
+          meterState,
           isHovered: hoveredStallKey.value === getStallSelectionKey(s),
           floor: s.floor,
           floorName: s.floorName,
@@ -3379,12 +3453,21 @@ const setupProjectLayers = () => {
       'fill-color': [
         'case',
         ['boolean', ['get', 'isSelected'], false], '#2563eb',
+        // สีโหมดจดมิเตอร์ (ไม่ผูกกับสถานะแผง)
+        ['==', ['get', 'meterState'], 'pending'], '#f59e0b',
+        ['==', ['get', 'meterState'], 'no-meter'], '#fcd34d',
+        ['==', ['get', 'meterState'], 'recorded'], '#10b981',
+        ['==', ['get', 'meterState'], 'abnormal'], '#ef4444',
+        ['==', ['get', 'meterState'], 'skipped'], '#94a3b8',
+        ['==', ['get', 'meterState'], 'none'], '#cbd5e1',
+        ['==', ['get', 'meterState'], 'no-data'], '#cbd5e1',
         ['boolean', ['get', 'isDimmed'], false], [
           'case',
           ['==', ['get', 'status'], 'available'], '#86efac',
           ['==', ['get', 'status'], 'reserved'], '#fed7aa',
           '#94a3b8'
         ],
+        ['boolean', ['get', 'isPaused'], false], '#94a3b8',
         ['==', ['get', 'status'], 'available'], '#10b981',
         ['==', ['get', 'status'], 'reserved'], '#f59e0b',
         '#475569'
@@ -3393,6 +3476,8 @@ const setupProjectLayers = () => {
         'case',
         ['boolean', ['get', 'isSelected'], false], 1,
         ['boolean', ['get', 'isDimmed'], false], 0.32,
+        ['==', ['get', 'meterState'], 'none'], 0.4,
+        ['==', ['get', 'meterState'], 'no-data'], 0.55,
         1
       ],
       'fill-outline-color': '#ffffff'
@@ -4723,7 +4808,7 @@ const enterProject = (p: ProjectZone, directToFloor?: string) => {
     // ทุกครั้งที่เปิดโครงการบนมือถือ ให้เริ่มเป็น Bottom Sheet ครึ่งหน้าจอเสมอ
     // ป้องกันค่าความสูงจากการลากหรือขยายโครงการก่อนหน้าค้างอยู่
     isProjectSheetExpanded.value = false
-    projectSheetHeight.value = Math.round(window.innerHeight * 0.5)
+    projectSheetHeight.value = Math.round(window.innerHeight * sheetDefaultRatio())
   }
   isPolygonEditMode.value = false
   isStallPolygonEditMode.value = false
@@ -4788,15 +4873,19 @@ const enterProject = (p: ProjectZone, directToFloor?: string) => {
 
 // ควบคุมการเลื่อนปรับขนาดความสูง Bottom Sheet ของโครงการบนโหมด Responsive
 const isProjectSheetExpanded = ref(false)
-const projectSheetHeight = ref<number | null>(null)
+// ใช้ร่วมกับการ์ดจดมิเตอร์รายแผง (StallMeterRecordCard) เพื่อให้แผ่นล่างของโครงการกับแผงสูงเท่ากันตอนสลับ
+const projectSheetHeight = useState<number | null>('overview-sheet-height', () => null)
 const isSheetDragging = ref(false)
+// ความสูงเริ่มต้นของแผ่นล่างบนมือถือ: แผงที่ใช้เนื้อหาเฉพาะโหมด (จดมิเตอร์) สูงกว่าเล็กน้อยเพื่อให้กรอกได้โดยไม่ต้องเลื่อน
+const slotsRef = useSlots()
+const sheetDefaultRatio = () => (slotsRef['project-body'] ? 0.62 : 0.5)
 let sheetTouchStartY = 0
 let sheetTouchStartHeight = 0
 let sheetMoved = false
 
 const toggleProjectSheetExpand = () => {
   isProjectSheetExpanded.value = !isProjectSheetExpanded.value
-  projectSheetHeight.value = isProjectSheetExpanded.value ? Math.round(window.innerHeight - 58) : Math.round(window.innerHeight * 0.5)
+  projectSheetHeight.value = isProjectSheetExpanded.value ? Math.round(window.innerHeight - 58) : Math.round(window.innerHeight * sheetDefaultRatio())
 }
 
 const onSheetTouchStart = (e: TouchEvent) => {
@@ -4825,6 +4914,16 @@ const onSheetTouchMove = (e: TouchEvent) => {
   }
 }
 
+// ปิด Bottom Sheet กลับผังรวมตลาด: ใช้ร่วมกันระหว่างการรูดลงและปุ่มปิดบนมือถือ
+const closeProjectSheet = () => {
+  projectSheetHeight.value = 0
+  setTimeout(() => {
+    projectSheetHeight.value = null
+    isProjectSheetExpanded.value = false
+    exitProject()
+  }, 180)
+}
+
 const onSheetTouchEnd = () => {
   if (!isSheetDragging.value || typeof window === 'undefined' || window.innerWidth > 768) return
   isSheetDragging.value = false
@@ -4835,7 +4934,7 @@ const onSheetTouchEnd = () => {
       projectSheetHeight.value = Math.round(window.innerHeight - 58)
       isProjectSheetExpanded.value = true
     } else {
-      projectSheetHeight.value = Math.round(window.innerHeight * 0.5)
+      projectSheetHeight.value = Math.round(window.innerHeight * sheetDefaultRatio())
       isProjectSheetExpanded.value = false
     }
     return
@@ -4843,12 +4942,7 @@ const onSheetTouchEnd = () => {
 
   // หากลากลงมาต่ำกว่า 22vh หรือรูดลงมาใกล้ขอบจอล่างสุด -> ให้ปิดกลับผังรวมตลาด
   if (projectSheetHeight.value && projectSheetHeight.value <= window.innerHeight * 0.22) {
-    projectSheetHeight.value = 0
-    setTimeout(() => {
-      projectSheetHeight.value = null
-      isProjectSheetExpanded.value = false
-      exitProject()
-    }, 180)
+    closeProjectSheet()
   } else {
     // ผู้ใช้เลื่อนปรับขนาดไว้ตรงไหน ก็ให้ค้างขนาดไว้ตามที่ผู้ใช้ปรับเลย
     if (projectSheetHeight.value && projectSheetHeight.value > window.innerHeight * 0.7) {
@@ -4994,7 +5088,7 @@ const bindMapEvents = () => {
       const s = getStallFromFeature(stallHit[0])
       const changedStall = setHoveredStall(s)
       const isMyBooked = Boolean(s && !props.previewMode && (props.myBookedStallCodes || []).includes(s.code))
-      const canClick = Boolean(s && (props.managementMode || (s.status !== 'occupied' && !isMyBooked)))
+      const canClick = Boolean(s && (props.managementMode || !isMyBooked))
       map.getCanvas().style.cursor = canClick ? 'pointer' : 'not-allowed'
       // Keep stall details click-driven so the tooltip does not flicker while moving across the map.
       return
@@ -5100,7 +5194,7 @@ const bindMapEvents = () => {
         if (s) showPopupForStall(s)
         return
       }
-      if (s && (s.status !== 'occupied' || props.managementMode)) {
+      if (s) {
         emit('selectStall', s)
       }
       return
@@ -5257,7 +5351,7 @@ const clearAllFilters = () => {
   rentFilter.value = 'all'
   sizeFilter.value = 'all'
   availabilityFilter.value = props.stallStatusFilter
-  zoneFilter.value = 'all'
+  zoneFilter.value = []
   readinessFilter.value = 'all'
   floorFilter.value = 'all'
   contractStatusFilter.value = 'all'
@@ -5277,7 +5371,7 @@ const clearAllFilters = () => {
   appliedRentFilter.value = 'all'
   appliedSizeFilter.value = 'all'
   appliedAvailabilityFilter.value = props.stallStatusFilter
-  appliedZoneFilter.value = 'all'
+  appliedZoneFilter.value = []
   appliedReadinessFilter.value = 'all'
   appliedFloorFilter.value = 'all'
   appliedContractStatusFilter.value = 'all'
@@ -5328,7 +5422,7 @@ const applyFilters = () => {
   appliedRentFilter.value = rentFilter.value
   appliedSizeFilter.value = sizeFilter.value
   appliedAvailabilityFilter.value = availabilityFilter.value
-  appliedZoneFilter.value = zoneFilter.value
+  appliedZoneFilter.value = [...zoneFilter.value]
   appliedReadinessFilter.value = readinessFilter.value
   appliedFloorFilter.value = floorFilter.value
   appliedContractStatusFilter.value = contractStatusFilter.value
@@ -5426,6 +5520,10 @@ watch(() => props.actionRequiredStallCodes, () => {
 })
 
 watch(() => props.activeFilterCodes, () => {
+  refreshSources()
+})
+
+watch(() => props.meterStates, () => {
   refreshSources()
 })
 
@@ -5716,9 +5814,9 @@ const toggleFacilitiesLayer = () => {
   hoverPopup?.remove()
   refreshSources()
 }
+// กด "ดูผลลัพธ์" แล้วคงแผงตัวกรองไว้ ให้ปรับต่อได้ (ปิดด้วยปุ่มปิดหรือ Esc)
 const applyFiltersFromPanel = () => {
   applyFilters()
-  ovPanel.value = null
 }
 const onOvKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Escape' && ovPanel.value) ovPanel.value = null
@@ -5731,7 +5829,7 @@ onBeforeUnmount(() => {
 
 // กดตัวเลขสถานะบนแดชบอร์ดเพื่อกรองแผงทันที (ใช้ตัวกรองชุดเดียวกับหน้าตัวกรอง) ส่งค่าที่ไม่ระบุ = คงเดิม
 const applyDashboardFilter = (patch: Partial<{ zone: string; contractStatus: ContractStatusFilter; renewalStatus: RenewalFilter; returnStatus: ReturnFilter; legalStatus: LegalFilter; maintenanceStatus: MaintenanceFilter }>) => {
-  if (patch.zone !== undefined) { zoneFilter.value = patch.zone || 'all'; appliedZoneFilter.value = zoneFilter.value }
+  if (patch.zone !== undefined) { zoneFilter.value = patch.zone && patch.zone !== 'all' ? [patch.zone] : []; appliedZoneFilter.value = [...zoneFilter.value] }
   if (patch.contractStatus !== undefined) { contractStatusFilter.value = patch.contractStatus; appliedContractStatusFilter.value = patch.contractStatus }
   if (patch.renewalStatus !== undefined) { renewalStatusFilter.value = patch.renewalStatus; appliedRenewalStatusFilter.value = patch.renewalStatus }
   if (patch.returnStatus !== undefined) { returnStatusFilter.value = patch.returnStatus; appliedReturnStatusFilter.value = patch.returnStatus }
@@ -5742,7 +5840,7 @@ const applyDashboardFilter = (patch: Partial<{ zone: string; contractStatus: Con
 
 watch([appliedSearchQuery, appliedZoneFilter, appliedContractStatusFilter, appliedRenewalStatusFilter, appliedReturnStatusFilter, appliedLegalStatusFilter, appliedMaintenanceStatusFilter], () => {
   emit('operational-filter-change', {
-    zone: appliedZoneFilter.value,
+    zone: appliedZoneFilter.value.length === 1 ? appliedZoneFilter.value[0]! : 'all',
     search: appliedSearchQuery.value,
     contractStatus: appliedContractStatusFilter.value,
     renewalStatus: appliedRenewalStatusFilter.value,
@@ -7061,6 +7159,12 @@ onActivated(() => {
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
 }
 
+/* แถบเครื่องมือจัดการผังลอยทับท้ายแผง: เว้นที่ให้เลื่อนดูเนื้อหาได้พ้นแถบ */
+.stall-mode-panel.has-bottom-toolbar { padding-bottom: 76px; }
+
+/* แผงที่ใช้เนื้อหาเฉพาะโหมด (เช่น จดมิเตอร์) มีเนื้อหาน้อย: สูงเท่าเนื้อหา ไม่ยืดเต็มความสูง */
+.stall-mode-panel.has-custom-body { bottom: auto; max-height: calc(100% - 28px); }
+
 .smp-back-section {
   width: 100%;
   padding-bottom: 13px;
@@ -7091,6 +7195,7 @@ onActivated(() => {
   transform: translateX(-2px);
 }
 
+.smp-edit-project-btn { margin-left: auto; flex-shrink: 0; }
 .smp-title-row {
   display: flex;
   align-items: center;
@@ -8326,6 +8431,9 @@ onActivated(() => {
   color: var(--tx-1e293b);
 }
 
+.smp-stat-note { margin-left: 6px; font-size: var(--font-size-xs); font-weight: 500; color: var(--tx-94a3b8); }
+.smp-stat.is-paused { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; }
+.smp-stat.is-paused strong { color: var(--tx-64748b); }
 .smp-stat.is-available strong { color: var(--tx-15803d); }
 .smp-stat.is-reserved strong { color: var(--tx-d97706); }
 .smp-stat.is-occupied strong { color: var(--tx-64748b); }
@@ -8394,6 +8502,7 @@ onActivated(() => {
 .smp-expand-toggle-btn {
   display: none;
 }
+.smp-sheet-close-btn { display: none; }
 .smp-header-row {
   display: flex;
   align-items: center;
@@ -8563,6 +8672,7 @@ onActivated(() => {
   border-radius: 12px;
   background: var(--bg-ffffff);
   overflow: hidden;
+  flex-shrink: 0;
 }
 .smp-project-info-grid.is-list .smp-info-pill { min-height: 62px; padding: 11px 16px; border: 0; border-radius: 0; background: transparent; gap: 12px; box-sizing: border-box; }
 .smp-project-info-grid.is-list .smp-info-pill + .smp-info-pill { border-top: 1px solid var(--bd-eef2f6); }
@@ -8675,6 +8785,32 @@ onActivated(() => {
     background: var(--bg-ffffff) !important;
   }
 
+  .smp-sheet-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    margin-right: 2px;
+    border: 1px solid var(--bd-e2e8f0);
+    border-radius: 50%;
+    background: var(--bg-f8fafc);
+    color: var(--tx-475569);
+    cursor: pointer;
+  }
+  .smp-sheet-close-btn:active { background: var(--bg-e2e8f0); }
+
+  /* ห้ามให้การ์ดข้างในหดตัวตามความสูงของ sheet ไม่งั้นเนื้อหาถูกตัดและเลื่อนไม่ได้ ต้องให้ล้นแล้วเลื่อนแทน */
+  .smp-scroll-content > * {
+    flex-shrink: 0 !important;
+  }
+
+  /* มือถือ: แผ่นล่างที่เนื้อหาน้อยสูงเท่าเนื้อหา (ลากขีดขยายเองได้) */
+  .stall-mode-panel.has-custom-body {
+    height: auto !important;
+    max-height: 50dvh !important;
+  }
   .stall-mode-panel.is-sheet-expanded {
     height: calc(100dvh - 58px) !important;
     max-height: calc(100dvh - 58px) !important;

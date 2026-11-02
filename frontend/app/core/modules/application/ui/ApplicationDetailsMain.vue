@@ -138,13 +138,13 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                   </span>
                   <h3>{{ isStall ? 'ข้อมูลแผงที่ขอเช่า' : 'ข้อมูลคำร้อง' }}</h3>
-                  <div v-if="isStall" class="stall-heading"><span v-for="stall in requestedStalls" :key="stall.code">แผง {{ stall.code }}</span></div>
+                  <div v-if="isStall" class="stall-heading"><span v-for="stall in requestedStalls" :key="stall.code">แผง {{ stallShortNumber(stall.code) }}</span></div>
                 </div>
                 <template v-if="isStall">
                   <div v-for="stall in requestedStalls" :key="stall.code" class="requested-stall">
                     <dl class="stall-grid">
                       <div><dt>โซน</dt><dd>{{ stall.zone || '-' }}</dd></div>
-                      <div><dt>หมายเลขแผง</dt><dd>{{ stall.code }} <span v-if="stall.floor" class="stall-floor">{{ stall.floor }}</span></dd></div>
+                      <div><dt>หมายเลขแผง</dt><dd>{{ stallShortNumber(stall.code) }} <span v-if="stall.floor" class="stall-floor">{{ stall.floor }}</span></dd></div>
                       <div><dt>ประเภทพื้นที่</dt><dd>{{ stall.category || '-' }}</dd></div>
                       <div><dt>ขนาดพื้นที่ (ตร.ม.)</dt><dd>{{ stall.size || '-' }}</dd></div>
                       <div><dt>ค่าธรรมเนียมสิทธิแรกเข้า (บาท)</dt><dd>{{ formatAmount(stall.entryFee) }}</dd></div>
@@ -158,7 +158,7 @@
                 </template>
                 <dl v-else class="detail-list">
                   <div v-if="application.market_name"><dt>ตลาด</dt><dd>{{ application.market_name }}</dd></div>
-                  <div v-if="isStall"><dt>แผงค้า</dt><dd>{{ application.stall_number || application.stall_ident || '-' }}</dd></div>
+                  <div v-if="isStall"><dt>แผงค้า</dt><dd>{{ stallShortNumber(application.stall_number || application.stall_ident) || '-' }}</dd></div>
                   <div v-if="isStall"><dt>ชื่อร้านค้า</dt><dd>{{ application.shop_name || '-' }}</dd></div>
                   <div v-if="isStall"><dt>ประเภทสินค้า</dt><dd>{{ application.product_type || application.product_category || 'ทั่วไป' }}</dd></div>
                   <div v-if="!isStall"><dt>หัวข้อคำร้อง</dt><dd>{{ application.subject || application.shop_name || 'คำร้องทั่วไป' }}</dd></div>

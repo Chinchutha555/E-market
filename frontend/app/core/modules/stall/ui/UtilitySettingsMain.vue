@@ -345,7 +345,7 @@ onMounted(async () => {
           const code = String(s?.code || s?.ident || s?.stall_ident || '').trim().toUpperCase()
           if (!code || seen.has(code)) return
           seen.add(code)
-          const number = String(s.sourceProperties?.number ?? s.sourceProperties?.Number ?? '').trim() || code
+          const number = String(s.sourceProperties?.number ?? s.sourceProperties?.Number ?? '').trim() || stallShortNumber(code)
           list.push({ code, number, projectId: String(p.id), projectName: cleanName(p.name) })
         })
       })
