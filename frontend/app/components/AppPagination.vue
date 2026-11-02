@@ -196,7 +196,7 @@ const onPageSizeSelect = (val: string | number) => {
   align-items: center;
   gap: 8px;
   color: var(--tx-64748b);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   flex-wrap: wrap;
 }
@@ -208,7 +208,7 @@ const onPageSizeSelect = (val: string | number) => {
 
 .pagination-total-items {
   color: var(--tx-94a3b8);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   margin-left: 2px;
   white-space: nowrap;
@@ -223,7 +223,7 @@ const onPageSizeSelect = (val: string | number) => {
   height: 34px;
   padding: 0 8px 0 10px;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-1e293b);
   border-color: var(--bd-cbd5e1);
@@ -252,7 +252,7 @@ const onPageSizeSelect = (val: string | number) => {
 
 .pagination-select-wrap :deep(.app-select-option) {
   padding: 7px 10px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   justify-content: center;
 }
@@ -306,7 +306,7 @@ const onPageSizeSelect = (val: string | number) => {
   border-radius: 8px;
   background: var(--bg-ffffff);
   color: var(--tx-334155);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;

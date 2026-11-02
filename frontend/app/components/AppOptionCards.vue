@@ -40,7 +40,7 @@ const select = (value: string) => {
 .app-option-dot { flex: 0 0 auto; width: 20px; height: 20px; margin-top: 1px; box-sizing: border-box; border: 1.5px solid var(--bd-cbd5e1); border-radius: 50%; background: var(--bg-ffffff); }
 .app-option-card.active .app-option-dot { border-color: #2563eb; background: radial-gradient(circle, #ffffff 0 3.5px, #2563eb 4px); }
 .app-option-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.app-option-text strong { color: var(--tx-1e293b); font-size: 0.9375rem; font-weight: 700; }
+.app-option-text strong { color: var(--tx-1e293b); font-size: var(--font-size-base); font-weight: 700; }
 .app-option-card.active .app-option-text strong { color: var(--tx-1d4ed8); }
-.app-option-text small { color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 500; line-height: 1.45; }
+.app-option-text small { color: var(--tx-64748b); font-size: var(--font-size-xs); font-weight: 500; line-height: 1.45; }
 </style>

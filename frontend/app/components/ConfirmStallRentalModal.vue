@@ -44,8 +44,8 @@ watch(() => props.open, (open) => { if (open) { submitted.value = false; rentTyp
 .rent-dialog { width: min(100%, 520px); max-height:min(90vh,90dvh); display:flex; flex-direction:column; overflow:hidden; border-radius: 20px; background: var(--bg-ffffff); box-shadow: 0 20px 35px rgba(15,23,42,.2); }
 .rent-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:24px 28px}
 .rent-icon { width: 54px; height: 54px; display: grid; place-items: center; margin: 0 auto 16px; color: var(--tx-2563eb); background: var(--bg-eff6ff); border-radius: 14px; }
-h3 { margin: 0; text-align: center; font-size: 1.25rem; color: var(--tx-0f172a); } p { color: var(--tx-64748b); text-align: center; font-size: .9375rem; line-height: 1.5; }
+h3 { margin: 0; text-align: center; font-size: var(--font-size-xl); color: var(--tx-0f172a); } p { color: var(--tx-64748b); text-align: center; font-size: var(--font-size-base); line-height: 1.5; }
 .rent-error { margin: 0; color: var(--tx-dc2626); text-align: left; }
-.rent-fields { display: grid; gap: 10px; } label { font-size: .875rem; font-weight: 600; color: var(--tx-334155); }
+.rent-fields { display: grid; gap: 10px; } label { font-size: var(--font-size-sm); font-weight: 600; color: var(--tx-334155); }
 .rent-choices { display: flex; flex-wrap: wrap; gap: 12px 20px; } .rent-actions { flex:0 0 auto;display: flex; justify-content: flex-end; gap: 10px; padding:16px 28px; border-top:1px solid var(--bd-e2e8f0); background:var(--bg-f8fafc); }
 </style>

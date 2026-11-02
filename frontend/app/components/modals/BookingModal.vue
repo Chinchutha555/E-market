@@ -17,10 +17,10 @@
             </svg>
           </div>
         </div>
-        <h4 style="font-size: 1.25rem; font-weight: 700; color: var(--tx-059669); margin-bottom: 8px;">
+        <h4 style="font-size: var(--font-size-xl); font-weight: 700; color: var(--tx-059669); margin-bottom: 8px;">
           {{ isQueueMode ? 'คุณเข้าสู่ลำดับคิวเรียบร้อยแล้ว!' : 'ส่งคำขอจองดูแผงเรียบร้อยแล้ว!' }}
         </h4>
-        <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; max-width: 440px; margin: 0 auto 24px;">
+        <div style="font-size: var(--font-size-sm); color: var(--text-muted); line-height: 1.6; max-width: 440px; margin: 0 auto 24px;">
           เลขที่คำขอจอง: <strong style="color: var(--tx-0f172a);">{{ successBookingNumber }}</strong><br/>
           <template v-if="isQueueMode">
             สถานะของคุณ: <strong style="color: var(--tx-d97706);">รอคิว (Waiting List)</strong><br/>
@@ -44,7 +44,7 @@
             <div style="color: var(--tx-d97706); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"></path><path d="M5 2h14"></path><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path></svg>
             </div>
-            <div style="font-size: 0.85rem; color: var(--tx-92400e);">
+            <div style="font-size: var(--font-size-sm); color: var(--tx-92400e);">
               <strong>แผงนี้มีผู้จองถือสิทธิ์อยู่:</strong> ท่านกำลังทำรายการ <strong>"ต่อคิว"</strong> (จะได้คิวถัดไปอัตโนมัติ โดยไม่ต้องเลือกวันนัดหมายในขั้นตอนนี้)
             </div>
           </div>
@@ -52,18 +52,18 @@
           <!-- Stall Summary Info Banner -->
           <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid var(--bd-a7f3d0); padding: 14px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div>
-              <div style="font-weight: 700; font-size: 1rem; color: var(--tx-0f172a);">แผง {{ stall?.stall_number }} - {{ stall?.category || stall?.category_name || 'ทั่วไป' }}</div>
-              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+              <div style="font-weight: 700; font-size: var(--font-size-md); color: var(--tx-0f172a);">แผง {{ stall?.stall_number }} - {{ stall?.category || stall?.category_name || 'ทั่วไป' }}</div>
+              <div style="font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 2px;">
                 ขนาด: {{ stall?.size_width || 2 }} × {{ stall?.size_length || 2 }} ม. ({{ stall?.area_sqm || 4 }} ตร.ม.)
               </div>
             </div>
             <div style="text-align: right;">
-              <div style="font-size: 1.15rem; font-weight: 800; color: var(--tx-059669);">฿{{ Number(stall?.monthly_rate || 2500).toLocaleString() }}</div>
-              <div style="font-size: 0.75rem; color: var(--text-dim);">บาท / เดือน (รายวัน: ฿{{ stall?.daily_rate || 100 }})</div>
+              <div style="font-size: var(--font-size-lg); font-weight: 800; color: var(--tx-059669);">฿{{ Number(stall?.monthly_rate || 2500).toLocaleString() }}</div>
+              <div style="font-size: var(--font-size-xs); color: var(--text-dim);">บาท / เดือน (รายวัน: ฿{{ stall?.daily_rate || 100 }})</div>
             </div>
           </div>
 
-          <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">
+          <h4 style="font-size: var(--font-size-sm); font-weight: 700; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">
             1. ข้อมูลผู้ประสงค์เข้าดูแผง
           </h4>
 
@@ -91,7 +91,7 @@
             </div>
           </div>
 
-          <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--text-muted); margin: 16px 0 12px; text-transform: uppercase; letter-spacing: 0.05em;">
+          <h4 style="font-size: var(--font-size-sm); font-weight: 700; color: var(--text-muted); margin: 16px 0 12px; text-transform: uppercase; letter-spacing: 0.05em;">
             {{ isQueueMode ? '2. สินค้าที่ต้องการขาย' : '2. ข้อมูลนัดหมายและสินค้าที่ต้องการขาย' }}
           </h4>
 

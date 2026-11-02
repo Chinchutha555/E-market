@@ -423,7 +423,7 @@ onMounted(loadDebts)
 }
 
 .page-subtitle {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-64748b);
   margin: 4px 0 0;
 }
@@ -467,14 +467,14 @@ onMounted(loadDebts)
 }
 
 .section-card-title {
-  font-size: 1.0625rem;
+  font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--tx-1e293b);
   margin: 0;
 }
 
 .section-card-desc {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin: 2px 0 0;
 }
@@ -496,7 +496,7 @@ onMounted(loadDebts)
 }
 
 .form-label {
-  font-size: 0.84375rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-334155);
 }
@@ -511,7 +511,7 @@ onMounted(loadDebts)
   border-radius: 8px;
   padding: 0 12px;
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-1e293b);
   background: var(--bg-ffffff);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -538,7 +538,7 @@ onMounted(loadDebts)
 .input-suffix {
   position: absolute;
   right: 12px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
   pointer-events: none;
@@ -560,14 +560,14 @@ onMounted(loadDebts)
 }
 
 .table-card-title {
-  font-size: 1.125rem;
+  font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--tx-1e293b);
   margin: 0;
 }
 
 .table-card-subtitle {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin: 3px 0 0;
 }
@@ -601,7 +601,7 @@ onMounted(loadDebts)
   border-radius: 8px;
   padding: 0 32px 0 36px;
   font-family: inherit;
-  font-size: 0.84375rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-1e293b);
   background: var(--bg-ffffff);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -644,7 +644,7 @@ onMounted(loadDebts)
   background: none;
   border: none;
   padding: 10px 4px;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--tx-64748b);
   cursor: pointer;
@@ -687,7 +687,7 @@ onMounted(loadDebts)
 
 .debt-table thead th {
   background: transparent;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--tx-64748b);
   padding: 14px 16px;
@@ -696,7 +696,7 @@ onMounted(loadDebts)
 }
 
 .debt-table tbody td {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-334155);
   padding: 16px 16px;
   border-bottom: 1px solid var(--bd-f1f5f9);
@@ -709,7 +709,7 @@ onMounted(loadDebts)
 
 .col-num {
   color: var(--tx-94a3b8);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
 }
 
 .tenant-id-pill {
@@ -718,12 +718,12 @@ onMounted(loadDebts)
   background: var(--bg-f1f5f9);
   padding: 4px 8px;
   border-radius: 6px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
 }
 
 .market-id-pill {
   color: var(--tx-475569);
-  font-size: 0.84375rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
 }
 
@@ -735,7 +735,7 @@ onMounted(loadDebts)
 
 .col-date {
   color: var(--tx-64748b);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   white-space: nowrap;
 }
 
@@ -744,11 +744,11 @@ onMounted(loadDebts)
   color: var(--tx-1e293b);
   text-align: right;
   white-space: nowrap;
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
 }
 
 .currency-unit {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--tx-64748b);
 }
@@ -758,7 +758,7 @@ onMounted(loadDebts)
   display: inline-block;
   border-radius: 6px;
   padding: 4px 12px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -792,13 +792,13 @@ onMounted(loadDebts)
 }
 
 .empty-title {
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   font-weight: 600;
   color: var(--tx-475569);
 }
 
 .empty-desc {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-94a3b8);
 }
 

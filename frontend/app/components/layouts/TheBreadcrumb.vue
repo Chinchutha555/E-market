@@ -162,7 +162,7 @@ const handleBack = async () => {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  font-size: 1.125rem;
+  font-size: var(--font-size-lg);
   font-family: 'Bai Jamjuree', sans-serif;
   flex-wrap: wrap;
 }
@@ -181,7 +181,7 @@ const handleBack = async () => {
 
 .body-breadcrumb-sep {
   color: var(--tx-cbd5e1);
-  font-size: 1rem;
+  font-size: var(--font-size-md);
   font-weight: 300;
   user-select: none;
 }

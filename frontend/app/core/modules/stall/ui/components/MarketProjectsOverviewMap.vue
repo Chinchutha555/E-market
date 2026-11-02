@@ -15,7 +15,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            :placeholder="managementMode ? 'ค้นหาเลขที่การจอง คำร้อง โซน รหัสแผง หรือประเภทสินค้า...' : 'ค้นหาโครงการหรือหมวดหมู่สินค้า...'"
+            :placeholder="managementMode ? 'เลขที่การจอง คำร้อง ชื่อโครงการ หรือรหัสแผง' : 'ชื่อโครงการหรือประเภทสินค้า'"
             class="map-search-input"
             @input="handleSearchInput"
             @keydown.down.prevent="moveSearchSuggestion(1)"
@@ -936,7 +936,7 @@
                     ref="ovSearchInput"
                     v-model="searchQuery"
                     type="search"
-                    :placeholder="managementMode ? 'ค้นหาเลขที่การจอง คำร้อง โซน รหัสแผง หรือประเภทสินค้า' : 'ค้นหาโครงการหรือหมวดหมู่สินค้า'"
+                    :placeholder="managementMode ? 'เลขที่การจอง คำร้อง ชื่อโครงการ หรือรหัสแผง' : 'ชื่อโครงการหรือประเภทสินค้า'"
                     @input="handleSearchInput"
                     @keydown.down.prevent="moveSearchSuggestion(1)"
                     @keydown.up.prevent="moveSearchSuggestion(-1)"
@@ -954,8 +954,8 @@
                   v-if="!suggestionQuery.trim() || !searchResults.length"
                   variant="map"
                   icon="search"
-                  :title="suggestionQuery.trim() ? 'ไม่พบผลลัพธ์' : 'เริ่มค้นหา'"
-                  :description="suggestionQuery.trim() ? `ไม่พบ “${suggestionQuery}” ลองใช้คำอื่น` : 'พิมพ์เลขที่การจอง เลขที่คำร้อง ชื่อโซน โครงการ รหัสแผง หรือประเภทสินค้า'"
+                  :title="suggestionQuery.trim() ? 'ไม่พบผลลัพธ์' : 'พิมพ์คำค้นหา'"
+                  :description="suggestionQuery.trim() ? `ไม่พบ “${suggestionQuery}” ลองใช้คำอื่น` : 'ใช้เลขที่การจอง เลขที่คำร้อง ชื่อโครงการ หรือรหัสแผง'"
                 />
                 <template v-else>
                   <p class="ov-search-summary">
@@ -3104,6 +3104,13 @@ const setBuildingsOpacity = (value: number) => {
 
 const mapContainerRef = ref<HTMLElement | null>(null)
 const isMapLoading = ref(true)
+// The registry starts every market with no projects; polygons only exist once /gis-config
+// has been fetched and drawn. Keep the skeleton up until both the basemap and that data are ready.
+let isMapBaseReady = false
+let isGisHydrating = true
+const revealMapIfReady = () => {
+  if (isMapBaseReady && !isGisHydrating) isMapLoading.value = false
+}
 
 const initMap = () => {
   const container = (mapContainerRef.value || document.getElementById(props.containerId)) as any
@@ -3177,7 +3184,8 @@ const initMap = () => {
     // This keeps the management canvas from flashing as an empty white area
     // while MapLibre is still fetching its style and tiles.
     const clearLoading = () => {
-      isMapLoading.value = false
+      isMapBaseReady = true
+      revealMapIfReady()
     }
     map.once('idle', clearLoading)
     setTimeout(clearLoading, 450)
@@ -5541,7 +5549,7 @@ const ovTitle = computed(() => {
 })
 const ovSubtitle = computed(() => {
   if (ovPanel.value === 'dashboard') return props.dashboardSubtitle || 'สรุปข้อมูลภาพรวม'
-  if (ovPanel.value === 'search') return 'หาเลขที่การจอง คำร้อง โซน โครงการ หรือรหัสแผง'
+  if (ovPanel.value === 'search') return 'ค้นหาการจอง คำร้อง หรือแผง'
   if (ovPanel.value === 'filter') return props.filterContext === 'costs' ? 'หาบิลที่ต้องติดตาม' : 'หาแผงและโซนที่ตรงเงื่อนไข'
   return 'เลือกแผนที่ฐานและดูความหมายของสี'
 })
@@ -5776,10 +5784,16 @@ const initializeMap = async () => {
   try {
     // Start both jobs together and render the basemap as soon as MapLibre is
     // available. Large GIS JSON continues hydrating the sources in parallel.
+    isMapBaseReady = false
+    isGisHydrating = true
     const marketDataPromise = syncMarketJson(props.marketId, controller.signal).then(
       () => null,
       error => error
-    )
+    ).finally(() => {
+      if (controller.signal.aborted) return
+      isGisHydrating = false
+      revealMapIfReady()
+    })
     const ml = await import('maplibre-gl')
     if (isUnmounted || controller.signal.aborted) return
     maplibregl = ml.default || ml

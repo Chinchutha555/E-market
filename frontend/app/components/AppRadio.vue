@@ -29,7 +29,7 @@ const checked = computed(() => props.modelValue === props.value)
 </script>
 
 <style scoped>
-.app-radio { position: relative; display: inline-flex; align-items: center; gap: 10px; min-height: 28px; cursor: pointer; color: var(--tx-334155); font-size: 0.9375rem; font-weight: 500; user-select: none; }
+.app-radio { position: relative; display: inline-flex; align-items: center; gap: 10px; min-height: 28px; cursor: pointer; color: var(--tx-334155); font-size: var(--font-size-base); font-weight: 500; user-select: none; }
 .app-radio-native { position: absolute; opacity: 0; width: 0; height: 0; }
 .app-radio-dot { flex: 0 0 auto; width: 20px; height: 20px; box-sizing: border-box; border: 1.5px solid var(--bd-cbd5e1); border-radius: 50%; background: var(--bg-ffffff); transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease; }
 .app-radio:hover .app-radio-dot { border-color: #2563eb; }

@@ -60,14 +60,14 @@ const props = withDefaults(defineProps<{
 <style scoped>
 .urc { border: 1px solid var(--bd-e2e8f0); border-radius: 14px; background: var(--bg-f8fafc); padding: 0 20px 20px; min-width: 0; box-sizing: border-box; }
 .urc-head { display: flex; align-items: center; gap: 12px; padding: 18px 0 14px; border-bottom: 1px solid var(--bd-e2e8f0); color: var(--tx-334155); }
-.urc-head h4 { margin: 0; color: var(--tx-1e293b); font-size: 1.0625rem; font-weight: 700; }
+.urc-head h4 { margin: 0; color: var(--tx-1e293b); font-size: var(--font-size-lg); font-weight: 700; }
 .urc-modes { display: flex; flex-wrap: wrap; gap: 10px 28px; padding-top: 16px; }
 .urc-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-top: 16px; align-items: start; }
-.urc-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; color: var(--tx-334155); font-size: 0.875rem; font-weight: 600; }
+.urc-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; color: var(--tx-334155); font-size: var(--font-size-sm); font-weight: 600; }
 /* ป้ายกำกับสูงเท่ากันทุกช่อง (2 บรรทัด) เพื่อให้ช่องกรอกอยู่แนวเดียวกันแม้ข้อความยาวไม่เท่ากัน */
 .urc-field > span { display: flex; align-items: flex-end; min-height: 2.6em; line-height: 1.3; }
-.urc-hint { margin: 14px 0 0; color: var(--tx-64748b); font-size: 0.875rem; font-weight: 500; }
-.urc-error { margin: 12px 0 0; color: var(--tx-dc2626); font-size: 0.8125rem; font-weight: 600; line-height: 1.4; }
+.urc-hint { margin: 14px 0 0; color: var(--tx-64748b); font-size: var(--font-size-sm); font-weight: 500; }
+.urc-error { margin: 12px 0 0; color: var(--tx-dc2626); font-size: var(--font-size-xs); font-weight: 600; line-height: 1.4; }
 .urc.is-compact { padding: 0 16px 16px; }
 .urc.is-compact .urc-head { padding: 14px 0 12px; }
 .urc.is-compact .urc-modes { padding-top: 10px; gap: 6px 18px; }

@@ -1028,7 +1028,7 @@
                     <span v-if="isStallLease(app)" class="badge-type badge-type-stall">ขอเช่าแผง</span>
                     <span v-else class="badge-type badge-type-general">คำร้องทั่วไป</span>
                   </div>
-                  <div style="font-size: 0.75rem; color: var(--tx-94a3b8); margin-top: 2px;">
+                  <div style="font-size: var(--font-size-xs); color: var(--tx-94a3b8); margin-top: 2px;">
                     {{ app.created_at?.slice(0, 10) }}
                   </div>
                 </td>
@@ -1037,7 +1037,7 @@
                     <span class="badge badge-occupied">
                       แผง {{ app.stall_number }}
                     </span>
-                    <div style="font-size: 0.75rem; color: var(--tx-64748b); margin-top: 2px;">
+                    <div style="font-size: var(--font-size-xs); color: var(--tx-64748b); margin-top: 2px;">
                       ฿{{ Number(app.stall_monthly_rate).toLocaleString() }}/ด. ({{ app.requested_period_months }} เดือน)
                     </div>
                   </template>
@@ -1053,16 +1053,16 @@
                 </td>
                 <td>
                   <div style="font-weight: 600; color: var(--tx-1e293b);">{{ app.applicant_name }}</div>
-                  <div style="font-size: 0.8125rem; color: var(--tx-64748b);">{{ app.applicant_phone }}</div>
+                  <div style="font-size: var(--font-size-xs); color: var(--tx-64748b);">{{ app.applicant_phone }}</div>
                 </td>
                 <td>
                   <template v-if="isStallLease(app)">
                     <div style="font-weight: 600; color: var(--tx-1e293b);">{{ app.shop_name }}</div>
-                    <div style="font-size: 0.8125rem; color: var(--tx-94a3b8);">{{ app.product_type || '-' }}</div>
+                    <div style="font-size: var(--font-size-xs); color: var(--tx-94a3b8);">{{ app.product_type || '-' }}</div>
                   </template>
                   <template v-else>
                     <div style="font-weight: 600; color: var(--tx-1e293b);">{{ app.shop_name || app.applicant_name }}</div>
-                    <div style="font-size: 0.8125rem; color: var(--tx-64748b); max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" :title="app.review_note || app.subject">
+                    <div style="font-size: var(--font-size-xs); color: var(--tx-64748b); max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" :title="app.review_note || app.subject">
                       {{ app.review_note || app.subject || '-' }}
                     </div>
                   </template>
@@ -3014,15 +3014,15 @@ watch(() => route.query.booking, (value, previous) => {
 .id-copy-modal { width: min(760px, 100%); max-height: 90vh; display: flex; flex-direction: column; background: var(--bg-ffffff); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 35px rgba(15,23,42,.2); }
 .id-copy-header, .id-copy-footer { display: flex; align-items: center; padding: 16px 20px; }
 .id-copy-header { justify-content: space-between; border-bottom: 1px solid var(--bd-e2e8f0); }
-.id-copy-header h2 { margin: 0; font-size: 1.125rem; color: var(--tx-1e293b); }
+.id-copy-header h2 { margin: 0; font-size: var(--font-size-lg); color: var(--tx-1e293b); }
 .id-copy-close { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 8px; background: var(--bg-f1f5f9); color: var(--tx-475569); cursor: pointer; }
 .id-copy-content { display: grid; place-items: center; overflow: auto; min-height: 240px; padding: 16px; background: var(--bg-f8fafc); }
 .id-copy-content img { max-width: 100%; max-height: 65vh; object-fit: contain; }
 .id-copy-content iframe { width: 100%; height: 65vh; border: 0; background: var(--bg-ffffff); }
-.id-copy-content p { font-size: .875rem; color: var(--tx-64748b); }
+.id-copy-content p { font-size: var(--font-size-sm); color: var(--tx-64748b); }
 .id-copy-footer { justify-content: flex-end; border-top: 1px solid var(--bd-e2e8f0); }
 
-.shop-product { color: var(--tx-64748b); font-size: .875rem; overflow-wrap: anywhere; }
+.shop-product { color: var(--tx-64748b); font-size: var(--font-size-sm); overflow-wrap: anywhere; }
 .applicant-phone-row { margin-top: 6px; }
 
 /* -------------------------------------------------------------
@@ -3044,7 +3044,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .section-title {
-  font-size: 1.35rem;
+  font-size: 1.375rem;
   font-weight: 800;
   color: var(--tx-0f172a);
   letter-spacing: -0.02em;
@@ -3052,7 +3052,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .item-count-subtitle {
-  font-size: 0.825rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
 }
@@ -3077,7 +3077,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-e2e8f0);
   border-radius: 9px;
-  font-size: 0.83rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-1e293b);
   font-family: inherit;
   transition: all 0.2s ease;
@@ -3173,7 +3173,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .kpi-title {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
   line-height: 1.2;
@@ -3188,14 +3188,14 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .kpi-count {
-  font-size: 1.45rem;
+  font-size: var(--font-size-2xl);
   font-weight: 800;
   color: var(--tx-0f172a);
   line-height: 1;
 }
 
 .kpi-unit-pill {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 6px;
@@ -3312,7 +3312,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .kpi-popover-header {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-1e293b);
   display: flex;
@@ -3335,7 +3335,7 @@ watch(() => route.query.booking, (value, previous) => {
   justify-content: space-between;
   padding: 6px 8px;
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-334155);
   cursor: pointer;
   transition: background 0.15s ease;
@@ -3368,19 +3368,19 @@ watch(() => route.query.booking, (value, previous) => {
 
 .kpi-status-name {
   flex: 1;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
 }
 
 .kpi-status-val {
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
 }
 
 .kpi-popover-reset {
   margin-top: 8px;
   padding-top: 6px;
   border-top: 1px solid var(--bd-f1f5f9);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-2563eb);
   font-weight: 600;
   text-align: center;
@@ -3411,7 +3411,7 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 7px;
   padding: 5px 12px;
   font-family: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
@@ -3427,7 +3427,7 @@ watch(() => route.query.booking, (value, previous) => {
   height: 19px;
   padding: 0 6px;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   line-height: 1;
   transition: all 0.18s ease;
@@ -3678,13 +3678,13 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .market-title {
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--tx-1e293b);
 }
 
 .market-count-pill {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 3px 10px;
   background: var(--bg-ffffff);
@@ -3786,14 +3786,14 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .booking-label {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 600;
   line-height: 1.2;
 }
 
 .booking-id-text {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   font-weight: 800;
   color: var(--tx-0f172a);
   letter-spacing: -0.02em;
@@ -3806,7 +3806,7 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 5px;
   margin-top: 3px;
   color: var(--tx-94a3b8);
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
 }
 
@@ -3818,7 +3818,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .status-pill-badge {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 4px 14px;
   border-radius: 20px;
@@ -3884,7 +3884,7 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 12px;
   flex-wrap: wrap;
   color: var(--tx-64748b);
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
 }
 
 .compact-meta-item {
@@ -3956,7 +3956,7 @@ watch(() => route.query.booking, (value, previous) => {
   border-radius: 50%;
   background: var(--bg-e2e8f0);
   color: var(--tx-64748b);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -3965,7 +3965,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .step-label-text {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-64748b);
   white-space: nowrap;
@@ -4035,7 +4035,7 @@ watch(() => route.query.booking, (value, previous) => {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.76rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
 }
@@ -4048,13 +4048,13 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .info-value-text {
-  font-size: 0.92rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--tx-0f172a);
 }
 
 .days-remaining-pill {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-2563eb);
   background: var(--bg-eff6ff);
@@ -4067,7 +4067,7 @@ watch(() => route.query.booking, (value, previous) => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-1e293b);
   background: var(--bg-f8fafc);
@@ -4082,7 +4082,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .cell-sub-meeting-point {
-  font-size: 0.76rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
 }
 
@@ -4094,7 +4094,7 @@ watch(() => route.query.booking, (value, previous) => {
   color: var(--tx-2563eb);
   padding: 3px 8px;
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   text-decoration: none;
   transition: all 0.2s ease;
@@ -4121,7 +4121,7 @@ watch(() => route.query.booking, (value, previous) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   line-height: 1.45;
 }
 
@@ -4145,7 +4145,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: #2563eb;
   border: 1px solid #2563eb;
   border-radius: 8px;
-  font-size: 0.83rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: #ffffff;
   cursor: pointer;
@@ -4169,7 +4169,7 @@ watch(() => route.query.booking, (value, previous) => {
   margin-top: 12px;
   padding-top: 11px;
   border-top: 1px solid var(--bd-f1f5f9);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   line-height: 1.45;
 }
 
@@ -4215,7 +4215,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: #2563eb;
   border: 1px solid #2563eb;
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: #ffffff;
   cursor: pointer;
@@ -4267,7 +4267,7 @@ watch(() => route.query.booking, (value, previous) => {
   gap: 7px;
   padding: 5px 12px;
   font-family: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
@@ -4282,7 +4282,7 @@ watch(() => route.query.booking, (value, previous) => {
   height: 19px;
   padding: 0 6px;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   line-height: 1;
   transition: all 0.18s ease;
@@ -4385,7 +4385,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: var(--bg-ffffff);
   color: var(--tx-2563eb);
   border: 1px solid var(--bd-bfdbfe);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   padding: 7px 14px;
   border-radius: 8px;
@@ -4409,7 +4409,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: var(--bg-ffffff);
   color: var(--tx-475569);
   border: 1px solid var(--bd-cbd5e1);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   padding: 7px 14px;
   border-radius: 8px;
@@ -4427,7 +4427,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 /* Type Badges */
 .badge-type {
-  font-size: 0.75rem; /* 12px min floor */
+  font-size: var(--font-size-xs); /* 12px min floor */
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 6px;
@@ -4452,17 +4452,17 @@ watch(() => route.query.booking, (value, previous) => {
 .general-subject-title {
   font-weight: 600;
   color: var(--tx-1e293b);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .general-stall-hint {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-top: 2px;
 }
 
 .general-no-stall-hint {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-94a3b8);
   margin-top: 2px;
 }
@@ -4476,7 +4476,7 @@ watch(() => route.query.booking, (value, previous) => {
   color: var(--tx-047857);
   border: 1px solid var(--bd-a7f3d0);
   border-radius: 6px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
@@ -4517,7 +4517,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .modal-title-general {
-  font-size: 1.0625rem; /* 17px */
+  font-size: var(--font-size-lg); /* 17px */
   font-weight: 700;
   color: var(--tx-1e293b);
   margin: 0;
@@ -4541,7 +4541,7 @@ watch(() => route.query.booking, (value, previous) => {
   color: var(--tx-b91c1c);
   padding: 10px 14px;
   border-radius: 8px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
 }
 
 .general-preset-grid {
@@ -4556,7 +4556,7 @@ watch(() => route.query.booking, (value, previous) => {
   border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
   padding: 8px 12px;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   font-weight: 500;
   color: var(--tx-475569);
   text-align: left;
@@ -4595,7 +4595,7 @@ watch(() => route.query.booking, (value, previous) => {
   border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   padding: 9px 12px;
-  font-size: 0.875rem; /* 14px */
+  font-size: var(--font-size-sm); /* 14px */
   color: var(--tx-1e293b);
   font-family: inherit;
   outline: none;
@@ -4623,7 +4623,7 @@ watch(() => route.query.booking, (value, previous) => {
   border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   padding: 10px 12px;
-  font-size: 0.875rem; /* 14px */
+  font-size: var(--font-size-sm); /* 14px */
   color: var(--tx-1e293b);
   font-family: inherit;
   outline: none;
@@ -4699,14 +4699,14 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .app-card-number {
-  font-size: 0.9375rem; /* 15px */
+  font-size: var(--font-size-base); /* 15px */
   font-weight: 700;
   display: block;
   line-height: 1.25;
 }
 
 .app-card-date {
-  font-size: 0.75rem; /* 12px min floor */
+  font-size: var(--font-size-xs); /* 12px min floor */
   color: var(--tx-94a3b8);
   margin-top: 2px;
 }
@@ -4734,13 +4734,13 @@ watch(() => route.query.booking, (value, previous) => {
 
 .app-card-shop-name {
   font-weight: 700;
-  font-size: 0.9375rem; /* 15px */
+  font-size: var(--font-size-base); /* 15px */
   color: var(--tx-1e293b);
   line-height: 1.3;
 }
 
 .app-card-product-type {
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   color: var(--tx-64748b);
   margin-top: 2px;
 }
@@ -4754,7 +4754,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .app-card-stall-rate {
-  font-size: 0.75rem; /* 12px min floor */
+  font-size: var(--font-size-xs); /* 12px min floor */
   color: var(--tx-64748b);
   font-weight: 500;
   white-space: nowrap;
@@ -4768,21 +4768,21 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .meta-label {
-  font-size: 0.75rem; /* 12px min floor */
+  font-size: var(--font-size-xs); /* 12px min floor */
   color: var(--tx-64748b);
   margin-bottom: 2px;
   display: block;
 }
 
 .meta-val-primary {
-  font-size: 0.875rem; /* 14px */
+  font-size: var(--font-size-sm); /* 14px */
   font-weight: 600;
   color: var(--tx-1e293b);
   line-height: 1.3;
 }
 
 .meta-val-sub {
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   color: var(--tx-64748b);
   display: inline-flex;
   align-items: center;
@@ -4821,7 +4821,7 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   font-weight: 500;
   color: var(--tx-334155);
   background: var(--bg-ffffff);
@@ -4852,7 +4852,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .empty-cards-title {
-  font-size: 0.9375rem; /* 15px */
+  font-size: var(--font-size-base); /* 15px */
   color: var(--tx-64748b);
   font-weight: 500;
 }
@@ -4863,7 +4863,7 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   gap: 5px;
   margin-top: 6px;
-  font-size: 0.75rem; /* 12px min floor */
+  font-size: var(--font-size-xs); /* 12px min floor */
   font-weight: 500;
   padding: 3px 8px;
   border-radius: 6px;
@@ -4922,7 +4922,7 @@ watch(() => route.query.booking, (value, previous) => {
 .review-comment-pill {
   border-radius: 8px;
   padding: 6px 10px;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   line-height: 1.4;
   word-break: break-word;
   transition: all 0.15s ease;
@@ -4973,12 +4973,12 @@ watch(() => route.query.booking, (value, previous) => {
 
 .comment-role-label {
   font-weight: 600;
-  font-size: 0.75rem; /* 12px */
+  font-size: var(--font-size-xs); /* 12px */
   letter-spacing: 0.01em;
 }
 
 .comment-text-body {
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   color: inherit;
   opacity: 0.95;
 }
@@ -4987,7 +4987,7 @@ watch(() => route.query.booking, (value, previous) => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem; /* 12px */
+  font-size: var(--font-size-xs); /* 12px */
   color: var(--tx-2563eb);
   cursor: pointer;
   padding: 2px 4px;
@@ -5003,7 +5003,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 .text-empty-dash {
   color: var(--tx-94a3b8);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   padding-left: 4px;
 }
 
@@ -5060,7 +5060,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .modal-title-danger {
-  font-size: 1.0625rem; /* 17px */
+  font-size: var(--font-size-lg); /* 17px */
   font-weight: 700;
   color: var(--tx-1e293b);
   margin: 0;
@@ -5068,7 +5068,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .modal-subtitle {
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   color: var(--tx-64748b);
   margin-top: 2px;
 }
@@ -5104,7 +5104,7 @@ watch(() => route.query.booking, (value, previous) => {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
 }
 
 .summary-item {
@@ -5127,7 +5127,7 @@ watch(() => route.query.booking, (value, previous) => {
   border: 1px solid var(--bd-fecaca);
   border-radius: 8px;
   padding: 10px 12px;
-  font-size: 0.78125rem; /* 12.5px */
+  font-size: var(--font-size-xs); /* 12.5px */
   color: var(--tx-991b1b);
   margin-bottom: 14px;
   display: flex;
@@ -5137,7 +5137,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .form-label-sub {
-  font-size: 0.75rem; /* 12px */
+  font-size: var(--font-size-xs); /* 12px */
   font-weight: 600;
   color: var(--tx-64748b);
   margin-bottom: 6px;
@@ -5155,7 +5155,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: var(--bg-f1f5f9);
   border: 1px solid var(--bd-e2e8f0);
   color: var(--tx-475569);
-  font-size: 0.75rem; /* 12px */
+  font-size: var(--font-size-xs); /* 12px */
   padding: 4px 10px;
   border-radius: 6px;
   cursor: pointer;
@@ -5171,7 +5171,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 .form-label {
   display: block;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   font-weight: 600;
   color: var(--tx-334155);
   margin-bottom: 6px;
@@ -5182,7 +5182,7 @@ watch(() => route.query.booking, (value, previous) => {
   border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   padding: 10px 12px;
-  font-size: 0.875rem; /* 14px */
+  font-size: var(--font-size-sm); /* 14px */
   font-family: inherit;
   color: var(--tx-1e293b);
   resize: vertical;
@@ -5206,7 +5206,7 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   gap: 5px;
   color: var(--tx-dc2626);
-  font-size: 0.75rem; /* 12px */
+  font-size: var(--font-size-xs); /* 12px */
   margin-top: 5px;
 }
 
@@ -5230,7 +5230,7 @@ watch(() => route.query.booking, (value, previous) => {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.75rem; /* 12px min floor */
+  font-size: var(--font-size-xs); /* 12px min floor */
   font-weight: 600;
   color: var(--tx-2563eb);
   background: var(--bg-eff6ff);
@@ -5278,7 +5278,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .revision-modal-title {
-  font-size: 1.125rem; /* 18px */
+  font-size: var(--font-size-lg); /* 18px */
   font-weight: 700;
   color: var(--tx-1e293b);
   margin: 0;
@@ -5286,7 +5286,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .revision-modal-subtitle {
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   color: var(--tx-64748b);
   margin-top: 3px;
   display: flex;
@@ -5324,13 +5324,13 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   gap: 6px;
   font-weight: 700;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   color: var(--tx-b45309);
   margin-bottom: 4px;
 }
 
 .revision-note-body {
-  font-size: 0.875rem; /* 14px */
+  font-size: var(--font-size-sm); /* 14px */
   color: var(--tx-92400e);
   line-height: 1.5;
   word-break: break-word;
@@ -5351,7 +5351,7 @@ watch(() => route.query.booking, (value, previous) => {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-1e3a8a);
 }
 
@@ -5364,7 +5364,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 .summary-market-tag {
   color: var(--tx-3b82f6);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
 }
 
 .summary-rates-wrap {
@@ -5376,13 +5376,13 @@ watch(() => route.query.booking, (value, previous) => {
 
 .summary-total-highlight {
   color: var(--tx-1d4ed8);
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
 }
 
 /* Form Section Headings & Inputs */
 .form-section-heading {
-  font-size: 0.9375rem; /* 15px */
+  font-size: var(--font-size-base); /* 15px */
   font-weight: 700;
   color: var(--tx-2563eb);
   margin: 18px 0 12px;
@@ -5403,7 +5403,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: var(--bg-ffffff);
   color: var(--tx-1e293b);
   font-family: inherit;
-  font-size: 0.875rem; /* 14px */
+  font-size: var(--font-size-sm); /* 14px */
   line-height: 1.5;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -5424,7 +5424,7 @@ watch(() => route.query.booking, (value, previous) => {
   border-radius: 8px;
   padding: 10px 14px;
   color: var(--tx-dc2626);
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   font-weight: 500;
   margin-top: 14px;
 }
@@ -5458,14 +5458,14 @@ watch(() => route.query.booking, (value, previous) => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-1e293b);
   margin: 0;
 }
 
 .upload-badge-spec {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   background: var(--bg-f1f5f9);
   padding: 3px 8px;
@@ -5521,7 +5521,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .prompt-title {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-1e293b);
   margin-bottom: 2px;
@@ -5534,7 +5534,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .prompt-desc {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   line-height: 1.4;
 }
@@ -5546,7 +5546,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-cbd5e1);
   color: var(--tx-334155);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 7px 13px;
   border-radius: 8px;
@@ -5597,7 +5597,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .preview-pdf-badge span {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   line-height: 1;
 }
@@ -5611,7 +5611,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .preview-filename {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-1e293b);
   white-space: nowrap;
@@ -5623,7 +5623,7 @@ watch(() => route.query.booking, (value, previous) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
 }
 
 .meta-size {
@@ -5656,7 +5656,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: var(--bg-eff6ff);
   border: 1px solid var(--bd-bfdbfe);
   color: var(--tx-2563eb);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 6px 10px;
   border-radius: 7px;
@@ -5691,7 +5691,7 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   gap: 6px;
   margin-top: 6px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-dc2626);
   background: var(--bg-fef2f2);
   border: 1px solid var(--bd-fecaca);
@@ -5709,7 +5709,7 @@ watch(() => route.query.booking, (value, previous) => {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   min-width: 1100px;
 }
 
@@ -5722,7 +5722,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: transparent !important;
   color: var(--tx-64748b);
   font-weight: 500;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   padding: 16px 20px;
   border-top: 1px solid var(--bd-e2e8f0);
   border-bottom: 1px solid var(--bd-e2e8f0);
@@ -5756,7 +5756,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 .table-actions-cell :deep(.app-btn) {
   padding: 0 10px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
 }
 /* Page layout, header & card shell: same as the bookings page */
 .application-main-page {
@@ -5793,7 +5793,7 @@ watch(() => route.query.booking, (value, previous) => {
 .page-subtitle {
   margin: 4px 0 0;
   color: var(--tx-64748b);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
 }
 
@@ -5818,12 +5818,12 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .section-title {
-  font-size: 1.15rem;
+  font-size: var(--font-size-lg);
   font-weight: 700;
 }
 
 .item-count-subtitle {
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   margin-top: 4px;
 }
 
@@ -5850,7 +5850,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: var(--bg-ffffff);
   color: var(--tx-334155);
   font-family: inherit;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -5926,7 +5926,7 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .sort-dropdown-header {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-64748b);
   text-transform: uppercase;
@@ -5985,13 +5985,13 @@ watch(() => route.query.booking, (value, previous) => {
 }
 
 .sort-item-text strong {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   line-height: 1.2;
 }
 
 .sort-item-text small {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   line-height: 1.1;
 }
@@ -6016,7 +6016,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: var(--bg-eff6ff);
   border: 1px solid var(--bd-bfdbfe);
   color: var(--tx-2563eb);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   line-height: 1;
   border-radius: 9999px;
@@ -6056,7 +6056,7 @@ watch(() => route.query.booking, (value, previous) => {
   align-items: center;
   gap: 4px;
   margin-top: 4px;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   line-height: 1.3;
 }
 
@@ -6073,7 +6073,7 @@ watch(() => route.query.booking, (value, previous) => {
 
 /* Applicant Sub Info (อายุ เลขประจำตัวประชาชน และปุ่มดูสำเนาบัตร) */
 .applicant-age-pill {
-  font-size: 0.75rem; /* 12px min floor */
+  font-size: var(--font-size-xs); /* 12px min floor */
   font-weight: 600;
   color: var(--tx-0369a1);
   background: var(--bg-e0f2fe);
@@ -6089,7 +6089,7 @@ watch(() => route.query.booking, (value, previous) => {
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 4px;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   font-family: inherit;
 }
 
@@ -6113,7 +6113,7 @@ watch(() => route.query.booking, (value, previous) => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem; /* 12px min floor */
+  font-size: var(--font-size-xs); /* 12px min floor */
   font-weight: 600;
   padding: 1px 7px;
   border-radius: 6px;
@@ -6151,7 +6151,7 @@ watch(() => route.query.booking, (value, previous) => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
 }
 
 .inline-item-chip .meta-label {
@@ -6177,7 +6177,7 @@ watch(() => route.query.booking, (value, previous) => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
   padding: 0;
@@ -6196,7 +6196,7 @@ watch(() => route.query.booking, (value, previous) => {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  font-size: 0.8125rem; /* 13px */
+  font-size: var(--font-size-xs); /* 13px */
   line-height: 1.45;
 }
 

@@ -17,11 +17,11 @@
             </svg>
           </div>
         </div>
-        <h4 style="font-size: 1.25rem; font-weight: 700; color: var(--status-avail-text); margin-bottom: 8px;">
+        <h4 style="font-size: var(--font-size-xl); font-weight: 700; color: var(--status-avail-text); margin-bottom: 8px;">
           ยื่นคำร้องขอเช่าแผงเรียบร้อยแล้ว!
         </h4>
-        <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; max-width: 460px; margin: 0 auto 24px;">
-          เลขที่คำร้อง: <strong style="color: var(--primary); font-size: 1.05rem;">{{ successAppNumber }}</strong><br/>
+        <div style="font-size: var(--font-size-sm); color: var(--text-muted); line-height: 1.6; max-width: 460px; margin: 0 auto 24px;">
+          เลขที่คำร้อง: <strong style="color: var(--primary); font-size: var(--font-size-lg);">{{ successAppNumber }}</strong><br/>
           ขั้นตอนถัดไป: คำร้องจะถูกส่งให้ <strong>เจ้าหน้าที่ตรวจสอบ</strong> &rarr; <strong>ผอ.ตลาด อนุมัติ</strong> &rarr; <strong>ผอ.สำนักตลาด อนุมัติ</strong> เพื่อจัดทำสัญญาเช่าฉบับสมบูรณ์
         </div>
         <div style="display: flex; justify-content: center; gap: 12px;">
@@ -39,7 +39,7 @@
           <div
             style="background: var(--bg-eff6ff); border: 1px solid var(--bd-bfdbfe); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px;"
           >
-            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: 0.85rem; color: var(--tx-1e3a8a);">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: var(--font-size-sm); color: var(--tx-1e3a8a);">
               <div>
                 <span>แผงค้าที่ยื่นคำร้อง: </span>
                 <strong>{{ targetStallNumber }} ({{ selectedStallRecords.length }} แผง)</strong>
@@ -52,7 +52,7 @@
             </div>
           </div>
 
-          <h4 style="font-size: 0.9375rem; font-weight: 700; color: var(--primary); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+          <h4 style="font-size: var(--font-size-base); font-weight: 700; color: var(--primary); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
@@ -155,7 +155,7 @@
             @error="idCardCopyError = $event"
           />
 
-          <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--primary); margin: 16px 0 12px;">
+          <h4 style="font-size: var(--font-size-sm); font-weight: 700; color: var(--primary); margin: 16px 0 12px;">
             2. ข้อมูลร้านค้าและสินค้าที่ขอจำหน่าย
           </h4>
 
@@ -510,14 +510,14 @@ const handleSubmit = async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-1e293b);
   margin: 0;
 }
 
 .upload-badge-spec {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   background: var(--bg-f1f5f9);
   padding: 3px 8px;
@@ -573,7 +573,7 @@ const handleSubmit = async () => {
 }
 
 .prompt-title {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-1e293b);
   margin-bottom: 2px;
@@ -586,7 +586,7 @@ const handleSubmit = async () => {
 }
 
 .prompt-desc {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   line-height: 1.4;
 }
@@ -598,7 +598,7 @@ const handleSubmit = async () => {
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-cbd5e1);
   color: var(--tx-334155);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 7px 13px;
   border-radius: 8px;
@@ -649,7 +649,7 @@ const handleSubmit = async () => {
 }
 
 .preview-pdf-badge span {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   line-height: 1;
 }
@@ -663,7 +663,7 @@ const handleSubmit = async () => {
 }
 
 .preview-filename {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-1e293b);
   white-space: nowrap;
@@ -675,7 +675,7 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
 }
 
 .meta-size {
@@ -708,7 +708,7 @@ const handleSubmit = async () => {
   background: var(--bg-eff6ff);
   border: 1px solid var(--bd-bfdbfe);
   color: var(--tx-2563eb);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 6px 10px;
   border-radius: 7px;
@@ -743,7 +743,7 @@ const handleSubmit = async () => {
   align-items: center;
   gap: 6px;
   margin-top: 6px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-dc2626);
   background: var(--bg-fef2f2);
   border: 1px solid var(--bd-fecaca);

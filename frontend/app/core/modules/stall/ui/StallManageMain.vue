@@ -1305,11 +1305,29 @@
                     </div>
                   </section>
 
+                  <template v-if="isManageDataLoading">
+                    <section v-for="n in 4" :key="`dash-skeleton-${n}`" class="ov-dash-section-card ov-dash-skeleton-card" aria-busy="true" aria-label="กำลังโหลดข้อมูลแดชบอร์ด">
+                      <span class="kpi-skeleton-num dash-skel-title"></span>
+                      <span v-if="n === 1" class="dash-skel-donut" aria-hidden="true"></span>
+                      <div v-for="r in 3" :key="r" class="dash-skel-row" aria-hidden="true">
+                        <span class="dash-skel-dot"></span>
+                        <span class="kpi-skeleton-num dash-skel-line"></span>
+                        <span class="kpi-skeleton-pill"></span>
+                      </div>
+                    </section>
+                  </template>
+                  <template v-else>
                   <section class="ov-dash-section-card" aria-labelledby="all-project-donuts-heading">
                     <div class="ov-dash-section-head">
                       <div>
-                        <h4 id="all-project-donuts-heading" class="ov-dash-section-title">ภาพรวมทุกโครงการ</h4>
+                        <h4 id="all-project-donuts-heading" class="ov-dash-section-title">จำนวนแผงแต่ละโครงการ</h4>
                       </div>
+                    </div>
+                    <div class="ov-hbar-scroll">
+                    <div class="ov-hbar-key" aria-hidden="true">
+                      <span class="is-available"><i></i>ว่าง</span>
+                      <span class="is-reserved"><i></i>ติดจอง</span>
+                      <span class="is-occupied"><i></i>มีผู้เช่า</span>
                     </div>
                     <ol class="ov-hbar-list" aria-label="จำนวนแผงแยกตามสถานะของแต่ละโครงการ">
                       <li v-for="project in sortedProjectBars" :key="`hbar-${project.id}`">
@@ -1318,24 +1336,25 @@
                           class="ov-hbar-row"
                           :class="{ active: selectedDashboardProjectId === project.id }"
                           :aria-pressed="selectedDashboardProjectId === project.id"
-                          :aria-label="`${project.name}: ว่าง ${project.available}, ติดจอง ${project.reserved}, มีผู้เช่า ${project.occupied}`"
+                          :aria-label="`${project.name}: รวม ${project.total} แผง, ว่าง ${project.available}, ติดจอง ${project.reserved}, มีผู้เช่า ${project.occupied}`"
                           :title="`${project.name} · ว่าง ${project.available.toLocaleString('th-TH')} · ติดจอง ${project.reserved.toLocaleString('th-TH')} · มีผู้เช่า ${project.occupied.toLocaleString('th-TH')}`"
                           @click="selectDashboardProject(project.id)"
                         >
                           <span class="ov-hbar-name">{{ project.name }}</span>
+                          <span class="ov-hbar-total">{{ project.total.toLocaleString('th-TH') }} แผง</span>
                           <span class="ov-hbar-track" aria-hidden="true">
-                            <i v-if="project.occupied" class="is-occupied" :style="{ width: `${(project.occupied / projectBarMax) * 100}%` }"></i>
-                            <i v-if="project.reserved" class="is-reserved" :style="{ width: `${(project.reserved / projectBarMax) * 100}%` }"></i>
-                            <i v-if="project.available" class="is-available" :style="{ width: `${(project.available / projectBarMax) * 100}%` }"></i>
+                            <i v-if="project.available" class="is-available" :style="{ width: `${(project.available / Math.max(1, project.total)) * 100}%` }"></i>
+                            <i v-if="project.reserved" class="is-reserved" :style="{ width: `${(project.reserved / Math.max(1, project.total)) * 100}%` }"></i>
+                            <i v-if="project.occupied" class="is-occupied" :style="{ width: `${(project.occupied / Math.max(1, project.total)) * 100}%` }"></i>
                           </span>
-                          <span class="ov-hbar-total">{{ project.total.toLocaleString('th-TH') }}</span>
+                          <span class="ov-hbar-chips">
+                            <span class="ov-hbar-chip is-available" :class="{ 'is-zero': !project.available }"><strong>{{ project.available.toLocaleString('th-TH') }}</strong></span>
+                            <span class="ov-hbar-chip is-reserved" :class="{ 'is-zero': !project.reserved }"><strong>{{ project.reserved.toLocaleString('th-TH') }}</strong></span>
+                            <span class="ov-hbar-chip is-occupied" :class="{ 'is-zero': !project.occupied }"><strong>{{ project.occupied.toLocaleString('th-TH') }}</strong></span>
+                          </span>
                         </button>
                       </li>
                     </ol>
-                    <div class="ov-project-column-legend is-footer" aria-label="สรุปสถานะแผงทุกโครงการ">
-                      <span class="is-available"><i></i>ว่าง</span>
-                      <span class="is-reserved"><i></i>ติดจอง</span>
-                      <span class="is-occupied"><i></i>มีผู้เช่า</span>
                     </div>
                   </section>
 
@@ -1454,11 +1473,24 @@
                       </div>
                     </div>
                   </section>
+                  </template>
 
                 </div>
 
                 <!-- MODE 2: แดชบอร์ดการเงินและการจัดเก็บ (payments) -->
                 <div v-else-if="pageMode === 'payments'" class="ov-dash-mode-view">
+                  <template v-if="isManageDataLoading">
+                    <section v-for="n in 2" :key="`dash-skeleton-${n}`" class="ov-dash-section-card ov-dash-skeleton-card" aria-busy="true" aria-label="กำลังโหลดข้อมูลแดชบอร์ด">
+                      <span class="kpi-skeleton-num dash-skel-title"></span>
+                      <span v-if="n === 1" class="dash-skel-donut" aria-hidden="true"></span>
+                      <div v-for="r in 3" :key="r" class="dash-skel-row" aria-hidden="true">
+                        <span class="dash-skel-dot"></span>
+                        <span class="kpi-skeleton-num dash-skel-line"></span>
+                        <span class="kpi-skeleton-pill"></span>
+                      </div>
+                    </section>
+                  </template>
+                  <template v-else>
                   <section class="ov-dash-summary-card" aria-labelledby="payment-summary-heading">
                     <div class="ov-stall-section-head">
                       <div>
@@ -1525,10 +1557,23 @@
                       </div>
                     </div>
                   </div>
+                  </template>
                 </div>
 
                 <!-- MODE 3: แดชบอร์ดการจดมิเตอร์น้ำและไฟฟ้า (meters) -->
                 <div v-else-if="pageMode === 'meters'" class="ov-dash-mode-view">
+                  <template v-if="isManageDataLoading">
+                    <section v-for="n in 2" :key="`dash-skeleton-${n}`" class="ov-dash-section-card ov-dash-skeleton-card" aria-busy="true" aria-label="กำลังโหลดข้อมูลแดชบอร์ด">
+                      <span class="kpi-skeleton-num dash-skel-title"></span>
+                      <span v-if="n === 1" class="dash-skel-donut" aria-hidden="true"></span>
+                      <div v-for="r in 3" :key="r" class="dash-skel-row" aria-hidden="true">
+                        <span class="dash-skel-dot"></span>
+                        <span class="kpi-skeleton-num dash-skel-line"></span>
+                        <span class="kpi-skeleton-pill"></span>
+                      </div>
+                    </section>
+                  </template>
+                  <template v-else>
                   <section class="ov-dash-summary-card" aria-labelledby="meter-summary-heading">
                     <div class="ov-stall-section-head">
                       <div>
@@ -1596,6 +1641,7 @@
                       </div>
                     </div>
                   </div>
+                  </template>
                 </div>
               </div>
             </template>
@@ -7159,7 +7205,6 @@ const niceChartMaximum = (value: number) => {
 
 // กราฟแท่งแนวนอนของภาพรวมโครงการ: ชื่อโครงการซ้าย แท่งแบ่งสีตามสถานะ จำนวนแผงรวมที่ปลายแท่ง
 const sortedProjectBars = computed(() => [...stallProjectStatusBreakdown.value].sort((a, b) => a.order - b.order))
-const projectBarMax = computed(() => Math.max(1, ...stallProjectStatusBreakdown.value.map(project => project.total)))
 
 const allProjectsChartMax = computed(() => niceChartMaximum(
   Math.max(0, ...stallProjectStatusBreakdown.value.map(project => project.total))
@@ -12929,7 +12974,7 @@ button.market-map-kpi:hover {
   align-items: baseline;
   gap: 8px;
   color: var(--tx-0f172a);
-  font-size: clamp(1.15rem, 1.45vw, 1.55rem);
+  font-size: 1.25rem;
   font-weight: 800;
   line-height: 1.1;
   white-space: nowrap;
@@ -13012,6 +13057,25 @@ button.market-map-kpi:hover {
   background-size: 200% 100%;
   animation: kpiSkeletonShimmer 1.35s ease-in-out infinite;
 }
+
+.ov-dash-skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 150px;
+}
+.dash-skel-title { width: 140px; height: 18px; }
+.dash-skel-donut {
+  align-self: center;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 14px solid var(--bg-f1f5f9);
+  box-sizing: border-box;
+}
+.dash-skel-row { display: flex; align-items: center; gap: 10px; }
+.dash-skel-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--bg-e2e8f0); flex: 0 0 auto; }
+.dash-skel-line { flex: 1 1 auto; width: auto; height: 14px; }
 
 .kpi-skeleton-pill {
   display: inline-block;
@@ -14527,7 +14591,7 @@ button.market-map-kpi:hover {
   .market-map-kpi.active { padding: 9px 5px 9px 9px; }
   .market-map-kpi-copy small { font-size: 0.75rem; } /* 12px = ขนาดต่ำสุดของระบบ ให้ "ต้องดำเนินการ" แสดงครบในพื้นที่ที่เหลือ */
   /* คงรูปแบบป้ายหน่วยให้เห็นพื้นหลังชัดเจน แม้ยังไม่ได้เปิดแผงด้านข้าง */
-  .market-map-kpi-strip:not(.has-side-panel) .market-map-kpi .market-map-kpi-copy strong { font-size: 1.0625rem; gap: 6px; }
+  .market-map-kpi-strip:not(.has-side-panel) .market-map-kpi .market-map-kpi-copy strong { font-size: 1.25rem; gap: 6px; }
   .market-map-kpi-strip:not(.has-side-panel) .market-map-kpi .market-map-kpi-copy strong em {
     display: inline-block;
     padding: 4px 10px;
@@ -14540,19 +14604,22 @@ button.market-map-kpi:hover {
   .market-map-kpi-strip.has-side-panel .market-map-kpi.active { padding: 9px 11px; }
   .market-map-kpi-strip.has-side-panel .market-map-kpi-icon { display: none; }
   .market-map-kpi-strip.has-side-panel .market-map-kpi-copy small { font-size: 0.8125rem; }
-  .market-map-kpi-strip.has-side-panel .market-map-kpi-copy strong { font-size: 1.1875rem; }
+  .market-map-kpi-strip.has-side-panel .market-map-kpi-copy strong { font-size: 1.25rem; line-height: 1.15; }
   .market-map-kpi-strip.has-side-panel .market-map-kpi-copy strong em { display: block; }
 }
-@container kpi (max-width: 900px) {
-  /* แคบจริงๆ แม้ยังไม่เปิดแผงข้าง: ซ่อนไอคอนด้วย */
+@container kpi (max-width: 1060px) {
+  /* แคบจริงๆ แม้ยังไม่เปิดแผงข้าง (เช่นตอนเมนูข้างขยาย): ซ่อนไอคอนด้วย ให้ตัวเลขกับป้ายหน่วยไม่ถูกตัด */
   .market-map-kpi-icon { display: none; }
   .market-map-kpi { padding: 10px 12px; gap: 0; }
+  /* ไอคอนหายแล้วมีที่เหลือ: คืนขนาดตัวเลขและชื่อให้อ่านง่ายขึ้น */
+  .market-map-kpi-strip:not(.has-side-panel) .market-map-kpi .market-map-kpi-copy strong { font-size: 1.25rem; line-height: 1.15; }
+  .market-map-kpi-copy small { font-size: 0.8125rem; }
 }
-@container kpi (max-width: 760px) {
+@container kpi (max-width: 800px) {
   /* แคบมาก: ซ่อนป้ายหน่วย "แผง" เหลือชื่อและตัวเลข */
   .market-map-kpi { padding: 8px 10px; }
   .market-map-kpi-copy small { font-size: 0.8125rem; }
-  .market-map-kpi-copy strong { font-size: 1.0625rem; }
+  .market-map-kpi-copy strong { font-size: 1.25rem; }
   .market-map-kpi-copy strong em { display: none !important; }
 }
 
@@ -14671,22 +14738,35 @@ button.market-map-kpi:hover {
 .ov-chart-axis-title.is-y { margin: 14px 0 10px 2px; }
 
 /* ภาพรวมโครงการ: กราฟแท่งแนวนอน */
-.ov-hbar-list { list-style: none; margin: 6px 0 0; padding: 0 4px 0 0; max-height: 340px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
-.ov-hbar-row { width: 100%; display: grid; grid-template-columns: 96px minmax(0, 1fr) 44px; align-items: center; gap: 10px; padding: 6px 8px; border: 1px solid transparent; border-radius: 10px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background-color .15s ease, border-color .15s ease; }
-.ov-hbar-row:hover { background: var(--bg-f8fafc); }
+.ov-hbar-total { color: var(--tx-64748b); font-size: 0.875rem; font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ov-hbar-chips { grid-column: 1 / -1; display: flex; gap: 6px; }
+.ov-hbar-chip { display: inline-flex; align-items: baseline; justify-content: center; min-width: 52px; padding: 2px 10px; border-radius: 7px; font-size: 0.8125rem; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ov-hbar-chip strong { font-size: 0.9375rem; font-weight: 700; }
+.ov-hbar-chip.is-available { background: rgba(16, 185, 129, 0.14); color: var(--tx-059669); }
+.ov-hbar-chip.is-reserved { background: rgba(245, 158, 11, 0.16); color: #d97706; }
+.ov-hbar-chip.is-occupied { background: rgba(71, 85, 105, 0.14); color: var(--tx-475569); }
+.ov-hbar-chip.is-zero { background: var(--bg-f1f5f9); color: var(--tx-94a3b8); }
+.ov-hbar-chip.is-zero strong { font-weight: 600; }
+.ov-hbar-key > span { display: inline-flex; align-items: center; gap: 6px; }
+.ov-hbar-key i { width: 10px; height: 10px; border-radius: 3px; }
+.ov-hbar-key .is-available i { background: #10b981; }
+.ov-hbar-key .is-reserved i { background: #f59e0b; }
+.ov-hbar-key .is-occupied i { background: #475569; }
+.ov-hbar-scroll { max-height: 440px; margin-top: 8px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.ov-hbar-key { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 8px 4px 10px; background: var(--bg-ffffff); border-bottom: 1px solid var(--bd-f1f5f9); color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 600; }
+.ov-hbar-list { list-style: none; margin: 0; padding: 12px 4px 2px 0; }
+.ov-hbar-row { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 7px 12px; padding: 12px 14px; border: 1px solid var(--bd-e2e8f0); border-radius: 12px; background: var(--bg-f8fafc); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background-color .15s ease, border-color .15s ease; }
+.ov-hbar-row:hover { background: var(--bg-ffffff); border-color: #93c5fd; }
+.ov-hbar-list li + li { margin-top: 10px; }
 .ov-hbar-row:focus-visible { outline: 2px solid #93c5fd; outline-offset: 1px; }
 .ov-hbar-row.active { background: var(--bg-eff6ff); border-color: #2563eb; }
-.ov-hbar-name { overflow: hidden; color: var(--tx-334155); font-size: 0.8125rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.ov-hbar-name { min-width: 0; overflow: hidden; color: var(--tx-334155); font-size: 0.9375rem; font-weight: 600; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .ov-hbar-row.active .ov-hbar-name { color: var(--tx-2563eb); font-weight: 700; }
-.ov-hbar-track { display: flex; align-items: stretch; height: 14px; overflow: hidden; border-radius: 999px; background: var(--bg-f1f5f9); }
+.ov-hbar-track { grid-column: 1 / -1; display: flex; align-items: stretch; gap: 2px; height: 10px; overflow: hidden; border-radius: 999px; background: var(--bg-f1f5f9); }
 .ov-hbar-track i { display: block; height: 100%; min-width: 2px; transition: width .3s ease; }
 .ov-hbar-track .is-occupied { background: #475569; }
 .ov-hbar-track .is-reserved { background: #f59e0b; }
 .ov-hbar-track .is-available { background: #10b981; }
-.ov-hbar-total { color: var(--tx-64748b); font-size: 0.875rem; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
-.ov-hbar-row:hover .ov-hbar-total { color: var(--tx-334155); }
-.ov-hbar-row.active .ov-hbar-total { color: var(--tx-2563eb); }
-
 /* คำอธิบายสีของกราฟภาพรวมโครงการ: อยู่ใต้รายการ ตรึงไว้ไม่เลื่อนไปกับแท่ง */
 .ov-project-column-legend.is-footer { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--bd-f1f5f9); justify-content: center; }
 

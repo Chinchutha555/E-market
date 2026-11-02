@@ -192,7 +192,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--bd-cbd5e1);
   border-radius: 10px;
   font-family: inherit;
-  font-size: 0.88rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-94a3b8);
   display: flex;
   align-items: center;
@@ -238,7 +238,7 @@ onBeforeUnmount(() => {
   display: block;
   margin-top: 5px;
   color: var(--tx-dc2626);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   line-height: 1.3;
 }
@@ -291,7 +291,7 @@ onBeforeUnmount(() => {
 .app-select-menu.is-inline .app-select-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 4px; max-height: 260px; overflow-y: auto; overscroll-behavior: contain; padding: 2px; }
 .app-select-search { padding: 0 0 6px; background: var(--bg-ffffff); }
 .app-select-menu:not(.is-inline) .app-select-search { position: sticky; top: -6px; z-index: 1; }
-.app-select-search input { width: 100%; box-sizing: border-box; height: 36px; padding: 0 12px; border: 1px solid var(--bd-e2e8f0); border-radius: 8px; background: var(--bg-ffffff); color: var(--tx-0f172a); font: inherit; font-size: 0.875rem; outline: none; }
+.app-select-search input { width: 100%; box-sizing: border-box; height: 36px; padding: 0 12px; border: 1px solid var(--bd-e2e8f0); border-radius: 8px; background: var(--bg-ffffff); color: var(--tx-0f172a); font: inherit; font-size: var(--font-size-sm); outline: none; }
 .app-select-search input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, .15); }
 
 .app-select-list {
@@ -306,7 +306,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   padding: 9px 12px;
   border-radius: 8px;
-  font-size: 0.86rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-334155);
   cursor: pointer;
   transition: all 0.15s ease;

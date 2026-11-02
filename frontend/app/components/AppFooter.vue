@@ -302,14 +302,14 @@
 }
 
 .assistance-title {
-  font-size: 1.02rem;
+  font-size: var(--font-size-md);
   font-weight: 700;
   color: var(--tx-0f172a);
   margin-bottom: 3px;
 }
 
 .assistance-subtitle {
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
 }
 
@@ -328,7 +328,7 @@
   color: #ffffff;
   padding: 9px 20px;
   border-radius: 9999px;
-  font-size: 0.86rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   text-decoration: none;
   transition: all 0.18s ease;
@@ -384,21 +384,21 @@
 }
 
 .brand-org-name {
-  font-size: 1.05rem;
+  font-size: var(--font-size-lg);
   font-weight: 800;
   color: var(--tx-0f172a);
   letter-spacing: -0.01em;
 }
 
 .brand-org-sub {
-  font-size: 0.76rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 600;
   margin-top: 1px;
 }
 
 .brand-desc {
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-64748b);
   line-height: 1.6;
   margin: 0 0 20px;
@@ -414,7 +414,7 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-475569);
   line-height: 1.5;
 }
@@ -426,7 +426,7 @@
 }
 
 .footer-heading {
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--tx-0f172a);
   margin: 0 0 18px;
@@ -460,7 +460,7 @@
   gap: 8px;
   color: var(--tx-475569);
   text-decoration: none;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   transition: all 0.16s ease;
 }
 
@@ -479,7 +479,7 @@
   align-items: center;
   gap: 8px;
   color: var(--tx-64748b);
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
 }
 
 .markets-list-grid {
@@ -507,7 +507,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-334155);
 }
 
@@ -530,7 +530,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-334155);
   font-weight: 500;
 }
@@ -540,7 +540,7 @@
   background: var(--bg-f8fafc);
   border-top: 1px solid var(--bd-e2e8f0);
   padding: 18px 0;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
 }
 
@@ -585,7 +585,7 @@
   background: var(--bg-eff6ff);
   border: 1px solid var(--bd-bfdbfe);
   color: var(--tx-2563eb);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
 }
 

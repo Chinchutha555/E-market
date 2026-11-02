@@ -242,7 +242,7 @@ onUnmounted(() => {
 }
 
 .app-alert-title {
-  font-size: 1.15rem;
+  font-size: var(--font-size-lg);
   font-weight: 800;
   color: var(--tx-0f172a);
   margin: 0 0 8px 0;
@@ -250,7 +250,7 @@ onUnmounted(() => {
 }
 
 .app-alert-message {
-  font-size: 0.92rem;
+  font-size: var(--font-size-base);
   color: var(--tx-475569);
   line-height: 1.55;
   margin: 0 0 24px 0;
@@ -268,7 +268,7 @@ onUnmounted(() => {
   flex: 1;
   padding: 11px 20px;
   border-radius: 10px;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   background: var(--bg-f1f5f9);
   color: var(--tx-475569);
@@ -286,7 +286,7 @@ onUnmounted(() => {
   flex: 1;
   padding: 11px 24px;
   border-radius: 10px;
-  font-size: 0.92rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   border: none;
   cursor: pointer;

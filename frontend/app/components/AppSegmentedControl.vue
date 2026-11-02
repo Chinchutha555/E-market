@@ -102,7 +102,7 @@ const selectOption = (value: string) => {
   border-radius: 6px;
   color: var(--tx-64748b);
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
