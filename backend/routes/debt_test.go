@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"emarket-api/config"
 	"emarket-api/databases"
+	"emarket-api/databases/seeds"
 	"emarket-api/helpers"
 	"emarket-api/models"
 	"encoding/json"
@@ -72,6 +73,39 @@ func TestDebtAccessAndCreation(t *testing.T) {
 		}
 		if len(result.Data) != tc.count {
 			t.Fatalf("%s saw %d debts", tc.user.Username, len(result.Data))
+		}
+	}
+	if e = seeds.SeedAll(db); e != nil {
+		t.Fatalf("SeedAll failed: %v", e)
+	}
+	loginBody, _ := json.Marshal(map[string]string{"username": "finance", "password": "finance1234"})
+	loginReq := httptest.NewRequest("POST", "/api/v1/auth/login", bytes.NewReader(loginBody))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginRec := httptest.NewRecorder()
+	router.ServeHTTP(loginRec, loginReq)
+	if loginRec.Code != 200 {
+		t.Fatalf("finance login failed: %d %s", loginRec.Code, loginRec.Body.String())
+	}
+	var loginRes struct {
+		Data struct {
+			AccessToken string `json:"access_token"`
+			Role        string `json:"role"`
+		} `json:"data"`
+	}
+	if e = json.Unmarshal(loginRec.Body.Bytes(), &loginRes); e != nil || loginRes.Data.AccessToken == "" || loginRes.Data.Role != "finance" {
+		t.Fatalf("unexpected finance login response: %s", loginRec.Body.String())
+	}
+	finCreateBody, _ := json.Marshal(invalid)
+	finCreateReq := httptest.NewRequest("POST", "/api/v1/debts", bytes.NewReader(finCreateBody))
+	finCreateReq.Header.Set("Authorization", "Bearer "+loginRes.Data.AccessToken)
+	finCreateReq.Header.Set("Content-Type", "application/json")
+	finCreateRec := httptest.NewRecorder()
+	router.ServeHTTP(finCreateRec, finCreateReq)
+	if finCreateRec.Code != 201 {
+		t.Fatalf("finance create debt failed: %d %s", finCreateRec.Code, finCreateRec.Body.String())
+	}
+	if false {
+		if false {
 		}
 	}
 }

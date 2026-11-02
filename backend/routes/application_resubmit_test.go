@@ -57,4 +57,11 @@ func TestTenantResubmitReturnedApplication(t *testing.T) {
 	if code := call(users[0]); code != 409 {
 		t.Fatalf("repeat: %d", code)
 	}
+	if err := db.Model(&app).Updates(map[string]interface{}{"application_state": "rejected", "bureau_director_review_json": "{\"decision\":\"reject\"}"}).Error; err != nil {
+		t.Fatal(err)
+	}
+	if code := call(users[0]); code != 409 {
+		t.Fatalf("closed bureau rejection allowed resubmit: %d", code)
+	}
+
 }

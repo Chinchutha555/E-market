@@ -1,4 +1,7 @@
 export interface IApplication {
+  trade_duration?: number
+  trade_duration_unit?: 'days' | 'months' | 'years' | string
+  requires_contract?: boolean | null
 	id: number
 	application_no?: string
 	application_number?: string

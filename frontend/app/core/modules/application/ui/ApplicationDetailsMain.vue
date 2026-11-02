@@ -61,7 +61,20 @@
             <p>{{ nextAction.description }}</p>
           </div>
           <div class="next-action-buttons">
-            <AppButton v-if="status === 'completed' && isStall && isTenant" :to="'/contracts?new_for_stall=' + encodeURIComponent(application.stall_number || application.stall_id || '') + '&app_id=' + application.id" variant="primary" size="md">ทำสัญญา</AppButton>
+            <AppButton v-if="['approved', 'completed'].includes(status) && isStall && isTenant && application.requires_contract !== false" :to="'/contracts?new_for_stall=' + encodeURIComponent(application.stall_number || application.stall_id || '') + '&app_id=' + application.id" variant="primary" size="md">ร่างสัญญา</AppButton>
+            <AppButton
+              v-if="isTenant && status === 'debt_pending'"
+              variant="primary"
+              size="md"
+              :loading="actionSubmitting"
+              :disabled="actionSubmitting"
+              @click="payDebtAndResubmit()"
+            >
+              <template #prefix>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </template>
+              <span>ชำระหนี้และส่งตรวจอีกครั้ง</span>
+            </AppButton>
             <!-- 3 Officer Review Actions (เมื่อมีสิทธิ์พิจารณาคำร้องนี้) -->
             <template v-if="canReview">
               <AppButton
@@ -77,7 +90,7 @@
                 <span>{{ approveButtonLabel }}</span>
               </AppButton>
 
-              <AppButton
+              <AppButton v-if="!['pending_bureau_director', 'pending_debt_check', 'debt_pending'].includes(status)"
                 variant="secondary"
                 size="md"
                 :disabled="actionSubmitting"
@@ -89,7 +102,7 @@
                 <span>ส่งกลับแก้ไข</span>
               </AppButton>
 
-              <AppButton
+              <AppButton v-if="!['pending_debt_check', 'debt_pending'].includes(status)"
                 variant="danger-outline"
                 size="md"
                 :disabled="actionSubmitting"
@@ -184,10 +197,12 @@
                   <div><dt>วันที่ยื่นคำร้อง</dt><dd>{{ createdAtLabel || '-' }}</dd></div>
                   <div><dt>เลขที่คำร้อง</dt><dd>{{ applicationNumber || '-' }}</dd></div>
                   <template v-if="isStall">
-                    <div><dt>ระยะเวลาเช่า</dt><dd>{{ application.requested_period_months || application.lease_term_months ? `${application.requested_period_months || application.lease_term_months} เดือน` : '-' }}</dd></div>
+                    <div><dt>ระยะเวลาเช่า</dt><dd>{{ application.trade_duration && ({ days: 'วัน', months: 'เดือน', years: 'ปี' } as Record<string, string>)[application.trade_duration_unit] ? application.trade_duration + ' ' + ({ days: 'วัน', months: 'เดือน', years: 'ปี' } as Record<string, string>)[application.trade_duration_unit] : (application.requested_period_months || application.lease_term_months ? (application.requested_period_months || application.lease_term_months) + ' เดือน' : '-') }}</dd></div>
                     <div><dt>วันที่ขอเริ่มสัญญา</dt><dd>{{ application.requested_start_date || '-' }}</dd></div>
+                    <div v-if="application.trade_end_date"><dt>วันสิ้นสุดระยะเวลาที่เลือก</dt><dd>{{ application.trade_end_date }}</dd></div>
                     <div v-if="application.stall_monthly_rate || application.monthly_rate"><dt>ค่าเช่า/เดือน</dt><dd>฿{{ Number(application.stall_monthly_rate || application.monthly_rate).toLocaleString() }}</dd></div>
                     <div v-if="application.proposed_rent_type"><dt>ประเภทการเช่า</dt><dd>{{ ({ trial: 'ทดลองขาย', temporary: 'ทำการค้าแบบชั่วคราว', contract: 'ทำการค้าแบบมีสัญญา', monthly: 'รายเดือน', daily: 'รายวัน', yearly: 'รายปี', annual: 'รายปี' } as Record<string, string>)[String(application.proposed_rent_type).toLowerCase()] || application.proposed_rent_type }}</dd></div>
+                    <div v-if="application.requires_contract != null"><dt>การทำสัญญา</dt><dd>{{ application.requires_contract ? 'ต้องทำสัญญา' : 'ไม่ต้องทำสัญญา' }}</dd></div>
                   </template>
                   <div><dt>สำเนาบัตรประชาชน</dt><dd>{{ application.has_id_card_copy ? 'แนบแล้ว' : 'ไม่ได้แนบ' }}</dd></div>
 
@@ -290,6 +305,8 @@
 
   </div>
   <ApplicationDocumentPreview :application="showApplicationDocument ? application : null" @close="showApplicationDocument = false" @signed="Object.assign(application, $event)" />
+  <DirectorReviewModal :open="showDirectorReview" :kind="directorReviewKind" :initial-decision="directorInitialDecision" :application="application" @cancel="showDirectorReview = false" @confirm="confirmDirectorReview" />
+  <OfficerReviewModal :open="showOfficerReview" :application="application" @cancel="showOfficerReview = false" @confirm="confirmOfficerReview" />
   <OfficerSignatureModal :open="showOfficerSignature" @cancel="showOfficerSignature = false" @confirm="submitOfficerApproval" />
   <ApplicationMockOtpModal :open="showApprovalOtp" @cancel="cancelApprovalOtp" @confirm="submitApprovalOtp" />
   <AppModal v-model="showSignedDocumentUpload" title="นำเข้าเอกสารลงนาม" description="แนบคำร้องที่ผู้เช่าลงนามแล้ว">
@@ -357,10 +374,15 @@ const isStall = computed(() => {
   return Boolean(app.booking_id || (app.stall_number && app.stall_number !== '-') || (app.stall_ident && app.stall_ident !== '-'))
 })
 
-const status = computed(() => String(application.value?.status || application.value?.application_state || ''))
+const status = computed(() => {
+  const s = String(application.value?.status || application.value?.application_state || '')
+  if (s === 'submitted') return 'pending_officer'
+  return s
+})
 
 const statusLabel = computed(() => {
   switch (status.value) {
+    case 'submitted':
     case 'pending_officer': return 'รอเจ้าหน้าที่ตรวจสอบ'
     case 'pending_debt_check': return 'รอตรวจสอบหนี้'
     case 'debt_pending': return 'มีหนี้ค้างชำระ'
@@ -404,8 +426,9 @@ const canRevise = computed(() => isTenant.value && isStall.value && status.value
 const isMyTurn = computed(() => {
   const r = String(role.value || '')
   switch (status.value) {
-    case 'pending_officer':
-    case 'pending_debt_check':
+    case 'pending_officer': return r === 'staff'
+    case 'pending_debt_check': return r === 'finance'
+    case 'debt_pending': return r === 'tenant' || (!application.value?.has_finance_signature && r === 'finance')
     case 'contract_pending': return r === 'staff'
     case 'approved': return isStall.value && r === 'staff'
     case 'pending_market_director': return r === 'market_director'
@@ -421,7 +444,9 @@ const steps = computed(() => [
     number: 1,
     label: status.value === 'revision_required'
       ? (isTenant.value ? 'แก้ไขคำร้องขอเช่า' : 'รอผู้เช่าแก้ไขคำร้อง')
-      : 'ยื่นคำร้องขอเช่า'
+      : status.value === 'debt_pending'
+        ? (isTenant.value ? 'ชำระหนี้ค้างชำระ' : 'รอผู้เช่าชำระหนี้ค้าง')
+        : 'ยื่นคำร้องขอเช่า'
   },
   { number: 2, label: 'จนท. ตรวจสอบ/หนี้' },
   { number: 3, label: 'ผอ.ตลาด พิจารณา' },
@@ -430,7 +455,7 @@ const steps = computed(() => [
 
 const isStepCompleted = (step: number): boolean => {
   const s = status.value
-  if (s === 'revision_required') return false
+  if (s === 'revision_required' || s === 'debt_pending') return false
   if (step === 1) return true
   if (step === 2) return ['pending_market_director', 'pending_bureau_director', 'approved', 'contract_pending', 'completed'].includes(s)
   if (step === 3) return ['pending_bureau_director', 'approved', 'contract_pending', 'completed'].includes(s)
@@ -440,26 +465,34 @@ const isStepCompleted = (step: number): boolean => {
 
 const isStepActive = (step: number): boolean => {
   const s = status.value
-  if (s === 'revision_required') return step === 1
-  if (step === 2) return ['pending_officer', 'pending_debt_check', 'debt_pending'].includes(s)
+  if (s === 'revision_required' || s === 'debt_pending') return step === 1
+  if (step === 2) return ['pending_officer', 'pending_debt_check'].includes(s)
   if (step === 3) return s === 'pending_market_director'
   if (step === 4) return s === 'pending_bureau_director'
   return false
 }
 
 const isConnectorFilled = (afterStep: number): boolean => {
-  if (afterStep === 1) return isStepCompleted(2) || (isStepCompleted(1) && status.value !== 'revision_required')
+  if (afterStep === 1) return isStepCompleted(2) || (isStepCompleted(1) && status.value !== 'revision_required' && status.value !== 'debt_pending')
   return isStepCompleted(afterStep + 1)
 }
 
 const nextAction = computed(() => {
   switch (status.value) {
     case 'pending_officer':
-      return { tone: 'waiting', owner: 'เจ้าหน้าที่ตลาด', title: 'รอเจ้าหน้าที่ตรวจสอบเอกสาร', description: 'เจ้าหน้าที่กำลังตรวจสอบความครบถ้วนของเอกสารและข้อมูลผู้ยื่น จากนั้นจะส่งต่อให้ ผอ.ตลาดพิจารณา' }
+      return { tone: 'waiting', owner: 'เจ้าหน้าที่ตลาด', title: 'รอเจ้าหน้าที่ตรวจสอบเอกสาร', description: 'เจ้าหน้าที่กำลังตรวจสอบความครบถ้วนของเอกสารและข้อมูลผู้ยื่น จากนั้นจะส่งต่อให้ฝ่ายการคลังตรวจสอบหนี้' }
     case 'pending_debt_check':
-      return { tone: 'waiting', owner: 'เจ้าหน้าที่การคลัง / ตลาด', title: 'รอตรวจสอบประวัติหนี้ค้าง', description: 'ระบบกำลังรอการตรวจสอบประวัติหนี้ค้างชำระของผู้ยื่นคำร้อง' }
-    case 'debt_pending':
-      return { tone: 'danger', owner: 'ผอ.ตลาด / การคลัง', title: 'มีหนี้ค้างชำระ', description: 'ต้องเคลียร์หนี้ค้างชำระให้เรียบร้อยก่อนจึงจะพิจารณาคำร้องต่อได้' }
+      return { tone: 'waiting', owner: 'เจ้าหน้าที่ฝ่ายการคลัง', title: 'รอตรวจสอบประวัติหนี้ค้างชำระ', description: 'อยู่ระหว่างรอเจ้าหน้าที่ฝ่ายการคลังตรวจสอบประวัติหนี้ค้างชำระของผู้ยื่นคำร้อง' }
+    case 'debt_pending': {
+      const debtAmt = Number(application.value?.market_director_review?.debt_amount || 0)
+      const amtText = debtAmt > 0 ? ` จำนวน ${debtAmt.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท` : ''
+      return {
+        tone: 'danger',
+        owner: 'ผู้ยื่นคำร้อง',
+        title: `พบหนี้ค้างชำระ${amtText}`,
+        description: 'ฝ่ายการคลังตรวจพบหนี้ค้างชำระ ผู้เช่าต้องชำระหนี้ค้างให้เรียบร้อยก่อนส่งให้เจ้าหน้าที่ตลาดตรวจสอบอีกครั้ง'
+      }
+    }
     case 'pending_market_director':
       return { tone: 'waiting', owner: 'ผอ.ตลาด', title: 'รอ ผอ.ตลาดให้ความเห็นชอบ', description: 'คำร้องผ่านการตรวจสอบเอกสารแล้ว กำลังรอ ผอ.ตลาดพิจารณาและให้ความเห็นชอบ' }
     case 'pending_bureau_director':
@@ -596,14 +629,16 @@ const canReview = computed(() => {
   const app = application.value
   if (!app) return false
   const r = String(role.value || '')
-  return (app.status === 'pending_officer' && r === 'staff') ||
-    (app.status === 'pending_market_director' && r === 'market_director') ||
-    (app.status === 'pending_bureau_director' && r === 'bureau_director')
+  return (status.value === 'pending_officer' && r === 'staff') ||
+    ((status.value === 'pending_debt_check' || (status.value === 'debt_pending' && !app.has_finance_signature)) && r === 'finance') ||
+    (status.value === 'pending_market_director' && r === 'market_director') ||
+    (status.value === 'pending_bureau_director' && r === 'bureau_director')
 })
 
 const approveButtonLabel = computed(() => {
   const s = status.value
   if (s === 'pending_officer') return 'ตรวจสอบรับรอง'
+  if (s === 'pending_debt_check' || s === 'debt_pending') return 'อนุมัติ'
   if (s === 'pending_market_director') return 'ผอ. อนุมัติ'
   if (s === 'pending_bureau_director') return 'ผอ.สำนัก อนุมัติ'
   return 'อนุมัติคำร้อง'
@@ -611,7 +646,8 @@ const approveButtonLabel = computed(() => {
 
 const defaultApproveComment = computed(() => {
   const s = status.value
-  if (s === 'pending_officer') return 'เจ้าหน้าที่ตรวจสอบเอกสารครบถ้วน ส่งต่อ ผอ.ตลาด'
+  if (s === 'pending_officer') return 'เจ้าหน้าที่ตรวจสอบเอกสารครบถ้วน ส่งต่อฝ่ายการคลัง'
+  if (s === 'pending_debt_check' || s === 'debt_pending') return 'ฝ่ายการคลังตรวจสอบหนี้ค้างชำระแล้ว'
   if (s === 'pending_market_director') return 'ผอ.ตลาด พิจารณาอนุมัติคำร้อง'
   if (s === 'pending_bureau_director') return 'ผอ.สำนักตลาด พิจารณาอนุมัติคำร้องเรียบร้อย'
   return 'อนุมัติเรียบร้อย'
@@ -653,44 +689,141 @@ const downloadSignedDocument = async () => {
     URL.revokeObjectURL(url)
   } catch { await showError('ดาวน์โหลดเอกสารไม่สำเร็จ') }
 }
+const showDirectorReview = ref(false)
+const directorReviewKind = ref<'market' | 'bureau'>('market')
+const directorInitialDecision = ref<'approve' | 'reject'>('approve')
+const pendingDirectorReview = ref<any>(null)
+const pendingOtpAction = ref<'approve' | 'reject'>('approve')
+const confirmDirectorReview = (review: any) => {
+  pendingDirectorReview.value = review
+  showDirectorReview.value = false
+  if (directorReviewKind.value === 'bureau' && review.decision === 'reject') {
+    pendingOtpAction.value = 'reject'
+    showApprovalOtp.value = true
+  } else showOfficerSignature.value = true
+}
+const showOfficerReview = ref(false)
+const pendingOfficerReview = ref<any>(null)
+const confirmOfficerReview = (review: any) => { pendingOfficerReview.value = review; showOfficerReview.value = false; showOfficerSignature.value = true }
 const showOfficerSignature = ref(false)
 const showApprovalOtp = ref(false)
 const pendingApprovalSignature = ref('')
 const cancelApprovalOtp = () => { showApprovalOtp.value = false; pendingApprovalSignature.value = '' }
 const submitApprovalOtp = async (otp: string) => {
   const signature = pendingApprovalSignature.value
+  const action = pendingOtpAction.value
   cancelApprovalOtp()
+  if (action === 'reject') {
+    if (!application.value || actionSubmitting.value) return
+    actionSubmitting.value = true
+    try {
+      await post('/applications/' + application.value.id + '/action', { action: 'reject', comment: 'ผอ.สำนักไม่อนุมัติคำร้อง', bureau_director_review: pendingDirectorReview.value || undefined, otp })
+      await showSuccess('ไม่อนุมัติและปิดคำร้องแล้ว', 'สำเร็จ')
+      pendingDirectorReview.value = null
+      await fetchDetail()
+    } catch (err: any) { await showError(err?.data?.detail || err?.data?.message || 'ไม่สามารถดำเนินการได้') }
+    finally { actionSubmitting.value = false }
+    return
+  }
   await processApproval(signature, otp)
 }
 const submitOfficerApproval = async (signature: string) => { showOfficerSignature.value = false; await processApproval(signature) }
 const processApproval = async (signature = '', otp = '') => {
-  if (!signature) { showOfficerSignature.value = true; return }
-  if (status.value === 'pending_bureau_director' && !otp) { pendingApprovalSignature.value = signature; showApprovalOtp.value = true; return }
+  if (!signature) {
+    if ((status.value === 'pending_officer' || status.value === 'submitted') && isStall.value) {
+      if (!application.value?.officer_review_supported) { await showError('ยังไม่สามารถบันทึกข้อมูลตรวจสอบได้ กรุณาลองใหม่ภายหลัง'); return }
+      pendingOfficerReview.value = null
+      showOfficerReview.value = true
+    }
+    else if (status.value === 'pending_debt_check' || status.value === 'debt_pending') {
+      if (application.value?.director_review_supported === false) { await showError('ยังไม่สามารถบันทึกข้อมูลตรวจสอบได้ กรุณาลองใหม่ภายหลัง'); return }
+      pendingDirectorReview.value = null
+      directorReviewKind.value = 'market'
+      directorInitialDecision.value = 'approve'
+      showDirectorReview.value = true
+    }
+    else if (status.value === 'pending_bureau_director' && isStall.value) {
+      pendingDirectorReview.value = null
+      directorReviewKind.value = 'bureau'
+      directorInitialDecision.value = 'approve'
+      showDirectorReview.value = true
+    } else showOfficerSignature.value = true
+    return
+  }
+  if (status.value === 'pending_bureau_director' && !otp) { pendingOtpAction.value = 'approve'; pendingApprovalSignature.value = signature; showApprovalOtp.value = true; return }
   if (!application.value || actionSubmitting.value) return
   const app = application.value
   const appNo = applicationNumber.value
+  const isFinanceHasDebt = ['pending_debt_check', 'debt_pending'].includes(status.value) && pendingDirectorReview.value?.debt_status === 'has'
+  const isFinanceNoDebt = ['pending_debt_check', 'debt_pending'].includes(status.value) && pendingDirectorReview.value?.debt_status === 'none'
+  const confirmMsg = isFinanceHasDebt
+    ? `ยืนยันบันทึกผลตรวจพบหนี้ค้างชำระ จำนวน ${Number(pendingDirectorReview.value?.debt_amount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท และส่งกลับให้ผู้เช่าชำระหนี้ก่อนหรือไม่?`
+    : isFinanceNoDebt
+      ? `ยืนยันผลตรวจสอบไม่มีหนี้ค้างชำระ และส่งต่อคำร้อง ${appNo} ให้ ผอ.ตลาด พิจารณาหรือไม่?`
+      : `คุณต้องการพิจารณาอนุมัติคำร้อง ${appNo} หรือไม่?`
   const confirmed = otp ? true : await showConfirm(
-    `คุณต้องการพิจารณาอนุมัติคำร้อง ${appNo} หรือไม่?`,
+    confirmMsg,
     {
-      title: 'ยืนยันการอนุมัติคำร้อง',
+      title: isFinanceHasDebt ? 'ยืนยันแจ้งหนี้ค้างชำระผู้เช่า' : 'ยืนยันการอนุมัติคำร้อง',
+      type: isFinanceHasDebt ? 'warning' : 'info',
+      confirmText: isFinanceHasDebt ? 'ส่งกลับผู้เช่าชำระหนี้' : 'ยืนยันอนุมัติ',
+      cancelText: 'ยกเลิก'
+    }
+  )
+  if (!confirmed) return
+  const finalComment = isFinanceHasDebt
+    ? `ฝ่ายการคลังตรวจพบหนี้ค้างชำระ จำนวน ${Number(pendingDirectorReview.value?.debt_amount || 0).toFixed(2)} บาท ส่งกลับผู้เช่าชำระหนี้ก่อน`
+    : isFinanceNoDebt
+      ? 'ฝ่ายการคลังตรวจสอบแล้ว ไม่มีหนี้ค้างชำระ ส่งต่อ ผอ.ตลาด'
+      : defaultApproveComment.value
+  actionSubmitting.value = true
+  try {
+    await post(`/applications/${app.id}/action`, {
+      action: 'approve',
+      comment: finalComment,
+      signature_base64: signature,
+      officer_review: status.value === 'pending_officer' || status.value === 'submitted' ? pendingOfficerReview.value : undefined,
+      market_director_review: ['pending_debt_check', 'debt_pending'].includes(status.value) ? pendingDirectorReview.value : undefined,
+      bureau_director_review: status.value === 'pending_bureau_director' ? pendingDirectorReview.value : undefined,
+      otp
+    })
+    await showSuccess(
+      isFinanceHasDebt
+        ? 'บันทึกผลตรวจหนี้ค้างชำระแล้ว ระบบได้ส่งกลับให้ผู้เช่าชำระหนี้ก่อนส่งให้เจ้าหน้าที่ตรวจสอบอีกครั้ง'
+        : isFinanceNoDebt
+          ? `ตรวจสอบหนี้เรียบร้อยแล้ว ส่งต่อคำร้อง ${appNo} ให้ ผอ.ตลาด เรียบร้อยแล้ว`
+          : `อนุมัติคำร้อง ${appNo} เรียบร้อยแล้ว`
+    )
+    await fetchDetail()
+  } catch (err: any) {
+    await showError(err?.data?.detail || err?.data?.message || err?.message || 'เกิดข้อผิดพลาดในการอนุมัติคำร้อง')
+  } finally {
+    actionSubmitting.value = false
+  }
+}
+
+const payDebtAndResubmit = async () => {
+  if (!application.value || actionSubmitting.value) return
+  const app = application.value
+  const debtAmt = Number(app.market_director_review?.debt_amount || 0)
+  const amtText = debtAmt > 0 ? ` จำนวน ${debtAmt.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท` : ''
+  const confirmed = await showConfirm(
+    `ยืนยันการชำระหนี้ค้างชำระ${amtText} สำหรับคำร้อง ${applicationNumber.value} และส่งกลับให้เจ้าหน้าที่ตรวจสอบอีกครั้งหรือไม่?`,
+    {
+      title: 'ยืนยันการชำระหนี้ค้างชำระ',
       type: 'info',
-      confirmText: 'ยืนยันอนุมัติ',
+      confirmText: 'ชำระหนี้และส่งตรวจ',
       cancelText: 'ยกเลิก'
     }
   )
   if (!confirmed) return
   actionSubmitting.value = true
   try {
-    await post(`/applications/${app.id}/action`, {
-      action: 'approve',
-      comment: defaultApproveComment.value,
-      signature_base64: signature,
-      otp
-    })
-    await showSuccess(`อนุมัติคำร้อง ${appNo} เรียบร้อยแล้ว`)
+    await post(`/applications/${app.id}/pay-debt`, {})
+    await showSuccess('ชำระหนี้ค้างเรียบร้อยแล้ว ระบบได้ส่งคำร้องให้เจ้าหน้าที่ตรวจสอบอีกครั้ง')
     await fetchDetail()
   } catch (err: any) {
-    await showError(err?.data?.detail || err?.data?.message || err?.message || 'เกิดข้อผิดพลาดในการอนุมัติคำร้อง')
+    await showError(err?.data?.detail || err?.data?.message || err?.message || 'ไม่สามารถบันทึกการชำระหนี้ได้')
   } finally {
     actionSubmitting.value = false
   }
@@ -710,7 +843,15 @@ const quickRejectReasons = [
   'ขอให้แนบเอกสารเพิ่มเติมเพื่อประกอบการพิจารณา'
 ]
 
-const openRejectModal = (action: 'return_revision' | 'reject') => {
+const openRejectModal = async (action: 'return_revision' | 'reject') => {
+  if (status.value === 'pending_bureau_director') {
+    if (action !== 'reject') return
+    if (!application.value?.director_review_supported) { await showError('ยังไม่สามารถบันทึกข้อมูลตรวจสอบได้ กรุณาลองใหม่ภายหลัง'); return }
+    pendingDirectorReview.value = { decision: 'reject', other_details: '', office_checked: false, system_number: '', document_date: '' }
+    pendingOtpAction.value = 'reject'
+    showApprovalOtp.value = true
+    return
+  }
   rejectAction.value = action
   rejectComment.value = ''
   rejectErrorMsg.value = ''
@@ -791,7 +932,7 @@ onMounted(fetchDetail)
 .detail-title-wrap { min-width: 0; }
 .detail-title-icon { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 12px; background: var(--bg-eff6ff); border: 1px solid var(--bd-dbeafe); color: var(--tx-2563eb); flex-shrink: 0; }
 .eyebrow { display: block; color: var(--tx-64748b); font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 3px; }
-.detail-hero h1 { margin: 0; font-size: 1.65rem; line-height: 1.1; font-weight: 800; overflow-wrap: anywhere; }
+.detail-hero h1 { margin: 0; font-size: var(--font-size-2xl); line-height: 1.1; font-weight: 800; overflow-wrap: anywhere; }
 .created-at { margin-top: 5px; color: var(--tx-94a3b8); font-size: var(--font-size-xs); }
 
 .status-badge { padding: 6px 13px; border-radius: 999px; font-size: var(--font-size-xs); font-weight: 700; white-space: nowrap; }
@@ -805,7 +946,7 @@ onMounted(fetchDetail)
 .next-action-card { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; min-height: 76px; padding: 15px 18px; border: 1px solid var(--bd-bfdbfe); border-left: 4px solid #2563eb; border-radius: 14px; background: var(--bg-ffffff); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03); }
 .next-action-icon { width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center; border-radius: 11px; background: var(--bg-eff6ff); color: var(--tx-2563eb); }
 .next-action-copy { flex: 1; min-width: 0; }
-.next-action-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; color: var(--tx-64748b); font-size: var(--font-size-xs); font-weight: 650; }
+.next-action-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; color: var(--tx-64748b); font-size: var(--font-size-xs); font-weight: 600; }
 .next-action-owner { padding: 2px 7px; border-radius: 999px; background: var(--bg-f1f5f9); color: var(--tx-64748b); font-size: var(--font-size-xs); line-height: 1.35; font-weight: 600; white-space: nowrap; }
 .next-action-owner.is-mine { background: var(--bg-dbeafe); color: var(--tx-1d4ed8); }
 .next-action-copy h2 { margin: 0; color: var(--tx-0f172a); font-size: var(--font-size-md); line-height: 1.35; font-weight: 700; }

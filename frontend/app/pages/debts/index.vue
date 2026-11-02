@@ -196,6 +196,7 @@
                 <th style="width: 150px;">วันที่บันทึก</th>
                 <th style="width: 160px; text-align: right;">ยอดหนี้</th>
                 <th style="width: 130px; text-align: center;">สถานะ</th>
+                <th style="width: 140px; text-align: right;">จัดการ</th>
               </tr>
             </thead>
             <tbody>
@@ -220,9 +221,25 @@
                     {{ item.status === 'outstanding' ? 'ค้างชำระ' : (item.status === 'paid' ? 'ชำระแล้ว' : item.status) }}
                   </span>
                 </td>
+                <td style="text-align: right;">
+                  <AppButton
+                    v-if="item.status === 'outstanding'"
+                    variant="primary"
+                    size="sm"
+                    :loading="payingId === item.id"
+                    :disabled="payingId === item.id"
+                    @click="payDebt(item)"
+                  >
+                    <template #prefix>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </template>
+                    ชำระหนี้
+                  </AppButton>
+                  <span v-else style="color: var(--tx-94a3b8); font-size: var(--font-size-xs);">-</span>
+                </td>
               </tr>
               <tr v-if="!filtered.length">
-                <td colspan="7" class="empty-cell">
+                <td colspan="8" class="empty-cell">
                   <AppEmptyState
                     variant="table"
                     icon="document"
@@ -252,11 +269,12 @@ definePageMeta({ middleware: 'auth' })
 
 const { get, post } = useApi()
 const { role } = useAuth()
-const { showError, showSuccess } = useAppAlert()
+const { showError, showSuccess, showConfirm } = useAppAlert()
 
-const canCreate = computed(() => ['admin', 'staff'].includes(role.value || ''))
+const canCreate = computed(() => ['admin', 'staff', 'finance', 'market_director'].includes(role.value || ''))
 const loading = ref(true)
 const saving = ref(false)
+const payingId = ref<number | string | null>(null)
 const search = ref('')
 const statusFilter = ref('')
 const page = ref(1)
@@ -368,6 +386,35 @@ async function saveDebt() {
     )
   } finally {
     saving.value = false
+  }
+}
+
+async function payDebt(item: any) {
+  const amt = (Number(item.amount_satang || 0) / 100).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const confirmed = await showConfirm(
+    `ยืนยันการชำระหนี้ค้างชำระจำนวน ${amt} บาท (${item.description || '-'}) และส่งคำร้องที่ติดสถานะมีหนี้ค้างให้เจ้าหน้าที่ตรวจสอบอีกครั้งหรือไม่?`,
+    {
+      title: 'ยืนยันการชำระหนี้ค้างชำระ',
+      type: 'info',
+      confirmText: 'ชำระหนี้',
+      cancelText: 'ยกเลิก'
+    }
+  )
+  if (!confirmed) return
+  payingId.value = item.id
+  try {
+    await post(`/debts/${item.id}/pay`, {})
+    await loadDebts()
+    await showSuccess('ชำระหนี้ค้างชำระเรียบร้อยแล้ว ระบบได้ส่งคำร้องให้เจ้าหน้าที่ตรวจสอบอีกครั้ง', 'ชำระหนี้สำเร็จ')
+  } catch (err: any) {
+    await showError(
+      err?.data?.error?.message ||
+        err?.data?.message ||
+        'ไม่สามารถบันทึกการชำระหนี้ได้',
+      'เกิดข้อผิดพลาด'
+    )
+  } finally {
+    payingId.value = null
   }
 }
 

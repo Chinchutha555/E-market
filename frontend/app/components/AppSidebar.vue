@@ -216,6 +216,23 @@
           </NuxtLink>
 
           <NuxtLink
+            :to="staffMarketId ? '/stalls/application-settings?market=' + staffMarketId : '/staff'"
+            class="nav-icon-link staff-nav-submenu-link"
+            :class="{ active: route.path === '/stalls/application-settings' }"
+          >
+            <span class="nav-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h8M8 17h8"></path></svg></span>
+            <span v-if="isExpanded" class="nav-label">จัดการคำร้อง</span>
+          </NuxtLink>
+          <NuxtLink
+            :to="staffMarketId ? '/stalls/contract-templates?market=' + staffMarketId : '/staff'"
+            class="nav-icon-link staff-nav-submenu-link"
+            :class="{ active: route.path === '/stalls/contract-templates' }"
+            :title="isExpanded ? '' : 'จัดการรูปแบบสัญญา'"
+          >
+            <span class="nav-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h8M8 17h5"></path><path d="m15 18 2 2 4-4"></path></svg></span>
+            <span v-if="isExpanded" class="nav-label">จัดการรูปแบบสัญญา</span>
+          </NuxtLink>
+          <NuxtLink
             :to="staffUtilityLink()"
             class="nav-icon-link staff-nav-submenu-link"
             :class="{ active: route.path === '/stalls/utility-settings' && route.query.section !== 'meters' }"
@@ -326,6 +343,8 @@ const isMarketManagementRoute = computed(() =>
   route.path === '/stalls' ||
   (route.path === '/stalls/manage' && route.query.mode !== 'inspect') ||
   route.path.startsWith('/stalls/visit-schedule') ||
+  route.path.startsWith('/stalls/application-settings') ||
+  route.path.startsWith('/stalls/contract-templates') ||
   route.path.startsWith('/stalls/utility-settings')
 )
 const isMarketManagementExpanded = ref(isMarketManagementRoute.value)
@@ -397,7 +416,7 @@ const refreshApplicationCount = async () => {
   const currentRole = String(role.value || user.value?.role || '').toLowerCase()
   const stateByRole: Record<string, string> = {
     admin: 'pending_officer', staff: 'pending_officer',
-    market_director: 'pending_market_director', bureau_director: 'pending_bureau_director'
+    market_director: 'pending_market_director', finance: 'pending_market_director', bureau_director: 'pending_bureau_director'
   }
   const expectedStatus = stateByRole[currentRole]
   if (!expectedStatus) { pendingApplicationCount.value = 0; return }

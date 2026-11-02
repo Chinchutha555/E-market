@@ -68,6 +68,8 @@ export const useAuthStore = defineStore("auth", {
 	getters: {
 		isLoggedIn: (state) => !!state.accessToken,
 		isAdmin: (state) => state.role === "admin",
+		isStaff: (state) => state.role === "staff" || state.role === "officer",
+		isFinance: (state) => state.role === "finance",
 		isTenant: (state) => state.role === "tenant",
 	},
 	actions: {
@@ -149,7 +151,7 @@ export const useAuthStore = defineStore("auth", {
 				if (res.status && res.data) {
 					const data = res.data
 					this.setToken(data.access_token, data.refresh_token)
-					const userRole = normalizeRole(data.role || data.user?.role || (credentials.username.startsWith("tenant") ? "tenant" : credentials.username === "staff" ? "staff" : "admin"))
+					const userRole = normalizeRole(data.role || data.user?.role || (credentials.username.startsWith("tenant") ? "tenant" : credentials.username === "staff" ? "staff" : credentials.username === "finance" ? "finance" : "admin"))
 					this.role = userRole
 					this.setUser(data.user || {
 						id: credentials.username === "tenant" ? 3 : credentials.username === "tenant2" ? 4 : credentials.username === "tenant3" ? 17 : 1,

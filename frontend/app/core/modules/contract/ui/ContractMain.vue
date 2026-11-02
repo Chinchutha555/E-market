@@ -2,7 +2,7 @@
   <div class="contracts-page">
     <AppHeader />
 
-    <div class="content-body">
+    <div class="page-container">
       <div class="page-header-row">
         <div>
           <h1 class="main-page-title">สัญญา</h1>
@@ -20,13 +20,13 @@
       <!-- Standard Table/Card Container -->
       <div v-else class="table-card-container">
         <!-- Card Header: Title + Subtitle on Left, Search + View Mode + Actions on Right -->
-        <div class="table-card-header">
-          <div class="table-header-left">
-            <h2 class="table-card-title">{{ isTenant ? 'แผงเช่าและสัญญาของฉัน' : 'รายการสัญญาเช่าทั้งหมด' }}</h2>
-            <div class="table-card-subtitle">{{ filteredContracts.length }} สัญญา</div>
+        <div class="card-header-row">
+          <div class="header-left">
+            <h2 class="section-title">{{ isTenant ? 'แผงเช่าและสัญญาของฉัน' : 'รายการสัญญาเช่าทั้งหมด' }}</h2>
+            <div class="item-count-subtitle">ทั้งหมด {{ filteredContracts.length }} สัญญา</div>
           </div>
 
-          <div class="table-header-actions">
+          <div class="header-right">
             <!-- Search Input with Clear Button -->
             <div class="search-input-wrapper">
               <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -62,21 +62,23 @@
           </div>
         </div>
 
-        <!-- KPI Ribbon Cards (Overview & Status Filter Shortcuts) -->
-        <div class="officer-kpi-ribbon">
+        <!-- KPI Ribbon Cards -->
+        <div class="officer-kpi-ribbon officer-status-kpi-ribbon">
           <!-- 1. ทั้งหมด -->
           <div
             class="kpi-ribbon-card kpi-all"
             :class="{ active: selectedStatus === '' }"
             role="button"
             tabindex="0"
-            @click="selectedStatus = ''; filterContracts(); currentPage = 1" @keydown.enter.prevent="selectedStatus = ''; filterContracts(); currentPage = 1" @keydown.space.prevent="selectedStatus = ''; filterContracts(); currentPage = 1"
+            @click="selectedStatus = ''; filterContracts(); currentPage = 1"
+            @keydown.enter.prevent="selectedStatus = ''; filterContracts(); currentPage = 1"
+            @keydown.space.prevent="selectedStatus = ''; filterContracts(); currentPage = 1"
           >
             <div class="kpi-icon-box">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
             </div>
             <div class="kpi-text-box">
-              <div class="kpi-title">สัญญาเช่าทั้งหมด</div>
+              <div class="kpi-title">ทั้งหมด</div>
               <div class="kpi-value-row">
                 <span class="kpi-count">{{ contracts.length }}</span>
                 <span class="kpi-unit-pill">ฉบับ</span>
@@ -84,19 +86,21 @@
             </div>
           </div>
 
-          <!-- 3. รอดำเนินการ (Pending) -->
+          <!-- 2. รอดำเนินการ (Pending) -->
           <div
             class="kpi-ribbon-card kpi-pending"
             :class="{ active: selectedStatus === 'pending' }"
             role="button"
             tabindex="0"
-            @click="selectedStatus = 'pending'; pendingContractFilter = 'all'; filterContracts(); currentPage = 1" @keydown.enter.prevent="selectedStatus = 'pending'; pendingContractFilter = 'all'; filterContracts(); currentPage = 1" @keydown.space.prevent="selectedStatus = 'pending'; pendingContractFilter = 'all'; filterContracts(); currentPage = 1"
+            @click="selectedStatus = 'pending'; pendingContractFilter = 'all'; filterContracts(); currentPage = 1"
+            @keydown.enter.prevent="selectedStatus = 'pending'; pendingContractFilter = 'all'; filterContracts(); currentPage = 1"
+            @keydown.space.prevent="selectedStatus = 'pending'; pendingContractFilter = 'all'; filterContracts(); currentPage = 1"
           >
             <div class="kpi-icon-box">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             </div>
             <div class="kpi-text-box">
-              <div class="kpi-title">รอตรวจสัญญา</div>
+              <div class="kpi-title">รอดำเนินการ</div>
               <div class="kpi-value-row">
                 <span class="kpi-count">{{ countContractsByStatus('pending') }}</span>
                 <span class="kpi-unit-pill">ฉบับ</span>
@@ -104,19 +108,21 @@
             </div>
           </div>
 
-          <!-- 2. ใช้งานอยู่ (Active) -->
+          <!-- 3. ใช้งานอยู่ (Active) -->
           <div
             class="kpi-ribbon-card kpi-applied"
             :class="{ active: selectedStatus === 'active' }"
             role="button"
             tabindex="0"
-            @click="selectedStatus = 'active'; filterContracts(); currentPage = 1" @keydown.enter.prevent="selectedStatus = 'active'; filterContracts(); currentPage = 1" @keydown.space.prevent="selectedStatus = 'active'; filterContracts(); currentPage = 1"
+            @click="selectedStatus = 'active'; filterContracts(); currentPage = 1"
+            @keydown.enter.prevent="selectedStatus = 'active'; filterContracts(); currentPage = 1"
+            @keydown.space.prevent="selectedStatus = 'active'; filterContracts(); currentPage = 1"
           >
             <div class="kpi-icon-box">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             </div>
             <div class="kpi-text-box">
-              <div class="kpi-title">ใช้งานอยู่ (Active)</div>
+              <div class="kpi-title">ใช้งานอยู่</div>
               <div class="kpi-value-row">
                 <span class="kpi-count">{{ countContractsByStatus('active') }}</span>
                 <span class="kpi-unit-pill">ฉบับ</span>
@@ -124,19 +130,21 @@
             </div>
           </div>
 
-          <!-- 4. หมดสัญญา (Expired) -->
+          <!-- 4. หมดสัญญาแล้ว (Expired) -->
           <div
             class="kpi-ribbon-card kpi-expired"
             :class="{ active: selectedStatus === 'expired' }"
             role="button"
             tabindex="0"
-            @click="selectedStatus = 'expired'; filterContracts(); currentPage = 1" @keydown.enter.prevent="selectedStatus = 'expired'; filterContracts(); currentPage = 1" @keydown.space.prevent="selectedStatus = 'expired'; filterContracts(); currentPage = 1"
+            @click="selectedStatus = 'expired'; filterContracts(); currentPage = 1"
+            @keydown.enter.prevent="selectedStatus = 'expired'; filterContracts(); currentPage = 1"
+            @keydown.space.prevent="selectedStatus = 'expired'; filterContracts(); currentPage = 1"
           >
             <div class="kpi-icon-box">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             </div>
             <div class="kpi-text-box">
-              <div class="kpi-title">หมดสัญญาแล้ว</div>
+              <div class="kpi-title">หมดสัญญา</div>
               <div class="kpi-value-row">
                 <span class="kpi-count">{{ countContractsByStatus('expired') }}</span>
                 <span class="kpi-unit-pill">ฉบับ</span>
@@ -146,11 +154,13 @@
 
           <!-- 5. สิ้นสุด/ยกเลิก (Terminated) -->
           <div
-            class="kpi-ribbon-card kpi-terminated"
+            class="kpi-ribbon-card kpi-cancelled"
             :class="{ active: selectedStatus === 'terminated' }"
             role="button"
             tabindex="0"
-            @click="selectedStatus = 'terminated'; filterContracts(); currentPage = 1" @keydown.enter.prevent="selectedStatus = 'terminated'; filterContracts(); currentPage = 1" @keydown.space.prevent="selectedStatus = 'terminated'; filterContracts(); currentPage = 1"
+            @click="selectedStatus = 'terminated'; filterContracts(); currentPage = 1"
+            @keydown.enter.prevent="selectedStatus = 'terminated'; filterContracts(); currentPage = 1"
+            @keydown.space.prevent="selectedStatus = 'terminated'; filterContracts(); currentPage = 1"
           >
             <div class="kpi-icon-box">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
@@ -165,11 +175,24 @@
           </div>
         </div>
 
-        <div v-if="selectedStatus === 'pending'" class="contract-subfilters" aria-label="ขั้นตอนสัญญาที่รอดำเนินการ">
-          <button v-for="option in pendingContractOptions" :key="option.value" type="button" class="contract-subfilter" :class="{ active: pendingContractFilter === option.value }" :aria-pressed="pendingContractFilter === option.value" @click="pendingContractFilter = option.value; filterContracts(); currentPage = 1">
-            {{ option.label }} <span>{{ option.count }}</span>
-          </button>
-        </div>
+        <!-- Pending Subfilters -->
+        <transition name="fade-slide">
+          <div v-if="selectedStatus === 'pending'" class="tenant-subfilter-bar" style="margin-top: -12px; margin-bottom: 22px;">
+            <button
+              v-for="option in pendingContractOptions"
+              :key="option.value"
+              type="button"
+              class="subfilter-chip"
+              :class="[getPendingChipClass(option.value), { active: pendingContractFilter === option.value }]"
+              :aria-pressed="pendingContractFilter === option.value"
+              @click="pendingContractFilter = option.value; filterContracts(); currentPage = 1"
+            >
+              <span v-if="option.value !== 'all'" class="subfilter-dot"></span>
+              <span>{{ option.label }}</span>
+              <span class="subfilter-badge">{{ option.count }}</span>
+            </button>
+          </div>
+        </transition>
 
         <!-- Empty State -->
         <AppEmptyState
@@ -185,8 +208,8 @@
         </AppEmptyState>
 
         <!-- Table View -->
-        <div v-else-if="viewMode === 'table'" class="table-container" role="region" aria-label="ตารางสัญญา" tabindex="0">
-          <table class="custom-table">
+        <div v-else-if="viewMode === 'table'" class="officer-table-container" role="region" aria-label="ตารางสัญญา" tabindex="0">
+          <table class="officer-custom-table">
             <thead>
               <tr>
                 <th scope="col">เลขที่สัญญา</th>
@@ -213,6 +236,7 @@
                 <td class="action-cell">
                   <div class="table-actions-cell">
                     <AppButton v-if="canReviewContract(c)" variant="primary" size="sm" @click="approveContract(c)">ลงนาม</AppButton>
+                    <AppButton v-if="isStaff && c.status === 'draft'" variant="primary" size="sm" @click="openContractDraft(c)">กำหนดรายละเอียด</AppButton>
                     <AppButton v-if="isTenant && c.status === 'revision_required'" variant="primary" size="sm" @click="openContractRevision(c)">แก้ไข</AppButton>
                     <AppButton variant="secondary" size="sm" @click="viewContractDoc(c)">
                       <template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/></svg></template>
@@ -226,64 +250,287 @@
           </table>
         </div>
 
-        <!-- Card View -->
-        <div v-else class="contract-groups">
-          <section v-for="group in groupedContracts" :key="group.key" class="contract-group">
-            <button type="button" class="contract-group-heading" :aria-expanded="isContractGroupOpen(group.key)" @click="toggleContractGroup(group.key)">
-              <svg class="group-chevron" :class="{ closed: !isContractGroupOpen(group.key) }" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-              <span class="group-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11H3z"/><path d="M9 21v-8h6v8"/></svg></span>
-              <strong>{{ group.name }}</strong><span class="group-count">{{ group.items.length }} สัญญา</span>
-            </button>
-            <div v-show="isContractGroupOpen(group.key)" class="contract-group-body">
-              <article v-for="c in group.items" :key="c.id" class="flow-contract-card" :class="contractBorderClass(c.status)">
-                <div class="flow-card-header">
-                  <div class="flow-card-identity">
-                    <span class="flow-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></span>
-                    <div><div class="flow-label">เลขที่สัญญา</div><strong class="flow-number">{{ c.contract_number }}</strong><div class="flow-date">วันที่ยื่น {{ formatContractDate(c.created_at) }}</div></div>
-                  </div>
-                  <div class="flow-card-header-actions">
-                    <AppButton variant="outline" size="sm" @click="viewContractDoc(c)">ตัวอย่างเอกสาร</AppButton>
-                    <span class="status-pill-badge" :class="getStatusBadgeClass(c.status)">{{ getStatusLabel(c.status) }}</span>
-                    <button type="button" class="flow-collapse" :aria-expanded="isContractCardOpen(c.id)" :aria-label="isContractCardOpen(c.id) ? 'ย่อรายละเอียดสัญญา' : 'ขยายรายละเอียดสัญญา'" @click="toggleContractCard(c.id)">
-                      <svg :class="{ closed: !isContractCardOpen(c.id) }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                    </button>
-                  </div>
+        <!-- Card View (Accordion grouped view matching Application) -->
+        <div v-else class="application-cards-container">
+          <div v-if="groupedContracts.length > 0" class="officer-groups-wrapper">
+            <div
+              v-for="group in groupedContracts"
+              :key="group.key"
+              class="project-stall-entry"
+            >
+              <!-- Accordion Header -->
+              <button
+                type="button"
+                class="officer-project-header"
+                :class="{ open: isContractGroupOpen(group.key) }"
+                @click="toggleContractGroup(group.key)"
+              >
+                <div class="header-left-content">
+                  <svg class="chevron-indicator" :class="{ rotated: isContractGroupOpen(group.key) }" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  <span class="accordion-header-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                  </span>
+                  <span class="market-title">{{ group.name }}</span>
+                  <span class="market-count-pill">{{ group.items.length }} สัญญา</span>
                 </div>
-                <div class="flow-meta"><span>แผง <strong>{{ stallShortNumber(c.stall_ident) || '-' }}</strong></span><span>{{ contractProject(c) }}</span><span>{{ contractMarket(c) }}</span><span>{{ c.tenant_name || '-' }} <a v-if="c.tenant_phone" :href="'tel:' + c.tenant_phone">{{ c.tenant_phone }}</a></span></div>
-                <div v-show="isContractCardOpen(c.id)" class="flow-card-body">
-                  <div class="flow-stepper" aria-label="ขั้นตอนสัญญา">
-                    <div v-for="(step, index) in contractStepLabels" :key="step" class="flow-step" :class="contractStepClass(c, index)">
-                      <span class="flow-step-circle">
-                        <svg v-if="contractStepClass(c, index) === 'done'" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span v-else>{{ index + 1 }}</span>
-                      </span>
-                      <span>{{ step }}</span>
+              </button>
+
+              <!-- Accordion Body -->
+              <div
+                v-show="isContractGroupOpen(group.key)"
+                class="market-accordion-body officer-cards-list in-project"
+              >
+                <div
+                  v-for="c in group.items"
+                  :key="c.id"
+                  class="booking-item-card"
+                  :class="[getContractBorderClass(c.status), { 'collapsed-card': !isContractCardOpen(c.id) }]"
+                >
+                  <!-- Card Top Row -->
+                  <div class="card-top-row">
+                    <!-- Top Line: Contract Number & Status Badge + Chevron -->
+                    <div class="card-top-main">
+                      <div class="top-row-left">
+                        <div class="circle-status-icon blue-circle">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                          </svg>
+                        </div>
+
+                        <div class="booking-number-block">
+                          <div class="booking-label-row">
+                            <span class="booking-label">เลขที่สัญญา</span>
+                          </div>
+                          <div class="booking-id-text">#{{ c.contract_number }}</div>
+                          <div class="officer-booked-at">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            <span>วันที่ทำสัญญา {{ formatContractDate(c.created_at) }}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="top-row-right">
+                        <AppButton variant="outline" size="sm" title="ตัวอย่างเอกสาร" @click.stop="viewContractDoc(c)">
+                          <template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>
+                          ตัวอย่างเอกสาร
+                        </AppButton>
+                        <span class="status-pill-badge" :class="getStatusBadgeClass(c.status)">
+                          {{ getStatusLabel(c.status) }}
+                        </span>
+                        <button class="card-collapse-btn" type="button" @click.stop="toggleContractCard(c.id)" title="ย่อ/ขยายการ์ด">
+                          <svg
+                            class="card-chevron"
+                            :class="{ rotated: isContractCardOpen(c.id) }"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Compact context row: stall, project, market, and applicant/tenant -->
+                    <div class="card-meta-tags-row compact-officer-meta">
+                      <div class="compact-meta-item compact-meta-stall">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        <span>แผงค้า</span>
+                        <strong>{{ c.stall_ident || '-' }}</strong>
+                      </div>
+
+                      <div class="compact-meta-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9"></path><path d="M9 22V12h6v10"></path></svg>
+                        <span>{{ contractProject(c) }}</span>
+                      </div>
+
+                      <div class="compact-meta-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"></path></svg>
+                        <span>{{ contractMarket(c) }}</span>
+                      </div>
+
+                      <div class="compact-meta-item compact-meta-person">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <strong>{{ c.tenant_name || '-' }}</strong>
+                        <a v-if="c.tenant_phone" :href="'tel:' + c.tenant_phone" @click.stop>{{ c.tenant_phone }}</a>
+                      </div>
                     </div>
                   </div>
-                  <div class="flow-details">
-                    <div><span>ระยะสัญญา</span><strong>{{ formatContractDate(c.start_date) }} – {{ formatContractDate(c.end_date) }}</strong></div>
-                    <div><span>ร้านค้า</span><strong>{{ c.shop_name || '-' }}</strong><small>{{ c.business_type || '-' }}</small></div>
-                    <div><span>ผู้เช่า</span><strong>{{ c.tenant_name || '-' }}</strong><small>{{ c.tenant_phone || '-' }}</small></div>
-                    <div><span>ค่าเช่า</span><strong>฿{{ Number(c.rental_fee || 0).toLocaleString() }} {{ c.billing_cycle === 'daily' ? '/ วัน' : '/ เดือน' }}</strong><small>เงินประกัน ฿{{ Number(c.security_deposit || 0).toLocaleString() }}</small></div>
+
+                  <!-- Collapsed Next Step Bar -->
+                  <div
+                    v-if="!isContractCardOpen(c.id)"
+                    class="collapsed-next-step"
+                    :class="getContractProgressTone(c.status)"
+                  >
+                    <div class="collapsed-next-step-content">
+                      <span class="collapsed-next-step-label">ความคืบหน้า</span>
+                      <strong>{{ contractProgressText(c) }}</strong>
+                    </div>
+
+                    <div class="collapsed-actions-group">
+                      <AppButton v-if="canReviewContract(c) && c.status !== 'pending_bureau_director'" variant="outline" size="sm" @click.stop="rejectContract(c)"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>ส่งกลับแก้ไข</AppButton>
+                      <AppButton v-if="isStaff && c.status === 'draft'" variant="primary" size="sm" @click.stop="openContractDraft(c)">กำหนดรายละเอียด</AppButton>
+                      <AppButton v-if="isTenant && c.status === 'revision_required'" variant="primary" size="sm" @click.stop="openContractRevision(c)">แก้ไขและยื่นใหม่</AppButton>
+                      <AppButton variant="secondary" size="sm" @click.stop="viewContractDoc(c)">
+                        <template #prefix><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path></svg></template>
+                        รายละเอียด
+                      </AppButton>
+                      <AppButton v-if="canReviewContract(c)" variant="primary" size="sm" @click.stop="approveContract(c)">{{ c.status === 'pending_bureau_director' ? 'ลงนามและอนุมัติ' : 'ลงนามและส่งต่อ' }}</AppButton>
+                      <AppButton v-if="canTerminateContract(c)" variant="danger-outline" size="sm" @click.stop="terminateContract(c)">สิ้นสุดสัญญา</AppButton>
+                    </div>
+                  </div>
+
+                  <!-- Expanded Card Body -->
+                  <div v-show="isContractCardOpen(c.id)">
+                    <!-- 4-Phase Stepper Container -->
+                    <div class="booking-stepper-container">
+                      <div class="stepper-track">
+                        <template v-for="(step, idx) in contractStepLabels" :key="step">
+                          <div class="stepper-step" :class="{ completed: isContractStepCompleted(c, idx), active: isContractStepActive(c, idx) }">
+                            <div class="step-circle">
+                              <svg v-if="isContractStepCompleted(c, idx)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                              <span v-else>{{ idx + 1 }}</span>
+                            </div>
+                            <div class="step-label-text">
+                              {{ idx === 0 && c.status === 'revision_required' ? (isTenant ? 'แก้ไขสัญญา' : 'รอผู้เช่าแก้ไข') : step }}
+                            </div>
+                          </div>
+                          <div v-if="idx < contractStepLabels.length - 1" class="stepper-connector" :class="{ filled: isContractStepCompleted(c, idx + 1) || isContractStepCompleted(c, idx) }"></div>
+                        </template>
+                      </div>
+                    </div>
+
+                    <!-- 4-Column Info Grid -->
+                    <div class="info-columns-grid officer-columns-grid">
+                      <!-- Col 1: ระยะเวลาสัญญา -->
+                      <div class="info-column">
+                        <div class="info-label">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                          <span>ระยะเวลาสัญญา</span>
+                        </div>
+                        <div class="info-value-row">
+                          <span class="info-value-text">{{ formatContractDate(c.start_date) }} – {{ formatContractDate(c.end_date) }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Col 2: อัตราค่าเช่า / การชำระ -->
+                      <div class="info-column">
+                        <div class="info-label">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                          <span>อัตราค่าเช่า</span>
+                        </div>
+                        <div class="info-value-row">
+                          <span class="info-value-text">฿{{ Number(c.rental_fee || 0).toLocaleString('th-TH') }}</span>
+                          <span class="days-remaining-pill">{{ c.billing_cycle === 'daily' ? 'ต่อวัน' : 'ต่อเดือน' }}</span>
+                        </div>
+                        <div class="cell-sub-meeting-point">
+                          <span>เงินประกัน ฿{{ Number(c.security_deposit || 0).toLocaleString('th-TH') }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Col 3: แผงค้า & ร้านค้า -->
+                      <div class="info-column">
+                        <div class="info-label">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                          <span>แผงค้า / ร้านค้า</span>
+                        </div>
+                        <div class="info-value-row">
+                          <span class="stall-count-pill">
+                            <span class="stall-code-strong">{{ c.stall_ident || '-' }}</span>
+                          </span>
+                        </div>
+                        <div v-if="c.shop_name" class="stall-shop-row">
+                          <span class="shop-prefix">ชื่อร้าน:</span>
+                          <strong class="shop-name-highlight">{{ c.shop_name }}</strong>
+                        </div>
+                        <div v-if="c.business_type" class="shop-product">ประเภทสินค้า: {{ c.business_type }}</div>
+                      </div>
+
+                      <!-- Col 4: ผู้เช่า -->
+                      <div class="info-column">
+                        <div class="info-label">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                          <span>ผู้เช่า</span>
+                        </div>
+                        <div class="info-value-row">
+                          <span class="info-value-text">{{ c.tenant_name || '-' }}</span>
+                        </div>
+                        <div v-if="c.tenant_id_card" class="applicant-id-doc-row">
+                          <span class="applicant-id-mono">
+                            <span class="sub-label">เลขบัตร:</span> {{ c.tenant_id_card }}
+                          </span>
+                        </div>
+                        <div v-if="c.tenant_phone" class="applicant-phone-row">
+                          <a :href="'tel:' + c.tenant_phone" class="phone-call-btn" title="คลิกเพื่อโทรออกทันที">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            <span>{{ c.tenant_phone }}</span>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- ข้อมูลเพิ่มเติมและรายละเอียดสัญญา -->
+                    <div v-if="c.terms_and_conditions || c.review_reason" class="application-inline-meta-bar">
+                      <div v-if="c.review_reason" class="inline-details-row text-danger">
+                        <span class="details-lead-label">เหตุผลที่ส่งกลับ:</span>
+                        <span class="details-lead-text">{{ c.review_reason }}</span>
+                      </div>
+                      <div v-else-if="c.terms_and_conditions" class="inline-details-row">
+                        <span class="details-lead-label">หมายเหตุ/เงื่อนไข:</span>
+                        <span class="details-lead-text">{{ c.terms_and_conditions }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Card Footer Row -->
+                    <div class="card-footer-row">
+                      <div class="footer-left-status" :class="getContractProgressTone(c.status)">
+                        <div class="collapsed-next-step-content">
+                          <span class="collapsed-next-step-label">ความคืบหน้า</span>
+                          <strong>{{ contractProgressText(c) }}</strong>
+                        </div>
+                      </div>
+
+                      <div class="footer-right-actions">
+                        <AppButton v-if="canReviewContract(c) && c.status !== 'pending_bureau_director'" variant="outline" size="md" @click.stop="rejectContract(c)">
+                          <template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg></template>
+                          ส่งกลับแก้ไข
+                        </AppButton>
+                        <AppButton v-if="isStaff && c.status === 'draft'" variant="primary" size="md" @click.stop="openContractDraft(c)">กำหนดรายละเอียด</AppButton>
+                        <AppButton v-if="isTenant && c.status === 'revision_required'" variant="primary" size="md" @click.stop="openContractRevision(c)">
+                          <template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></template>
+                          แก้ไขและยื่นใหม่
+                        </AppButton>
+                        <AppButton variant="secondary" size="md" @click.stop="viewContractDoc(c)" title="ดูรายละเอียดสัญญา">
+                          <template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path></svg></template>
+                          รายละเอียด
+                        </AppButton>
+                        <AppButton v-if="canReviewContract(c)" variant="primary" size="md" @click.stop="approveContract(c)">
+                          <template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></template>
+                          {{ c.status === 'pending_bureau_director' ? 'ลงนามและอนุมัติ' : 'ลงนามและส่งต่อ' }}
+                        </AppButton>
+                        <AppButton v-if="canTerminateContract(c)" variant="danger-outline" size="md" @click.stop="terminateContract(c)">
+                          <template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></template>
+                          สิ้นสุดสัญญา
+                        </AppButton>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="flow-card-footer">
-                  <div class="flow-progress"><span>ความคืบหน้า</span><strong>{{ contractProgressText(c) }}</strong></div>
-                  <div class="flow-actions">
-                    <AppButton v-if="canReviewContract(c) && c.status !== 'pending_bureau_director'" variant="danger-outline" size="md" @click="rejectContract(c)">ส่งกลับแก้ไข</AppButton>
-                    <AppButton v-if="isTenant && c.status === 'revision_required'" variant="primary" size="md" @click="openContractRevision(c)">แก้ไขและยื่นใหม่</AppButton>
-                    <AppButton variant="secondary" size="md" @click="viewContractDoc(c)">
-                      <template #prefix><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/></svg></template>
-                      รายละเอียด
-                    </AppButton>
-                    <AppButton v-if="canReviewContract(c)" variant="primary" size="md" @click="approveContract(c)">{{ c.status === 'pending_bureau_director' ? 'ลงนามและอนุมัติ' : 'ลงนามและส่งต่อ' }}</AppButton>
-                    <AppButton v-if="canTerminateContract(c)" variant="danger-outline" size="md" @click="terminateContract(c)">สิ้นสุดสัญญา</AppButton>
-                  </div>
-                </div>
-              </article>
+              </div>
             </div>
-          </section>
+          </div>
         </div>
+
         <!-- Universal Pagination Footer -->
         <AppPagination
           v-if="filteredContracts.length > 0"
@@ -307,8 +554,16 @@
 
         <form novalidate @submit.prevent="submitContract">
           <div class="modal-body">
+            <div v-if="editingContract?.status === 'draft'" class="contract-template-source">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg>
+              <div>
+                <strong>{{ editingContract.contract_template_title || 'รูปแบบสัญญามาตรฐาน' }}</strong>
+                <span v-if="editingContract.contract_template_code">รหัส {{ editingContract.contract_template_code }}</span>
+                <p>ระบบเติมข้อมูลจากคำร้องให้แล้ว กรุณากรอกเฉพาะช่องที่ยังว่าง</p>
+              </div>
+            </div>
             <p v-if="editingContract?.review_reason" class="contract-return-note">เหตุผลที่ส่งกลับ: {{ editingContract.review_reason }}</p>
-            <AppFileUpload v-model="contractDocument" label="เอกสารประกอบสัญญา" required-text="จำเป็น" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" :max-size-mb="3" hint="PDF, JPG หรือ PNG ขนาดไม่เกิน 3MB" :error="contractDocumentError" @error="contractDocumentError = $event" />
+            <AppFileUpload v-if="editingContract?.status !== 'draft'" v-model="contractDocument" label="เอกสารประกอบสัญญา" required-text="จำเป็น" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" :max-size-mb="3" hint="PDF, JPG หรือ PNG ขนาดไม่เกิน 3MB" :error="contractDocumentError" @error="contractDocumentError = $event" />
             <!-- Notice banner for tenant -->
             <div v-if="isTenant" class="tenant-contract-banner">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
@@ -424,7 +679,8 @@
 
           <div class="modal-footer">
             <AppButton type="button" variant="secondary" size="md" @click="showCreateModal = false">ยกเลิก</AppButton>
-            <AppButton type="submit" variant="primary" size="md" :disabled="saving">
+            <AppButton type="submit" variant="primary" size="md" :disabled="saving" :class="{ 'draft-submit-label': editingContract?.status === 'draft' }">
+              <span v-if="!saving && editingContract?.status === 'draft'">บันทึกแบบร่างและส่งให้ผู้เช่าอ่าน</span>
               <span v-if="saving">กำลังส่งสัญญา...</span>
               <span v-else-if="isTenant">ยืนยันและส่งสัญญาให้เจ้าหน้าที่ตรวจสอบ</span>
               <span v-else>ยืนยันและเปิดใช้งานสัญญา</span>
@@ -470,56 +726,84 @@
           <AppButton v-if="currentDoc.has_document" variant="outline" size="sm" @click="openContractAttachment(currentDoc)">ดูเอกสารประกอบ</AppButton>
           <div ref="contractPaper" class="contract-document">
             <div class="contract-header">
-              <h2 style="font-size: 1.375rem; font-weight: 700;">หนังสือสัญญาเช่าพื้นที่แผงค้าในตลาด</h2>
-              <div style="font-size: var(--font-size-sm); color: var(--tx-475569); margin-top: 4px;">ระบบจัดการตลาด e-Market Management System</div>
-              <div style="font-size: var(--font-size-sm); font-weight: 600; color: var(--tx-059669); margin-top: 6px;">
+              <h2 class="contract-doc-title">{{ currentDoc.contract_template_title || 'หนังสือสัญญาเช่าพื้นที่แผงค้าในตลาด' }}</h2>
+              <div class="contract-doc-org">ระบบจัดการตลาด e-Market Management System</div>
+              <div class="contract-doc-number-pill">
                 เลขที่สัญญา: {{ currentDoc.contract_number }}
               </div>
+              <div v-if="currentDoc.contract_template_code" class="contract-template-code">รูปแบบ {{ currentDoc.contract_template_code }}</div>
             </div>
 
-            <div style="line-height: 1.8; font-size: var(--font-size-base); text-align: justify;">
-              <p>
+            <div class="contract-body">
+              <p class="contract-intro-paragraph">
                 สัญญาฉบับนี้ทำขึ้น ณ <strong>ตลาดกลางชุมชน e-Market</strong> เมื่อวันที่ <strong>{{ currentDoc.created_at ? currentDoc.created_at.slice(0, 10) : currentDoc.start_date }}</strong>
                 ระหว่าง <strong>บริษัท บริหารจัดการตลาด จำกัด</strong> (ซึ่งต่อไปนี้เรียกว่า "ผู้ให้เช่า") ฝ่ายหนึ่ง กับ
               </p>
 
-              <div class="contract-grid" style="margin-top: 14px; background: var(--bg-f8fafc); padding: 14px; border-radius: 8px; border: 1px solid var(--bd-e2e8f0);">
-                <div><strong>ชื่อผู้เช่า:</strong> {{ currentDoc.tenant_name }}</div>
-                <div><strong>เลขประจำตัวประชาชน:</strong> {{ currentDoc.tenant_id_card }}</div>
-                <div><strong>เบอร์โทรศัพท์:</strong> {{ currentDoc.tenant_phone }}</div>
-                <div><strong>อีเมล:</strong> {{ currentDoc.tenant_email || '-' }}</div>
-                <div style="grid-column: 1 / -1;"><strong>ที่อยู่:</strong> {{ currentDoc.tenant_address || '-' }}</div>
+              <div class="contract-info-card">
+                <div class="contract-info-row">
+                  <span class="info-label">ชื่อผู้เช่า:</span>
+                  <span class="info-value">{{ currentDoc.tenant_name }}</span>
+                </div>
+                <div class="contract-info-row">
+                  <span class="info-label">เลขประจำตัวประชาชน:</span>
+                  <span class="info-value">{{ currentDoc.tenant_id_card }}</span>
+                </div>
+                <div class="contract-info-row">
+                  <span class="info-label">เบอร์โทรศัพท์:</span>
+                  <span class="info-value">{{ currentDoc.tenant_phone }}</span>
+                </div>
+                <div class="contract-info-row">
+                  <span class="info-label">อีเมล:</span>
+                  <span class="info-value">{{ currentDoc.tenant_email || '-' }}</span>
+                </div>
+                <div class="contract-info-row contract-info-full">
+                  <span class="info-label">ที่อยู่:</span>
+                  <span class="info-value">{{ currentDoc.tenant_address || '-' }}</span>
+                </div>
               </div>
 
-              <div class="section-title">ข้อ ๑. วัตถุประสงค์และสถานที่เช่า</div>
+              <div class="contract-clause-heading">ข้อ ๑. วัตถุประสงค์และสถานที่เช่า</div>
               <p>
                 ผู้ให้เช่าตกลงให้เช่า และผู้เช่าตกลงเช่าพื้นที่แผงค้าเลขที่ <strong>{{ stallShortNumber(currentDoc.stall ? currentDoc.stall.stall_number : (currentDoc.stall_ident || currentDoc.stall_id)) }}</strong> 
                 เพื่อประกอบกิจการร้านค้า <strong>"{{ currentDoc.business_name || currentDoc.shop_name || 'ร้านค้า' }}"</strong> จำหน่ายสินค้าประเภท <strong>{{ currentDoc.business_type || 'ทั่วไป' }}</strong>
               </p>
 
-              <div class="section-title">ข้อ ๒. ระยะเวลาการเช่า</div>
+              <div class="contract-clause-heading">ข้อ ๒. ระยะเวลาการเช่า</div>
               <p>
                 สัญญาการเช่ามีกำหนดระยะเวลา ตั้งแต่วันที่ <strong>{{ currentDoc.start_date }}</strong> ถึงวันที่ <strong>{{ currentDoc.end_date }}</strong>
               </p>
 
-              <div class="section-title">ข้อ ๓. ค่าเช่าและเงินประกัน</div>
-              <div class="contract-grid" style="margin-top: 8px; background: var(--bg-f8fafc); padding: 14px; border-radius: 8px; border: 1px solid var(--bd-e2e8f0);">
-                <div><strong>อัตราค่าเช่า:</strong> ฿{{ Number(currentDoc.rental_fee).toLocaleString() }} ({{ currentDoc.billing_cycle === 'monthly' ? 'รายเดือน' : 'รายวัน' }})</div>
-                <div><strong>เงินประกันสัญญา:</strong> ฿{{ Number(currentDoc.security_deposit || 0).toLocaleString() }} บาท</div>
-                <div><strong>เงินจ่ายล่วงหน้า:</strong> ฿{{ Number(currentDoc.advance_payment || 0).toLocaleString() }} บาท</div>
-                <div><strong>สถานะสัญญา:</strong> {{ getStatusLabel(currentDoc.status) }}</div>
+              <div class="contract-clause-heading">ข้อ ๓. ค่าเช่าและเงินประกัน</div>
+              <div class="contract-info-card">
+                <div class="contract-info-row">
+                  <span class="info-label">อัตราค่าเช่า:</span>
+                  <span class="info-value">฿{{ Number(currentDoc.rental_fee).toLocaleString() }} ({{ currentDoc.billing_cycle === 'monthly' ? 'รายเดือน' : 'รายวัน' }})</span>
+                </div>
+                <div class="contract-info-row">
+                  <span class="info-label">เงินประกันสัญญา:</span>
+                  <span class="info-value">฿{{ Number(currentDoc.security_deposit || 0).toLocaleString() }} บาท</span>
+                </div>
+                <div class="contract-info-row">
+                  <span class="info-label">เงินจ่ายล่วงหน้า:</span>
+                  <span class="info-value">฿{{ Number(currentDoc.advance_payment || 0).toLocaleString() }} บาท</span>
+                </div>
+                <div class="contract-info-row">
+                  <span class="info-label">สถานะสัญญา:</span>
+                  <span class="info-value">{{ getStatusLabel(currentDoc.status) }}</span>
+                </div>
               </div>
 
-              <div class="section-title">ข้อ ๔. ข้อกำหนดและเงื่อนไขเพิ่มเติม</div>
-              <p style="color: var(--tx-475569);">
+              <div class="contract-clause-heading">ข้อ ๔. ข้อกำหนดและเงื่อนไขเพิ่มเติม</div>
+              <p class="contract-terms-text">
                 {{ currentDoc.terms_and_conditions || 'ผู้เช่าต้องปฏิบัติตามกฎระเบียบความสะอาด สุขอนามัย และความปลอดภัยของตลาดอย่างเคร่งครัด' }}
               </p>
 
               <div class="contract-sign-box">
                 <div v-for="signer in contractSignatures" :key="signer.kind" class="sign-line">
                   <img v-if="signer.url" :src="signer.url" :alt="'ลายเซ็น ' + signer.label" class="contract-signature-image" />
-                  <span v-else>...........................................................</span><br>
-                  ( {{ signer.label }} )
+                  <span v-else class="dotted-signature-line">...........................................................</span>
+                  <div class="signer-name">( {{ signer.label }} )</div>
                 </div>
               </div>
             </div>
@@ -528,6 +812,7 @@
       </div>
     </div>
   </div>
+  <ContractTemplatePreviewModal :template="draftPreviewTemplate" :contract="draftPreviewContract" @close="draftPreviewTemplate = null; draftPreviewContract = null" />
   <OfficerSignatureModal :open="showContractSignature" @cancel="showContractSignature = false" @confirm="onContractSignature" />
   <ApplicationMockOtpModal :open="showContractOtp" @cancel="showContractOtp = false; pendingContractSignature = ''" @confirm="confirmContractOtp" />
   <AppModal v-model="showContractReturn" title="ส่งสัญญากลับแก้ไข" description="ระบุสิ่งที่ผู้เช่าต้องแก้ไข">
@@ -556,10 +841,11 @@ import ApplicationMockOtpModal from '~/components/ApplicationMockOtpModal.vue'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const { get, post, apiFetch } = useApi()
+const { get, post, put, apiFetch } = useApi()
 const { showSuccess, showError, showConfirm } = useAppAlert()
 
 const isTenant = computed(() => authStore.isTenant || authStore.currentUser?.role === 'tenant')
+const isStaff = computed(() => authStore.role === 'staff')
 const canReviewContract = (c: any) => (c?.status === 'pending' && authStore.role === 'staff') || (c?.status === 'pending_market_director' && authStore.role === 'market_director') || (c?.status === 'pending_bureau_director' && authStore.role === 'bureau_director')
 
 const loading = ref(true)
@@ -576,10 +862,10 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 
 // View Mode: Table vs Cards
-const viewMode = ref<'table' | 'cards'>('table')
+const viewMode = ref<'card' | 'table'>('card')
 const viewModeOptions = [
-  { value: 'table', label: 'ตาราง', icon: 'table' as const },
-  { value: 'cards', label: 'การ์ด', icon: 'card' as const }
+  { value: 'card', label: 'ตลาด', title: 'มุมมองแยกกลุ่มตามตลาด', icon: 'market' as const },
+  { value: 'table', label: 'ตาราง', title: 'มุมมองตารางรายการสัญญา', icon: 'table' as const }
 ]
 
 const pendingContractOptions = computed(() => {
@@ -610,6 +896,54 @@ const paginatedContracts = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
   return filteredContracts.value.slice(start, start + pageSize.value)
 })
+
+
+const getContractBorderClass = (status: string) => {
+  if (status === 'active') return 'border-status-approved'
+  if (['pending', 'pending_market_director', 'pending_bureau_director'].includes(status)) return 'border-status-pending'
+  if (status === 'revision_required') return 'border-status-pending'
+  if (['expired', 'terminated', 'rejected'].includes(status)) return 'border-status-muted'
+  return 'border-status-ready'
+}
+
+const getContractProgressTone = (status: string) => {
+  if (status === 'active') return 'tone-success'
+  if (['pending', 'pending_market_director', 'pending_bureau_director', 'revision_required'].includes(status)) return 'tone-waiting'
+  if (['expired', 'terminated', 'rejected'].includes(status)) return 'tone-muted'
+  return 'tone-action'
+}
+
+const isContractStepCompleted = (contract: any, index: number) => {
+  const completed = [
+    !!contract.has_tenant_signature || contract.status !== 'revision_required',
+    !!contract.has_officer_signature || ['pending_market_director', 'pending_bureau_director', 'active', 'expired', 'terminated'].includes(contract.status),
+    !!contract.has_market_signature || ['pending_bureau_director', 'active', 'expired', 'terminated'].includes(contract.status),
+    !!contract.has_bureau_signature || ['active', 'expired', 'terminated'].includes(contract.status)
+  ]
+  return completed[index]
+}
+
+const isContractStepActive = (contract: any, index: number) => {
+  if (isContractStepCompleted(contract, index)) return false
+  const activeStep: Record<string, number> = {
+    revision_required: 0,
+    pending: 1,
+    pending_market_director: 2,
+    pending_bureau_director: 3
+  }
+  return activeStep[contract.status] === index
+}
+
+const getPendingChipClass = (val: string) => {
+  switch (val) {
+    case 'all': return 'chip-all'
+    case 'pending': return 'chip-amber'
+    case 'pending_market_director': return 'chip-purple'
+    case 'pending_bureau_director': return 'chip-green'
+    case 'revision_required': return 'chip-orange'
+    default: return 'chip-all'
+  }
+}
 
 const contractStepLabels = ['ผู้เช่าส่งสัญญา', 'เจ้าหน้าที่ตรวจ', 'ผอ.ตลาดพิจารณา', 'ผอ.สำนักอนุมัติ']
 const openContractGroups = ref<Record<string, boolean>>({})
@@ -663,6 +997,8 @@ const contractStepClass = (contract: any, index: number) => {
 }
 const contractProgressText = (contract: any) => {
   switch (contract.status) {
+	case 'draft': return 'รอเจ้าหน้าที่กำหนดรายละเอียด'
+	case 'tenant_review': return 'รอผู้เช่าตรวจสอบแบบร่าง'
     case 'pending': return 'รอเจ้าหน้าที่ตรวจเอกสาร'
     case 'pending_market_director': return 'รอ ผอ.ตลาดพิจารณา'
     case 'pending_bureau_director': return 'รอ ผอ.สำนักลงนาม'
@@ -722,6 +1058,8 @@ const getTenantStallLabel = () => {
 // Document Preview Modal
 const viewDocModal = ref(false)
 const currentDoc = ref<any>(null)
+const draftPreviewTemplate = ref<any>(null)
+const draftPreviewContract = ref<any>(null)
 const contractPaper = ref<HTMLElement | null>(null)
 const downloadingContract = ref(false)
 const contractSignaturesLoading = ref(false)
@@ -759,9 +1097,9 @@ const loadData = async () => {
       const appId = route.query.app_id ? Number(route.query.app_id) : null
       const matchedApp = rawApps.find((a: any) => appId
         ? Number(a.id) === appId
-        : (a.status === 'completed' || a.status === 'contract_pending') && (String(a.stall_number || a.stall_ident) === stallKey || String(a.stall_id) === stallKey)
+        : (a.status === 'approved' || a.status === 'completed' || a.status === 'contract_pending') && (String(a.stall_number || a.stall_ident) === stallKey || String(a.stall_id) === stallKey)
       )
-      if (!matchedApp || (matchedApp.status !== 'completed' && matchedApp.status !== 'contract_pending')) {
+      if (!matchedApp || !['approved', 'completed', 'contract_pending'].includes(matchedApp.status)) {
         await showError('ไม่พบคำร้องที่อนุมัติขั้นสุดท้ายแล้ว กรุณากลับไปตรวจสอบหน้าคำร้อง', 'ไม่สามารถสร้างสัญญา')
         return
       }
@@ -976,8 +1314,46 @@ const openContractRevision = (contract: any) => {
     security_deposit: contract.security_deposit || 0
   }
 }
+const openContractDraft = (contract: any) => {
+  openContractRevision(contract)
+}
+
+const saveContractDraft = async () => {
+  if (!editingContract.value || saving.value) return
+  saving.value = true
+  try {
+    await put(`/contracts/${editingContract.value.id}/draft`, {
+      tenant_name: formContract.value.tenant_name,
+      tenant_id_card: formContract.value.tenant_id_card,
+      tenant_phone: formContract.value.tenant_phone,
+      tenant_email: formContract.value.tenant_email,
+      tenant_address: formContract.value.tenant_address,
+      business_type: formContract.value.business_type,
+      billing_cycle: formContract.value.billing_cycle,
+      terms_and_conditions: formContract.value.terms_and_conditions,
+      shop_name: formContract.value.business_name,
+      start_date: formContract.value.start_date,
+      end_date: formContract.value.end_date,
+      monthly_rental: Number(formContract.value.rental_fee),
+      security_deposit: Number(formContract.value.security_deposit),
+      advance_payment: Number(formContract.value.advance_payment)
+    })
+    showCreateModal.value = false
+    selectedStatus.value = ''
+    await loadData()
+    await showSuccess('บันทึกแบบร่างแล้ว ผู้เช่าสามารถตรวจสอบรายละเอียดได้', 'บันทึกสำเร็จ')
+  } catch (err: any) {
+    await showError(err?.data?.detail || err?.data?.message || err?.message || 'บันทึกแบบร่างไม่สำเร็จ')
+  } finally {
+    saving.value = false
+  }
+}
 const submitContract = async () => {
   if (!validateContractForm()) return
+	if (editingContract.value?.status === 'draft') {
+		await saveContractDraft()
+		return
+	}
   if (!contractDocument.value) { contractDocumentError.value = 'กรุณาแนบเอกสารประกอบสัญญา'; return }
   if (contractDocumentError.value || saving.value) return
   signaturePurpose.value = 'submit'
@@ -1108,6 +1484,20 @@ const clearContractSignatures = () => {
   contractSignatures.value.forEach(item => { if (item.url) URL.revokeObjectURL(item.url); item.url = '' })
 }
 const viewContractDoc = async (c: any) => {
+  if (c?.status === 'draft') {
+    draftPreviewTemplate.value = {
+      Code: c.contract_template_code || 'standard_contract',
+      Title: c.contract_template_title || 'สัญญาเช่าแผงค้า',
+      ContractKind: c.contract_template_kind || 'standard',
+      Description: c.contract_template_description || c.terms_and_conditions || '',
+      IsActive: true,
+      SortOrder: 0
+    }
+    draftPreviewContract.value = c
+    return
+  }
+  draftPreviewTemplate.value = null
+  draftPreviewContract.value = null
   const sequence = ++signatureLoadSequence
   clearContractSignatures()
   currentDoc.value = c
@@ -1190,6 +1580,8 @@ const getCircleStatusClass = (status: string) => {
 
 const getStatusLabel = (status: string) => {
   switch (status) {
+	case 'draft': return 'แบบร่าง'
+	case 'tenant_review': return 'รอผู้เช่าตรวจสอบ'
     case 'active': return 'ใช้งานอยู่'
     case 'pending': return 'รอเจ้าหน้าที่ตรวจ'
     case 'pending_market_director': return 'รอ ผอ.ตลาดลงนาม'
@@ -1208,83 +1600,44 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.page-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin: 0 0 22px; }
-.main-page-title { margin: 0; color: #0f172a; font-size: 1.5rem; font-weight: 800; }
-.page-subtitle { margin: 4px 0 0; color: #64748b; font-size: 0.9375rem; }
-.table-card-title { font-size: 1.125rem; font-weight: 600; }
-.table-card-subtitle { font-size: 0.8125rem; }
-.search-input { height: 40px; }
-.table-container { overflow-x: auto; border: 0; border-radius: 0; }
-.custom-table { min-width: 1050px; }
-.custom-table th { padding: 14px 16px; color: #64748b; background: #fff; border-bottom: 1px solid #f1f5f9; font-size: 0.8125rem; font-weight: 500; }
-.custom-table td { padding: 16px; font-size: 0.875rem; }
-.custom-table tbody tr:hover { background: #f8fafc; }
-.action-heading, .action-cell { text-align: right; }
-.table-actions-cell { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; }
-.cell-sub-cycle, .cell-sub-category { font-size: 0.8125rem; }
-.cell-phone-link, .cell-duration-text { font-size: 0.875rem; }
-.contract-groups { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
-.contract-group { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; }
-.contract-group-heading { width: 100%; min-height: 58px; display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #1e293b; background: #f8fafc; border: 0; text-align: left; font: inherit; cursor: pointer; }
-.contract-group-heading strong { font-size: 1rem; font-weight: 700; }
-.group-icon { display: inline-flex; color: #2563eb; }
-.group-chevron { color: #64748b; transform: rotate(180deg); transition: transform .15s; }
-.group-chevron.closed { transform: none; }
-.group-count { padding: 2px 10px; border: 1px solid #e2e8f0; border-radius: 999px; background: #fff; color: #64748b; font-size: 0.8125rem; font-weight: 600; }
-.contract-group-body { display: flex; flex-direction: column; gap: 12px; padding: 12px; }
-.flow-contract-card { padding: 20px 22px; border: 1px solid #e2e8f0; border-left: 4px solid #2563eb; border-radius: 14px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.03); }
-.flow-contract-card.border-active { border-left-color: #10b981; }
-.flow-contract-card.border-pending { border-left-color: #f59e0b; }
-.flow-contract-card.border-danger { border-left-color: #ef4444; }
-.flow-contract-card.border-muted { border-left-color: #94a3b8; }
-.flow-card-header, .flow-card-identity, .flow-card-header-actions, .flow-meta, .flow-card-footer, .flow-actions { display: flex; align-items: center; }
-.flow-card-header { justify-content: space-between; gap: 16px; }
-.flow-card-identity { gap: 14px; min-width: 0; }
-.flow-icon { display: grid; place-items: center; width: 48px; height: 48px; flex: 0 0 48px; color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; border-radius: 12px; }
-.flow-label, .flow-date { color: #64748b; font-size: 0.8125rem; }
-.flow-number { display: block; color: #0f172a; font-size: 1.125rem; font-weight: 800; overflow-wrap: anywhere; }
-.flow-card-header-actions { justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
-.flow-collapse { display: grid; place-items: center; width: 32px; height: 32px; color: #64748b; border: 0; border-radius: 8px; background: transparent; cursor: pointer; }
-.flow-collapse:hover { background: #f1f5f9; }
-.flow-collapse svg { transform: rotate(180deg); transition: transform .15s; }
-.flow-collapse svg.closed { transform: none; }
-.flow-meta { flex-wrap: wrap; gap: 8px 0; margin-top: 16px; color: #64748b; font-size: 0.875rem; }
-.flow-meta > span { padding: 0 12px; border-right: 1px solid #e2e8f0; }
-.flow-meta > span:first-child { padding-left: 0; }
-.flow-meta > span:last-child { border: 0; }
-.flow-meta strong, .flow-meta a { color: #2563eb; }
-.flow-meta a { margin-left: 5px; text-decoration: none; }
-.flow-card-body { margin-top: 18px; }
-.flow-stepper { display: flex; overflow-x: auto; gap: 8px; padding: 16px; border: 1px solid #f1f5f9; border-radius: 10px; background: #f8fafc; }
-.flow-step { position: relative; min-width: 125px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; color: #64748b; text-align: center; font-size: 0.8125rem; font-weight: 600; }
-.flow-step::after { position: absolute; top: 15px; left: calc(50% + 23px); width: calc(100% - 38px); height: 2px; background: #cbd5e1; content: ''; }
-.flow-step:last-child::after { display: none; }
-.flow-step.done::after { background: #10b981; }
-.flow-step-circle { position: relative; z-index: 1; display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid #cbd5e1; border-radius: 50%; background: #fff; font-size: 0.75rem; }
-.flow-step.done .flow-step-circle { border-color: #10b981; background: #10b981; color: #fff; }
-.flow-step.current .flow-step-circle { border-color: #2563eb; background: #2563eb; color: #fff; }
-.flow-step.current { color: #2563eb; }
-.flow-details { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; padding: 20px 0; }
-.flow-details > div { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.flow-details span, .flow-details small { color: #64748b; font-size: 0.8125rem; }
-.flow-details strong { color: #1e293b; font-size: 0.9375rem; font-weight: 700; overflow-wrap: anywhere; }
-.flow-card-footer { justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 14px; border-top: 1px solid #f1f5f9; }
-.flow-progress { display: flex; flex-wrap: wrap; gap: 8px; color: #64748b; font-size: 0.8125rem; }
-.flow-progress strong { color: #334155; font-weight: 600; }
-.flow-actions { justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
-@media (max-width: 800px) { .flow-details { grid-template-columns: repeat(2, minmax(0, 1fr)); } .flow-card-header { align-items: flex-start; } }
-@media (max-width: 550px) { .flow-contract-card { padding: 16px; } .flow-card-header { flex-wrap: wrap; } .flow-card-header-actions { width: 100%; justify-content: flex-start; } .flow-card-footer { align-items: flex-start; } .flow-actions { justify-content: flex-start; } }
-.contract-return-note { color: #b45309; background: #fffbeb; padding: 12px; border-radius: 8px; }
-.contract-signature-image { max-width: 150px; max-height: 55px; object-fit: contain; }
+.draft-submit-label :deep(span:not(:first-child)) {
+  display: none;
+}
+.contract-template-source{display:flex;gap:12px;margin-bottom:16px;padding:14px 16px;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff;color:#1e40af}.contract-template-source svg{flex:0 0 auto;width:20px;height:20px;margin-top:2px}.contract-template-source strong,.contract-template-source span{display:block}.contract-template-source strong{font-size:var(--font-size-base);font-weight:700}.contract-template-source span{margin-top:2px;font-size:var(--font-size-xs);font-weight:600;color:#2563eb}.contract-template-source p{margin:5px 0 0;font-size:var(--font-size-sm);font-weight:500;color:#475569}.contract-template-code{margin-top:6px;color:#64748b;font-size:var(--font-size-xs);font-weight:600}
+/* Page layout, header & card shell: same as the application page */
 .contracts-page {
+  background-color: var(--bg-f8fafc);
   min-height: 100vh;
-  background: var(--bg-f8fafc);
+  padding-bottom: 60px;
 }
 
-.content-body {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+.contracts-page .page-container {
+  padding: 24px 32px 48px;
+  flex: 1;
+}
+
+.page-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 0 20px 0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.main-page-title {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--tx-0f172a);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.page-subtitle {
+  margin: 4px 0 0;
+  color: var(--tx-64748b);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
 }
 
 /* Loading State */
@@ -1310,76 +1663,70 @@ onMounted(() => {
   to { transform: rotate(360deg); }
 }
 
-/* Standard Table Card Container */
+/* Card Shell */
 .table-card-container {
   background: var(--bg-ffffff);
-  border: 1px solid var(--bd-eef2f6);
+  border: 1px solid var(--bd-e2e8f0);
   border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   padding: 24px 28px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
-/* Table Card Header */
-.table-card-header {
+.card-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
+  margin-bottom: 22px;
   gap: 16px;
-  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
-.table-header-left {
+.header-left {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.table-card-title {
-  font-size: var(--font-size-xl);
-  font-weight: 700;
-  color: var(--tx-1e293b);
+.section-title {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--tx-0f172a);
+  letter-spacing: -0.02em;
   margin: 0;
-  letter-spacing: -0.01em;
 }
 
-.table-card-subtitle {
+.item-count-subtitle {
   font-size: var(--font-size-xs);
   color: var(--tx-64748b);
+  font-weight: 500;
 }
 
-.table-header-actions {
+.header-right {
   display: flex;
   align-items: center;
+  gap: 10px;
   flex-wrap: wrap;
-  gap: 12px;
 }
 
-/* Search Input Box */
+/* Search input */
 .search-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  color: var(--tx-94a3b8);
-  pointer-events: none;
+  min-width: 260px;
 }
 
 .search-input {
-  width: 250px;
-  height: 38px;
-  padding: 0 34px 0 36px;
-  font-size: var(--font-size-sm);
-  font-family: inherit;
-  color: var(--tx-1e293b);
+  width: 100%;
+  padding: 8px 32px 8px 34px;
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-e2e8f0);
-  border-radius: 8px;
+  border-radius: 9px;
+  font-size: var(--font-size-xs);
+  color: var(--tx-1e293b);
+  font-family: inherit;
   transition: all 0.2s ease;
+  height: 38px;
 }
 
 .search-input:focus {
@@ -1388,80 +1735,35 @@ onMounted(() => {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.search-input::placeholder {
+.search-icon {
+  position: absolute;
+  left: 10px;
   color: var(--tx-94a3b8);
+  pointer-events: none;
 }
 
 .clear-search-btn {
   position: absolute;
-  right: 10px;
-  background: none;
+  right: 8px;
+  background: transparent;
   border: none;
   color: var(--tx-94a3b8);
   cursor: pointer;
-  padding: 4px;
+  padding: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: color 0.15s ease;
 }
 
 .clear-search-btn:hover {
-  color: var(--tx-475569);
+  color: var(--tx-0f172a);
 }
 
-/* Header Buttons */
-.btn-export-report {
-  height: 38px;
-  padding: 0 14px;
-  font-size: var(--font-size-sm);
-  font-family: inherit;
-  font-weight: 500;
-  color: var(--tx-475569);
-  background: var(--bg-ffffff);
-  border: 1px solid var(--bd-e2e8f0);
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-export-report:hover {
-  background: var(--bg-f8fafc);
-  border-color: var(--bd-cbd5e1);
-  color: var(--tx-1e293b);
-}
-
-.btn-table-primary-action {
-  height: 38px;
-  padding: 0 16px;
-  font-size: var(--font-size-sm);
-  font-family: inherit;
-  font-weight: 600;
-  color: #ffffff;
-  background: #2563eb;
-  border: none;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
-}
-
-.btn-table-primary-action:hover {
-  background: #1d4ed8;
-}
-
-/* KPI Ribbon Cards */
+/* Officer KPI Ribbon */
 .officer-kpi-ribbon {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
   margin-bottom: 24px;
 }
 
@@ -1487,10 +1789,10 @@ onMounted(() => {
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-eef2f6);
   border-radius: 14px;
-  padding: 13px 16px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 14px;
   cursor: pointer;
   font-family: inherit;
   text-align: left;
@@ -1505,8 +1807,8 @@ onMounted(() => {
 }
 
 .kpi-icon-box {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -1537,7 +1839,7 @@ onMounted(() => {
 }
 
 .kpi-count {
-  font-size: 1.375rem;
+  font-size: var(--font-size-2xl);
   font-weight: 800;
   color: var(--tx-0f172a);
   line-height: 1;
@@ -1546,12 +1848,12 @@ onMounted(() => {
 .kpi-unit-pill {
   font-size: var(--font-size-xs);
   font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 5px;
+  padding: 2px 8px;
+  border-radius: 6px;
   line-height: 1.2;
 }
 
-/* KPI Color Variations */
+/* 1. ทั้งหมด */
 .kpi-all .kpi-icon-box {
   background: var(--bg-eff6ff);
   color: var(--tx-2563eb);
@@ -1567,21 +1869,7 @@ onMounted(() => {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
 }
 
-.kpi-applied .kpi-icon-box {
-  background: var(--bg-f0fdf4);
-  color: var(--tx-16a34a);
-  border: 1px solid var(--bd-dcfce7);
-}
-.kpi-applied .kpi-unit-pill {
-  background: var(--bg-dcfce7);
-  color: var(--tx-15803d);
-}
-.kpi-applied.active {
-  border-color: #16a34a;
-  background: var(--bg-f7fee7);
-  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.18);
-}
-
+/* 2. รอดำเนินการ */
 .kpi-pending .kpi-icon-box {
   background: var(--bg-fffbeb);
   color: var(--tx-d97706);
@@ -1597,6 +1885,23 @@ onMounted(() => {
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
 }
 
+/* 3. ใช้งานอยู่ */
+.kpi-applied .kpi-icon-box {
+  background: var(--bg-f5f3ff);
+  color: var(--tx-7c3aed);
+  border: 1px solid var(--bd-ede9fe);
+}
+.kpi-applied .kpi-unit-pill {
+  background: var(--bg-ede9fe);
+  color: var(--tx-6d28d9);
+}
+.kpi-applied.active {
+  border-color: #8b5cf6;
+  background: var(--bg-faf5ff);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+/* 4. หมดสัญญา */
 .kpi-expired .kpi-icon-box {
   background: var(--bg-f8fafc);
   color: var(--tx-64748b);
@@ -1612,88 +1917,811 @@ onMounted(() => {
   box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.18);
 }
 
-.kpi-terminated .kpi-icon-box {
-  background: var(--bg-fef2f2);
-  color: var(--tx-dc2626);
-  border: 1px solid var(--bd-fee2e2);
-}
-.kpi-terminated .kpi-unit-pill {
-  background: var(--bg-fee2e2);
-  color: var(--tx-b91c1c);
-}
-.kpi-terminated.active {
-  border-color: #ef4444;
-  background: var(--bg-fffafa);
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.18);
-}
-
-/* Empty State */
-.empty-state-box {
-  text-align: center;
-  padding: 56px 24px;
-}
-
-.empty-icon {
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
-  background: var(--bg-f8fafc);
+/* 5. ยกเลิก/สิ้นสุด */
+.kpi-cancelled .kpi-icon-box {
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
   border: 1px solid var(--bd-e2e8f0);
-  color: var(--tx-94a3b8);
+}
+.kpi-cancelled .kpi-unit-pill {
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
+}
+.kpi-cancelled.active {
+  border-color: var(--bd-94a3b8);
+  background: var(--bg-f8fafc);
+  box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.18);
+}
+
+/* Sub-filter bar (Pending Stages) */
+.tenant-subfilter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-eef2f6);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  margin-top: -12px;
+  margin-bottom: 22px;
+}
+
+.subfilter-chip {
+  appearance: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.subfilter-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1;
+  transition: all 0.18s ease;
 }
 
-.empty-title {
-  font-size: var(--font-size-lg);
+.subfilter-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.subfilter-chip.chip-all {
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  color: var(--tx-475569);
+}
+.subfilter-chip.chip-all .subfilter-badge {
+  background: var(--bg-e2e8f0);
+  color: var(--tx-475569);
+}
+.subfilter-chip.chip-all.active {
+  background: var(--bg-eff6ff);
+  border: 1.5px solid #3b82f6;
+  color: var(--tx-1d4ed8);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.12);
+}
+.subfilter-chip.chip-all.active .subfilter-badge {
+  background: var(--bg-dbeafe);
+  color: var(--tx-1d4ed8);
+  font-weight: 700;
+}
+
+.subfilter-chip.chip-amber {
+  background: var(--bg-fffbeb);
+  border: 1px solid var(--bd-fef3c7);
+  color: var(--tx-92400e);
+}
+.subfilter-chip.chip-amber .subfilter-dot { background: #f59e0b; }
+.subfilter-chip.chip-amber .subfilter-badge { background: var(--bg-fef3c7); color: var(--tx-b45309); }
+.subfilter-chip.chip-amber.active {
+  background: var(--bg-fef3c7);
+  border: 1.5px solid #f59e0b;
+  color: var(--tx-78350f);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.15);
+}
+.subfilter-chip.chip-amber.active .subfilter-badge { background: #fde68a; color: var(--tx-78350f); font-weight: 700; }
+
+.subfilter-chip.chip-purple {
+  background: var(--bg-faf5ff);
+  border: 1px solid var(--bd-f3e8ff);
+  color: var(--tx-6b21a8);
+}
+.subfilter-chip.chip-purple .subfilter-dot { background: #9333ea; }
+.subfilter-chip.chip-purple .subfilter-badge { background: var(--bg-f3e8ff); color: var(--tx-7e22ce); }
+.subfilter-chip.chip-purple.active {
+  background: var(--bg-f3e8ff);
+  border: 1.5px solid #9333ea;
+  color: var(--tx-581c87);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(147, 51, 234, 0.15);
+}
+.subfilter-chip.chip-purple.active .subfilter-badge { background: var(--bg-e9d5ff); color: var(--tx-581c87); font-weight: 700; }
+
+.subfilter-chip.chip-green {
+  background: var(--bg-f0fdf4);
+  border: 1px solid var(--bd-dcfce7);
+  color: var(--tx-166534);
+}
+.subfilter-chip.chip-green .subfilter-dot { background: #10b981; }
+.subfilter-chip.chip-green .subfilter-badge { background: var(--bg-dcfce7); color: var(--tx-15803d); }
+.subfilter-chip.chip-green.active {
+  background: var(--bg-dcfce7);
+  border: 1.5px solid #10b981;
+  color: var(--tx-14532d);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.15);
+}
+.subfilter-chip.chip-green.active .subfilter-badge { background: var(--bg-bbf7d0); color: var(--tx-14532d); font-weight: 700; }
+
+.subfilter-chip.chip-orange {
+  background: var(--bg-fff7ed);
+  border: 1px solid var(--bd-ffedd5);
+  color: var(--tx-9a3412);
+}
+.subfilter-chip.chip-orange .subfilter-dot { background: #ea580c; }
+.subfilter-chip.chip-orange .subfilter-badge { background: var(--bg-ffedd5); color: var(--tx-c2410c); }
+.subfilter-chip.chip-orange.active {
+  background: var(--bg-ffedd5);
+  border: 1.5px solid #ea580c;
+  color: var(--tx-7c2d12);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(234, 88, 12, 0.15);
+}
+.subfilter-chip.chip-orange.active .subfilter-badge { background: var(--bg-fed7aa); color: var(--tx-7c2d12); font-weight: 700; }
+
+/* Accordion Project Headers */
+.officer-groups-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.project-stall-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.officer-project-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.officer-project-header:hover {
+  background: var(--bg-f1f5f9);
+}
+
+.officer-project-header .header-left-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chevron-indicator {
+  color: var(--tx-64748b);
+  transition: transform 0.25s ease;
+}
+
+.chevron-indicator.rotated {
+  transform: rotate(180deg);
+}
+
+.accordion-header-icon {
+  color: var(--tx-2563eb);
+  display: flex;
+  align-items: center;
+}
+
+.market-title {
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--tx-1e293b);
-  margin-bottom: 6px;
 }
 
-.empty-desc {
-  font-size: var(--font-size-sm);
+.market-count-pill {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  padding: 3px 10px;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
+  border-radius: 12px;
+  color: var(--tx-475569);
+}
+
+.market-accordion-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Booking Item Card (Application style) */
+.booking-item-card {
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
+  border-left: 4px solid var(--bd-cbd5e1);
+  border-radius: 14px;
+  padding: 20px 22px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.booking-item-card:hover {
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+.booking-item-card.border-status-pending {
+  border-left: 4px solid #f59e0b;
+}
+
+.booking-item-card.border-status-ready {
+  border-left: 4px solid #2563eb;
+}
+
+.booking-item-card.border-status-applied {
+  border-left: 4px solid #8b5cf6;
+}
+
+.booking-item-card.border-status-approved {
+  border-left: 4px solid #10b981;
+}
+
+.booking-item-card.border-status-muted {
+  border-left: 4px solid var(--bd-94a3b8);
+}
+
+/* Card Top Row */
+.card-top-row {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card-top-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.top-row-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.circle-status-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.circle-status-icon.blue-circle {
+  background: linear-gradient(135deg, var(--bg-eff6ff) 0%, var(--bg-e0e7ff) 100%);
+  color: var(--tx-2563eb);
+  border: 1px solid var(--bd-bfdbfe);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08);
+}
+
+.booking-number-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.booking-label-row {
+  display: flex;
+  align-items: center;
+}
+
+.booking-label {
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
-  max-width: 440px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.booking-id-text {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  color: var(--tx-0f172a);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.officer-booked-at {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  color: var(--tx-94a3b8);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+}
+
+.top-row-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.status-pill-badge {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.pill-green {
+  background: var(--bg-dcfce7);
+  color: var(--tx-15803d);
+}
+
+.pill-amber {
+  background: var(--bg-fef3c7);
+  color: var(--tx-d97706);
+}
+
+.pill-blue {
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+}
+
+.pill-purple {
+  background: var(--bg-f5f3ff);
+  color: var(--tx-7c3aed);
+}
+
+.pill-gray {
+  background: var(--bg-f1f5f9);
+  color: var(--tx-64748b);
+}
+
+.pill-red {
+  background: var(--bg-fee2e2);
+  color: var(--tx-dc2626);
+}
+
+.card-collapse-btn {
+  background: transparent;
+  border: none;
+  color: var(--tx-64748b);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-chevron {
+  transition: transform 0.2s ease;
+}
+
+.card-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+/* Context Meta Tags Row */
+.card-meta-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--tx-64748b);
+  font-size: var(--font-size-xs);
+}
+
+.compact-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.compact-meta-item + .compact-meta-item {
+  padding-left: 12px;
+  border-left: 1px solid var(--bd-e2e8f0);
+}
+
+.compact-meta-item svg {
+  color: var(--tx-94a3b8);
+  flex-shrink: 0;
+}
+
+.compact-meta-item strong {
+  color: var(--tx-334155);
+  font-weight: 650;
+}
+
+.compact-meta-stall strong {
+  color: var(--tx-1d4ed8);
+}
+
+.compact-meta-item a {
+  color: var(--tx-64748b);
+  text-decoration: none;
+}
+
+.compact-meta-item a:hover {
+  color: var(--tx-2563eb);
+  text-decoration: underline;
+}
+
+/* Stepper Track */
+.booking-stepper-container {
+  margin: 18px 0 16px 0;
+  padding: 12px 16px;
+  background: var(--bg-f8fafc);
+  border-radius: 10px;
+  border: 1px solid var(--bd-f1f5f9);
+}
+
+.stepper-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  max-width: 680px;
   margin: 0 auto;
 }
 
-.btn-empty-reset {
-  margin-top: 16px;
-  padding: 7px 16px;
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 2;
+  position: relative;
+}
+
+.step-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg-e2e8f0);
+  color: var(--tx-64748b);
   font-size: var(--font-size-xs);
-  font-family: inherit;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+}
+
+.step-label-text {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--tx-64748b);
+  white-space: nowrap;
+}
+
+.stepper-step.completed .step-circle {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.stepper-step.completed .step-label-text {
+  color: var(--tx-0f172a);
+}
+
+.stepper-step.active .step-circle {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+.stepper-step.active .step-label-text {
+  color: var(--tx-2563eb);
+  font-weight: 700;
+}
+
+.stepper-connector {
+  flex: 1;
+  height: 3px;
+  background: var(--bg-e2e8f0);
+  margin: -18px 8px 0 8px;
+  z-index: 1;
+  transition: background 0.25s ease;
+}
+
+.stepper-connector.filled {
+  background: #10b981;
+}
+
+/* 4-Column Info Grid */
+.info-columns-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1.15fr 1fr 1.35fr;
+  gap: 16px;
+  padding: 14px 0 8px 0;
+  border-top: 1px solid var(--bd-f1f5f9);
+}
+
+@media (max-width: 900px) {
+  .info-columns-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 580px) {
+  .info-columns-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.info-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-xs);
+  color: var(--tx-64748b);
+  font-weight: 500;
+}
+
+.info-value-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.info-value-text {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--tx-0f172a);
+}
+
+.days-remaining-pill {
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-2563eb);
   background: var(--bg-eff6ff);
-  border: 1px solid var(--bd-bfdbfe);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-empty-reset:hover {
-  background: var(--bg-dbeafe);
-}
-
-/* Custom Table Styles */
-.table-container {
-  overflow-x: auto;
-  border: 1px solid var(--bd-f1f5f9);
+  padding: 2px 8px;
   border-radius: 12px;
-  margin-bottom: 18px;
+  border: 1px solid var(--bd-dbeafe);
 }
 
-.custom-table {
+.stall-count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--tx-1e293b);
+  background: var(--bg-f8fafc);
+  padding: 3px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--bd-e2e8f0);
+}
+
+.stall-code-strong {
+  font-weight: 700;
+  color: var(--tx-1d4ed8);
+}
+
+.stall-shop-row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: var(--font-size-sm);
+  color: var(--tx-334155);
+}
+
+.shop-prefix {
+  font-size: var(--font-size-xs);
+  color: var(--tx-64748b);
+}
+
+.shop-name-highlight {
+  font-weight: 700;
+  color: var(--tx-0f172a);
+}
+
+.shop-product {
+  color: var(--tx-64748b);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+.cell-sub-meeting-point {
+  font-size: var(--font-size-xs);
+  color: var(--tx-64748b);
+}
+
+.applicant-id-mono {
+  font-size: var(--font-size-xs);
+  color: var(--tx-475569);
+  font-family: inherit;
+}
+
+.applicant-id-mono .sub-label {
+  color: var(--tx-94a3b8);
+}
+
+.applicant-phone-row {
+  margin-top: 6px;
+}
+
+.phone-call-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-eff6ff);
+  color: var(--tx-2563eb);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.phone-call-btn:hover {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+/* Inline Meta Bar */
+.application-inline-meta-bar {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--bd-e2e8f0);
+}
+
+.inline-details-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.details-lead-label {
+  font-weight: 600;
+  color: var(--tx-64748b);
+  white-space: nowrap;
+}
+
+.details-lead-text {
+  color: var(--tx-334155);
+}
+
+.inline-details-row.text-danger .details-lead-label,
+.inline-details-row.text-danger .details-lead-text {
+  color: var(--tx-dc2626);
+}
+
+/* Card Footer Row */
+.card-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 14px;
+  margin-top: 10px;
+  border-top: 1px solid var(--bd-f1f5f9);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-left-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+
+.footer-left-status strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+.footer-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Collapsed Next Step */
+.collapsed-next-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid var(--bd-f1f5f9);
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+
+.collapsed-next-step-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.collapsed-next-step-content::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.collapsed-next-step-label {
+  color: var(--tx-94a3b8);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.collapsed-next-step strong {
+  color: inherit;
+  font-weight: 600;
+}
+
+.collapsed-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tone-waiting { color: var(--tx-d97706); }
+.tone-success { color: var(--tx-15803d); }
+.tone-action { color: var(--tx-2563eb); }
+.tone-muted { color: var(--tx-64748b); }
+
+/* Table View Styles (Matched to Application table) */
+.officer-table-container {
+  overflow-x: auto;
+  border: 1px solid var(--bd-e2e8f0);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  background: var(--bg-ffffff);
+}
+
+.officer-custom-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
   font-size: var(--font-size-sm);
 }
 
-.custom-table th {
+.officer-custom-table th {
   padding: 13px 16px;
   font-size: var(--font-size-xs);
   font-weight: 600;
@@ -1703,14 +2731,14 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.custom-table td {
+.officer-custom-table td {
   padding: 15px 16px;
   border-bottom: 1px solid var(--bd-f1f5f9);
   color: var(--tx-334155);
   vertical-align: middle;
 }
 
-.custom-table tbody tr:hover {
+.officer-custom-table tbody tr:hover {
   background: var(--bg-f8fafc);
 }
 
@@ -1718,16 +2746,6 @@ onMounted(() => {
   color: var(--tx-2563eb);
   font-weight: 700;
   font-size: var(--font-size-sm);
-}
-
-.clickable-code {
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.clickable-code:hover {
-  color: var(--tx-1d4ed8);
 }
 
 .cell-sub-cycle {
@@ -1771,20 +2789,14 @@ onMounted(() => {
   font-size: var(--font-size-xs);
 }
 
-.cell-expiring-tag {
-  font-size: var(--font-size-xs);
-  color: var(--tx-dc2626);
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 2px;
-}
-
 .cell-bold-amount {
   font-weight: 700;
-  color: var(--tx-1e293b);
+  color: var(--tx-0f172a);
   font-size: var(--font-size-base);
+}
+
+.action-heading, .action-cell {
+  text-align: right;
 }
 
 .table-actions-cell {
@@ -1792,292 +2804,9 @@ onMounted(() => {
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
-}
-
-/* Card Grid View (Cards Mode) */
-.contract-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 18px;
-  margin-bottom: 20px;
-}
-
-.contract-card {
-  background: var(--bg-ffffff);
-  border: 1px solid var(--bd-eef2f6);
-  border-radius: 14px;
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-  position: relative;
-}
-
-.contract-card:hover {
-  border-color: var(--bd-cbd5e1);
-  box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.08);
-  transform: translateY(-2px);
-}
-
-.contract-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.contract-header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.contract-icon-box {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.contract-header-meta {
-  display: flex;
-  flex-direction: column;
-}
-
-.contract-label-text {
-  font-size: var(--font-size-xs);
-  color: var(--tx-94a3b8);
-  font-weight: 500;
-}
-
-.contract-card-number {
-  font-size: var(--font-size-base);
-  font-weight: 700;
-  cursor: pointer;
-  line-height: 1.3;
-}
-
-.contract-card-number:hover {
-  text-decoration: underline;
-}
-
-.contract-card-cycle {
-  font-size: var(--font-size-xs);
-  color: var(--tx-64748b);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 2px;
-}
-
-.contract-header-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-}
-
-.expiring-badge {
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  color: var(--tx-dc2626);
-  background: var(--bg-fee2e2);
-  padding: 2px 8px;
-  border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* Status Pill Badges */
-.status-pill-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 7px;
-  white-space: nowrap;
-}
-
-.pill-green {
-  background: var(--bg-dcfce7);
-  color: var(--tx-15803d);
-}
-
-.pill-amber {
-  background: var(--bg-fef3c7);
-  color: var(--tx-d97706);
-}
-
-.pill-blue {
-  background: var(--bg-eff6ff);
-  color: var(--tx-2563eb);
-}
-
-.pill-gray {
-  background: var(--bg-f1f5f9);
-  color: var(--tx-64748b);
-}
-
-.pill-red {
-  background: var(--bg-fee2e2);
-  color: var(--tx-dc2626);
-}
-
-/* Circle Status Icons */
-.green-circle {
-  background: var(--bg-dcfce7);
-  color: var(--tx-15803d);
-}
-
-.amber-circle {
-  background: var(--bg-fef3c7);
-  color: var(--tx-d97706);
-}
-
-.blue-circle {
-  background: var(--bg-eff6ff);
-  color: var(--tx-2563eb);
-}
-
-.gray-circle {
-  background: var(--bg-f1f5f9);
-  color: var(--tx-64748b);
-}
-
-.red-circle {
-  background: var(--bg-fee2e2);
-  color: var(--tx-dc2626);
-}
-
-/* Shop Banner in Card */
-.contract-shop-banner {
-  background: var(--bg-f8fafc);
-  border: 1px solid var(--bd-f1f5f9);
-  border-radius: 10px;
-  padding: 11px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.shop-banner-info {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.shop-name-title {
-  font-size: var(--font-size-base);
-  font-weight: 700;
-  color: var(--tx-1e293b);
-  line-height: 1.3;
-}
-
-.shop-category-subtitle {
-  font-size: var(--font-size-xs);
-  color: var(--tx-64748b);
-  margin-top: 2px;
-}
-
-.stall-badge-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--bg-eff6ff);
-  color: var(--tx-1d4ed8);
-  border: 1px solid var(--bd-bfdbfe);
-  padding: 3px 9px;
-  border-radius: 6px;
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-/* Card Metadata Grid */
-.contract-card-meta-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 16px;
-  padding: 2px 0;
-}
-
-.meta-card-col {
-  display: flex;
-  flex-direction: column;
-}
-
-.meta-card-label {
-  font-size: var(--font-size-xs);
-  color: var(--tx-64748b);
-  font-weight: 500;
-  margin-bottom: 2px;
-}
-
-.meta-card-value {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--tx-1e293b);
-  line-height: 1.3;
-}
-
-.meta-card-phone {
-  font-size: var(--font-size-xs);
-  color: var(--tx-2563eb);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  text-decoration: none;
-  margin-top: 2px;
-}
-
-.meta-card-phone:hover {
-  text-decoration: underline;
-}
-
-.meta-card-date {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--tx-475569);
-  font-size: var(--font-size-xs);
-}
-
-.meta-card-amount {
-  font-size: var(--font-size-lg);
-  font-weight: 800;
-  color: var(--tx-1e293b);
-  line-height: 1.2;
-}
-
-.meta-card-amount .unit-text {
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  color: var(--tx-64748b);
-  margin-left: 2px;
-}
-
-/* Card Footer Actions */
-.contract-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 8px;
-  border-top: 1px solid var(--bd-f1f5f9);
-  padding-top: 12px;
-  margin-top: auto;
 }
 
-/* Badge helpers */
 .badge-occupied {
   background: var(--bg-f1f5f9);
   color: var(--tx-334155);
@@ -2088,7 +2817,73 @@ onMounted(() => {
   font-weight: 600;
 }
 
-/* Field Errors */
+/* Modal and Print styles (preserved) */
+.contract-return-note { color: #b45309; background: #fffbeb; padding: 12px; border-radius: 8px; }
+.contract-signature-image { max-width: 150px; max-height: 55px; object-fit: contain; }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 20px;
+}
+
+.modal-content {
+  background: var(--bg-ffffff);
+  border-radius: 16px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  background: var(--bg-f8fafc);
+  border-top: 1px solid var(--bd-e2e8f0);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--tx-1e293b);
+  margin-bottom: 6px;
+}
+
+.req-star {
+  color: var(--tx-dc2626);
+}
+
 .field-error-text {
   margin: 4px 0 0;
   font-size: var(--font-size-xs);
@@ -2159,19 +2954,160 @@ onMounted(() => {
     width: 100%;
   }
 }
-/* Match the application list toolbar and table. */
-.table-card-title { font-size: 1.125rem; font-weight: 600; }
-.search-input { height: 40px; }
-.table-container { border: 0; border-radius: 0; }
-.custom-table th { padding: 14px 16px; color: #64748b; background: #fff; border-bottom: 1px solid #f1f5f9; font-size: 0.8125rem; font-weight: 500; }
-.custom-table td { padding: 16px; font-size: 0.875rem; }
-.cell-sub-cycle, .cell-sub-category { font-size: 0.8125rem; }
-.cell-phone-link, .cell-duration-text { font-size: 0.875rem; }
-.contract-subfilters { display: flex; flex-wrap: wrap; gap: 8px; margin: -8px 0 20px; }
-.contract-subfilter { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 999px; background: #fff; color: #64748b; font: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
-.contract-subfilter span { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: #f1f5f9; font-size: 0.75rem; }
-.contract-subfilter.active { border-color: #93c5fd; background: #eff6ff; color: #2563eb; }
-.contract-subfilter.active span { background: #dbeafe; }
-.status-pill-badge { font-size: 0.8125rem; padding: 4px 12px; }
-.contract-group-heading:focus-visible, .flow-collapse:focus-visible, .contract-subfilter:focus-visible { outline: 2px solid #2563eb; outline-offset: -2px; }
+
+/* ============================================================ */
+/* CONTRACT DOCUMENT VIEW & PRINT STYLES                        */
+/* ============================================================ */
+.contract-document {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 36px;
+  background: var(--bg-ffffff);
+  border: 1px solid var(--bd-e2e8f0);
+  border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+  color: var(--tx-1e293b);
+  box-sizing: border-box;
+}
+
+.contract-header {
+  text-align: center;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--bd-e2e8f0);
+}
+
+.contract-doc-title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--tx-0f172a);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.contract-doc-org {
+  margin-top: 5px;
+  font-size: var(--font-size-xs);
+  color: var(--tx-64748b);
+  font-weight: 500;
+}
+
+.contract-doc-number-pill {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 14px;
+  background: var(--bg-ecfdf5);
+  border: 1px solid var(--bd-a7f3d0);
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--tx-059669);
+  letter-spacing: 0.01em;
+}
+
+.contract-body {
+  font-size: var(--font-size-sm);
+  line-height: 1.75;
+  color: var(--tx-334155);
+  text-align: left;
+}
+
+.contract-body p {
+  margin: 8px 0;
+  line-height: 1.75;
+}
+
+.contract-body strong {
+  color: var(--tx-0f172a);
+  font-weight: 600;
+}
+
+.contract-clause-heading {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--tx-0f172a);
+  margin-top: 20px;
+  margin-bottom: 6px;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+.contract-info-card {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 20px;
+  background: var(--bg-f8fafc);
+  border: 1px solid var(--bd-e2e8f0);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0 14px;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+
+.contract-info-row {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  align-items: baseline;
+}
+
+.contract-info-full {
+  grid-column: 1 / -1;
+}
+
+.info-label {
+  color: var(--tx-64748b);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.info-value {
+  color: var(--tx-1e293b);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.contract-terms-text {
+  color: var(--tx-475569);
+  line-height: 1.7;
+}
+
+.contract-sign-box {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  margin-top: 36px;
+  padding-top: 16px;
+  text-align: center;
+}
+
+.sign-line {
+  font-size: var(--font-size-xs);
+  color: var(--tx-64748b);
+  line-height: 1.8;
+}
+
+.dotted-signature-line {
+  color: var(--tx-94a3b8);
+  letter-spacing: 1px;
+}
+
+.signer-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--tx-1e293b);
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.contract-signature-image {
+  max-height: 60px;
+  max-width: 180px;
+  object-fit: contain;
+  margin: 0 auto 6px;
+  display: block;
+}
+
 </style>

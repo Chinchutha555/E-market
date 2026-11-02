@@ -125,6 +125,21 @@ button, input, select, textarea {
   color: inherit;
 }
 
+/* Remove spin buttons / up-down arrows from number inputs across all browsers */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button,
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
+
 /* Typography Utility Classes */
 .text-2xs  { font-size: var(--font-size-2xs) !important; }
 .text-xs   { font-size: var(--font-size-xs) !important; }

@@ -123,6 +123,10 @@ func SetupRouter() *gin.Engine {
 			marketGroup.GET("/:id/gis-config", middlewares.Gzip(), marketHandler.GetGISConfig)
 			marketGroup.GET("/:id/gis-config/draft", middlewares.Gzip(), middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff", "market_director"), middlewares.RequireMarketAccess(db, "id"), marketHandler.GetGISDraft)
 			marketGroup.PUT("/:id/gis-config", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff", "market_director"), middlewares.RequireMarketAccess(db, "id"), marketHandler.SaveGISConfig)
+			marketGroup.GET("/:id/trade-conditions", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff", "market_director"), middlewares.RequireMarketAccess(db, "id"), tradeConditions(db))
+			marketGroup.PUT("/:id/trade-conditions", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff", "market_director"), middlewares.RequireMarketAccess(db, "id"), tradeConditions(db))
+			marketGroup.GET("/:id/contract-templates", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff", "market_director"), middlewares.RequireMarketAccess(db, "id"), contractTemplates(db))
+			marketGroup.PUT("/:id/contract-templates", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff", "market_director"), middlewares.RequireMarketAccess(db, "id"), contractTemplates(db))
 			marketGroup.GET("/:id/utility-settings", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff", "market_director"), middlewares.RequireMarketAccess(db, "id"), marketHandler.GetUtilitySettings)
 			marketGroup.PUT("/:id/utility-settings", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff", "market_director"), middlewares.RequireMarketAccess(db, "id"), marketHandler.SaveUtilitySettings)
 		}
@@ -192,7 +196,8 @@ func SetupRouter() *gin.Engine {
 		debtGroup := api.Group("/debts", middlewares.AuthorizeJWT())
 		{
 			debtGroup.GET("", debtHandler.List)
-			debtGroup.POST("", middlewares.RequireRoles("admin", "staff", "market_director"), debtHandler.Create)
+			debtGroup.POST("", middlewares.RequireRoles("admin", "staff", "market_director", "finance"), debtHandler.Create)
+			debtGroup.POST("/:id/pay", middlewares.RequireRoles("tenant", "admin", "staff", "market_director", "finance"), debtHandler.Pay)
 		}
 
 		// Application Routes
@@ -201,6 +206,7 @@ func SetupRouter() *gin.Engine {
 			appGroup.GET("", appHandler.GetApplications)
 			appGroup.GET("/:id", middlewares.RequireResourceAccess(db, "application"), appHandler.GetApplicationByID)
 			appGroup.GET("/:id/officer-signature", middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.OfficerSignature(db))
+			appGroup.GET("/:id/finance-signature", middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.DirectorSignature(db, "finance"))
 			appGroup.GET("/:id/market-signature", middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.DirectorSignature(db, "market"))
 			appGroup.GET("/:id/bureau-signature", middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.DirectorSignature(db, "bureau"))
 			appGroup.GET("/:id/id-card-copy", middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.IDCardCopy(db))
@@ -209,6 +215,7 @@ func SetupRouter() *gin.Engine {
 			appGroup.POST("", middlewares.RequireRoles("tenant", "staff", "market_director"), appHandler.CreateApplication)
 			appGroup.POST("/:id/sign", middlewares.RequireRoles("tenant"), middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.SignApplication(db))
 			appGroup.POST("/:id/resubmit", middlewares.RequireRoles("tenant"), middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.Resubmit(db))
+			appGroup.POST("/:id/pay-debt", middlewares.RequireRoles("tenant", "staff", "finance", "admin"), middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.PayDebtAndResubmit(db))
 			appGroup.POST("/:id/action", middlewares.RequireApplicationReviewer(db), appHandler.Action)
 			appGroup.POST("/clear", middlewares.RequireRoles("staff"), func(c *gin.Context) {
 				c.JSON(http.StatusOK, responses.SuccessResponse(gin.H{"cleared": true}, http.StatusOK))
@@ -233,6 +240,7 @@ func SetupRouter() *gin.Engine {
 		{
 			contractGroup.GET("", contractHandler.GetContracts)
 			contractGroup.GET("/:id", middlewares.RequireResourceAccess(db, "contract"), contractHandler.GetContractByID)
+			contractGroup.PUT("/:id/draft", middlewares.RequireRoles("staff"), middlewares.RequireResourceAccess(db, "contract"), contractHandler.SaveDraft)
 			contractGroup.POST("", middlewares.RequireRoles("tenant"), middlewares.RequireStallPayloadAccess(db), contractHandler.CreateContract)
 			contractGroup.POST("/:id/action", middlewares.RequireRoles("staff", "market_director", "bureau_director"), middlewares.RequireResourceAccess(db, "contract"), contractHandlerPkg.ContractReview(db))
 			contractGroup.POST("/:id/resubmit", middlewares.RequireRoles("tenant"), middlewares.RequireResourceAccess(db, "contract"), contractHandlerPkg.ContractResubmit(db))

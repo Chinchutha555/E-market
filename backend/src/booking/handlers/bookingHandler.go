@@ -320,7 +320,7 @@ func (h *Handler) transition(c *gin.Context, status string, officerOnly bool) {
 		CancelAll       bool   `json:"cancel_all"`
 	}
 	_ = c.ShouldBindJSON(&body)
-	if status == "interested" && (strings.TrimSpace(body.StallIdent) == "" || (body.RentalType != "temporary" && body.RentalType != "contract" && body.RentalType != "trial")) {
+	if status == "interested" && (strings.TrimSpace(body.StallIdent) == "" || strings.TrimSpace(body.RentalType) == "") {
 		respondError(c, responses.NewAppErr(http.StatusBadRequest, "กรุณาเลือกแผงและประเภทการค้า"))
 		return
 	}

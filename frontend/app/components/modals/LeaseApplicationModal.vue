@@ -183,24 +183,21 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="app_start">วันที่ประสงค์เริ่มเช่า <b class="req-star">*</b></label>
-              <AppInput id="app_start" v-model="form.requested_start_date" type="date" :error="errors.requested_start_date" @blur="validateField('requested_start_date')" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">ระยะเวลาขอเช่า (เดือน) <b class="req-star">*</b></label>
-              <AppSelect
-                v-model="form.requested_period_months"
-                :options="periodOptions"
-                placeholder="เลือกระยะเวลาขอเช่า"
-              />
+              <label class="form-label">ระยะเวลาขอเช่า <span class="req-star" aria-hidden="true">*</span></label>
+              <div v-for="record in selectedStallRecords" :key="record.id" class="lease-term-choice">
+                <label v-if="selectedStallRecords.length > 1" class="form-label">แผง {{ record.stall_number || record.stall_ident }}</label>
+                <div v-if="optionsFor(record).length === 1" class="lease-term-value">{{ periodOptionsFor(record)[0]?.label }}</div>
+                <AppSelect v-else-if="optionsFor(record).length > 1" v-model="selectedPeriodIds[String(record.id)]" :options="periodOptionsFor(record)" placeholder="เลือกระยะเวลา" />
+              </div>
+              <p v-if="!hasDeferredDateSupport" class="lease-term-error" role="alert">ระบบยังไม่พร้อมบันทึกคำร้อง กรุณาติดต่อเจ้าหน้าที่</p>
+              <p v-if="hasMissingOptions" class="lease-term-error" role="alert">ไม่พบระยะเวลาที่เจ้าหน้าที่กำหนด กรุณาติดต่อเจ้าหน้าที่</p>
             </div>
           </div>
         </div>
 
         <div class="modal-footer">
           <AppButton type="button" variant="secondary" size="md" @click="$emit('close')">ยกเลิก</AppButton>
-          <AppButton type="submit" variant="primary" size="md" :loading="submitting" :disabled="submitting">
+          <AppButton type="submit" variant="primary" size="md" :loading="submitting" :disabled="submitting || !hasTradeDurations || !hasDeferredDateSupport">
             <span v-if="submitting">กำลังส่งคำร้อง...</span>
             <span v-else>ยื่นคำร้องขอเช่าแผง {{ targetStallNumber }}</span>
           </AppButton>
@@ -245,13 +242,6 @@ const isSuccess = ref(false)
 const successAppNumber = ref('')
 const selectedSubBookingId = ref<number | string>('')
 
-const periodOptions = [
-  { value: 3, label: '3 เดือน (ทดลองขาย)' },
-  { value: 6, label: '6 เดือน' },
-  { value: 12, label: '1 ปี (มาตรฐาน)' },
-  { value: 24, label: '2 ปี' }
-]
-
 const selectableSubBookings = computed(() => {
   const subs = props.booking?.sub_bookings
   if (Array.isArray(subs) && subs.length > 0) {
@@ -295,6 +285,30 @@ const selectedStallRecords = computed(() => {
   return props.booking ? [props.booking] : []
 })
 
+type TradeOption = { ID: string; Duration: number; Unit: string; StartDate: string; EndDate: string }
+const selectedPeriodIds = reactive<Record<string, string>>({})
+const optionsFor = (record: any): TradeOption[] => {
+  if (Array.isArray(record?.trade_options) && record.trade_options.length) return record.trade_options
+  if (Number(record?.trade_duration) > 0 && ['days', 'months', 'years'].includes(record.trade_duration_unit)) {
+    return [{ ID: 'legacy', Duration: Number(record.trade_duration), Unit: record.trade_duration_unit, StartDate: '', EndDate: '' }]
+  }
+  return []
+}
+const periodOptionsFor = (record: any) => optionsFor(record).map(option => {
+  const units: Record<string, string> = { days: 'วัน', months: 'เดือน', years: 'ปี' }
+  return { value: option.ID, label: option.Duration + ' ' + (units[option.Unit] || option.Unit) }
+})
+const selectedOption = (record: any) => optionsFor(record).find(option => option.ID === selectedPeriodIds[String(record.id)])
+const hasMissingOptions = computed(() => selectedStallRecords.value.some((record: any) => !optionsFor(record).length))
+const hasDeferredDateSupport = computed(() => selectedStallRecords.value.length > 0 && selectedStallRecords.value.every((record: any) => record.period_dates_deferred === true))
+const hasTradeDurations = computed(() => selectedStallRecords.value.length > 0 && selectedStallRecords.value.every((record: any) => !!selectedOption(record)))
+const syncPeriodSelections = () => {
+  for (const record of selectedStallRecords.value) {
+    const options = optionsFor(record)
+    const key = String(record.id)
+    if (!options.some(option => option.ID === selectedPeriodIds[key])) selectedPeriodIds[key] = options.length === 1 ? options[0].ID : ''
+  }
+}
 const activeBookingRecord = computed(() => {
   return selectedStallRecords.value[0] || props.booking
 })
@@ -346,8 +360,6 @@ const form = ref({
   applicant_address: '',
   shop_name: '',
   product_type: '',
-  requested_start_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-  requested_period_months: 12,
   proposed_rent_type: 'monthly'
 })
 
@@ -404,7 +416,7 @@ const validateField = (field: keyof typeof errors) => {
   } else if (field === 'product_type') {
     errors.product_type = form.value.product_type.trim() ? '' : 'กรุณาระบุประเภทสินค้าที่จะจำหน่าย'
   } else if (field === 'requested_start_date') {
-    errors.requested_start_date = form.value.requested_start_date ? '' : 'กรุณาเลือกวันที่ประสงค์เริ่มเช่า'
+    errors.requested_start_date = ''
   }
 }
 
@@ -434,6 +446,7 @@ watch(() => props.show, (newVal) => {
     } else {
       selectedSubBookingId.value = props.booking?.id || ''
     }
+    syncPeriodSelections()
     const base = activeBookingRecord.value || props.booking
     if (base) {
       const parsedName = splitApplicantTitle(base.tenant_name || base.applicant_name || '')
@@ -450,15 +463,17 @@ watch(() => props.show, (newVal) => {
   }
 }, { immediate: true })
 
+watch(selectedStallRecords, syncPeriodSelections)
+
 const handleSubmit = async () => {
   hasSubmitted.value = true
   const formValid = validateForm()
-  if (!formValid || !idCardCopy.value || idCardCopyError.value) return
+  if (!formValid || !idCardCopy.value || idCardCopyError.value || !hasTradeDurations.value || !hasDeferredDateSupport.value) return
   const age = Number(form.value.applicant_age)
   submitting.value = true
   try {
     const idCardCopyBase64 = idCardCopy.value ? await readIDCardCopy(idCardCopy.value) : ''
-    const periodMonths = Number(form.value.requested_period_months) || 12
+    syncPeriodSelections()
     const base = activeBookingRecord.value || props.booking
     const mId = base?.market_id || props.stall?.market_id
     const mName = base?.market_name || props.stall?.market_name || 'ตลาด กทม.'
@@ -471,6 +486,9 @@ const handleSubmit = async () => {
       const sId = rec.stall_id || props.stall?.id
       const bId = rec.id || base?.id
       const monthlyRate = Number(rec.stall_monthly_rate || rec.monthly_rent || 3600)
+      const selected = selectedOption(rec)
+      if (!selected) throw new Error('กรุณาเลือกระยะเวลาขอเช่า')
+      const periodMonths = selected.Unit === 'years' ? Number(selected.Duration) * 12 : selected.Unit === 'months' ? Number(selected.Duration) : 0
 
       const payload = {
         application_type: 'stall_lease',
@@ -490,7 +508,7 @@ const handleSubmit = async () => {
         shop_name: form.value.shop_name.trim(),
         product_category: form.value.product_type.trim() || 'สินค้าทั่วไป',
         product_type: form.value.product_type.trim() || 'สินค้าทั่วไป',
-        requested_start_date: form.value.requested_start_date,
+        trade_option_id: selected.ID,
         lease_term_months: periodMonths,
         requested_period_months: periodMonths,
         monthly_rate: monthlyRate,
@@ -516,6 +534,7 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
+.lease-term-choice + .lease-term-choice{margin-top:12px}.lease-term-value{min-height:42px;box-sizing:border-box;display:flex;align-items:center;gap:4px;padding:9px 14px;border:1px solid var(--bd-e2e8f0);border-radius:10px;background:var(--bg-f8fafc);color:var(--tx-334155);font-size:var(--font-size-base);font-weight:600}.lease-term-value + .lease-term-choice + .lease-term-choice{margin-top:12px}.lease-term-value{margin-top:6px}.lease-term-error{margin:6px 0 0;color:var(--tx-dc2626);font-size:var(--font-size-sm)}
 .sr-only {
   position: absolute;
   width: 1px;

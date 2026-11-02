@@ -26,6 +26,9 @@ func SeedAll(db *gorm.DB) error {
 		users := []models.User{
 			{Username: "admin", Password: hashPassword("admin1234"), FullName: "ผู้ดูแลระบบตลาด กทม. (Admin)", Role: "admin", Email: "admin@emarket.bma.go.th", Phone: "02-123-4567", Status: "A"},
 			{Username: "staff", Password: hashPassword("staff1234"), FullName: "เจ้าหน้าที่ตลาด (Staff)", Role: "staff", Email: "staff@emarket.bma.go.th", Phone: "02-123-4568", Status: "A"},
+			{Username: "finance", Password: hashPassword("finance1234"), FullName: "เจ้าหน้าที่ฝ่ายการคลัง", Role: "finance", Email: "finance@emarket.bma.go.th", Phone: "02-123-4569", Status: "A"},
+			{Username: "market_director", Password: hashPassword("market1234"), FullName: "ผู้อำนวยการตลาด", Role: "market_director", Email: "market_director@emarket.bma.go.th", Phone: "02-123-4570", Status: "A"},
+			{Username: "bureau_director", Password: hashPassword("bureau1234"), FullName: "ผู้อำนวยการสำนักตลาด", Role: "bureau_director", Email: "bureau_director@emarket.bma.go.th", Phone: "02-123-4571", Status: "A"},
 			{Username: "tenant", Password: hashPassword("tenant1234"), FullName: "สมชาย ใจดี", Role: "tenant", Email: "tenant@emarket.bma.go.th", Phone: "081-234-5678", Status: "A"},
 			{Username: "tenant2", Password: hashPassword("tenant21234"), FullName: "นภาพร รัตนศิลป์", Role: "tenant", Email: "tenant2@emarket.bma.go.th", Phone: "089-111-2233", Status: "A"},
 			{Username: "tenant3", Password: hashPassword("tenant31234"), FullName: "วิชัย เจริญทรัพย์", Role: "tenant", Email: "tenant3@emarket.bma.go.th", Phone: "086-778-9900", Status: "A"},
@@ -49,8 +52,10 @@ func SeedAll(db *gorm.DB) error {
 	// Director demo accounts are only created in an explicitly configured local environment.
 	if os.Getenv("APP_ENV") == "development" || os.Getenv("APP_ENV") == "test" {
 		for _, director := range []models.User{
-			{Username: "market_director_demo", Password: hashPassword("marketdemo1234"), FullName: "ผู้อำนวยการตลาด (ทดสอบ)", Role: "market_director", Status: "A"},
-			{Username: "bureau_director_demo", Password: hashPassword("bureaudemo1234"), FullName: "ผู้อำนวยการสำนักตลาด (ทดสอบ)", Role: "bureau_director", Status: "A"},
+			{Username: "market_director", Password: hashPassword("market1234"), FullName: "ผู้อำนวยการตลาด", Role: "market_director", Status: "A"},
+			{Username: "market_director_demo", Password: hashPassword("marketdemo1234"), FullName: "ผู้อำนวยการตลาด", Role: "market_director", Status: "A"},
+			{Username: "bureau_director", Password: hashPassword("bureau1234"), FullName: "ผู้อำนวยการสำนักตลาด", Role: "bureau_director", Status: "A"},
+			{Username: "bureau_director_demo", Password: hashPassword("bureaudemo1234"), FullName: "ผู้อำนวยการสำนักตลาด", Role: "bureau_director", Status: "A"},
 		} {
 			var existing models.User
 			if err := db.Where("username = ?", director.Username).Attrs(director).FirstOrCreate(&existing).Error; err != nil {
@@ -66,8 +71,11 @@ func SeedAll(db *gorm.DB) error {
 	for _, d := range []struct {
 		userEnv, passEnv, nameEnv, defUser, defPass, defName, role string
 	}{
-		{"MARKET_DIRECTOR_USERNAME", "MARKET_DIRECTOR_PASSWORD", "MARKET_DIRECTOR_FULL_NAME", "market_director_demo", "marketdemo1234", "ผู้อำนวยการตลาด (ทดสอบ)", "market_director"},
-		{"BUREAU_DIRECTOR_USERNAME", "BUREAU_DIRECTOR_PASSWORD", "BUREAU_DIRECTOR_FULL_NAME", "bureau_director_demo", "bureaudemo1234", "ผู้อำนวยการสำนักตลาด (ทดสอบ)", "bureau_director"},
+		{"FINANCE_USERNAME", "FINANCE_PASSWORD", "FINANCE_FULL_NAME", "finance", "finance1234", "เจ้าหน้าที่ฝ่ายการคลัง", "finance"},
+		{"MARKET_DIRECTOR_USERNAME", "MARKET_DIRECTOR_PASSWORD", "MARKET_DIRECTOR_FULL_NAME", "market_director", "market1234", "ผู้อำนวยการตลาด", "market_director"},
+		{"", "", "", "market_director_demo", "marketdemo1234", "ผู้อำนวยการตลาด", "market_director"},
+		{"BUREAU_DIRECTOR_USERNAME", "BUREAU_DIRECTOR_PASSWORD", "BUREAU_DIRECTOR_FULL_NAME", "bureau_director", "bureau1234", "ผู้อำนวยการสำนักตลาด", "bureau_director"},
+		{"", "", "", "bureau_director_demo", "bureaudemo1234", "ผู้อำนวยการสำนักตลาด", "bureau_director"},
 	} {
 		pwd := os.Getenv(d.passEnv)
 		if pwd == "" {
@@ -88,6 +96,9 @@ func SeedAll(db *gorm.DB) error {
 			return err
 		}
 	}
+
+	db.Model(&models.User{}).Where("role = ? AND full_name LIKE ?", "market_director", "%(ทดสอบ)%").Update("full_name", "ผู้อำนวยการตลาด")
+	db.Model(&models.User{}).Where("role = ? AND full_name LIKE ?", "bureau_director", "%(ทดสอบ)%").Update("full_name", "ผู้อำนวยการสำนักตลาด")
 
 	// 2. Seed 12 BMA Markets
 	var marketCount int64
@@ -380,7 +391,7 @@ func SeedAll(db *gorm.DB) error {
 	// Scope the market director demo accounts to markets so they have assignments to review applications.
 	if len(marketsForStaff) > 0 {
 		var directors []models.User
-		if err := db.Where("role = ?", "market_director").Find(&directors).Error; err == nil {
+		if err := db.Where("role IN ?", []string{"market_director", "finance"}).Find(&directors).Error; err == nil {
 			for _, director := range directors {
 				for _, m := range marketsForStaff {
 					assignment := models.MarketStaffAssignment{UserID: director.ID, MarketID: m.ID}
@@ -644,7 +655,7 @@ func SeedAll(db *gorm.DB) error {
 				ApplicationNo: "APP-20261028-202345", StallIdent: "JJ-16-231", MarketID: &mID, MarketName: "ตลาดนัดจตุจักร",
 				ApplicantName: "คุณจิราพร บุญมี", ApplicantPhone: "084-222-3344", ApplicantIDCard: "1-1003-44552-33-4",
 				ShopName: "ร้านขนมไทยโบราณ", ProductCategory: "อาหารและเครื่องดื่ม", LeaseTermMonths: 12, MonthlyRate: 1800,
-				ApplicationState: "submitted", Status: "A", Subject: "ขอเช่าพื้นที่แผงค้าใหม่",
+				ApplicationState: "pending_officer", Status: "A", Subject: "ขอเช่าพื้นที่แผงค้าใหม่",
 			},
 			{
 				ApplicationNo: "APP-20261028-303456", StallIdent: "JJ-17-390", MarketID: &mID, MarketName: "ตลาดนัดจตุจักร",
