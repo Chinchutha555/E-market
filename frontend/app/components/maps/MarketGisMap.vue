@@ -61,7 +61,7 @@
         <div class="gis-card-header">
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="stall-code" style="font-size: 1.375rem; color: var(--primary);">{{ selectedStall.stall_number }}</span>
+              <span class="stall-code" style="font-size: 1.375rem; color: var(--primary);">{{ stallShortNumber(selectedStall.stall_number) }}</span>
               <span :class="getStatusBadgeClass(selectedStall.status)">
                 {{ getStatusLabel(selectedStall.status) }}
               </span>
@@ -418,7 +418,7 @@ const setupStallsLayers = () => {
       hoverPopup.setLngLat(coordinates).setHTML(`
         <div style="font-family: 'Bai Jamjuree', sans-serif; padding: 4px; font-size: var(--font-size-xs); line-height: 1.4;">
           <div style="font-weight: 700; color: #0f172a; font-size: var(--font-size-xs);">
-            แผง ${p.stall_number} <span style="font-weight: 500; font-size: var(--font-size-xs); color: #64748b;">(โซน ${p.zone_code})</span>
+            แผง ${stallShortNumber(p.stall_number)} <span style="font-weight: 500; font-size: var(--font-size-xs); color: #64748b;">(โซน ${p.zone_code})</span>
           </div>
           <div style="color: #475569; font-size: var(--font-size-xs); margin-bottom: 2px;">
             ${p.category || p.zone_name || ''}

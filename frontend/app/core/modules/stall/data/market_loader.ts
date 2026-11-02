@@ -7,10 +7,14 @@
 
 import { getMarketGisConfig, type MarketGisConfig } from './markets_registry'
 import type { ProjectZone } from './market_gis_types'
+import { registerStallNumbers } from '~/utils/stallLabel'
 
 export function cloneProjects<T>(items: T): T {
   if (!items) return items
-  if (typeof structuredClone === 'function') return structuredClone(items)
+  // structuredClone โยน DataCloneError เมื่อเจอ Vue reactive proxy จึงถอยไปใช้ JSON (ข้อมูล GIS เป็น JSON ล้วน)
+  if (typeof structuredClone === 'function') {
+    try { return structuredClone(items) } catch { /* fall through */ }
+  }
   return JSON.parse(JSON.stringify(items))
 }
 
@@ -178,6 +182,7 @@ async function fetchMarketGisJson(slug: string, signal?: AbortSignal): Promise<M
             projects: mergeMarketProjects(baseConfig.projects, apiProjects, false)
           }
           marketCache.set(slug, mergedConfig)
+          registerStallNumbers(apiProjects)
           return mergedConfig
         }
       }

@@ -52,7 +52,7 @@
           </tr>
         </tbody>
       </table>
-      <AppEmptyState v-else variant="compact" icon="document" title="ยังไม่มีแผงที่ต้องจดมิเตอร์" description="แผงที่มีผู้เช่าจะแสดงในตารางนี้เพื่อจดมิเตอร์น้ำ-ไฟ" />
+      <AppEmptyState v-else class="meter-empty" variant="compact" icon="document" title="ยังไม่มีแผงที่ต้องจดมิเตอร์" description="แผงที่มีผู้เช่าจะแสดงในตารางนี้เพื่อจดมิเตอร์น้ำ-ไฟ" />
     </div>
 
     <!-- รายแผง (ของโครงการที่เลือก) -->
@@ -90,7 +90,7 @@
             </tr>
           </tbody>
         </table>
-        <AppEmptyState v-else variant="compact" icon="search" title="ไม่พบแผงตามตัวกรอง" description="ลองเลือกสถานะอื่นหรือโครงการอื่น" />
+        <AppEmptyState v-else class="meter-empty" variant="compact" icon="search" title="ไม่พบแผงตามตัวกรอง" description="ลองเลือกสถานะอื่นหรือโครงการอื่น" />
       </div>
     </div>
 
@@ -141,7 +141,7 @@ export interface MeterStallRow {
   waterUsed: number | null
   amount: number | null
   recordedBy: string
-  state: 'recorded' | 'abnormal' | 'pending' | 'skipped'
+  state: 'recorded' | 'abnormal' | 'pending' | 'skipped' | 'no-meter' | 'no-data'
 }
 
 const props = defineProps<{
@@ -160,14 +160,16 @@ const emit = defineEmits<{
 }>()
 
 const tab = ref<'project' | 'stall'>('project')
-const stallFilter = ref<'all' | 'recorded' | 'abnormal' | 'pending' | 'skipped'>('all')
+const stallFilter = ref<'all' | 'recorded' | 'abnormal' | 'pending' | 'skipped' | 'no-meter'>('all')
 const selectedProjectId = ref('')
 
 const stateLabel: Record<MeterStallRow['state'], string> = {
   recorded: 'จดแล้ว',
   abnormal: 'ผิดปกติ',
   pending: 'ยังไม่จด',
-  skipped: 'ข้าม'
+  skipped: 'ข้าม',
+  'no-meter': 'ยังไม่มีมิเตอร์',
+  'no-data': 'ไม่มีข้อมูลงวดนี้'
 }
 
 // เรียงจากโครงการที่จดน้อยสุดก่อน
@@ -188,6 +190,7 @@ const filterOptions = computed(() => [
   { value: 'recorded', label: 'จดแล้ว', count: countOf('recorded') },
   { value: 'abnormal', label: 'ผิดปกติ', count: countOf('abnormal') },
   { value: 'pending', label: 'ยังไม่จด', count: countOf('pending') },
+  { value: 'no-meter', label: 'ยังไม่มีมิเตอร์', count: countOf('no-meter') },
   { value: 'skipped', label: 'ข้าม', count: countOf('skipped') }
 ])
 const visibleStalls = computed(() => stallFilter.value === 'all' ? projectStalls.value : projectStalls.value.filter(row => row.state === stallFilter.value))
@@ -263,6 +266,8 @@ const exportCsv = () => {
 .msm-pill.is-ready, .msm-pill.is-recorded { background: var(--bg-dcfce7); color: var(--tx-15803d); }
 .msm-pill.is-abnormal { background: var(--bg-fee2e2); color: var(--tx-dc2626); }
 .msm-pill.is-skipped { background: var(--bg-f1f5f9); color: var(--tx-64748b); }
+.msm-pill.is-no-meter { background: var(--bg-fef3c7); color: var(--tx-b45309); }
+.msm-pill.is-no-data { background: var(--bg-f1f5f9); color: var(--tx-64748b); }
 
 .msm-stall-name { display: block; color: var(--tx-0f172a); font-size: var(--font-size-base); font-weight: 700; }
 .msm-stall-tenant { display: block; color: var(--tx-64748b); font-size: var(--font-size-xs); font-weight: 500; }
@@ -275,4 +280,5 @@ const exportCsv = () => {
   .msm-toolbar-actions { flex-wrap: wrap; }
   .msm-project-select { width: 100%; }
 }
+.meter-empty.app-empty-state { min-height: 0; margin-top: 4px; padding: 22px 16px; border: 1px dashed var(--bd-d5e0ed); border-radius: 16px; background: var(--bg-ffffff); }
 </style>

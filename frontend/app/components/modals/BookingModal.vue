@@ -3,7 +3,7 @@
     <div class="modal-content" style="max-width: 600px;">
       <AppModalHeader
         :title="isQueueMode ? 'ต่อคิวแผงติดจอง' : 'จองนัดหมายดูแผงเช่า'"
-        :subtitle="`แผง ${stall?.stall_number || '-'} · โซน ${stall?.zone_code || stall?.zone?.code || 'ทั่วไป'}`"
+        :subtitle="`แผง ${stallShortNumber(stall?.stall_number) || '-'} · โซน ${stall?.zone_code || stall?.zone?.code || 'ทั่วไป'}`"
         icon="pin"
         @close="$emit('close')"
       />
@@ -52,7 +52,7 @@
           <!-- Stall Summary Info Banner -->
           <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid var(--bd-a7f3d0); padding: 14px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div>
-              <div style="font-weight: 700; font-size: var(--font-size-md); color: var(--tx-0f172a);">แผง {{ stall?.stall_number }} - {{ stall?.category || stall?.category_name || 'ทั่วไป' }}</div>
+              <div style="font-weight: 700; font-size: var(--font-size-md); color: var(--tx-0f172a);">แผง {{ stallShortNumber(stall?.stall_number) }} - {{ stall?.category || stall?.category_name || 'ทั่วไป' }}</div>
               <div style="font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 2px;">
                 ขนาด: {{ stall?.size_width || 2 }} × {{ stall?.size_length || 2 }} ม. ({{ stall?.area_sqm || 4 }} ตร.ม.)
               </div>

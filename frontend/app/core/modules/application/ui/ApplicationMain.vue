@@ -561,7 +561,7 @@
                       <div class="compact-meta-item compact-meta-stall">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                         <span>แผงค้า</span>
-                        <strong>{{ app.stall_number && app.stall_number !== '-' ? app.stall_number : 'คำร้องทั่วไป' }}</strong>
+                        <strong>{{ app.stall_number && app.stall_number !== '-' ? stallShortNumber(app.stall_number) : 'คำร้องทั่วไป' }}</strong>
                       </div>
 
                       <div class="compact-meta-item">
@@ -810,7 +810,7 @@
                         </div>
                         <div class="info-value-row">
                           <span class="stall-count-pill">
-                            <span class="stall-code-strong">{{ app.stall_number && app.stall_number !== '-' ? app.stall_number : 'คำร้องทั่วไป' }}</span>
+                            <span class="stall-code-strong">{{ app.stall_number && app.stall_number !== '-' ? stallShortNumber(app.stall_number) : 'คำร้องทั่วไป' }}</span>
                           </span>
                         </div>
                         <div v-if="app.shop_name" class="stall-shop-row">
@@ -1080,7 +1080,7 @@
                 <td>
                   <template v-if="isStallLease(app)">
                     <span class="badge badge-occupied">
-                      แผง {{ app.stall_number }}
+                      แผง {{ stallShortNumber(app.stall_number) }}
                     </span>
                     <div style="font-size: var(--font-size-xs); color: var(--tx-64748b); margin-top: 2px;">
                       ฿{{ Number(app.stall_monthly_rate).toLocaleString() }}/ด. ({{ formatApplicationDuration(app) }})
@@ -1089,7 +1089,7 @@
                   <template v-else>
                     <div class="general-subject-title">{{ app.subject || app.shop_name || 'คำร้องทั่วไป' }}</div>
                     <div v-if="app.stall_number && app.stall_number !== '-'" class="general-stall-hint">
-                      แผง {{ app.stall_number }}
+                      แผง {{ stallShortNumber(app.stall_number) }}
                     </div>
                     <div v-else class="general-no-stall-hint">
                       คำร้องทั่วไป
@@ -1317,7 +1317,7 @@
             </div>
             <div class="summary-item">
               <span class="summary-label">ชื่อร้าน / แผง:</span>
-              <span class="summary-value">{{ targetAppForReject.shop_name }} (แผง {{ targetAppForReject.stall_number || targetAppForReject.stall_ident }})</span>
+              <span class="summary-value">{{ targetAppForReject.shop_name }} (แผง {{ stallShortNumber(targetAppForReject.stall_number || targetAppForReject.stall_ident) }})</span>
             </div>
           </div>
 

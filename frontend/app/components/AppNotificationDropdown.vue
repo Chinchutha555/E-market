@@ -139,7 +139,7 @@
               <div class="notif-item-desc">{{ formatNotifText(item.message) }}</div>
 
               <div v-if="item.market_name || item.stall_number" class="notif-item-tags">
-                <span v-if="item.stall_number" class="notif-meta-chip stall">แผง {{ item.stall_number }}</span>
+                <span v-if="item.stall_number" class="notif-meta-chip stall">แผง {{ stallShortNumber(item.stall_number) }}</span>
                 <span v-if="item.market_name" class="notif-meta-chip market">{{ item.market_name }}</span>
               </div>
             </div>

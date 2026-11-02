@@ -26,6 +26,7 @@
 
       <template v-else>
         <section class="detail-hero">
+          <div class="hero-top">
           <div class="detail-title-wrap">
             <div class="detail-title-icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -36,34 +37,24 @@
               <div class="created-at">วันที่จอง {{ formatThaiDateTime(booking.created_at) }}</div>
             </div>
           </div>
-
-          <div class="hero-actions">
-            <span
-              v-if="isQueueBooking(booking)"
-              class="status-badge tone-warning"
-              title="ลำดับคิวสำรอง"
-            >
-              คิวสำรองที่ {{ booking.queue_position || booking.queue_number || 1 }}
-            </span>
-            <span class="status-badge" :class="statusToneClass">{{ statusLabel }}</span>
+            <div class="hero-status-row">
+              <span class="hero-status-pill" :class="statusToneClass">{{ statusLabel }}</span>
+              <span
+                v-if="isQueueBooking(booking)"
+                class="tone-warning hero-status-pill"
+                title="ลำดับคิวสำรอง"
+                >
+                คิวสำรองที่ {{ booking.queue_position || booking.queue_number || 1 }}
+              </span>
+              </div>
           </div>
-        </section>
 
-        <section class="next-action-card" :class="`next-action-${nextAction.tone}`" aria-labelledby="next-action-title">
-          <div class="next-action-icon">
-            <svg v-if="nextAction.tone === 'waiting'" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg>
-            <svg v-else-if="nextAction.tone === 'complete'" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
-            <svg v-else width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
-          </div>
-          <div class="next-action-copy">
-            <div class="next-action-meta">
-              <span>ขั้นตอนถัดไป</span>
-              <span class="next-action-owner">{{ nextAction.owner }}</span>
+          <div v-if="hasActionButtons" class="hero-actions">
+            <div class="hero-next-step">
+              <span class="hero-next-label">ขั้นตอนถัดไป:</span>
+              <strong>{{ nextAction.title }}</strong>
             </div>
-            <h2 id="next-action-title">{{ nextAction.title }}</h2>
-            <p>{{ nextAction.description }}</p>
-          </div>
-          <div v-if="hasActionButtons" class="next-action-buttons">
+            <div class="hero-action-buttons">
             <!-- ============================================================ -->
             <!-- OFFICER ROLE ACTION BUTTONS (ตามหน้ารายการจอง 100%)          -->
             <!-- ============================================================ -->
@@ -244,8 +235,10 @@
                 </template>
               </AppButton>
             </template>
+            </div>
           </div>
         </section>
+
 
         <section class="progress-card" aria-label="ขั้นตอนการจอง">
           <div v-for="(step, index) in steps" :key="step.number" class="progress-fragment">
@@ -270,7 +263,7 @@
           </div>
           <div class="qcb-body">
             <div class="qcb-header">
-              <strong>{{ currentRole === 'officer' ? `รายการนี้อยู่ในคิวสำรองลำดับที่ ${booking.queue_position || booking.queue_number || 1} ของแผง ${booking.stall_number}` : `คุณอยู่ในคิวสำรองลำดับที่ ${booking.queue_position || booking.queue_number || 1} ของแผง ${booking.stall_number}` }}</strong>
+              <strong>{{ currentRole === 'officer' ? `รายการนี้อยู่ในคิวสำรองลำดับที่ ${booking.queue_position || booking.queue_number || 1} ของแผง ${stallShortNumber(booking.stall_number)}` : `คุณอยู่ในคิวสำรองลำดับที่ ${booking.queue_position || booking.queue_number || 1} ของแผง ${stallShortNumber(booking.stall_number)}` }}</strong>
               <span class="qcb-pill">คิวสำรองที่ {{ booking.queue_position || booking.queue_number || 1 }}</span>
             </div>
             <div class="qcb-details">
@@ -312,7 +305,7 @@
                     <tbody>
                       <tr v-for="sub in paginatedDetailStalls" :key="sub.id || sub.stall_number" :class="{ 'is-ended': isTerminalStallStatus(sub.status) }">
                         <td>
-                          <strong>{{ sub.stall_number }}</strong>
+                          <strong>{{ stallShortNumber(sub.stall_number) }}</strong>
                           <span class="stall-secondary">{{ getSubStallProjectName(sub) || '-' }}</span>
                           <span v-if="sub.status !== booking.status" class="status-badge" :class="getSubStatusToneClass(sub.status)">{{ getStatusLabelByCode(sub.status) }}</span>
                           <span v-if="Number(sub.waitlist_count || 0) > 0" class="stall-secondary">คิวรอ {{ sub.waitlist_count }}</span>
@@ -379,7 +372,7 @@
                   <div class="lease-app-head">
                     <div>
                       <strong class="lease-app-number">#{{ app.application_number || app.application_no || app.id }}</strong>
-                      <span class="lease-app-stall">แผง {{ app.stall_number || app.stall_ident || '-' }}</span>
+                      <span class="lease-app-stall">แผง {{ stallShortNumber(app.stall_number || app.stall_ident) || '-' }}</span>
                     </div>
                     <span class="status-badge" :class="getLeaseAppTone(app.status)">{{ getLeaseAppStatusLabel(app.status) }}</span>
                   </div>
@@ -499,7 +492,7 @@
     <!-- 3. Tenant Select Slot Modal (มาตรฐานเดียวกับหน้ารายการจอง) -->
     <div v-if="showSelectSlotModal && booking" class="modal-overlay" @click.self="showSelectSlotModal = false">
       <div class="modal-content" style="max-width: 480px;">
-        <AppModalHeader title="เลือกวันและเวลานัดชมแผง" :subtitle="`แผง ${booking.stall_number}`" icon="calendar" @close="showSelectSlotModal = false" />
+        <AppModalHeader title="เลือกวันและเวลานัดชมแผง" :subtitle="`แผง ${stallShortNumber(booking.stall_number)}`" icon="calendar" @close="showSelectSlotModal = false" />
         <div class="modal-body">
           <div class="form-group" style="margin-bottom: 14px;">
             <label class="form-label">เลือกวันที่เปิดให้เข้าชมแผง <span class="req-star" aria-hidden="true">*</span></label>
@@ -578,6 +571,7 @@
 </template>
 
 <script setup lang="ts">
+import { getBookingStatusLabel, getBookingStatusTone } from '../utils/bookingStatus'
 import {
   getBookingVisitDates,
   setCachedScheduleBookings,
@@ -897,26 +891,7 @@ const currentStep = computed(() => {
   return 1
 })
 
-const getStatusLabelByCode = (status?: string) => {
-  const s = status || 'pending_approval'
-  const labels: Record<string, string> = {
-    pending: 'รอเจ้าหน้าที่อนุมัติ',
-    pending_approval: 'รอเจ้าหน้าที่อนุมัติ',
-    pending_slot: 'รอเลือกวันนัดชม',
-    waiting_queue: 'รอคิว',
-    approved: 'นัดหมายสำเร็จ',
-    interested: 'รอผู้เช่ายื่นคำร้อง',
-    pending_decision: 'รอผู้เช่ายื่นคำร้อง',
-    lease_applied: 'ยื่นคำร้องสำเร็จ',
-    completed: 'ยื่นคำร้องสำเร็จ',
-    cancelled: 'ยกเลิก',
-    rejected: 'ยกเลิก',
-    not_interested: 'สละสิทธิ์',
-    no_show: 'ไม่มาตามนัด',
-    terminated: 'สิ้นสุดสัญญาเช่า'
-  }
-  return labels[s] || s
-}
+const getStatusLabelByCode = (status?: string) => getBookingStatusLabel(status || 'pending_approval')
 
 const activeHolder = computed(() => {
   const stallNo = booking.value?.stall_number
@@ -947,14 +922,7 @@ const statusLabel = computed(() => {
   return getStatusLabelByCode(status)
 })
 
-const statusToneClass = computed(() => {
-  const status = booking.value?.status
-  if (['cancelled', 'rejected', 'not_interested', 'no_show', 'terminated'].includes(status)) return 'tone-muted'
-  if (['approved', 'interested'].includes(status)) return 'tone-success'
-  if (['lease_applied', 'completed'].includes(status)) return 'tone-purple'
-  if (status === 'waiting_queue') return 'tone-blue'
-  return 'tone-warning'
-})
+const statusToneClass = computed(() => `pill-${getBookingStatusTone(booking.value?.status)}`)
 
 const timelineItems = computed(() => Array.isArray(booking.value?.timeline) ? booking.value.timeline : [])
 const cancellationReason = computed(() => booking.value?.rejection_reason || booking.value?.cancel_reason || booking.value?.not_interested_reason || '')
@@ -1127,8 +1095,8 @@ const openLeaseForSubBooking = (sub: any) => {
 
 const handleCancelSubBooking = async (sub: any) => {
   const confirmed = await showConfirm(
-    `คุณต้องการยกเลิก/สละสิทธิ์เฉพาะแผง ${sub.stall_number} ใช่หรือไม่?\n(ระบบจะปล่อยสิทธิ์เฉพาะแผง ${sub.stall_number} ให้ผู้รอคิวลำดับแรกหรือปล่อยว่าง ส่วนแผงอื่นในใบจองนี้ยังคงอยู่ตามปกติ)`,
-    { title: `ยืนยันยกเลิกเฉพาะแผง ${sub.stall_number}`, type: 'warning', confirmText: 'ยืนยันยกเลิกแผงนี้', cancelText: 'ย้อนกลับ' }
+    `คุณต้องการยกเลิก/สละสิทธิ์เฉพาะแผง ${stallShortNumber(sub.stall_number)} ใช่หรือไม่?\n(ระบบจะปล่อยสิทธิ์เฉพาะแผง ${stallShortNumber(sub.stall_number)} ให้ผู้รอคิวลำดับแรกหรือปล่อยว่าง ส่วนแผงอื่นในใบจองนี้ยังคงอยู่ตามปกติ)`,
+    { title: `ยืนยันยกเลิกเฉพาะแผง ${stallShortNumber(sub.stall_number)}`, type: 'warning', confirmText: 'ยืนยันยกเลิกแผงนี้', cancelText: 'ย้อนกลับ' }
   )
   if (!confirmed) return
   actionLoading.value = true
@@ -1140,7 +1108,7 @@ const handleCancelSubBooking = async (sub: any) => {
       by_officer: currentRole.value === 'officer'
     })
     await loadBooking()
-    await showSuccess(`ยกเลิกเฉพาะแผง ${sub.stall_number} เรียบร้อยแล้ว ยอดเงินและมัดจำคำนวณจากแผงที่เหลือโดยอัตโนมัติ`, 'สำเร็จ')
+    await showSuccess(`ยกเลิกเฉพาะแผง ${stallShortNumber(sub.stall_number)} เรียบร้อยแล้ว ยอดเงินและมัดจำคำนวณจากแผงที่เหลือโดยอัตโนมัติ`, 'สำเร็จ')
   } catch (error: any) {
     await showError(error?.data?.detail || 'ไม่สามารถดำเนินการได้', 'ข้อผิดพลาด')
   } finally {
@@ -1276,7 +1244,7 @@ const handleTenantCancel = async (reason: string) => {
   const isMultiStall = activeCount > 1
   const confirmed = await showConfirm(
     isQueue
-      ? `คุณต้องการสละสิทธิ์การต่อคิวแผง ${b.stall_number} (คิวสำรองที่ ${b.queue_position || b.queue_number || 1}) หรือไม่?\n(หากสละสิทธิ์ คิวจะถูกปล่อยและไม่สามารถกู้คืนได้)`
+      ? `คุณต้องการสละสิทธิ์การต่อคิวแผง ${stallShortNumber(b.stall_number)} (คิวสำรองที่ ${b.queue_position || b.queue_number || 1}) หรือไม่?\n(หากสละสิทธิ์ คิวจะถูกปล่อยและไม่สามารถกู้คืนได้)`
       : isMultiStall
         ? `คุณต้องการยกเลิกใบจองรหัส ${formatBookingNumber(b.booking_number)} ทั้งหมด ${activeCount} แผงที่เหลือ (${appointmentStallSummary.value}) หรือไม่?\n(หากต้องการยกเลิกเฉพาะบางแผง สามารถกดปุ่ม "ยกเลิกแผงนี้" แยกรายแผงด้านล่างได้)`
         : `คุณต้องการยกเลิกรายการนี้หรือไม่? ${b.holding_stall ? '(หากยกเลิก แผงจะถูกส่งต่อให้คิวถัดไปทันที)' : ''}`,
@@ -1423,8 +1391,17 @@ watch(() => route.params.id, loadBooking)
   box-sizing: border-box;
 }
 .detail-hero, .progress-card, .summary-shell, .detail-empty, .detail-skeleton { background: var(--bg-ffffff); border: 1px solid var(--bd-e2e8f0); border-radius: 16px; box-shadow: 0 1px 3px rgba(15,23,42,.03); }
-.detail-hero { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px; margin-bottom: 16px; }
-.detail-title-wrap, .hero-actions { display: flex; align-items: center; gap: 14px; }
+.detail-hero { display: flex; flex-direction: column; gap: 12px; padding: 20px 24px; margin-bottom: 16px; }
+.hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+
+.hero-status-row { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }
+.hero-status-pill { display: inline-flex; align-items: center; justify-content: center; padding: 4px 14px; border-radius: 20px; border: none; font-size: var(--font-size-xs); font-weight: 600; white-space: nowrap; }
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding-top: 12px; border-top: 1px solid var(--bd-f1f5f9); }
+.hero-next-step { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; min-width: 0; color: var(--tx-334155); font-size: var(--font-size-sm); }
+.hero-next-label { color: var(--tx-64748b); font-weight: 600; }
+.hero-next-step strong { color: var(--tx-1e293b); font-weight: 700; }
+.detail-title-wrap { display: flex; align-items: center; gap: 14px; }
+.hero-action-buttons { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .detail-title-icon { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 12px; background: var(--bg-eff6ff); border: 1px solid var(--bd-dbeafe); color: var(--tx-2563eb); }
 .eyebrow { display: block; color: var(--tx-64748b); font-size: var(--font-size-xs); font-weight: 600; margin-bottom: 3px; }
 .detail-hero h1 { margin: 0; font-size: 1.65rem; line-height: 1.1; }
@@ -1500,8 +1477,8 @@ watch(() => route.params.id, loadBooking)
 .form-label { font-size: var(--font-size-xs); font-weight: 600; color: var(--tx-334155); }
 .form-input, .form-textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--bd-cbd5e1); border-radius: 8px; font-family: inherit; font-size: var(--font-size-sm); color: var(--tx-0f172a); background: var(--bg-ffffff); outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
 .form-input:focus, .form-textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
-@media (max-width: 900px) { .detail-hero { align-items: flex-start; }.hero-actions { flex-direction: column; align-items: flex-end; }.booking-at-a-glance { grid-template-columns: repeat(2, 1fr); }.glance-item:nth-child(2) { border-right: 0; }.glance-item:nth-child(-n+2) { border-bottom: 1px solid var(--bd-eef2f6); }.progress-card { align-items: flex-start; overflow-x: auto; }.progress-step { min-width: 145px; }.progress-copy span { display: none; }.summary-grid { grid-template-columns: 1fr; }.summary-section.full-width { grid-column: auto; } }
-@media (max-width: 640px) { .detail-hero { flex-direction: column; }.hero-actions { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; }.detail-title-icon { width: 40px; height: 40px; }.detail-hero h1 { font-size: 1.375rem; }.booking-at-a-glance { grid-template-columns: 1fr; }.glance-item, .glance-item:nth-child(2) { min-height: 60px; border-right: 0; border-bottom: 1px solid var(--bd-eef2f6); }.glance-item:last-child { border-bottom: 0; }.progress-card { padding: 18px 16px; }.progress-step { min-width: 104px; flex-direction: column; text-align: center; }.progress-copy strong { font-size: var(--font-size-xs); }.progress-line { min-width: 26px; margin: 16px 8px 0; }.next-action-card { align-items: flex-start; flex-wrap: wrap; }.next-action-copy { min-width: calc(100% - 56px); }.next-action-buttons { width: 100%; padding-left: 54px; }.summary-shell { padding: 16px; }.summary-heading { align-items: flex-start; flex-direction: column; }.detail-list, .tenant-list { grid-template-columns: 1fr; }.detail-list .full { grid-column: auto; }.notice { flex-direction: column; gap: 4px; }.timeline-edge-trigger { top: 32%; bottom: auto; width: 40px; height: 180px; transform: translateY(-50%); border-radius: 11px 0 0 11px; font-size: var(--font-size-xs); }.timeline-edge-trigger:hover { width: 44px; } }
+@media (max-width: 900px) { .detail-hero { align-items: stretch; }.booking-at-a-glance { grid-template-columns: repeat(2, 1fr); }.glance-item:nth-child(2) { border-right: 0; }.glance-item:nth-child(-n+2) { border-bottom: 1px solid var(--bd-eef2f6); }.progress-card { align-items: flex-start; overflow-x: auto; }.progress-step { min-width: 145px; }.progress-copy span { display: none; }.summary-grid { grid-template-columns: 1fr; }.summary-section.full-width { grid-column: auto; } }
+@media (max-width: 640px) { .detail-hero { flex-direction: column; }.hero-top { flex-direction: column; gap: 12px; }.hero-status-row { justify-content: flex-start; }.hero-action-buttons { width: 100%; justify-content: stretch; }.hero-action-buttons > * { flex: 1 1 auto; }.detail-title-icon { width: 40px; height: 40px; }.detail-hero h1 { font-size: 1.375rem; }.booking-at-a-glance { grid-template-columns: 1fr; }.glance-item, .glance-item:nth-child(2) { min-height: 60px; border-right: 0; border-bottom: 1px solid var(--bd-eef2f6); }.glance-item:last-child { border-bottom: 0; }.progress-card { padding: 18px 16px; }.progress-step { min-width: 104px; flex-direction: column; text-align: center; }.progress-copy strong { font-size: var(--font-size-xs); }.progress-line { min-width: 26px; margin: 16px 8px 0; }.next-action-card { align-items: flex-start; flex-wrap: wrap; }.next-action-copy { min-width: calc(100% - 56px); }.next-action-buttons { width: 100%; padding-left: 54px; }.summary-shell { padding: 16px; }.summary-heading { align-items: flex-start; flex-direction: column; }.detail-list, .tenant-list { grid-template-columns: 1fr; }.detail-list .full { grid-column: auto; }.notice { flex-direction: column; gap: 4px; }.timeline-edge-trigger { top: 32%; bottom: auto; width: 40px; height: 180px; transform: translateY(-50%); border-radius: 11px 0 0 11px; font-size: var(--font-size-xs); }.timeline-edge-trigger:hover { width: 44px; } }
 
 /* Compact detail layout; the original hero and next-action card themes are preserved. */
 .booking-information-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
@@ -1589,4 +1566,12 @@ watch(() => route.params.id, loadBooking)
 .lease-app-link { margin-left: auto; color: var(--tx-2563eb); font-weight: 600; text-decoration: none; }
 .lease-app-link:hover { text-decoration: underline; }
 .tone-danger { background: var(--bg-fee2e2); color: var(--tx-dc2626); }
+
+/* สีป้ายสถานะ: ต้องตรงกับหน้ารายการจอง (ดูไฟล์ utils/bookingStatus.ts) */
+.hero-status-pill.pill-green { background: var(--bg-dcfce7); color: var(--tx-15803d); }
+.hero-status-pill.pill-amber { background: var(--bg-fef3c7); color: var(--tx-d97706); }
+.hero-status-pill.pill-blue { background: var(--bg-eff6ff); color: var(--tx-2563eb); }
+.hero-status-pill.pill-purple { background: var(--bg-f5f3ff); color: var(--tx-7c3aed); }
+.hero-status-pill.pill-sky { background: var(--bg-f0f9ff); color: var(--tx-0284c7); }
+.hero-status-pill.pill-gray { background: var(--bg-f1f5f9); color: var(--tx-64748b); }
 </style>

@@ -45,7 +45,7 @@ const props = withDefaults(defineProps<{
   description?: string
   icon?: 'document' | 'map' | 'pin' | 'users' | 'tool' | 'payment' | 'settings'
   // md = ฟอร์มทั่วไป (480px), xl = ตารางข้อมูลกว้าง (1100px)
-  size?: 'md' | 'xl'
+  size?: 'md' | 'lg' | 'xl'
 }>(), { size: 'md' })
 
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
@@ -80,6 +80,9 @@ useBodyScrollLock(toRef(props, 'modelValue'))
   background:var(--bg-ffffff);
   box-shadow:0 24px 48px rgba(15,23,42,.22);
   margin:auto;
+}
+.app-modal--lg{
+  width:min(680px,100%);
 }
 .app-modal--xl{
   width:min(1100px,100%);

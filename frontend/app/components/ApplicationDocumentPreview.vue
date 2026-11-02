@@ -69,7 +69,7 @@
               <p><strong>เรื่อง</strong> {{ application.subject }}</p>
               <p><strong>ผู้ยื่นคำร้อง</strong> {{ application.applicant_name }} อายุ {{ application.applicant_age || '-' }} ปี</p>
               <p>เลขบัตรประชาชน {{ application.applicant_id_card || '-' }} โทร {{ application.applicant_phone || '-' }}</p>
-              <p>ตลาด {{ application.market_name || '-' }} แผง {{ application.stall_number || '-' }}</p>
+              <p>ตลาด {{ application.market_name || '-' }} แผง {{ stallShortNumber(application.stall_number) || '-' }}</p>
               <p><strong>รายละเอียด</strong> {{ application.details || '-' }}</p>
               <div class="document-sign">ลงชื่อ .................................................. ผู้ยื่นคำร้อง</div>
             </template>

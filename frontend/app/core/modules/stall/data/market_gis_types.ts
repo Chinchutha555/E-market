@@ -16,6 +16,9 @@ export interface ProjectZone {
   stallsAvailable: number
   totalStalls: number
   realAreaSqm: number
+  /** ขนาดแผงมาตรฐานของโครงการ (เมตร) ตั้งใน GIS ถ้าไม่ระบุใช้ 2.5 × 2.0 */
+  standardStallWidthM?: number
+  standardStallDepthM?: number
   centroid: [number, number]
   coordinates: [number, number][]
   floors?: ProjectFloor[]

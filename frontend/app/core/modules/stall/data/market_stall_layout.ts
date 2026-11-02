@@ -24,6 +24,8 @@ export interface MapStall {
   depthM: number
   entryFee: number
   monthlyRent: number
+  /** ตั้งใน GIS: false = ปิดรับจองแผงนี้ชั่วคราว (ค่าเริ่มต้น เปิดรับจอง) */
+  bookable?: boolean
   commonFee: number
   depositFee: number
   photo: string

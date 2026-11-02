@@ -7,7 +7,7 @@
       :style="isMapOverviewMode ? { ...(leftPanelWidth ? { '--lp-w': leftPanelWidth } : {}), ...(rightSidePanelWidth ? { '--side-w': `${rightSidePanelWidth}px` } : {}) } : undefined"
     >
       <!-- สวิตช์มุมมองแผนที่ (ข้อมูลแผง / การชำระเงิน / การจดมิเตอร์) แบบ Capsule Pill ลอยมุมซ้ายบน -->
-      <div v-if="isMapOverviewMode && !meterCardCode" ref="viewDropdownWrapRef" class="map-mode-dropdown-wrap" :class="{ 'is-compact': !!rightSidePanelWidth }">
+      <div v-if="isMapOverviewMode" ref="viewDropdownWrapRef" class="map-mode-dropdown-wrap" :class="{ 'is-compact': !!rightSidePanelWidth }">
         <button
           type="button"
           class="map-mode-trigger-btn"
@@ -138,10 +138,18 @@
         <div v-if="meterSummaryOpen" class="map-cost-float meter-summary-float">
           <StallMeterSummaryPanel
             :projects="meterSummaryProjects"
+            v-model:month="costMonth"
+            :current-month="meterCurrentMonth"
+            :stalls="meterSummaryData.stalls"
+            :averages="meterSummaryData.averages"
+            :skip-reasons="meterSkipReasonCounts"
+            @open-stall="openMeterStall"
+            @open-meter-settings="goMeterSettings"
             @close="meterSummaryOpen = false"
             @open-project="openMeterProject"
           />
         </div>
+
 
         <button
           v-if="!costTool && pageMode === 'payments'"
@@ -159,17 +167,21 @@
 
         <StallMeterRecordCard
           v-if="pageMode === 'meters' && meterCardCode"
-          :key="meterCardCode"
           :code="meterCardCode"
           :label="meterCardLabel"
           :project-name="selectedProject ? cleanProjectName(selectedProject.name) : ''"
+          :read-only="isPastPeriod"
           :pending-left="meterPendingLeft"
           :has-next="meterHasNext"
           :average-electric="meterAverages.electric"
           :average-water="meterAverages.water"
           @back="closeMeterCard"
-          @saved="handleMeterRecorded"
-          @skipped="handleMeterRecorded"
+          :can-go-back="meterCanGoBack"
+          @prev="openPrevMeterStall"
+          @close="closeMeterCardToOverview"
+          @saved="handleMeterRecorded($event)"
+          @skipped="handleMeterSkipped"
+          :notice="meterNotice"
         />
 
         <div v-if="costTool" class="map-cost-float" role="dialog" :aria-label="costTool === 'utility' ? 'รายการค่าน้ำ ค่าไฟ' : 'รายการบิลแผงเช่าชั่วคราว'">
@@ -643,9 +655,9 @@
               <small class="map-summary-title">ความคืบหน้าการจด</small>
               <span class="map-summary-value-row">
                 <strong class="map-summary-count" style="font-size: 1.25rem; color: var(--tx-2563eb);">{{ meterSummary.completionRate }}%</strong>
-                <em class="map-summary-unit-pill" style="background: var(--bg-eff6ff); color: var(--tx-2563eb);">{{ meterSummary.recordedCount }}/{{ meterSummary.totalCount }} จุด</em>
+                <em class="map-summary-unit-pill" style="background: var(--bg-eff6ff); color: var(--tx-2563eb);">{{ meterSummary.recordedCount }}/{{ meterSummary.totalCount }} แผง</em>
               </span>
-              <span class="map-summary-meta">เหลือ {{ meterSummary.pendingCount }} จุดที่ต้องจด</span>
+              <span class="map-summary-meta">เหลือ {{ meterSummary.pendingCount }} แผงที่ต้องจด</span>
             </span>
           </div>
 
@@ -696,7 +708,7 @@
         <div class="dash-card">
           <h3 class="dash-card-title">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            จุดที่ตรวจพบความผิดปกติ / ต้องตรวจสอบหน้างาน ({{ meterSummary.anomalyCount }} จุด)
+            แผงที่ตรวจพบความผิดปกติ / ต้องตรวจสอบหน้างาน ({{ meterSummary.anomalyCount }} แผง)
           </h3>
           <div class="dash-table-wrap">
             <table class="dash-mini-table">
@@ -867,8 +879,8 @@
           </div>
 
           <div
-            v-else-if="isMapOverviewMode && pageMode === 'meters' && !meterCardCode"
-            class="market-map-kpi-strip"
+            v-else-if="isMapOverviewMode && pageMode === 'meters'"
+            class="market-map-kpi-strip is-meters"
             :class="{ 'has-side-panel': !!rightSidePanelWidth }"
             :style="rightSidePanelWidth ? { '--side-w': `${rightSidePanelWidth}px` } : undefined"
             aria-label="สรุปสถานะการจดมิเตอร์"
@@ -879,16 +891,10 @@
               :class="{ active: selectedMeterFilter === 'total' }"
               @click="toggleMeterFilter('total')"
             >
-              <span class="market-map-kpi-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m12 14 4-4"></path>
-                  <path d="M3.34 19a10 10 0 1 1 17.32 0"></path>
-                </svg>
-              </span>
+              <span class="market-map-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg></span>
               <span class="market-map-kpi-copy">
-                <small>ต้องจด</small>
-                <strong>{{ meterSummary.totalCount.toLocaleString('th-TH') }} <em>จุด</em></strong>
-                <small class="kpi-sub">น้ำ {{ meterSummary.waterCount }} / ไฟ {{ meterSummary.electricCount }}</small>
+                <small>ทั้งหมด</small>
+                <strong>{{ meterSummary.totalCount.toLocaleString('th-TH') }} <em>แผง</em></strong>
               </span>
             </button>
 
@@ -906,8 +912,7 @@
               </span>
               <span class="market-map-kpi-copy">
                 <small>จดแล้ว</small>
-                <strong>{{ meterSummary.recordedCount.toLocaleString('th-TH') }} <em>จุด</em></strong>
-                <small class="kpi-sub">{{ meterSummary.completionRate }}% เสร็จสิ้น</small>
+                <strong>{{ meterSummary.recordedCount.toLocaleString('th-TH') }} <em>แผง</em></strong>
               </span>
             </button>
 
@@ -925,8 +930,7 @@
               </span>
               <span class="market-map-kpi-copy">
                 <small>รอจด</small>
-                <strong>{{ meterSummary.pendingCount.toLocaleString('th-TH') }} <em>จุด</em></strong>
-                <small class="kpi-sub">ครบกำหนด {{ meterSummary.dueDateText }}</small>
+                <strong>{{ meterSummary.pendingCount.toLocaleString('th-TH') }} <em>แผง</em></strong>
               </span>
             </button>
 
@@ -945,8 +949,7 @@
               </span>
               <span class="market-map-kpi-copy">
                 <small>เกินกำหนด</small>
-                <strong>{{ meterSummary.overdueCount.toLocaleString('th-TH') }} <em>จุด</em></strong>
-                <small class="kpi-sub">{{ meterSummary.overdueCount === 0 ? 'ไม่มีรายการตกค้าง' : `${meterSummary.overdueCount} จุด` }}</small>
+                <strong>{{ meterSummary.overdueCount.toLocaleString('th-TH') }} <em>แผง</em></strong>
               </span>
             </button>
 
@@ -963,8 +966,7 @@
               </span>
               <span class="market-map-kpi-copy">
                 <small>ค่าผิดปกติ</small>
-                <strong>{{ meterSummary.anomalyCount.toLocaleString('th-TH') }} <em>จุด</em></strong>
-                <small class="kpi-sub">ใช้น้ำ/ไฟ สูงเกินเกณฑ์</small>
+                <strong>{{ meterSummary.anomalyCount.toLocaleString('th-TH') }} <em>แผง</em></strong>
               </span>
             </button>
           </div>
@@ -1104,6 +1106,7 @@
             :actionRequiredStallCodes="actionRequiredStallCodes"
             :operationalFilterMeta="stallOperationalFilterMeta"
             :activeFilterCodes="mapActiveFilterCodes"
+            :meterStates="meterMapStates"
             @market-data-loaded="handleMapDataLoaded"
             :isDashboardOpen="dashboardPanelOpen"
             :dashboardTitle="dashboardViewTitle"
@@ -1129,6 +1132,7 @@
             :returnProjectPanel="isMapOverviewMode && isProjectPanelReturning"
             @clearStallSelection="handleClearStallSelection"
             @operational-filter-change="onOperationalFilterChange"
+            @filtered-summary="onFilteredSummary"
             @reset-cost-filters="resetCostFilters"
             @selectProject="selectProject"
             @requestExitProject="handleRequestExitProject"
@@ -1137,6 +1141,7 @@
             @updateProjectPolygon="updateProjectPolygon"
             @updateStallPolygon="updateStallPolygon"
             @requestAddProject="openZoneEditor"
+            @requestEditProject="openProjectEditor"
             @requestAddStallLayout="openDrawnStall"
             @requestAddFacility="openFacilityEditor"
             @requestDeleteFacility="deleteFacility"
@@ -1670,7 +1675,7 @@
               </div>
             </template>
             <template v-if="pageMode === 'meters'" #project-body>
-              <StallMeterProjectCard :rows="meterProjectStalls" @open-stall="openMeterCard" @next="openNextMeterStall" />
+              <StallMeterProjectCard :rows="meterProjectStalls" :stats="meterProjectStats" :cycle="meterCycle" :read-only="isPastPeriod" v-model:month="costMonth" :current-month="meterCurrentMonth" @next="openNextMeterStall" />
             </template>
 
             <template #overlay>
@@ -1694,30 +1699,17 @@
                       <button
                         type="button"
                         class="issd-return-btn"
-                        :aria-label="stallDrawerMode === 'edit' ? 'รายละเอียดแผง' : (selectedProject?.name ? `กลับไป ${selectedProject.name}` : 'กลับ')"
-                        @click="stallDrawerMode === 'edit' && !isCreatingNewStall ? cancelStallEdit() : closeStall()"
+                        :aria-label="selectedProject?.name ? `กลับไป ${selectedProject.name}` : 'กลับ'"
+                        @click="closeStall()"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                        <span>{{ stallDrawerMode === 'edit' ? 'รายละเอียดแผง' : (selectedProject?.name || 'กลับ') }}</span>
+                        <span>{{ selectedProject?.name || 'กลับ' }}</span>
                       </button>
                     </div>
                     <div class="issd-header-top">
                       <div class="issd-title-group">
-                        <button
-                          v-if="!isMapOverviewMode && (stallDrawerMode === 'edit' && !isCreatingNewStall)"
-                          type="button"
-                          class="issd-back-btn"
-                          title="กลับไปดูรายละเอียด"
-                          aria-label="ย้อนกลับ"
-                          @click="cancelStallEdit()"
-                        >
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="15 18 9 12 15 6"></polyline>
-                          </svg>
-                        </button>
-                        <strong>{{ stallDrawerMode === 'edit' ? (isCreatingNewStall ? 'เพิ่มแผงเช่าใหม่' : `แก้ไขแผง ${stallEdit.ident}`) : `แผง ${stallDisplayNumber}` }}</strong>
+                        <strong>{{ `แผง ${stallDisplayNumber}` }}</strong>
                         <span
-                          v-if="stallDrawerMode !== 'edit'"
                           class="issd-status-pill"
                           :class="`is-${stallEdit.stall_status || 'available'}`"
                         >
@@ -1736,19 +1728,14 @@
                       </button>
                     </div>
                     <div class="issd-project-sub">
-                      <template v-if="stallDrawerMode === 'edit'">
-                        {{ isCreatingNewStall ? 'ตั้งค่ารหัส ขนาด และอัตราค่าเช่าสำหรับแผงใหม่' : `รหัสแผง ${stallEdit.ident} · แก้ไขข้อมูลและอัตราค่าเช่า` }}
-                      </template>
-                      <template v-else>
                         {{ cleanProjectName(selectedProject?.name || stallEdit.project_name || 'โซนแผงค้า') }}<template v-if="(selectedProject?.floors?.length || 0) > 1"> · {{ formatFloorDisplay(stallEdit.floor) }}</template>
-                      </template>
                     </div>
                   </div>
 
                   <!-- 2. Body -->
                   <!-- 2A. Mini Summary Mode -->
                   <!-- 2A-1. โหมดจัดการ GIS: Drawer แบบเดิม -->
-                  <div v-if="stallDrawerMode === 'detail' && !isInspectMode" class="issd-body">
+                  <div v-if="(stallDrawerMode === 'detail' || stallDrawerMode === 'edit') && !isInspectMode" class="issd-body">
                     <!-- Stall Photo Banner -->
                     <div
                       class="issd-photo-banner"
@@ -1762,27 +1749,35 @@
                       </div>
                     </div>
 
-                    <!-- Stall Specifications & Rates -->
+                    <!-- 3 ช่องสรุป: ขนาด | ค่าเช่า | แรกเข้า (เหมือนการ์ดฝั่งผู้เช่า) -->
+                    <div class="issd-metrics3">
+                      <div>
+                        <span class="issd-metric-label">ขนาด</span>
+                        <strong class="issd-metric-value">{{ inspectStallSizeSqm }} <small>ตร.ม.</small></strong>
+                      </div>
+                      <div>
+                        <span class="issd-metric-label">ค่าเช่า</span>
+                        <strong class="issd-metric-value is-rent">฿{{ Number(stallEdit.monthly_rent || 1800).toLocaleString('th-TH') }}<small>/เดือน</small></strong>
+                      </div>
+                      <div>
+                        <span class="issd-metric-label">แรกเข้า</span>
+                        <strong class="issd-metric-value">฿{{ Number(inspectStallEntryFee).toLocaleString('th-TH') }}</strong>
+                      </div>
+                    </div>
+
+                    <!-- ข้อมูลที่เหลือทั้งหมด -->
                     <dl class="issd-detail-list">
+                      <div class="issd-detail-row">
+                        <dt>การรับจอง</dt>
+                        <dd><span class="issd-bookable-pill" :class="{ 'is-paused': stallEdit.bookable === false }">{{ stallEdit.bookable === false ? 'ปิดรับจอง' : 'เปิดรับจอง' }}</span></dd>
+                      </div>
                       <div class="issd-detail-row">
                         <dt>หมวดสินค้า</dt>
                         <dd>{{ stallEdit.category || selectedProject?.category || 'ทั่วไป' }}</dd>
                       </div>
                       <div class="issd-detail-row">
-                        <dt>ขนาดพื้นที่</dt>
-                        <dd>{{ stallEdit.width }} × {{ stallEdit.depth }} ม. ({{ inspectStallSizeSqm }} ตร.ม.)</dd>
-                      </div>
-                      <div class="issd-detail-row">
-                        <dt>ค่าเช่ารายเดือน</dt>
-                        <dd class="is-rent">{{ Number(stallEdit.monthly_rent || 1800).toLocaleString('th-TH') }} บาท</dd>
-                      </div>
-                      <div class="issd-detail-row">
-                        <dt>ค่าเช่ารายวัน</dt>
-                        <dd>{{ Number(stallEdit.daily_rent || 150).toLocaleString('th-TH') }} บาท</dd>
-                      </div>
-                      <div class="issd-detail-row">
-                        <dt>ค่าธรรมเนียมแรกเข้า</dt>
-                        <dd class="is-bold">{{ Number(inspectStallEntryFee).toLocaleString('th-TH') }} บาท</dd>
+                        <dt>ขนาดแผง</dt>
+                        <dd>{{ stallEdit.width }} × {{ stallEdit.depth }} ม.</dd>
                       </div>
                     </dl>
                   </div>
@@ -2159,6 +2154,9 @@
 
                     <!-- Right Column: Main Content & Tab Footer -->
                     <div class="issd-full-main">
+                      <button type="button" class="issd-close-btn issd-full-close" title="ปิดและกลับไปโครงการ" aria-label="ปิดรายละเอียดแผง กลับไปโครงการ" @click="closeStall">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      </button>
                       <!-- 1.1 Action Alert Card (at top of content area) -->
                       <div v-if="fullDetailSettling" class="issd-full-skeleton" aria-hidden="true">
                         <span></span><span></span><span></span>
@@ -2249,17 +2247,17 @@
                           <strong id="stall-space-detail-heading">รายละเอียดพื้นที่</strong>
                         </div>
                         <dl class="issd-stall-facts-grid">
-                          <div v-if="stallEdit.name && !String(stallEdit.name).startsWith('แผง')" class="issd-stall-fact">
+                          <div class="issd-stall-fact">
                             <dt>ชื่อแผง</dt>
-                            <dd>{{ stallEdit.name }}</dd>
+                            <dd>{{ stallDisplayNumber || stallEdit.name || '-' }}</dd>
                           </div>
-                          <div class="issd-stall-fact" :class="{ 'is-wide': !stallEdit.name || String(stallEdit.name).startsWith('แผง') }">
+                          <div class="issd-stall-fact">
                             <dt>ชั้น</dt>
                             <dd>{{ formatFloorDisplay(stallEdit.floor) }}<small>{{ stallEdit.building ? `อาคาร ${stallEdit.building}` : 'ระดับพื้นที่' }}</small></dd>
                           </div>
                           <div class="issd-stall-fact is-wide">
-                            <dt>โซน</dt>
-                            <dd>{{ selectedProject?.name || stallEdit.project_name || stallEdit.zone_name || 'โซนกลาง' }}<small>ผังโครงการ</small></dd>
+                            <dt>โครงการ</dt>
+                            <dd>{{ selectedProject?.name || stallEdit.project_name || stallEdit.zone_name || '-' }}<small>ผังโครงการ</small></dd>
                           </div>
                           <div class="issd-stall-fact is-wide">
                             <dt>หมวดสินค้า</dt>
@@ -2939,75 +2937,8 @@
                 </div>
               </div>
 
-                  <!-- View: Edit in Map -->
-                  <div v-else-if="stallDrawerMode === 'edit'" class="issd-body issd-body-edit">
-                    <form class="issd-form-grid" novalidate @submit.prevent="saveStall">
-                      <AppImageUpload
-                        v-model="editablePhotoFiles"
-                        class="full"
-                        label="รูปภาพแผง"
-                        :hint="`${editablePhotos.length}/${MAX_STALL_PHOTOS} รูป · JPG, PNG, WebP ไม่เกิน 2MB ต่อรูป`"
-                        multiple
-                        :max-files="MAX_STALL_PHOTOS"
-                        preview-alt="ภาพแผง"
-                      />
-                      <label>
-                        <span>รหัสแผง <b v-if="isCreatingNewStall" class="req-star">*</b></span>
-                        <AppInput v-model="stallEdit.ident" placeholder="เช่น A-001" :disabled="!isCreatingNewStall" :error="stallErrors.ident" @blur="validateStallField('ident')" />
-                      </label>
-                      <label>
-                        <span>ชื่อแผง</span>
-                        <AppInput v-model="stallEdit.name" placeholder="ระบุชื่อแผง (ถ้ามี)" />
-                      </label>
-                      <label>
-                        <span>โซน</span>
-                        <AppSelect v-model="stallEdit.zone_id" :options="zoneOptions" :disabled="!isCreatingNewStall" />
-                      </label>
-                      <label>
-                        <span>โครงการ</span>
-                        <AppInput v-model="stallEdit.project_name" placeholder="ชื่อโครงการ" disabled />
-                      </label>
-                      <label>
-                        <span>ชั้น</span>
-                        <AppSelect v-model="stallEdit.floor" :options="floorOptions" :disabled="(selectedProject?.floors?.length || 1) <= 1" />
-                      </label>
-                      <label>
-                        <span>สถานะ <b class="req-star">*</b></span>
-                        <AppSelect v-model="stallEdit.stall_status" :options="stallStatusOptions" :disabled="stallEdit.stall_status === 'occupied'" />
-                      </label>
-                      <label>
-                        <span>กว้าง (เมตร) <b class="req-star">*</b></span>
-                        <AppInput v-model="stallEdit.width" type="number" placeholder="เช่น 2.0" :error="stallErrors.width" @blur="validateStallField('width')" />
-                      </label>
-                      <label>
-                        <span>ลึก (เมตร) <b class="req-star">*</b></span>
-                        <AppInput v-model="stallEdit.depth" type="number" placeholder="เช่น 2.0" :error="stallErrors.depth" @blur="validateStallField('depth')" />
-                      </label>
-                      <label>
-                        <span>ค่าเช่ารายวัน (บาท)</span>
-                        <AppInput v-model="stallEdit.daily_rent" type="number" placeholder="เช่น 150" />
-                      </label>
-                      <label>
-                        <span>ค่าเช่ารายเดือน (บาท) <b class="req-star">*</b></span>
-                        <AppInput v-model="stallEdit.monthly_rent" type="number" placeholder="เช่น 1800" :error="stallErrors.monthly_rent" @blur="validateStallField('monthly_rent')" />
-                      </label>
-                      <label class="full">
-                        <span>หมวดสินค้า</span>
-                        <AppSelect
-                          v-model="stallEdit.category"
-                          :options="stallCategoryOptions"
-                          placeholder="เลือกหมวดสินค้า"
-                        />
-                      </label>
-                      <label class="full">
-                        <span>รายละเอียด</span>
-                        <textarea v-model.trim="stallEdit.description" rows="2" placeholder="รายละเอียดเพิ่มเติมของแผง"></textarea>
-                      </label>
-                    </form>
-                  </div>
-
                   <!-- 3. Footer for Detail (Mini) and Edit Modes -->
-                  <div v-if="stallDrawerMode === 'detail'" class="issd-footer">
+                  <div v-if="stallDrawerMode === 'detail' || stallDrawerMode === 'edit'" class="issd-footer">
                     <button
                       type="button"
                       class="issd-cta-btn"
@@ -3023,29 +2954,6 @@
                         <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                       </svg>
                     </button>
-                  </div>
-                  <div v-else-if="stallDrawerMode === 'edit'" class="issd-footer issd-footer-edit">
-                    <AppButton
-                      v-if="!isCreatingNewStall"
-                      variant="danger-outline"
-                      size="sm"
-                      @click="deleteStall()"
-                    >
-                      <template #prefix>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/>
-                        </svg>
-                      </template>
-                      ลบแผง
-                    </AppButton>
-                    <div class="issd-footer-right">
-                      <AppButton variant="secondary" size="sm" @click="cancelStallEdit">
-                        ยกเลิก
-                      </AppButton>
-                      <AppButton :loading="savingStall" size="sm" @click="saveStall">
-                        {{ isCreatingNewStall ? 'เพิ่มแผงเช่า' : 'บันทึกการแก้ไข' }}
-                      </AppButton>
-                    </div>
                   </div>
               </div>
             </template>
@@ -3097,6 +3005,123 @@
         <template #footer>
           <AppButton variant="secondary" size="md" @click="dismissZoneEditor">ยกเลิก</AppButton>
           <AppButton size="md" @click="createZone">บันทึกโซน</AppButton>
+        </template>
+      </AppModal>
+
+      <AppModal
+        v-model="showStallEditModal"
+        size="lg"
+        icon="pin"
+        :title="isCreatingNewStall ? 'เพิ่มแผงเช่าใหม่' : `แก้ไขแผง ${stallDisplayNumber}`"
+        :description="isCreatingNewStall ? 'ตั้งค่ารหัส ขนาด และอัตราค่าเช่าสำหรับแผงใหม่' : 'ข้อมูล ขนาด และราคาของแผง'"
+      >
+        <form class="issd-form-grid stall-edit-form" novalidate @submit.prevent="saveStall">
+                              <h4 class="issd-form-section full">ข้อมูลแผง</h4>
+                              <AppImageUpload
+                                v-model="editablePhotoFiles"
+                                class="full"
+                                label="รูปภาพแผง"
+                                :hint="`${editablePhotos.length}/${MAX_STALL_PHOTOS} รูป · JPG, PNG, WebP ไม่เกิน 2MB ต่อรูป`"
+                                multiple
+                                :max-files="MAX_STALL_PHOTOS"
+                                preview-alt="ภาพแผง"
+                              />
+                              <label>
+                                <span>รหัสแผง <b v-if="isCreatingNewStall" class="req-star">*</b></span>
+                                <AppInput v-model="stallEdit.ident" placeholder="เช่น A-001" :disabled="!isCreatingNewStall" :error="stallErrors.ident" @blur="validateStallField('ident')" />
+                              </label>
+                              <label>
+                                <span>ชื่อแผง</span>
+                                <AppInput v-model="stallEdit.name" placeholder="ระบุชื่อแผง (ถ้ามี)" />
+                              </label>
+                              <label class="full">
+                                <span>หมวดสินค้า</span>
+                                <AppSelect
+                                  v-model="stallEdit.category"
+                                  :options="stallCategoryOptions"
+                                  placeholder="เลือกหมวดสินค้า"
+                                />
+                              </label>
+                              <label class="full">
+                                <span>รายละเอียด</span>
+                                <textarea v-model.trim="stallEdit.description" rows="2" placeholder="รายละเอียดเพิ่มเติมของแผง"></textarea>
+                              </label>
+        
+                              <h4 class="issd-form-section full">ขนาดและตำแหน่ง</h4>
+                              <label>
+                                <span>กว้าง (เมตร) <b class="req-star">*</b></span>
+                                <AppInput v-model="stallEdit.width" type="number" placeholder="เช่น 2.0" :error="stallErrors.width" @blur="validateStallField('width')" />
+                              </label>
+                              <label>
+                                <span>ลึก (เมตร) <b class="req-star">*</b></span>
+                                <AppInput v-model="stallEdit.depth" type="number" placeholder="เช่น 2.0" :error="stallErrors.depth" @blur="validateStallField('depth')" />
+                              </label>
+                              <label>
+                                <span>โครงการ</span>
+                                <AppInput v-model="stallEdit.project_name" placeholder="ชื่อโครงการ" disabled />
+                              </label>
+                              <label>
+                                <span>ชั้น</span>
+                                <AppSelect v-model="stallEdit.floor" :options="floorOptions" :disabled="(selectedProject?.floors?.length || 1) <= 1" />
+                              </label>
+        
+                              <h4 class="issd-form-section full">ราคาและการรับจอง</h4>
+                              <label>
+                                <span>ค่าเช่ารายเดือน (บาท) <b class="req-star">*</b></span>
+                                <AppInput v-model="stallEdit.monthly_rent" type="number" placeholder="เช่น 1800" :error="stallErrors.monthly_rent" @blur="validateStallField('monthly_rent')" />
+                              </label>
+                              <label>
+                                <span>ค่าเช่ารายวัน (บาท)</span>
+                                <AppInput v-model="stallEdit.daily_rent" type="number" placeholder="เช่น 150" />
+                              </label>
+                              <label>
+                                <span>การรับจอง</span>
+                                <AppSelect v-model="stallBookableModel" :options="stallBookableOptions" />
+                              </label>
+                              <label>
+                                <span>สถานะ</span>
+                                <AppSelect v-model="stallEdit.stall_status" :options="stallStatusOptions" :disabled="stallEdit.stall_status === 'occupied'" />
+                              </label>
+                            </form>
+        <template #footer>
+          <AppButton v-if="!isCreatingNewStall" class="stall-edit-delete" variant="danger-outline" size="md" @click="deleteStall()">
+            <template #prefix>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/></svg>
+            </template>
+            ลบแผง
+          </AppButton>
+          <AppButton variant="secondary" size="md" @click="cancelStallEdit">ยกเลิก</AppButton>
+          <AppButton :loading="savingStall" size="md" @click="saveStall">{{ isCreatingNewStall ? 'เพิ่มแผงเช่า' : 'บันทึกการแก้ไข' }}</AppButton>
+        </template>
+      </AppModal>
+
+      <AppModal
+        v-model="showProjectEditor"
+        icon="map"
+        title="แก้ไขข้อมูลโครงการ"
+        description="ชื่อ พื้นที่ และขนาดแผงมาตรฐานของโครงการนี้"
+      >
+        <form class="zone-form" novalidate @submit.prevent="saveProjectEdit">
+          <label>
+            <span>ชื่อโครงการ <b class="req-star">*</b></span>
+            <AppInput v-model="projectForm.name" placeholder="เช่น โครงการที่ 17" :error="projectErrors.name" @blur="validateProjectField('name')" />
+          </label>
+          <label>
+            <span>พื้นที่ในโครงการ (ตร.ม.)</span>
+            <AppInput v-model="projectForm.area" type="number" placeholder="เช่น 1800" :error="projectErrors.area" @blur="validateProjectField('area')" />
+          </label>
+          <label>
+            <span>ขนาดแผงมาตรฐาน กว้าง (เมตร)</span>
+            <AppInput v-model="projectForm.stallWidth" type="number" placeholder="เช่น 2.5" :error="projectErrors.stallWidth" @blur="validateProjectField('stallWidth')" />
+          </label>
+          <label>
+            <span>ขนาดแผงมาตรฐาน ลึก (เมตร)</span>
+            <AppInput v-model="projectForm.stallDepth" type="number" placeholder="เช่น 2.0" :error="projectErrors.stallDepth" @blur="validateProjectField('stallDepth')" />
+          </label>
+        </form>
+        <template #footer>
+          <AppButton variant="secondary" size="md" @click="showProjectEditor = false">ยกเลิก</AppButton>
+          <AppButton size="md" @click="saveProjectEdit">บันทึก</AppButton>
         </template>
       </AppModal>
 
@@ -3335,30 +3360,6 @@
       </AppModal>
 
 
-      <transition name="modal-bounce">
-        <div
-          v-if="showUnsavedLeaveModal"
-          class="unsaved-leave-backdrop"
-          role="dialog"
-          aria-modal="true"
-          @click.self="resolveUnsavedLeave('cancel')"
-        >
-          <div class="unsaved-leave-card">
-            <AppModalHeader title="มีการแก้ไขที่ยังไม่ได้บันทึก" subtitle="เลือกดำเนินการก่อนออกจากหน้านี้" icon="warning" tone="warning" @close="resolveUnsavedLeave('cancel')" />
-            <div class="unsaved-leave-content">
-              <p>คุณมีการแก้ไขข้อมูลผังตลาดที่ยังไม่ได้บันทึก ต้องการบันทึกการแก้ไขก่อนออกจากหน้านี้หรือไม่?</p>
-            </div>
-            <div class="unsaved-leave-actions">
-              <AppButton variant="outline" size="md" :disabled="savingGIS" @click="resolveUnsavedLeave('discard')">
-                ไม่บันทึก
-              </AppButton>
-              <AppButton variant="primary" size="md" :loading="savingGIS" @click="resolveUnsavedLeave('save')">
-                บันทึกการแก้ไข
-              </AppButton>
-            </div>
-          </div>
-        </div>
-      </transition>
 
       <transition name="modal-bounce">
         <div
@@ -3475,11 +3476,14 @@ const currentModeOption = computed(() => {
 })
 
 const selectPageMode = (mode: MapPageViewMode) => {
+  const modeChanged = pageMode.value !== mode
   pageMode.value = mode
   isViewDropdownOpen.value = false
   selectedPaymentFilter.value = null
   selectedMeterFilter.value = null
   dashboardStatusFilter.value = 'all'
+  // สลับมุมมองแล้วเริ่มจากภาพรวมตลาด ไม่พาโครงการที่เปิดค้างไว้ไปด้วย ให้เลือกโครงการใหม่เอง
+  if (modeChanged && selectedProject.value) clearSelectedProject()
   if (import.meta.client) nextTick(() => setTimeout(() => window.dispatchEvent(new Event('resize')), 100))
 }
 
@@ -3802,10 +3806,12 @@ const paymentSummary = computed(() => ({
   overdueAmount: 34000
 }))
 
+// ตัวเลขสรุปการจดมิเตอร์: เปิดโครงการอยู่นับเฉพาะโครงการนั้น ไม่ได้เปิดนับทั้งตลาด
+const meterScopeRows = computed<MeterStallRow[]>(() => (pageMode.value === 'meters' && selectedProject.value ? meterProjectStalls.value : meterLiveRows.value))
 const meterDatasets = computed(() => {
-  const target = meterLiveRows.value
+  const target = meterScopeRows.value
   const recordedStalls = target.filter(row => row.recorded)
-  const pendingStalls = target.filter(row => !row.recorded && !row.skipped)
+  const pendingStalls = target.filter(row => row.state === 'pending')
   const overdueStalls = pendingStalls.filter(row => billing.getUtility(row.code)?.status === 'overdue')
   const anomalyStalls = target.filter(row => row.abnormal)
 
@@ -3843,6 +3849,40 @@ const meterSummary = computed(() => {
     dueDateText,
     overdueCount: meterDatasets.value.overdueStalls.length,
     anomalyCount: meterDatasets.value.anomalyStalls.length
+  }
+})
+
+// โหมดจดมิเตอร์: ระบายสีแผนที่ตามสถานะการจด (แผงที่ไม่มีบิลไม่อยู่ในรายการ จึงจางลง)
+const meterMapStates = computed<Record<string, string> | null>(() => {
+  if (pageMode.value !== 'meters') return null
+  const states: Record<string, string> = {}
+  meterLiveRows.value.forEach((row) => { states[row.code.toUpperCase()] = row.state })
+  return states
+})
+
+// สรุปแผงทั้งโครงการที่เปิดอยู่ในการ์ดจดมิเตอร์ (บิลมีเฉพาะแผงที่มีผู้เช่า จึงใช้แยกแผงว่างกับแผงเหมาจ่ายได้)
+const meterProjectStats = computed(() => {
+  if (pageMode.value !== 'meters' || !selectedProject.value) return null
+  const codes = new Set<string>()
+  getAllFloorLayoutsForProject(selectedProject.value).forEach((layout) => {
+    layout.stalls.forEach((stall: any) => {
+      const code = stallCodeOf(stall)
+      if (code) codes.add(code)
+    })
+  })
+  const withTenant = billing.utilityList.value.filter(bill => codes.has(bill.stall.toUpperCase())).length
+  return { total: codes.size, vacant: codes.size - withTenant, flat: Math.max(0, withTenant - meterProjectStalls.value.length) }
+})
+// งวดที่เลือกเป็นงวดย้อนหลัง (เก่ากว่าเดือนปัจจุบัน) ดูข้อมูลที่จดไว้ได้อย่างเดียว
+const currentMonthKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` }
+const meterCurrentMonth = computed(() => currentMonthKey())
+const isPastPeriod = computed(() => billing.billingMonth.value < currentMonthKey())
+// รอบจดปัจจุบันและวันครบกำหนด (สิ้นเดือนของรอบบิล)
+const meterCycle = computed(() => {
+  const start = new Date(`${billing.billingMonth.value}-01T00:00:00`)
+  return {
+    label: new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' }).format(start),
+    due: meterSummary.value.dueDateText
   }
 })
 
@@ -4515,8 +4555,6 @@ const filteredRecentActivities = computed(() => {
   if (dashActivityTab.value === 'all') return realRecentActivities.value
   return realRecentActivities.value.filter(item => item.kind === dashActivityTab.value)
 })
-const showUnsavedLeaveModal = ref(false)
-let unsavedLeaveResolver: ((choice: 'save' | 'discard' | 'cancel') => void) | null = null
 const selectedProject = ref<ProjectZone | null>(null)
 const contracts = ref<any[]>([])
 const stallHistory = ref<any[]>([])
@@ -4537,7 +4575,7 @@ watch(showInspectStallOverlay, (open) => {
   if (open) isViewDropdownOpen.value = false
 })
 const showInspectPhotoModal = ref(false)
-const emptyStall = () => ({ id: 0, ident: '', name: '', description: '', category: '', zone_id: 1, zone_name: selectedProject.value?.name || '', project_name: selectedProject.value?.name || '', floor: '1', width: 2, depth: 2, daily_rent: 150, monthly_rent: 1800, stall_status: 'available', coordinates_geojson: '', published: false })
+const emptyStall = () => ({ id: 0, ident: '', name: '', description: '', category: '', zone_id: 1, zone_name: selectedProject.value?.name || '', project_name: selectedProject.value?.name || '', floor: '1', width: 2, depth: 2, daily_rent: 150, monthly_rent: 1800, stall_status: 'available', bookable: true, coordinates_geojson: '', published: false })
 const stallEdit = ref(emptyStall())
 const selectedStallSurveyNumber = ref('')
 const stallDisplayNumber = computed(() => selectedStallSurveyNumber.value || String(stallEdit.value.ident || ''))
@@ -4770,6 +4808,11 @@ const floorOptions = computed(() => {
   const fls = selectedProject.value?.floors
   if (fls && fls.length > 0) return fls.map(f => ({ value: String(f.id), label: f.name || `ชั้น ${f.id}` }))
   return [{ value: '1', label: 'ชั้น 1' }, { value: '2', label: 'ชั้น 2' }, { value: '3', label: 'ชั้น 3' }]
+})
+const stallBookableOptions = [{ value: 'open', label: 'เปิดรับจอง' }, { value: 'paused', label: 'ปิดรับจอง' }]
+const stallBookableModel = computed({
+  get: () => (stallEdit.value.bookable === false ? 'paused' : 'open'),
+  set: (value: string | number) => { stallEdit.value.bookable = value !== 'paused' }
 })
 const stallStatusOptions = [{ value: 'available', label: 'ว่าง' }, { value: 'reserved', label: 'ติดจอง' }, { value: 'occupied', label: 'มีผู้เช่า' }]
 const stallStatusLabel = computed(() => stallStatusOptions.find(option => option.value === stallEdit.value.stall_status)?.label || 'ไม่ระบุสถานะ')
@@ -5083,7 +5126,7 @@ const stallActionRichItems = computed(() => {
       list.push({
         key: 'act-booking-slot',
         category: 'การจอง',
-        severity: 'info',
+        severity: 'warning',
         title: 'รอเลือกวันนัดชม',
         count: 1,
         description: `ผู้จอง: ${applicant} ยังไม่ได้เลือกวันและเวลานัดเข้าชมแผง`,
@@ -5094,7 +5137,7 @@ const stallActionRichItems = computed(() => {
       list.push({
         key: 'act-booking-approved',
         category: 'การจอง',
-        severity: 'info',
+        severity: 'warning',
         title: 'นัดเข้าชมแผง',
         count: 1,
         description: `ผู้จอง: ${applicant} นัดเข้าชมวันที่ ${b.visit_date || '-'}${b.visit_time_slot ? ' เวลา ' + b.visit_time_slot : ''}`,
@@ -5105,7 +5148,7 @@ const stallActionRichItems = computed(() => {
       list.push({
         key: 'act-booking-interested',
         category: 'การจอง',
-        severity: 'info',
+        severity: 'warning',
         title: 'รอยื่นคำร้อง',
         count: 1,
         description: `${applicant} เข้าชมแผงแล้วและสนใจเช่า อยู่ระหว่างรอยื่นคำร้องขอเช่า`,
@@ -6611,6 +6654,10 @@ const zoneForm = ref({ name: '', sectionNumber: '', category: '', floorCount: 1 
 const drawnZoneCoordinates = ref<[number, number][]>([])
 const pendingStallLayout = ref<{ projectId: string; coordinates: [number, number][]; floorId: string } | null>(null)
 const isCreatingNewStall = computed(() => Boolean(pendingStallLayout.value))
+const showStallEditModal = computed({
+  get: () => stallDrawerMode.value === 'edit',
+  set: (open: boolean) => { if (!open && stallDrawerMode.value === 'edit') cancelStallEdit() }
+})
 const facilityForm = ref<{ name: string; type: string; coordinates: [number, number]; projectId?: string }>({ name: '', type: 'toilet', coordinates: [100.5, 13.75] })
 const unwrap = (value: any) => value?.data ?? value
 const stallStatusOverrides = computed(() => {
@@ -7086,7 +7133,25 @@ const actionRequiredStallCodes = computed<string[]>(() => {
 })
 
 // ข้อมูลตัวเลขสรุปที่แสดงบนแถบฟิลเตอร์ด้านบน: สอดคล้องกับโซนที่เลือก หรือทั้งตลาด
+const filteredSummary = ref<{ active: boolean; total: number; available: number; reserved: number; occupied: number; paused: number; codes: Set<string> }>({ active: false, total: 0, available: 0, reserved: 0, occupied: 0, paused: 0, codes: new Set() })
+const onFilteredSummary = (summary: typeof filteredSummary.value) => { filteredSummary.value = summary }
+// การ์ดตัวเลขตามตัวกรองบนผัง: มีตัวกรองใช้อยู่ให้นับเฉพาะแผงที่ตรงตัวกรอง
 const currentDisplayedSummary = computed(() => {
+  const base = baseDisplayedSummary.value
+  const f = filteredSummary.value
+  if (!f.active || selectedProject.value) return base
+  const countIn = (codes: string[]) => codes.reduce((n, code) => n + (f.codes.has(String(code).trim().toUpperCase()) ? 1 : 0), 0)
+  return {
+    ...base,
+    total: f.total,
+    available: f.available,
+    reserved: f.reserved,
+    occupied: f.occupied,
+    actionRequired: countIn(actionRequiredStallCodes.value),
+    legalCases: countIn(legalCaseStallCodes.value)
+  }
+})
+const baseDisplayedSummary = computed(() => {
   const actionSet = new Set(actionRequiredStallCodes.value)
   const legalCaseSet = new Set(legalCaseStallCodes.value)
   if (selectedProject.value) {
@@ -7477,45 +7542,14 @@ const persistGISChanges = async (publishState = true) => {
   syncSnapshotsFromCurrent()
 }
 
-const askUnsavedLeaveDecision = (): Promise<'save' | 'discard' | 'cancel'> => {
-  showUnsavedLeaveModal.value = true
-  return new Promise((resolve) => {
-    unsavedLeaveResolver = resolve
-  })
-}
-
-const resolveUnsavedLeave = async (choice: 'save' | 'discard' | 'cancel') => {
-  if (choice === 'save') {
-    savingGIS.value = true
-    try {
-      await persistGISChanges(true)
-      showUnsavedLeaveModal.value = false
-      void showSuccess('บันทึกการแก้ไขและอัปเดตผังตลาดเรียบร้อยแล้ว', 'บันทึกสำเร็จ')
-      if (unsavedLeaveResolver) {
-        unsavedLeaveResolver('save')
-        unsavedLeaveResolver = null
-      }
-    } catch {
-      void showError('ไม่สามารถบันทึกผังได้ กรุณาตรวจสอบสิทธิ์และข้อมูลพิกัด', 'บันทึกไม่สำเร็จ')
-    } finally {
-      savingGIS.value = false
-    }
-    return
-  }
-  showUnsavedLeaveModal.value = false
-  if (choice === 'discard') {
-    revertUnsavedChanges()
-  }
-  if (unsavedLeaveResolver) {
-    unsavedLeaveResolver(choice)
-    unsavedLeaveResolver = null
-  }
-}
-
 const ensureCanLeaveOrBack = async (): Promise<boolean> => {
   if (isInspectMode.value || !hasUnsavedChanges.value) return true
-  const decision = await askUnsavedLeaveDecision()
-  return decision !== 'cancel'
+  const leave = await showConfirm('ข้อมูลผังตลาดมีการแก้ไขที่ยังไม่ได้บันทึก ออกจากหน้านี้และทิ้งการแก้ไขหรือไม่', {
+    title: 'มีการแก้ไขที่ยังไม่ได้บันทึก',
+    confirmText: 'ทิ้งและออกจากหน้านี้'
+  })
+  if (leave) revertUnsavedChanges()
+  return leave
 }
 
 const selectProject = (project: ProjectZone) => {
@@ -7604,6 +7638,54 @@ const openZoneEditor = (coordinates: [number, number][]) => {
   zoneErrors.floorCount = ''
   zoneErrors.category = ''
   showZoneEditor.value = true
+}
+const showProjectEditor = ref(false)
+const projectEditId = ref('')
+const projectForm = ref({ name: '', area: '' as string | number, stallWidth: '' as string | number, stallDepth: '' as string | number })
+const projectErrors = reactive({ name: '', area: '', stallWidth: '', stallDepth: '' })
+const openProjectEditor = (projectId: string) => {
+  const project = projects.value.find(item => item.id === projectId)
+  if (!project) return
+  projectEditId.value = projectId
+  projectForm.value = {
+    name: String(project.name || ''),
+    area: project.realAreaSqm || '',
+    stallWidth: project.standardStallWidthM || 2.5,
+    stallDepth: project.standardStallDepthM || 2
+  }
+  projectErrors.name = ''
+  projectErrors.area = ''
+  projectErrors.stallWidth = ''
+  projectErrors.stallDepth = ''
+  showProjectEditor.value = true
+}
+const validateProjectField = (field: 'name' | 'area' | 'stallWidth' | 'stallDepth') => {
+  if (field === 'name') {
+    projectErrors.name = String(projectForm.value.name || '').trim() ? '' : 'กรุณาระบุชื่อโครงการ'
+    return
+  }
+  const raw = projectForm.value[field]
+  if (raw === '' || raw === null || raw === undefined) { projectErrors[field] = ''; return }
+  const value = Number(raw)
+  projectErrors[field] = Number.isFinite(value) && value > 0 ? '' : 'ต้องมากกว่า 0'
+}
+const saveProjectEdit = () => {
+  ;(['name', 'area', 'stallWidth', 'stallDepth'] as const).forEach(validateProjectField)
+  if (projectErrors.name || projectErrors.area || projectErrors.stallWidth || projectErrors.stallDepth) return
+  const idx = projects.value.findIndex(item => item.id === projectEditId.value)
+  if (idx < 0) return
+  const current = projects.value[idx]!
+  const area = Number(projectForm.value.area)
+  projects.value[idx] = {
+    ...current,
+    name: String(projectForm.value.name).trim(),
+    realAreaSqm: area > 0 ? area : current.realAreaSqm,
+    standardStallWidthM: Number(projectForm.value.stallWidth) || undefined,
+    standardStallDepthM: Number(projectForm.value.stallDepth) || undefined
+  }
+  if (selectedProject.value?.id === current.id) selectedProject.value = projects.value[idx]!
+  markGISChanged()
+  showProjectEditor.value = false
 }
 const dismissZoneEditor = () => {
   showZoneEditor.value = false
@@ -7883,7 +7965,7 @@ const selectStall = async (mapStall: any) => {
     stallEdit.value = {
       ...emptyStall(),
       ident: code,
-      name: mapStall.name || '',
+      name: selectedStallSurveyNumber.value || mapStall.name || '',
       category: mapStall.areaType || selectedProject.value?.category || '',
       zone_name: selectedProject.value?.name || mapStall.zone || '',
       project_name: selectedProject.value?.name || mapStall.zone || '',
@@ -7892,6 +7974,7 @@ const selectStall = async (mapStall: any) => {
       depth: mapStall.depthM || 2,
       monthly_rent: mapStall.monthlyRent || 1800,
       stall_status: resolveRealStallStatus(code, selectedProject.value, mapStall),
+      bookable: mapStall.bookable !== false,
       coordinates_geojson: geometry
     }
     loadStallContracts(code)
@@ -7912,7 +7995,15 @@ const selectStall = async (mapStall: any) => {
     ...stored,
     zone_name: selectedProject.value?.name || stored.project_name || stored.zone_name || mapStall.zone || '',
     project_name: selectedProject.value?.name || stored.project_name || mapStall.zone || '',
+    name: selectedStallSurveyNumber.value || stored.name || mapStall.name || '',
+    // ข้อมูลแผงใช้ค่าจากไฟล์ GIS (mapStall) เป็นหลัก ฐานข้อมูลแผงเป็นแค่ค่าสำรอง
+    category: mapStall.areaType || stored.category || '',
+    floor: String(mapStall.floor || stored.floor || '1'),
+    width: mapStall.widthM || stored.width || 2,
+    depth: mapStall.depthM || stored.depth || 2,
+    monthly_rent: mapStall.monthlyRent || stored.monthly_rent || 1800,
     coordinates_geojson: stored.coordinates_geojson || geometry,
+    bookable: mapStall.bookable !== false,
     stall_status: resolveRealStallStatus(code, selectedProject.value, stored)
   }
   loadStallContracts(code)
@@ -7979,6 +8070,12 @@ const deleteStall = async (projectArg?: ProjectZone | null, mapStallArg?: any) =
 
   void showSuccess(`ลบแผง “${code}” ออกจากผังแล้ว กดปุ่ม “บันทึกการแก้ไข” ด้านบนเพื่อบันทึกผัง`, 'ลบแผงในผังแล้ว')
 }
+const quickMissingFields = computed(() => {
+  const missing: string[] = []
+  if (!Number(stallEdit.value.monthly_rent)) missing.push('ค่าเช่า')
+  if (!Number(stallEdit.value.width) || !Number(stallEdit.value.depth)) missing.push('ขนาด')
+  return missing
+})
 const saveStall = async () => {
   if (!validateStallForm()) return
   savingStall.value = true
@@ -8013,6 +8110,7 @@ const saveStall = async () => {
           depthM: Number(stallEdit.value.depth),
           entryFee: 0,
           monthlyRent: rent,
+          bookable: stallEdit.value.bookable !== false,
           commonFee: 0,
           depositFee: rent,
           photo: '',
@@ -8046,7 +8144,8 @@ const saveStall = async () => {
             widthM: Number(stallEdit.value.width) || st.widthM,
             depthM: Number(stallEdit.value.depth) || st.depthM,
             size: Number((Number(stallEdit.value.width || st.widthM) * Number(stallEdit.value.depth || st.depthM)).toFixed(1)),
-            monthlyRent: Number(stallEdit.value.monthly_rent) || st.monthlyRent
+            monthlyRent: Number(stallEdit.value.monthly_rent) || st.monthlyRent,
+            bookable: stallEdit.value.bookable !== false
           }
         })
         projects.value[pIdx] = {
@@ -8464,6 +8563,9 @@ const buildMeterData = (onlyProjectId?: string): MeterData => {
       || (projectAverage.water > 0 && (wUsed ?? 0) > projectAverage.water * METER_ABNORMAL_FACTOR)
     )
     const skipReason = recorded ? '' : billing.getUtilitySkip(bill.stall)
+    // แผงที่ต้องจดมิเตอร์แต่ยังไม่ได้ตั้งเลขมิเตอร์ จดไม่ได้จนกว่าจะเพิ่มมิเตอร์
+    const binding = utilitySettings.getMeter(bill.stall)
+    const missingMeter = !recorded && (['water', 'electric'] as const).some(kind => needsReading(bill.stall, kind) && !binding[kind])
     return {
       code: bill.stall,
       projectId: meta.projectId,
@@ -8480,7 +8582,8 @@ const buildMeterData = (onlyProjectId?: string): MeterData => {
       waterUsed: wUsed,
       amount: billing.utilityTotal(bill),
       recordedBy: '',
-      state: recorded ? (abnormal ? 'abnormal' : 'recorded') : (skipReason ? 'skipped' : 'pending')
+      // งวดย้อนหลังดูได้อย่างเดียว: แผงที่ไม่มีเลขที่จดไว้ในงวดนั้นเป็น "ไม่มีข้อมูลงวดนี้"
+      state: recorded ? (abnormal ? 'abnormal' : 'recorded') : isPastPeriod.value ? 'no-data' : missingMeter ? 'no-meter' : (skipReason ? 'skipped' : 'pending')
     }
   })
   const groups = new Map<string, MeterProjectRow>()
@@ -8503,15 +8606,25 @@ const buildMeterData = (onlyProjectId?: string): MeterData => {
 const meterSummaryData = computed<MeterData>(() => (meterSummaryOpen.value ? buildMeterData() : EMPTY_METER_DATA))
 const meterProjectData = computed<MeterData>(() => (pageMode.value === 'meters' && selectedProject.value ? buildMeterData(String(selectedProject.value.id)) : EMPTY_METER_DATA))
 // ระหว่างสลับตลาด/โครงการ Vue อาจประเมิน computed ก่อนข้อมูลรอบใหม่พร้อม จึงต้องมี fallback ทุกจุดที่อ่านผลลัพธ์
+// เหตุผลที่ข้าม -> จำนวนแผง (ใช้ในสรุปการจด)
+const meterSkipReasonCounts = computed(() => {
+  const counts: Record<string, number> = {}
+  meterSummaryData.value.stalls.filter(row => row.state === 'skipped').forEach((row) => {
+    const reason = billing.getUtilitySkip(row.code) || 'ไม่ระบุเหตุผล'
+    counts[reason] = (counts[reason] || 0) + 1
+  })
+  return counts
+})
+const goMeterSettings = () => { void navigateTo(`/stalls/utility-settings?market=${encodeURIComponent(String(marketId.value))}&section=meters`) }
 const meterSummaryProjects = computed<MeterProjectRow[]>(() => meterSummaryData.value?.projects ?? [])
 const meterProjectStalls = computed<MeterStallRow[]>(() => meterProjectData.value?.stalls ?? [])
 const meterProjectAverages = computed<MeterData['averages']>(() => meterProjectData.value?.averages ?? {})
 const meterLiveData = computed<MeterData>(() => buildMeterData())
 const meterLiveRows = computed<MeterStallRow[]>(() => meterLiveData.value?.stalls ?? [])
 const meterLiveProjects = computed<MeterProjectRow[]>(() => meterLiveData.value?.projects ?? [])
-const meterAnomalyRows = computed<MeterStallRow[]>(() => meterLiveRows.value.filter(row => row.abnormal))
+const meterAnomalyRows = computed<MeterStallRow[]>(() => meterScopeRows.value.filter(row => row.abnormal))
 const meterUsageSummary = computed(() => {
-  const recorded = meterLiveRows.value.filter(row => row.recorded)
+  const recorded = meterScopeRows.value.filter(row => row.recorded)
   const waterValues = recorded.map(row => row.waterUsed).filter((value): value is number => value != null)
   const electricValues = recorded.map(row => row.electricUsed).filter((value): value is number => value != null)
   const waterTotal = waterValues.reduce((sum, value) => sum + value, 0)
@@ -8553,11 +8666,28 @@ const findNextMeterStall = (afterCode: string) => {
   return null
 }
 const meterHasNext = computed(() => !!findNextMeterStall(meterCardCode.value))
+// ประวัติแผงที่เพิ่งจดหรือดูผ่านการ์ด ใช้ย้อนกลับไปแผงก่อนหน้า (ล้างเมื่อปิดการ์ด)
+const meterCardHistory = ref<string[]>([])
+const meterCanGoBack = computed(() => meterCardHistory.value.length > 0)
 const openMeterCard = (code: string) => {
   closeCostDrawer()
-  meterCardCode.value = String(code).toUpperCase()
+  const next = String(code).toUpperCase()
+  if (meterCardCode.value && meterCardCode.value !== next) meterCardHistory.value.push(meterCardCode.value)
+  meterCardCode.value = next
 }
+const openPrevMeterStall = () => {
+  const prev = meterCardHistory.value.pop()
+  if (!prev) return
+  closeCostDrawer()
+  meterCardCode.value = prev
+}
+watch(meterCardCode, (value) => { if (!value) meterCardHistory.value = [] })
 const closeMeterCard = () => { meterCardCode.value = '' }
+// ปุ่มปิดบนการ์ดจดรายแผง: กลับหน้ารวมโครงการเลย (ไม่ค้างที่การ์ดสรุปโครงการ)
+const closeMeterCardToOverview = () => {
+  meterCardCode.value = ''
+  clearSelectedProject()
+}
 const openNextMeterStall = () => {
   const next = findNextMeterStall(meterCardCode.value)
   if (next) openMeterCard(next.code)
@@ -8592,10 +8722,25 @@ const persistRecordedMeterReadings = (code: string) => {
   })
   void utilitySettings.syncNow()
 }
-const handleMeterRecorded = (code: string) => {
+// แจ้งผลบนการ์ดของแผงถัดไป ให้รู้ว่าแผงก่อนหน้าถูกบันทึกหรือข้ามแล้ว และตอนนี้อยู่แผงใหม่ (หายเองใน 6 วินาที)
+const meterNotice = ref('')
+let meterNoticeTimer: ReturnType<typeof setTimeout> | undefined
+const showMeterNotice = (text: string) => {
+  meterNotice.value = text
+  clearTimeout(meterNoticeTimer)
+  meterNoticeTimer = setTimeout(() => { meterNotice.value = '' }, 6000)
+}
+watch(meterCardCode, (value) => { if (!value) { clearTimeout(meterNoticeTimer); meterNotice.value = '' } })
+const meterLabelOf = (code: string) => meterProjectStalls.value.find(row => row.code.toUpperCase() === code.toUpperCase())?.label || `แผง ${code}`
+const handleMeterSkipped = (code: string) => {
+  const label = meterLabelOf(code)
+  handleMeterRecorded(code, `ข้าม${label} แล้ว`)
+}
+const handleMeterRecorded = (code: string, noticeText?: string) => {
+  const doneLabel = meterLabelOf(code)
   persistRecordedMeterReadings(code)
   const next = findNextMeterStall(code)
-  if (next) { openMeterCard(next.code); return }
+  if (next) { openMeterCard(next.code); showMeterNotice(noticeText || `บันทึก${doneLabel} แล้ว`); return }
   closeMeterCard()
   void showSuccess('จดครบทุกแผงของโครงการนี้แล้ว', 'จดครบแล้ว')
 }
@@ -9500,8 +9645,12 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .issd-body-edit{padding:12px 14px}
 .issd-form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0}
 .issd-form-grid .full{grid-column:1/-1}
+.stall-edit-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px}.stall-edit-form label{display:grid;gap:5px}.stall-edit-delete{margin-right:auto}@media(max-width:560px){.stall-edit-form{grid-template-columns:1fr}}
+.issd-form-section{margin:8px 0 0;padding-top:12px;border-top:1px solid var(--bd-f1f5f9);color:var(--tx-0f172a);font-size:var(--font-size-sm);font-weight:700}
+.issd-form-grid>.issd-form-section:first-child{margin-top:0;padding-top:0;border-top:0}
 .issd-form-grid label{display:grid;gap:5px;color:var(--tx-475569);font-size:.8125rem;font-weight:600}
-.issd-form-grid textarea{width:100%;box-sizing:border-box;border:1px solid var(--bd-cbd5e1);border-radius:8px;padding:8px 10px;color:var(--tx-1e293b);background:var(--bg-ffffff);font:inherit;resize:vertical;min-height:56px}
+.issd-form-grid textarea{width:100%;box-sizing:border-box;border:1px solid var(--bd-cbd5e1);border-radius:10px;padding:9px 14px;color:var(--tx-1e293b);background:var(--bg-ffffff);font:500 .88rem/1.4 inherit;resize:vertical;min-height:64px;transition:border-color .15s,box-shadow .15s}
+.issd-form-grid textarea::placeholder{color:var(--tx-94a3b8)}
 .issd-form-grid textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .issd-footer-edit{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .issd-footer-right{display:flex;align-items:center;gap:8px;margin-left:auto}
@@ -9511,6 +9660,7 @@ const CloseIcon = () => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: '
 .issd-detail-list{margin:0;flex-shrink:0;border:1px solid var(--bd-e2e8f0);border-radius:12px;background:var(--bg-ffffff);overflow:hidden}.issd-detail-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 14px;font-size:.8125rem}.issd-detail-row+.issd-detail-row{border-top:1px solid var(--bd-f1f5f9)}.issd-detail-row dt{color:var(--tx-64748b);font-size:.8125rem;font-weight:500;flex-shrink:0;white-space:nowrap}.issd-detail-row dd{margin:0;color:var(--tx-1e293b);font-size:.8125rem;font-weight:600;text-align:right;max-width:65%;line-height:1.4}.issd-detail-row dd.is-rent{color:var(--tx-15803d);font-weight:700}.issd-detail-row dd.is-bold{color:var(--tx-0f172a);font-weight:700}
 .issd-occupancy-box{padding:11px 14px;flex-shrink:0;border-radius:12px;border:1px solid var(--bd-e2e8f0);background:var(--bg-f8fafc);display:grid;gap:3px}.issd-occupancy-box.is-available{background:var(--bg-f0fdf4);border-color:var(--bd-bbf7d0)}.issd-occupancy-box.is-reserved{background:var(--bg-fffbeb);border-color:var(--bd-fde68a)}.issd-occupancy-box.is-occupied{background:var(--bg-f8fafc);border-color:var(--bd-cbd5e1)}.issd-occupancy-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.issd-occupancy-head span{font-size:.75rem;font-weight:600;color:var(--tx-64748b)}.issd-occupancy-head small{font-size:.75rem;font-weight:700;color:var(--tx-2563eb)}.issd-occupancy-box strong{font-size:.8125rem;font-weight:700;color:var(--tx-0f172a);line-height:1.35}.issd-occupancy-box p{margin:0;font-size:.75rem;color:var(--tx-475569);line-height:1.35}
 .issd-footer{padding:12px 18px 16px;background:var(--bg-ffffff);border-top:1px solid var(--bd-f1f5f9);box-shadow:0 -4px 12px rgba(15,23,42,.04);flex-shrink:0}.issd-cta-btn{width:100%;box-sizing:border-box;padding:11px 16px;border:0;border-radius:11px;background:linear-gradient(180deg,#3b82f6 0%,#2563eb 100%);color:#fff;font-family:inherit;font-size:.875rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.32);transition:transform .15s ease,box-shadow .15s ease}.issd-cta-btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(37,99,235,.4)}
+.issd-metrics3{display:grid;grid-template-columns:1fr 1fr 1fr;margin-top:10px;padding:10px 6px;text-align:center;background:var(--bg-f8fafc);border:1px solid var(--bd-e2e8f0);border-radius:10px}.issd-metrics3>div{display:flex;flex-direction:column;gap:2px;min-width:0}.issd-metrics3>div+div{border-left:1px solid var(--bd-e2e8f0)}.issd-metric-label{font-size:var(--font-size-xs);font-weight:600;color:var(--tx-64748b)}.issd-metric-value{font-size:var(--font-size-lg);font-weight:800;color:var(--tx-0f172a);line-height:1.25}.issd-metric-value.is-rent{color:var(--tx-10b981)}.issd-metric-value small{display:block;font-size:var(--font-size-xs);font-weight:500;color:var(--tx-64748b)}.issd-bookable-pill{display:inline-block;padding:3px 10px;border-radius:6px;font-size:var(--font-size-xs);font-weight:600;background:var(--bg-dcfce7);color:var(--tx-15803d)}.issd-bookable-pill.is-paused{background:var(--bg-f1f5f9);color:var(--tx-64748b)}.issd-quick-note{margin-top:10px;padding:8px 12px;border-radius:8px;font-size:var(--font-size-xs);font-weight:600}.issd-quick-note.is-warn{background:var(--bg-fef3c7);color:var(--tx-b45309)}
 .issd-footer-full{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .issd-footer-full :deep(.app-button),
 .issd-footer-full > button,
@@ -10245,17 +10395,21 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid var(--bd-cbd5e1
 @media (max-width: 1000px) {
   .manage-page .officer-summary-dashboard.is-map-floating { top: var(--mp-top-2row); }
 }
+@media (max-width: 768px) {
+  /* มือถือ: แผงข้าง (แดชบอร์ด/ค้นหา/ตัวกรอง/ชั้นข้อมูล) เปิดทับเต็มจอ ซ่อนตัวเลือกมุมมองไม่ให้บังหัวแผง */
+  .map-mode-dropdown-wrap.is-compact { display: none; }
+}
 @media (max-width: 720px) {
   .map-mode-dropdown-wrap { top: 10px; left: 10px; }
   .manage-page.is-map-page { --mp-top: 148px; --mp-top-2row: 148px; }
 }
 
-.market-map-kpi.tone-blue .market-map-kpi-icon { background: var(--bg-eff6ff); color: var(--tx-2563eb); }
-.market-map-kpi.tone-green .market-map-kpi-icon { background: var(--bg-ecfdf5); color: var(--tx-059669); }
-.market-map-kpi.tone-amber .market-map-kpi-icon { background: var(--bg-fffbeb); color: var(--tx-d97706); }
-.market-map-kpi.tone-red .market-map-kpi-icon { background: var(--bg-fef2f2); color: var(--tx-dc2626); }
-.market-map-kpi.tone-rose .market-map-kpi-icon { background: var(--bg-fff1f2); color: var(--tx-e11d48); }
-.market-map-kpi.tone-violet .market-map-kpi-icon { background: var(--bg-f5f3ff); color: var(--tx-7c3aed); }
+.market-map-kpi.tone-blue .market-map-kpi-icon, .market-map-kpi.tone-blue .market-map-kpi-copy em { background: var(--bg-eff6ff); color: var(--tx-2563eb); }
+.market-map-kpi.tone-green .market-map-kpi-icon, .market-map-kpi.tone-green .market-map-kpi-copy em { background: var(--bg-ecfdf5); color: var(--tx-059669); }
+.market-map-kpi.tone-amber .market-map-kpi-icon, .market-map-kpi.tone-amber .market-map-kpi-copy em { background: var(--bg-fffbeb); color: var(--tx-d97706); }
+.market-map-kpi.tone-red .market-map-kpi-icon, .market-map-kpi.tone-red .market-map-kpi-copy em { background: var(--bg-fef2f2); color: var(--tx-dc2626); }
+.market-map-kpi.tone-rose .market-map-kpi-icon, .market-map-kpi.tone-rose .market-map-kpi-copy em { background: var(--bg-fff1f2); color: var(--tx-e11d48); }
+.market-map-kpi.tone-violet .market-map-kpi-icon, .market-map-kpi.tone-violet .market-map-kpi-copy em { background: var(--bg-f5f3ff); color: var(--tx-7c3aed); }
 
 .dash-breakdown-list {
   display: flex;
@@ -10818,6 +10972,24 @@ input,textarea{width:100%;box-sizing:border-box;border:1px solid var(--bd-cbd5e1
 }
 @media (min-width: 769px) and (max-width: 1000px) {
   .is-fullscreen-map-panel :deep(.stall-mode-panel.stall-mode-panel) { top: var(--mp-top-2row) !important; }
+}
+
+/* แผงโครงการที่ใช้เนื้อหาเฉพาะโหมด (จดมิเตอร์): สูงเท่าเนื้อหา ไม่ยืดเต็มความสูง */
+.is-fullscreen-map-panel { --meter-card-h: min(660px, calc(100% - var(--mp-top, 114px) - 18px)); }
+@media (min-width: 769px) {
+  /* การ์ดโครงการและการ์ดจดรายแผงสูงเท่ากัน ชิดล่าง ไม่กระโดดตอนสลับ */
+  .is-fullscreen-map-panel :deep(.stall-mode-panel.has-custom-body.stall-mode-panel) {
+    top: auto !important;
+    bottom: 18px !important;
+    height: var(--meter-card-h) !important;
+    max-height: none !important;
+  }
+}
+@media (max-width: 768px) {
+  .is-fullscreen-map-panel :deep(.stall-mode-panel.has-custom-body.stall-mode-panel) {
+    height: 62dvh !important;
+    max-height: calc(100dvh - 58px) !important;
+  }
 }
 
 /* ปุ่มย้อนกลับของแผงโครงการและแผงแผงใช้สไตล์เดียวกัน (เท่า AppButton sm) */
@@ -12894,6 +13066,11 @@ button.ov-stall-priority-row.active {
   width: min(1050px, calc(100% - var(--side-w, 380px) - 170px));
 }
 
+/* โหมดจดมิเตอร์มี 5 ใบ: ใช้ขนาดการ์ดเท่าแถบ 6 ใบ แต่ลดความกว้างแถบเหลือ 5/6 เพื่อให้การ์ดอยู่กึ่งกลางแผนที่ */
+.market-map-kpi-strip.is-meters { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.market-map-kpi-strip.is-meters:not(.has-side-panel) { width: min(1300px, calc((100% - 320px) * 5 / 6)); max-width: 1300px; }
+.market-map-kpi-strip.is-meters.has-side-panel { width: min(875px, calc((100% - var(--side-w, 380px) - 170px) * 5 / 6)); }
+
 .market-map-kpi {
   min-width: 0;
   min-height: 80px;
@@ -14745,7 +14922,8 @@ button.market-map-kpi:hover {
 .ov-hbar-chip.is-available { background: rgba(16, 185, 129, 0.14); color: var(--tx-059669); }
 .ov-hbar-chip.is-reserved { background: rgba(245, 158, 11, 0.16); color: #d97706; }
 .ov-hbar-chip.is-occupied { background: rgba(71, 85, 105, 0.14); color: var(--tx-475569); }
-.ov-hbar-chip.is-zero { background: var(--bg-f1f5f9); color: var(--tx-94a3b8); }
+/* ค่า 0: คงสีตามประเภทไว้ แต่จางลง */
+.ov-hbar-chip.is-zero { opacity: 0.55; }
 .ov-hbar-chip.is-zero strong { font-weight: 600; }
 .ov-hbar-key > span { display: inline-flex; align-items: center; gap: 6px; }
 .ov-hbar-key i { width: 10px; height: 10px; border-radius: 3px; }
@@ -15168,7 +15346,11 @@ button.market-map-kpi:hover {
   flex-direction: column;
   overflow: hidden;
   background: var(--bg-ffffff);
+  position: relative;
+  padding-top: 24px;
 }
+/* ปุ่มปิดมุมขวาบนของแผง: เว้นแถบบน 24px ไม่ให้ทับการ์ดแรก */
+.issd-full-main > .issd-full-close { position: absolute; top: 6px; right: 10px; z-index: 4; }
 
 .inspect-selected-stall-drawer .issd-full-main .issd-action-alert-card,
 .issd-full-main .issd-action-alert-card {
