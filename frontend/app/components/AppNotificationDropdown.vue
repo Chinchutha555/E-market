@@ -450,7 +450,7 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   background: #ef4444;
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -499,7 +499,7 @@ onBeforeUnmount(() => {
 }
 
 .notif-panel-title {
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--tx-0f172a);
 }
@@ -507,7 +507,7 @@ onBeforeUnmount(() => {
 .notif-unread-pill {
   background: var(--bg-fee2e2);
   color: var(--tx-dc2626);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
@@ -607,7 +607,7 @@ onBeforeUnmount(() => {
 }
 
 .notif-status-badge {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 6px;
@@ -640,21 +640,21 @@ onBeforeUnmount(() => {
 }
 
 .notif-time-text {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
   white-space: nowrap;
 }
 
 .notif-item-title {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   color: var(--tx-0f172a);
   line-height: 1.35;
 }
 
 .notif-item-desc {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-475569);
   font-weight: 500;
   line-height: 1.45;
@@ -672,7 +672,7 @@ onBeforeUnmount(() => {
 }
 
 .notif-meta-chip {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 6px;
@@ -720,13 +720,13 @@ onBeforeUnmount(() => {
 }
 
 .notif-empty-title {
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   color: var(--tx-334155);
 }
 
 .notif-empty-sub {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
 }
@@ -803,7 +803,7 @@ onBeforeUnmount(() => {
 }
 
 .notif-toast-role-pill {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 999px;
@@ -822,14 +822,14 @@ onBeforeUnmount(() => {
 }
 
 .notif-toast-title {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   color: var(--tx-0f172a);
   line-height: 1.35;
 }
 
 .notif-toast-message {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-475569);
   font-weight: 500;
   line-height: 1.4;
@@ -884,7 +884,7 @@ onBeforeUnmount(() => {
     border: 1px solid var(--bd-bfdbfe) !important;
     background: var(--bg-eff6ff) !important;
     color: var(--tx-2563eb) !important;
-    font-size: 0.875rem !important;
+    font-size: var(--font-size-sm) !important;
     font-weight: 600 !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
@@ -945,7 +945,7 @@ onBeforeUnmount(() => {
   }
 
   .notification-dropdown-card.is-mobile-fullscreen .notif-panel-title {
-    font-size: 1.0625rem !important;
+    font-size: var(--font-size-lg) !important;
     font-weight: 700 !important;
     color: var(--tx-0f172a) !important;
     white-space: nowrap !important;
@@ -954,7 +954,7 @@ onBeforeUnmount(() => {
   }
 
   .notification-dropdown-card.is-mobile-fullscreen .notif-unread-pill {
-    font-size: 0.75rem !important;
+    font-size: var(--font-size-xs) !important;
     padding: 2px 8px !important;
   }
 
@@ -970,7 +970,7 @@ onBeforeUnmount(() => {
   .notification-dropdown-card.is-mobile-fullscreen .notif-filter-bar :deep(.app-segmented-option) {
     flex: 1 !important;
     min-height: 38px !important;
-    font-size: 0.875rem !important;
+    font-size: var(--font-size-sm) !important;
     font-weight: 600 !important;
   }
 
@@ -1009,21 +1009,21 @@ onBeforeUnmount(() => {
   }
 
   .notification-dropdown-card.is-mobile-fullscreen .notif-item-title {
-    font-size: 0.9375rem !important;
+    font-size: var(--font-size-base) !important;
     line-height: 1.4 !important;
     font-weight: 700 !important;
     color: var(--tx-0f172a) !important;
   }
 
   .notification-dropdown-card.is-mobile-fullscreen .notif-item-desc {
-    font-size: 0.875rem !important;
+    font-size: var(--font-size-sm) !important;
     line-height: 1.45 !important;
     -webkit-line-clamp: 3 !important;
     color: var(--tx-475569) !important;
   }
 
   .notification-dropdown-card.is-mobile-fullscreen .notif-time-text {
-    font-size: 0.75rem !important;
+    font-size: var(--font-size-xs) !important;
   }
 
   .notification-dropdown-card.is-mobile-fullscreen .notif-empty-state {

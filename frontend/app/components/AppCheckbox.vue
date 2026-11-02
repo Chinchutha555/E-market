@@ -270,7 +270,7 @@ const handleChange = (e: Event) => {
 
 /* Label text */
 .app-checkbox-label {
-  font-size: 0.88rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-334155);
   font-weight: 500;
   cursor: inherit;

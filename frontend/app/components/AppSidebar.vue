@@ -466,7 +466,7 @@ watch(() => route.fullPath, () => {
   border-radius: 999px;
   background: #ef4444;
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   line-height: 1;
   box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
@@ -479,7 +479,7 @@ watch(() => route.fullPath, () => {
   min-width: 17px;
   height: 17px;
   padding: 0 4px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   border: 2px solid var(--bd-ffffff);
 }
 

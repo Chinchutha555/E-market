@@ -24,10 +24,10 @@
             </svg>
           </div>
           <div>
-            <div style="font-size: 0.75rem; color: var(--tx-2563eb); font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;">ตลาดที่ท่านกำลังทำการจองแผงเช่า</div>
+            <div style="font-size: var(--font-size-xs); color: var(--tx-2563eb); font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;">ตลาดที่ท่านกำลังทำการจองแผงเช่า</div>
             <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
-              <strong style="font-size: 1.25rem; color: var(--tx-0f172a); font-weight: 800;">{{ currentMarketName }}</strong>
-              <span style="font-size: 0.8rem; color: var(--tx-475569); background: var(--bg-ffffff); padding: 3px 10px; border-radius: 20px; border: 1px solid var(--bd-dbeafe); display: inline-flex; align-items: center; gap: 5px; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <strong style="font-size: var(--font-size-xl); color: var(--tx-0f172a); font-weight: 800;">{{ currentMarketName }}</strong>
+              <span style="font-size: var(--font-size-xs); color: var(--tx-475569); background: var(--bg-ffffff); padding: 3px 10px; border-radius: 20px; border: 1px solid var(--bd-dbeafe); display: inline-flex; align-items: center; gap: 5px; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
@@ -73,10 +73,10 @@
         <!-- Title & Filter Header -->
         <div class="step1-title-bar">
           <div>
-            <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--tx-0f172a); margin-bottom: 4px;">
+            <h2 style="font-size: var(--font-size-xl); font-weight: 800; color: var(--tx-0f172a); margin-bottom: 4px;">
               เลือกแผงเช่าที่สนใจ
             </h2>
-            <div style="font-size: 0.82rem; color: var(--tx-64748b);">
+            <div style="font-size: var(--font-size-xs); color: var(--tx-64748b);">
               คลิกเลือกโครงการหรือแผงค้าบนแผนที่เพื่อดูรายละเอียดและทำรายการจอง
             </div>
             <div style="height: 3px; width: 48px; background: var(--primary); border-radius: var(--radius-full); margin-top: 6px;"></div>
@@ -137,12 +137,12 @@
                 <!-- 1. Drawer Header (Pinned at Top) -->
                 <div style="padding: 14px 16px 10px; border-bottom: 1px solid var(--bd-f1f5f9); background: var(--bg-ffffff); flex-shrink: 0;">
                   <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <strong style="font-size: 1.125rem; color: var(--tx-0f172a); font-weight: 700;">แผงค้าที่เลือก</strong>
+                    <strong style="font-size: var(--font-size-lg); color: var(--tx-0f172a); font-weight: 700;">แผงค้าที่เลือก</strong>
                     <button class="btn-icon-square" style="width: 26px; height: 26px;" @click="clearAllSelectedStalls" title="ยกเลิกการเลือก" aria-label="ล้าง">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                   </div>
-                  <div style="font-size: 0.9375rem; color: var(--tx-64748b); font-weight: 600; margin-top: 2px;">{{ selectedProjectsSummary }}</div>
+                  <div style="font-size: var(--font-size-base); color: var(--tx-64748b); font-weight: 600; margin-top: 2px;">{{ selectedProjectsSummary }}</div>
                 </div>
 
                 <div v-if="activeWaitlistOffer" class="waitlist-claim-notice is-map-drawer" role="status">
@@ -205,7 +205,7 @@
                           alt="ภาพแผง"
                           style="width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.25s ease;"
                         />
-                        <div style="position: absolute; bottom: 6px; right: 6px; background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(4px); color: #ffffff; padding: 2px 8px; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                        <div style="position: absolute; bottom: 6px; right: 6px; background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(4px); color: #ffffff; padding: 2px 8px; border-radius: 6px; font-size: var(--font-size-xs); font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                           <span>{{ getStallPhotos(s).length > 1 ? `${getStallPhotos(s).length} รูป` : '3 รูป' }}</span>
                         </div>
@@ -214,16 +214,16 @@
                       <!-- 3-Box Metrics Grid (ขนาด | ค่าเช่า | แรกเข้า) -->
                       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; background: var(--bg-f8fafc); border: 1px solid var(--bd-e2e8f0); border-radius: 10px; padding: 10px 6px; text-align: center;">
                         <div>
-                          <div style="font-size: 0.8125rem; color: var(--tx-64748b); font-weight: 600; margin-bottom: 2px;">ขนาด</div>
-                          <div style="font-size: 1.0625rem; font-weight: 800; color: var(--tx-0f172a);">{{ s.size }} <span style="font-size: 0.8125rem; font-weight: normal; color: var(--tx-64748b);">ตร.ม.</span></div>
+                          <div style="font-size: var(--font-size-xs); color: var(--tx-64748b); font-weight: 600; margin-bottom: 2px;">ขนาด</div>
+                          <div style="font-size: var(--font-size-lg); font-weight: 800; color: var(--tx-0f172a);">{{ s.size }} <span style="font-size: var(--font-size-xs); font-weight: normal; color: var(--tx-64748b);">ตร.ม.</span></div>
                         </div>
                         <div style="border-left: 1px solid var(--bd-e2e8f0); border-right: 1px solid var(--bd-e2e8f0);">
-                          <div style="font-size: 0.8125rem; color: var(--tx-64748b); font-weight: 600; margin-bottom: 2px;">ค่าเช่า</div>
-                          <div style="font-size: 1.0625rem; font-weight: 800; color: var(--tx-10b981);">฿{{ s.monthlyRent.toLocaleString() }}<div style="font-size: 0.75rem; font-weight: 500; color: var(--tx-64748b);">/เดือน</div></div>
+                          <div style="font-size: var(--font-size-xs); color: var(--tx-64748b); font-weight: 600; margin-bottom: 2px;">ค่าเช่า</div>
+                          <div style="font-size: var(--font-size-lg); font-weight: 800; color: var(--tx-10b981);">฿{{ s.monthlyRent.toLocaleString() }}<div style="font-size: var(--font-size-xs); font-weight: 500; color: var(--tx-64748b);">/เดือน</div></div>
                         </div>
                         <div>
-                          <div style="font-size: 0.8125rem; color: var(--tx-64748b); font-weight: 600; margin-bottom: 2px;">แรกเข้า</div>
-                          <div style="font-size: 1.0625rem; font-weight: 800; color: var(--tx-0f172a);">฿{{ s.entryFee.toLocaleString() }}</div>
+                          <div style="font-size: var(--font-size-xs); color: var(--tx-64748b); font-weight: 600; margin-bottom: 2px;">แรกเข้า</div>
+                          <div style="font-size: var(--font-size-lg); font-weight: 800; color: var(--tx-0f172a);">฿{{ s.entryFee.toLocaleString() }}</div>
                         </div>
                       </div>
                     </div>
@@ -233,20 +233,20 @@
                   <div v-if="currentSelectionStatus === 'reserved' && currentWaitingInfo">
                     <div style="background: var(--bg-fffbeb); border: 1px solid var(--bd-fde68a); border-radius: 10px; padding: 10px 12px;">
                       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <span style="font-size: 0.875rem; font-weight: 800; color: var(--tx-92400e);">
+                        <span style="font-size: var(--font-size-sm); font-weight: 800; color: var(--tx-92400e);">
                           {{ selectedWaitingEntry ? 'สถานะคิวของคุณ' : 'เมื่อลงทะเบียน คุณจะได้' }}
                         </span>
-                        <span class="badge" style="background: #d97706; color: #ffffff; font-weight: 800; font-size: 0.8125rem; padding: 2px 8px;">
+                        <span class="badge" style="background: #d97706; color: #ffffff; font-weight: 800; font-size: var(--font-size-xs); padding: 2px 8px;">
                           คิวสำรองที่ {{ selectedWaitingEntry?.position || currentWaitingInfo.next_queue_number }}
                         </span>
                       </div>
-                      <div style="font-size: 0.8125rem; color: var(--tx-78350f); display: flex; justify-content: space-between; border-top: 1px dashed #fcd34d; padding-top: 6px; margin-top: 4px;">
+                      <div style="font-size: var(--font-size-xs); color: var(--tx-78350f); display: flex; justify-content: space-between; border-top: 1px dashed #fcd34d; padding-top: 6px; margin-top: 4px;">
                         <span>ผู้ถือสิทธิ์ปัจจุบัน:</span>
                         <strong>{{ currentWaitingInfo.current_booker?.masked_name || 'ผู้จองหลัก' }}</strong>
                       </div>
                     </div>
                   </div>
-                  <div v-else-if="currentSelectionStatus === 'reserved'" style="background: var(--bg-fffbeb); border: 1px solid var(--bd-fde68a); border-radius: 10px; padding: 10px 12px; font-size: 0.8125rem; color: var(--tx-92400e);">
+                  <div v-else-if="currentSelectionStatus === 'reserved'" style="background: var(--bg-fffbeb); border: 1px solid var(--bd-fde68a); border-radius: 10px; padding: 10px 12px; font-size: var(--font-size-xs); color: var(--tx-92400e);">
                     กำลังตรวจสอบลำดับคิวจริงของแผงนี้
                   </div>
                 </div>
@@ -264,12 +264,12 @@
                   <!-- Total Summary Header if > 1 stall -->
                   <div
                     v-if="selectedStalls.length > 1"
-                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.875rem;"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: var(--font-size-sm);"
                   >
                     <span style="color: var(--tx-64748b); font-weight: 600;">รวม {{ selectedStalls.length }} แผง ({{ totalSize }} ตร.ม.)</span>
                     <span style="color: var(--tx-0f172a); font-weight: 700;">
-                      <span style="color: var(--tx-10b981); font-weight: 800; font-size: 1.0625rem;">฿{{ totalMonthlyRent.toLocaleString() }}</span>
-                      <span style="font-size: 0.75rem; color: var(--tx-64748b);">/ด.</span>
+                      <span style="color: var(--tx-10b981); font-weight: 800; font-size: var(--font-size-lg);">฿{{ totalMonthlyRent.toLocaleString() }}</span>
+                      <span style="font-size: var(--font-size-xs); color: var(--tx-64748b);">/ด.</span>
                     </span>
                   </div>
 
@@ -281,7 +281,7 @@
                     style="
                       width: 100%;
                       padding: 11px 16px;
-                      font-size: 0.9375rem;
+                      font-size: var(--font-size-base);
                       border-radius: 10px;
                       font-weight: 700;
                       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
@@ -377,7 +377,7 @@
             <div class="modal-card card" style="max-width: 520px; width: 92%; padding: 0; overflow: hidden; border-radius: 20px; box-shadow: var(--shadow-popup);">
               <AppModalHeader title="ไม่สามารถเลือกแผงร่วมกันได้" subtitle="แผงว่างและแผงติดจองใช้ขั้นตอนการเช่าต่างกัน" icon="warning" tone="warning" @close="cancelConflictModal" />
               <div style="padding: 24px 28px;">
-                  <p style="font-size: 0.88rem; color: var(--tx-475569); line-height: 1.55; margin: 0 0 18px;">
+                  <p style="font-size: var(--font-size-sm); color: var(--tx-475569); line-height: 1.55; margin: 0 0 18px;">
                     <span v-if="pendingConflictingStall?.status === 'reserved'">
                       คุณกำลังคลิกเลือก <strong>แผง {{ stallDisplayNumber(pendingConflictingStall) }} (สถานะ: ติดจอง<span v-if="stallWaitingQueueCache[pendingConflictingStall?.code]"> — คิวสำรองลำดับที่ {{ stallWaitingQueueCache[pendingConflictingStall?.code]?.next_queue_number }}</span>)</strong><span v-if="stallWaitingQueueCache[pendingConflictingStall?.code]?.current_booker"> ต่อจาก <strong>{{ stallWaitingQueueCache[pendingConflictingStall?.code]?.current_booker?.masked_name }}</strong></span> แต่รายการที่คุณเลือกไว้ก่อนหน้าเป็น <strong>กลุ่มแผงว่าง</strong>
                     </span>
@@ -387,7 +387,7 @@
                   </p>
 
               <!-- Business Rule Explanation Box -->
-              <div style="background: var(--bg-fffbeb); border: 1px solid var(--bd-fde68a); border-radius: 10px; padding: 14px 16px; font-size: 0.84rem; color: var(--tx-92400e); margin-bottom: 22px; line-height: 1.5;">
+              <div style="background: var(--bg-fffbeb); border: 1px solid var(--bd-fde68a); border-radius: 10px; padding: 14px 16px; font-size: var(--font-size-sm); color: var(--tx-92400e); margin-bottom: 22px; line-height: 1.5;">
                 <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                   <span>เหตุผลทางขั้นตอนการเช่า (Business Rule):</span>
@@ -416,7 +416,7 @@
             class="btn"
             :class="isMarketFull ? 'btn-outline' : 'btn-primary'"
             :disabled="isMarketFull"
-            :style="isMarketFull ? 'padding: 12px 28px; font-size: 0.92rem; font-weight: 600; border-radius: 10px; opacity: 0.65; cursor: not-allowed; border-color: var(--bd-cbd5e1); background: var(--bg-f1f5f9); color: var(--tx-64748b);' : 'padding: 12px 32px; font-size: 1rem; font-weight: 700; border-radius: 10px; box-shadow: 0 4px 14px rgba(67, 97, 238, 0.35); display: inline-flex; align-items: center; gap: 8px;'"
+            :style="isMarketFull ? 'padding: 12px 28px; font-size: var(--font-size-base); font-weight: 600; border-radius: 10px; opacity: 0.65; cursor: not-allowed; border-color: var(--bd-cbd5e1); background: var(--bg-f1f5f9); color: var(--tx-64748b);' : 'padding: 12px 32px; font-size: var(--font-size-md); font-weight: 700; border-radius: 10px; box-shadow: 0 4px 14px rgba(67, 97, 238, 0.35); display: inline-flex; align-items: center; gap: 8px;'"
             @click="handleNextFromStep1"
           >
             <span>{{ isMarketFull ? 'ตลาดเต็มแล้ว (ไม่สามารถจองได้)' : 'ถัดไป' }}</span>
@@ -430,7 +430,7 @@
       <!-- ============================================================ -->
       <div v-if="currentStep === 2">
         <div style="margin-bottom: 24px;">
-          <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--tx-0f172a); margin-bottom: 4px;">
+          <h2 style="font-size: var(--font-size-xl); font-weight: 800; color: var(--tx-0f172a); margin-bottom: 4px;">
             กรอกข้อมูลเพื่อเยี่ยมชมแผง
           </h2>
           <div style="height: 3px; width: 48px; background: var(--primary); border-radius: var(--radius-full);"></div>
@@ -439,12 +439,12 @@
 
 
         <!-- Waiting List Context Alert Banner for Step 2 -->
-        <div v-if="currentSelectionStatus === 'reserved'" style="margin-bottom: 22px; background: linear-gradient(135deg, var(--bg-fffbeb) 0%, var(--bg-fef3c7) 100%); border: 1.5px solid #fcd34d; border-radius: 12px; padding: 14px 18px; color: var(--tx-92400e); font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div v-if="currentSelectionStatus === 'reserved'" style="margin-bottom: 22px; background: linear-gradient(135deg, var(--bg-fffbeb) 0%, var(--bg-fef3c7) 100%); border: 1.5px solid #fcd34d; border-radius: 12px; padding: 14px 18px; color: var(--tx-92400e); font-size: var(--font-size-sm); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
           <div style="display: flex; align-items: center; gap: 10px;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--tx-d97706); flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <div>
               <strong>คำขอนี้เป็นการลงทะเบียนรับสิทธิ์คิวสำรอง<span v-if="currentWaitingInfo"> (คิวสำรองที่ {{ currentWaitingInfo.next_queue_number }})</span></strong>
-              <div style="font-size: 0.78rem; color: var(--tx-b45309); margin-top: 2px;">
+              <div style="font-size: var(--font-size-xs); color: var(--tx-b45309); margin-top: 2px;">
                 <template v-if="currentWaitingInfo?.current_booker">ต่อจากผู้จองสิทธิ์ก่อนหน้า: <strong>{{ currentWaitingInfo.current_booker.masked_name }}</strong> (ปิดข้อมูลบางส่วนตามหลัก PDPA)</template>
                 <template v-else>กำลังตรวจสอบข้อมูลคิวจากระบบ</template>
               </div>
@@ -467,11 +467,11 @@
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
                 </div>
-                <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--tx-0f172a); margin: 0;">
+                <h3 style="font-size: var(--font-size-lg); font-weight: 700; color: var(--tx-0f172a); margin: 0;">
                   ข้อมูลผู้เช่า
                 </h3>
               </div>
-              <span v-if="idVerified" style="font-size: 0.78rem; color: var(--tx-059669); font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+              <span v-if="idVerified" style="font-size: var(--font-size-xs); color: var(--tx-059669); font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                   <polyline points="9 12 11 14 15 10"></polyline>
@@ -596,15 +596,15 @@
                   </svg>
                 </div>
                 <div>
-                  <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--tx-0f172a); margin: 0 0 2px 0;">
+                  <h3 style="font-size: var(--font-size-lg); font-weight: 700; color: var(--tx-0f172a); margin: 0 0 2px 0;">
                     ข้อมูลการเยี่ยมชมแผง
                   </h3>
-                  <span style="font-size: 0.78rem; color: var(--tx-64748b);">
+                  <span style="font-size: var(--font-size-xs); color: var(--tx-64748b);">
                     * เจ้าหน้าที่สำนักงานตลาดจะพาเดินชมสถานที่จริงตามรอบเวลา
                   </span>
                 </div>
               </div>
-              <span style="font-size: 0.75rem; background: var(--bg-eff6ff); color: var(--tx-1e40af); border: 1px solid var(--bd-bfdbfe); border-radius: 6px; padding: 4px 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+              <span style="font-size: var(--font-size-xs); background: var(--bg-eff6ff); color: var(--tx-1e40af); border: 1px solid var(--bd-bfdbfe); border-radius: 6px; padding: 4px 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                   <polyline points="9 12 11 14 15 10"></polyline>
@@ -617,13 +617,13 @@
             <div :class="{ 'has-form-error': !!formErrors.visitDate }" style="margin-bottom: 22px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                 <label class="form-label" style="margin-bottom: 0; font-weight: 700; color: var(--tx-1e293b); display: inline-flex; align-items: center; gap: 8px;">
-                  <span style="background: #2563eb; color: #ffffff; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800;">1</span>
-                  <span style="font-size: 0.95rem;">เลือกวันที่เปิดให้เข้าชมแผง <span class="req-star" aria-hidden="true">*</span></span>
+                  <span style="background: #2563eb; color: #ffffff; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: var(--font-size-xs); font-weight: 800;">1</span>
+                  <span style="font-size: var(--font-size-base);">เลือกวันที่เปิดให้เข้าชมแผง <span class="req-star" aria-hidden="true">*</span></span>
                 </label>
                 <NuxtLink
                   :to="`/stalls/visit-schedule?market=${route.query.market || '1'}`"
                   target="_blank"
-                  style="font-size: 0.76rem; color: var(--tx-2563eb); background: var(--bg-eff6ff); border: 1px solid var(--bd-bfdbfe); border-radius: 6px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; font-weight: 600;"
+                  style="font-size: var(--font-size-xs); color: var(--tx-2563eb); background: var(--bg-eff6ff); border: 1px solid var(--bd-bfdbfe); border-radius: 6px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; font-weight: 600;"
                   title="เปิดหน้าจัดการรอบเข้าชมแผงสำหรับเจ้าหน้าที่"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -686,7 +686,7 @@
               </div>
 
               <!-- Market Advice banner under date cards (Dynamic from active date description or market default) -->
-              <div style="font-size: 0.76rem; color: var(--tx-1e40af); background: var(--bg-eff6ff); border: 1px solid var(--bd-bfdbfe); border-radius: 8px; padding: 8px 12px; margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+              <div style="font-size: var(--font-size-xs); color: var(--tx-1e40af); background: var(--bg-eff6ff); border: 1px solid var(--bd-bfdbfe); border-radius: 8px; padding: 8px 12px; margin-top: 10px; display: flex; align-items: center; gap: 8px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--tx-2563eb);">
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="12" y1="16" x2="12" y2="12"></line>
@@ -700,16 +700,16 @@
             <div :class="{ 'has-form-error': !!formErrors.visitSlot }">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
                 <label class="form-label" style="margin-bottom: 0; font-weight: 700; color: var(--tx-1e293b); display: inline-flex; align-items: center; gap: 6px;">
-                  <span style="background: #2563eb; color: #ffffff; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800;">2</span>
+                  <span style="background: #2563eb; color: #ffffff; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: var(--font-size-xs); font-weight: 800;">2</span>
                   <span>เลือกรอบเวลาที่สะดวกเข้าชม (พาชมโดยเจ้าหน้าที่) <span class="req-star" aria-hidden="true">*</span></span>
                 </label>
-                <span style="font-size: 0.76rem; color: var(--tx-64748b);">
+                <span style="font-size: var(--font-size-xs); color: var(--tx-64748b);">
                   รอบละ 60 นาที &bull; เฉพาะรอบที่ยังว่าง
                 </span>
               </div>
 
               <!-- Notice when selected date has no available slots -->
-              <div v-if="isCurrentDateAllFull" style="background: var(--bg-fef2f2); border: 1.5px solid var(--bd-fecaca); border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--tx-991b1b); font-size: 0.85rem;">
+              <div v-if="isCurrentDateAllFull" style="background: var(--bg-fef2f2); border: 1.5px solid var(--bd-fecaca); border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--tx-991b1b); font-size: var(--font-size-sm);">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--tx-dc2626);">
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="15" y1="9" x2="9" y2="15"></line>
@@ -717,14 +717,14 @@
                 </svg>
                 <div>
                   <strong>รอบเวลาของวันที่เลือกเต็มทุกรอบแล้ว</strong>
-                  <div style="font-size: 0.78rem; color: var(--tx-b91c1c); margin-top: 2px;">
+                  <div style="font-size: var(--font-size-xs); color: var(--tx-b91c1c); margin-top: 2px;">
                     กรุณาคลิกเลือกวันที่อื่นด้านบนที่มีรอบว่าง เพื่อทำการนัดหมายเข้าชม
                   </div>
                 </div>
               </div>
 
               <!-- Notice when user has not yet selected a date -->
-              <div v-else-if="!bookingForm.visitDate" style="background: var(--bg-f8fafc); border: 1.5px dashed var(--bd-cbd5e1); border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--tx-64748b); font-size: 0.84rem;">
+              <div v-else-if="!bookingForm.visitDate" style="background: var(--bg-f8fafc); border: 1.5px dashed var(--bd-cbd5e1); border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--tx-64748b); font-size: var(--font-size-sm);">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--tx-94a3b8); flex-shrink: 0;">
                   <circle cx="12" cy="12" r="10"></circle>
                   <polyline points="12 6 12 12 16 14"></polyline>
@@ -752,20 +752,20 @@
                       </svg>
                     </span>
                     <strong class="slot-card-time" :style="{ color: (s.isFull || s.hasTenantConflict) ? '#64748b' : '#0f172a' }">{{ s.time }}</strong>
-                    <span v-if="s.enabled === false" style="margin-left: auto; font-size: 0.75rem; color: var(--tx-64748b); font-weight: 700; background: var(--bg-f1f5f9); padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
+                    <span v-if="s.enabled === false" style="margin-left: auto; font-size: var(--font-size-xs); color: var(--tx-64748b); font-weight: 700; background: var(--bg-f1f5f9); padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
                       งดรอบนี้
                     </span>
-                    <span v-else-if="s.hasTenantConflict" style="margin-left: auto; font-size: 0.75rem; color: var(--tx-d97706); font-weight: 700; background: var(--bg-fef3c7); border: 1px solid var(--bd-fde68a); padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
+                    <span v-else-if="s.hasTenantConflict" style="margin-left: auto; font-size: var(--font-size-xs); color: var(--tx-d97706); font-weight: 700; background: var(--bg-fef3c7); border: 1px solid var(--bd-fde68a); padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
                       มีนัดหมายอื่นแล้ว
                     </span>
-                    <span v-else-if="s.isFull" style="margin-left: auto; font-size: 0.75rem; color: var(--tx-dc2626); font-weight: 700; background: var(--bg-fee2e2); padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
+                    <span v-else-if="s.isFull" style="margin-left: auto; font-size: var(--font-size-xs); color: var(--tx-dc2626); font-weight: 700; background: var(--bg-fee2e2); padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                       </svg>
                       เต็มแล้ว
                     </span>
-                    <span v-else-if="(s.bookedCount || 0) > 0" class="slot-booked-summary" style="margin-left: auto; font-size: 0.75rem; color: var(--tx-2563eb); font-weight: 600; background: var(--bg-eff6ff); border: 1px solid var(--bd-bfdbfe); padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
+                    <span v-else-if="(s.bookedCount || 0) > 0" class="slot-booked-summary" style="margin-left: auto; font-size: var(--font-size-xs); color: var(--tx-2563eb); font-weight: 600; background: var(--bg-eff6ff); border: 1px solid var(--bd-bfdbfe); padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
                       จองแล้ว {{ s.bookedCount }}/{{ s.capacity }} คิว
                     </span>
                   </div>
@@ -806,7 +806,7 @@
       <!-- ============================================================ -->
       <div v-else-if="currentStep === 3" class="step3-review">
         <div style="margin-bottom: 24px;">
-          <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--tx-0f172a); margin-bottom: 4px;">
+          <h2 style="font-size: var(--font-size-xl); font-weight: 800; color: var(--tx-0f172a); margin-bottom: 4px;">
             ตรวจสอบและยืนยัน
           </h2>
           <div style="height: 3px; width: 48px; background: var(--primary); border-radius: var(--radius-full);"></div>
@@ -845,7 +845,7 @@
                 <line x1="12" y1="22.08" x2="12" y2="12"></line>
               </svg>
             </div>
-            <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--tx-0f172a); margin: 0;">
+            <h3 style="font-size: var(--font-size-lg); font-weight: 700; color: var(--tx-0f172a); margin: 0;">
               แผงเช่าที่คุณเลือก
             </h3>
           </div>
@@ -859,68 +859,68 @@
           >
             <!-- Sub-card Header -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bd-f1f5f9); padding-bottom: 14px; margin-bottom: 18px;">
-              <span style="background: #2563eb; color: #ffffff; font-weight: 700; font-size: 0.85rem; padding: 4px 14px; border-radius: 6px;">
+              <span style="background: #2563eb; color: #ffffff; font-weight: 700; font-size: var(--font-size-sm); padding: 4px 14px; border-radius: 6px;">
                 แผง {{ stallDisplayNumber(stallItem) }}
               </span>
               <span
                 v-if="stallItem.status === 'available'"
-                style="background: var(--bg-ecfdf5); color: var(--tx-10b981); font-weight: 600; font-size: 0.82rem; padding: 4px 14px; border-radius: 20px;"
+                style="background: var(--bg-ecfdf5); color: var(--tx-10b981); font-weight: 600; font-size: var(--font-size-xs); padding: 4px 14px; border-radius: 20px;"
               >
                 ว่าง
               </span>
               <span
                 v-else
-                style="background: var(--bg-fffbeb); color: var(--tx-d97706); font-weight: 600; font-size: 0.82rem; padding: 4px 14px; border-radius: 20px;"
+                style="background: var(--bg-fffbeb); color: var(--tx-d97706); font-weight: 600; font-size: var(--font-size-xs); padding: 4px 14px; border-radius: 20px;"
               >
                 ติดจอง
               </span>
             </div>
 
             <!-- 4-Column Data Grid -->
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 20px; font-size: 0.88rem; margin-bottom: 18px;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 20px; font-size: var(--font-size-sm); margin-bottom: 18px;">
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 4px;">โซน</div>
-                <div style="color: var(--tx-1e293b); font-size: 0.95rem; font-weight: 600;">{{ stallItem.zone || selectedProject?.name }}</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 4px;">โซน</div>
+                <div style="color: var(--tx-1e293b); font-size: var(--font-size-base); font-weight: 600;">{{ stallItem.zone || selectedProject?.name }}</div>
               </div>
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 4px;">หมายเลขแผง</div>
-                <div style="color: var(--tx-1e293b); font-size: 0.95rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 4px;">หมายเลขแผง</div>
+                <div style="color: var(--tx-1e293b); font-size: var(--font-size-base); font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
                   <span>{{ stallDisplayNumber(stallItem) }}</span>
-                  <span v-if="stallItem.floorName" style="font-size: 0.75rem; padding: 1px 7px; border-radius: 4px; background: var(--bg-eff6ff); color: var(--tx-2563eb); font-weight: 600; border: 1px solid var(--bd-bfdbfe);">
+                  <span v-if="stallItem.floorName" style="font-size: var(--font-size-xs); padding: 1px 7px; border-radius: 4px; background: var(--bg-eff6ff); color: var(--tx-2563eb); font-weight: 600; border: 1px solid var(--bd-bfdbfe);">
                     {{ stallItem.floorName }}
                   </span>
                 </div>
               </div>
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 4px;">ประเภทพื้นที่</div>
-                <div style="color: var(--tx-1e293b); font-size: 0.95rem; font-weight: 600;">{{ stallItem.areaType || 'ทั่วไป' }}</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 4px;">ประเภทพื้นที่</div>
+                <div style="color: var(--tx-1e293b); font-size: var(--font-size-base); font-weight: 600;">{{ stallItem.areaType || 'ทั่วไป' }}</div>
               </div>
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 4px;">ขนาดพื้นที่(ตร.ม.)</div>
-                <div style="color: var(--tx-1e293b); font-size: 0.95rem; font-weight: 600;">{{ stallItem.size }}</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 4px;">ขนาดพื้นที่(ตร.ม.)</div>
+                <div style="color: var(--tx-1e293b); font-size: var(--font-size-base); font-weight: 600;">{{ stallItem.size }}</div>
               </div>
 
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 4px;">ค่าธรรมเนียมสิทธิแรกเข้า (บาท)</div>
-                <div style="color: var(--tx-1e293b); font-size: 0.95rem; font-weight: 600;">{{ (stallItem.entryFee || 75000).toLocaleString() }}</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 4px;">ค่าธรรมเนียมสิทธิแรกเข้า (บาท)</div>
+                <div style="color: var(--tx-1e293b); font-size: var(--font-size-base); font-weight: 600;">{{ (stallItem.entryFee || 75000).toLocaleString() }}</div>
               </div>
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 4px;">ค่าเช่าต่อเดือน (บาท)</div>
-                <div style="color: var(--tx-1e293b); font-size: 0.95rem; font-weight: 600;">{{ (stallItem.monthlyRent || 1800).toLocaleString() }}</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 4px;">ค่าเช่าต่อเดือน (บาท)</div>
+                <div style="color: var(--tx-1e293b); font-size: var(--font-size-base); font-weight: 600;">{{ (stallItem.monthlyRent || 1800).toLocaleString() }}</div>
               </div>
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 4px;">ค่าส่วนกลาง (บาท)</div>
-                <div style="color: var(--tx-1e293b); font-size: 0.95rem; font-weight: 600;">{{ (stallItem.commonFee || 500).toLocaleString() }}</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 4px;">ค่าส่วนกลาง (บาท)</div>
+                <div style="color: var(--tx-1e293b); font-size: var(--font-size-base); font-weight: 600;">{{ (stallItem.commonFee || 500).toLocaleString() }}</div>
               </div>
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 4px;">ค่าประกันล่วงหน้า (บาท)</div>
-                <div style="color: var(--tx-1e293b); font-size: 0.95rem; font-weight: 600;">{{ (stallItem.depositFee || stallItem.monthlyRent || 1800).toLocaleString() }}</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 4px;">ค่าประกันล่วงหน้า (บาท)</div>
+                <div style="color: var(--tx-1e293b); font-size: var(--font-size-base); font-weight: 600;">{{ (stallItem.depositFee || stallItem.monthlyRent || 1800).toLocaleString() }}</div>
               </div>
             </div>
 
             <!-- Photos of THIS specific stall -->
             <div class="step3-photos">
-              <div style="color: var(--tx-64748b); font-size: 0.82rem; margin-bottom: 10px;">รูปภาพ</div>
+              <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 10px;">รูปภาพ</div>
               <div style="display: flex; gap: 14px; flex-wrap: wrap;">
                 <div
                   v-for="(photoUrl, pIdx) in getStallPhotos(stallItem)"
@@ -948,7 +948,7 @@
             </div>
 
             <!-- Waiting List Details with PDPA Masking if reserved -->
-            <div v-if="stallItem.status === 'reserved'" style="margin-top: 14px; background: var(--bg-fffbeb); border: 1.5px solid #fcd34d; border-radius: 10px; padding: 12px 16px; font-size: 0.82rem; color: var(--tx-92400e); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div v-if="stallItem.status === 'reserved'" style="margin-top: 14px; background: var(--bg-fffbeb); border: 1.5px solid #fcd34d; border-radius: 10px; padding: 12px 16px; font-size: var(--font-size-xs); color: var(--tx-92400e); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--tx-d97706); flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 <span>
@@ -957,7 +957,7 @@
                   <template v-else> กำลังตรวจสอบลำดับคิวจริง</template>
                 </span>
               </div>
-              <span style="font-size: 0.75rem; background: var(--bg-ecfdf5); border: 1px solid var(--bd-a7f3d0); color: var(--tx-047857); font-weight: 700; padding: 3px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;">
+              <span style="font-size: var(--font-size-xs); background: var(--bg-ecfdf5); border: 1px solid var(--bd-a7f3d0); color: var(--tx-047857); font-weight: 700; padding: 3px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                 <span>PDPA Masked</span>
               </span>
@@ -977,24 +977,24 @@
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
               </div>
-              <span style="font-size: 1.05rem; font-weight: 700; color: var(--tx-0f172a);">ข้อมูลผู้จอง</span>
+              <span style="font-size: var(--font-size-lg); font-weight: 700; color: var(--tx-0f172a);">ข้อมูลผู้จอง</span>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 0.88rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: var(--font-size-sm);">
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 2px;">ชื่อ - สกุล</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 2px;">ชื่อ - สกุล</div>
                 <div style="font-weight: 700; color: var(--tx-0f172a);">{{ bookingForm.firstName }} {{ bookingForm.lastName }}</div>
               </div>
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 2px;">เลขบัตรประชาชน</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 2px;">เลขบัตรประชาชน</div>
                 <div style="font-weight: 700; color: var(--tx-0f172a);">{{ bookingForm.idCard || '1-1004-98721-34-5' }}</div>
               </div>
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 2px;">เบอร์ติดต่อ</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 2px;">เบอร์ติดต่อ</div>
                 <div style="font-weight: 700; color: var(--tx-0f172a);">{{ bookingForm.phone }}</div>
               </div>
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 2px;">สินค้าที่จะจำหน่าย</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 2px;">สินค้าที่จะจำหน่าย</div>
                 <div style="font-weight: 700; color: var(--tx-0f172a);">{{ bookingForm.business }}</div>
               </div>
             </div>
@@ -1011,20 +1011,20 @@
                   <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
               </div>
-              <span style="font-size: 1.05rem; font-weight: 700; color: var(--tx-0f172a);">การเยี่ยมชมแผง</span>
+              <span style="font-size: var(--font-size-lg); font-weight: 700; color: var(--tx-0f172a);">การเยี่ยมชมแผง</span>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 0.88rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: var(--font-size-sm);">
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 2px;">วันนัดเยี่ยมชมแผง</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 2px;">วันนัดเยี่ยมชมแผง</div>
                 <div style="font-weight: 700; color: var(--tx-0f172a);">{{ formatThaiDate(bookingForm.visitDate) }}</div>
               </div>
               <div>
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 2px;">ช่วงเวลาที่นัดเยี่ยมชมแผง</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 2px;">ช่วงเวลาที่นัดเยี่ยมชมแผง</div>
                 <div style="font-weight: 700; color: var(--tx-0f172a);">{{ bookingForm.visitSlot }}</div>
               </div>
               <div style="grid-column: 1 / -1;">
-                <div style="color: var(--tx-64748b); font-size: 0.8rem; margin-bottom: 2px;">หมายเหตุ</div>
+                <div style="color: var(--tx-64748b); font-size: var(--font-size-xs); margin-bottom: 2px;">หมายเหตุ</div>
                 <div style="color: var(--tx-475569);">{{ bookingForm.notes || '-' }}</div>
               </div>
             </div>
@@ -1039,12 +1039,12 @@
                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                 <line x1="10" y1="2" x2="10" y2="22"></line>
               </svg></span>
-              <span style="font-size: 1rem; font-weight: 700; color: var(--tx-0f172a);">ตารางประมาณการค่าใช้จ่ายแบบโปร่งใส (ประมาณการวันทำสัญญา)</span>
+              <span style="font-size: var(--font-size-md); font-weight: 700; color: var(--tx-0f172a);">ตารางประมาณการค่าใช้จ่ายแบบโปร่งใส (ประมาณการวันทำสัญญา)</span>
             </div>
             <span class="badge" style="background: var(--bg-ecfdf5); color: var(--tx-059669); font-weight: 600;">ไม่มีค่าใช้จ่ายแอบแฝง</span>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.88rem;">
+          <div style="display: flex; flex-direction: column; gap: 10px; font-size: var(--font-size-sm);">
             <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px dashed var(--bd-e2e8f0);">
               <span style="color: var(--tx-475569);">1. ค่าธรรมเนียมสิทธิแรกเข้า (ชำระครั้งแรกครั้งเดียว)</span>
               <strong style="color: var(--tx-0f172a);">฿{{ totalEntryFee.toLocaleString() }}</strong>
@@ -1060,7 +1060,7 @@
             <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px dashed var(--bd-e2e8f0);">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="color: var(--tx-475569);">3. เงินประกันความเสียหายการเช่า</span>
-                <span class="badge" style="background: var(--bg-eff6ff); color: var(--tx-2563eb); font-size: 0.75rem; padding: 1px 6px;">* คืนเงิน 100% เมื่อสิ้นสุดสัญญา</span>
+                <span class="badge" style="background: var(--bg-eff6ff); color: var(--tx-2563eb); font-size: var(--font-size-xs); padding: 1px 6px;">* คืนเงิน 100% เมื่อสิ้นสุดสัญญา</span>
               </div>
               <strong style="color: var(--tx-0f172a);">฿{{ totalDepositFee.toLocaleString() }}</strong>
             </div>
@@ -1072,9 +1072,9 @@
                 ฿{{ totalCommonFee.toLocaleString() }}
               </strong>
             </div>
-            <div style="display: flex; justify-content: space-between; padding-top: 6px; font-size: 1.05rem;">
+            <div style="display: flex; justify-content: space-between; padding-top: 6px; font-size: var(--font-size-lg);">
               <strong style="color: var(--tx-1e3a8a);">ยอดรวมที่ต้องเตรียมชำระในวันทำสัญญา (โดยประมาณ):</strong>
-              <strong style="color: var(--tx-2563eb); font-size: 1.25rem;">฿{{ contractTotal.toLocaleString() }}</strong>
+              <strong style="color: var(--tx-2563eb); font-size: var(--font-size-xl);">฿{{ contractTotal.toLocaleString() }}</strong>
             </div>
           </div>
         </div>
@@ -1090,8 +1090,8 @@
               <polyline points="10 9 9 9 8 9"></polyline>
             </svg>
             <div>
-              <strong style="color: var(--tx-166534); font-size: 0.95rem;">การรับประกันเงินประกันการเช่า 100% (Refundable Deposit Guarantee)</strong>
-              <div style="font-size: 0.8rem; color: var(--tx-15803d);">
+              <strong style="color: var(--tx-166534); font-size: var(--font-size-base);">การรับประกันเงินประกันการเช่า 100% (Refundable Deposit Guarantee)</strong>
+              <div style="font-size: var(--font-size-xs); color: var(--tx-15803d);">
                 เงินประกันสัญญา ฿{{ totalDepositFee.toLocaleString() }} ได้รับคืนเต็มจำนวน 100% ภายใน 15 วันทำการหลังส่งมอบพื้นที่คืนตามระเบียบ กทม.
               </div>
             </div>
@@ -1145,11 +1145,11 @@
           <div style="padding: 24px 28px; background: var(--bg-ffffff);">
             <!-- Countdown Banner -->
             <div style="background: var(--bg-fefce8); border: 1px solid var(--bd-fef08a); border-radius: 10px; padding: 12px 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
-              <span style="flex: 1; min-width: 0; text-align: left; font-size: 0.82rem; line-height: 1.35; color: var(--tx-854d0e); font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+              <span style="flex: 1; min-width: 0; text-align: left; font-size: var(--font-size-xs); line-height: 1.35; color: var(--tx-854d0e); font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: 0 0 auto; color: var(--tx-ca8a04);"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 <span>ยื่นคำขอนัดดูแผงสำเร็จ</span>
               </span>
-              <span class="badge" style="flex: 0 0 auto; white-space: nowrap; background: var(--bg-fef3c7); color: var(--tx-b45309); border: 1px solid var(--bd-fde68a); font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; padding: 7px 10px;">
+              <span class="badge" style="flex: 0 0 auto; white-space: nowrap; background: var(--bg-fef3c7); color: var(--tx-b45309); border: 1px solid var(--bd-fde68a); font-size: var(--font-size-xs); font-weight: 700; display: inline-flex; align-items: center; gap: 5px; padding: 7px 10px;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 <span>รอเจ้าหน้าที่ตรวจสอบ</span>
               </span>
@@ -1158,16 +1158,16 @@
             <!-- Ticket Details Grid -->
             <div style="display: grid; grid-template-columns: 1fr; gap: 18px; text-align: left; margin-bottom: 20px;">
               <!-- Left: Specs -->
-              <div style="background: var(--bg-f8fafc); border: 1px solid var(--bd-e2e8f0); border-radius: 12px; padding: 16px; font-size: 0.82rem; display: flex; flex-direction: column; gap: 8px;">
+              <div style="background: var(--bg-f8fafc); border: 1px solid var(--bd-e2e8f0); border-radius: 12px; padding: 16px; font-size: var(--font-size-xs); display: flex; flex-direction: column; gap: 8px;">
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: var(--tx-64748b);">ตลาด:</span>
                   <strong style="color: var(--tx-0f172a);">{{ currentMarketName }}</strong>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: var(--tx-64748b);">หมายเลขแผง:</span>
-                  <strong style="color: var(--tx-2563eb); font-size: 1rem;">
+                  <strong style="color: var(--tx-2563eb); font-size: var(--font-size-md);">
                     แผง {{ passDisplayStalls.length > 0 ? passDisplayStalls.map(stallDisplayNumber).join(', ') : stallDisplayNumber(selectedStall) }}
-                    <span v-if="passDisplayStalls.length > 1" style="font-size: 0.8rem; font-weight: 600; color: var(--tx-64748b);">({{ passDisplayStalls.length }} แผง)</span>
+                    <span v-if="passDisplayStalls.length > 1" style="font-size: var(--font-size-xs); font-weight: 600; color: var(--tx-64748b);">({{ passDisplayStalls.length }} แผง)</span>
                   </strong>
                 </div>
                 <div v-if="passDisplayStalls[0]?.status === 'reserved' || currentSelectionStatus === 'reserved'" style="display: flex; justify-content: space-between; background: var(--bg-fffbeb); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--bd-fde68a);">
@@ -1247,7 +1247,7 @@
           <div style="padding:24px;">
 
           <!-- Comparison Table -->
-          <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 20px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); margin-bottom: 20px;">
             <thead>
               <tr style="background: var(--bg-f1f5f9); border-bottom: 2px solid var(--bd-cbd5e1);">
                 <th style="padding: 10px; text-align: left; color: var(--tx-475569);">คุณลักษณะ</th>
@@ -3194,10 +3194,10 @@ onUnmounted(unbindBookingPageListeners)
 .waitlist-claim-notice.is-map-drawer { flex-shrink: 0; border-bottom: 1px solid var(--bd-bfdbfe); }
 .waitlist-claim-icon { width: 34px; height: 34px; flex: 0 0 34px; display: grid; place-items: center; border-radius: 9px; background: var(--bg-dbeafe); color: var(--tx-2563eb); }
 .waitlist-claim-content { min-width: 0; display: flex; flex: 1; flex-direction: column; gap: 2px; }
-.waitlist-claim-content strong { color: var(--tx-1e3a8a); font-size: 0.9375rem; font-weight: 700; }
-.waitlist-claim-content span { color: var(--tx-475569); font-size: 0.8125rem; font-weight: 500; }
+.waitlist-claim-content strong { color: var(--tx-1e3a8a); font-size: var(--font-size-base); font-weight: 700; }
+.waitlist-claim-content span { color: var(--tx-475569); font-size: var(--font-size-xs); font-weight: 500; }
 .waitlist-claim-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.waitlist-claim-badge { flex: 0 0 auto; padding: 3px 8px; border-radius: 999px; background: var(--bg-dbeafe); color: var(--tx-1d4ed8) !important; font-size: 0.75rem !important; font-weight: 700 !important; }
+.waitlist-claim-badge { flex: 0 0 auto; padding: 3px 8px; border-radius: 999px; background: var(--bg-dbeafe); color: var(--tx-1d4ed8) !important; font-size: var(--font-size-xs) !important; font-weight: 700 !important; }
 @media (max-width: 760px) { .step1-title-bar { align-items: flex-start; flex-direction: column; gap: 12px; } .step1-map-toolbar { width: 100%; max-width: none; } }
 
 .map-selection-empty-drawer {
@@ -3220,15 +3220,15 @@ onUnmounted(unbindBookingPageListeners)
   backdrop-filter: blur(14px);
 }
 .msed-header { padding: 15px 16px 13px; border-bottom: 1px solid var(--bd-eef2f6); }
-.msed-header strong { display: block; color: var(--tx-0f172a); font-size: 1.125rem; font-weight: 800; }
-.msed-header span { display: block; margin-top: 3px; overflow: hidden; color: var(--tx-64748b); font-size: .9375rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.msed-header strong { display: block; color: var(--tx-0f172a); font-size: var(--font-size-lg); font-weight: 800; }
+.msed-header span { display: block; margin-top: 3px; overflow: hidden; color: var(--tx-64748b); font-size: var(--font-size-base); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .msed-content { display: flex; flex: 1; flex-direction: column; align-items: center; padding: 30px 23px 22px; text-align: center; }
 .msed-icon { display: grid; width: 58px; height: 58px; place-items: center; border: 1px solid var(--bd-bfdbfe); border-radius: 17px; background: var(--bg-eff6ff); color: var(--tx-2563eb); box-shadow: 0 7px 16px rgba(37, 99, 235, .12); }
-.msed-content h3 { margin: 15px 0 5px; color: var(--tx-0f172a); font-size: 1.25rem; font-weight: 800; }
-.msed-content > p { max-width: 290px; margin: 0; color: var(--tx-64748b); font-size: .9375rem; line-height: 1.55; }
+.msed-content h3 { margin: 15px 0 5px; color: var(--tx-0f172a); font-size: var(--font-size-xl); font-weight: 800; }
+.msed-content > p { max-width: 290px; margin: 0; color: var(--tx-64748b); font-size: var(--font-size-base); line-height: 1.55; }
 .msed-icon.is-full { border-color: var(--bd-fecaca); background: var(--bg-fef2f2); color: var(--tx-dc2626); box-shadow: 0 7px 16px rgba(220, 38, 38, .1); }
 .msed-status-list { width: 100%; margin-top: 21px; padding: 10px 12px; border: 1px solid var(--bd-e2e8f0); border-radius: 10px; background: var(--bg-f8fafc); text-align: left; }
-.msed-status-list > div { display: flex; align-items: center; gap: 8px; color: var(--tx-475569); font-size: .875rem; line-height: 1.5; }
+.msed-status-list > div { display: flex; align-items: center; gap: 8px; color: var(--tx-475569); font-size: var(--font-size-sm); line-height: 1.5; }
 .msed-status-list > div + div { margin-top: 8px; }
 .msed-status-list i { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; }
 .msed-status-list i.is-available { background: #10b981; }
@@ -3252,7 +3252,7 @@ onUnmounted(unbindBookingPageListeners)
   align-items: center;
   gap: 5px;
   color: var(--tx-dc2626);
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   margin-top: 6px;
   animation: formErrorFadeIn 0.2s ease-out;
@@ -3288,7 +3288,7 @@ onUnmounted(unbindBookingPageListeners)
   justify-content: center;
   gap: 4px;
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -3331,8 +3331,8 @@ onUnmounted(unbindBookingPageListeners)
 .photo-preview-overlay { background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(4px); z-index: 1200; }
 .photo-preview { width: min(860px, 94vw); max-height:min(90vh,90dvh); background: #0f172a; border-radius: 18px; overflow: hidden; box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; }
 .pp-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; color: #ffffff; }
-.pp-title { font-size: 1rem; font-weight: 700; }
-.pp-sub { font-size: 0.76rem; color: var(--tx-94a3b8); margin-top: 1px; }
+.pp-title { font-size: var(--font-size-md); font-weight: 700; }
+.pp-sub { font-size: var(--font-size-xs); color: var(--tx-94a3b8); margin-top: 1px; }
 .pp-close { width: 34px; height: 34px; border-radius: 10px; border: none; background: var(--bg-rgba-255-255-255-0p12); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.15s ease; }
 .pp-close:hover { background: var(--bg-rgba-255-255-255-0p22); }
 .pp-stage { position: relative; flex:1 1 auto; min-height:240px; height: min(520px, 60vh); background: #000000; display: flex; align-items: center; justify-content: center; }
@@ -3342,7 +3342,7 @@ onUnmounted(unbindBookingPageListeners)
 .pp-nav:hover { background: var(--bg-ffffff); transform: translateY(-50%) scale(1.08); }
 .pp-prev { left: 14px; }
 .pp-next { right: 14px; }
-.pp-counter { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.75); color: #ffffff; font-size: 0.75rem; font-weight: 600; padding: 3px 12px; border-radius: 999px; }
+.pp-counter { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.75); color: #ffffff; font-size: var(--font-size-xs); font-weight: 600; padding: 3px 12px; border-radius: 999px; }
 .pp-thumbs { display: flex; gap: 8px; padding: 12px 18px 16px; overflow-x: auto; justify-content: center; }
 .pp-thumb { flex: 0 0 auto; width: 76px; height: 54px; border-radius: 8px; overflow: hidden; border: 2px solid transparent; padding: 0; background: #1e293b; cursor: pointer; opacity: 0.6; transition: all 0.15s ease; }
 .pp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -3366,9 +3366,9 @@ onUnmounted(unbindBookingPageListeners)
 .ssc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
 .ssc-title { display: flex; flex: 1; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; }
 .ssc-title-main { display: flex; align-items: center; gap: 7px; min-width: 0; }
-.ssc-title strong { font-size: 1rem; color: var(--tx-0f172a); white-space: nowrap; }
-.ssc-status-badge { flex-shrink: 0; padding: 3px 8px !important; font-size: 0.8125rem !important; }
-.ssc-floor-name { display: block; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--tx-64748b); font-size: 0.8125rem; font-weight: 600; line-height: 1.4; }
+.ssc-title strong { font-size: var(--font-size-md); color: var(--tx-0f172a); white-space: nowrap; }
+.ssc-status-badge { flex-shrink: 0; padding: 3px 8px !important; font-size: var(--font-size-xs) !important; }
+.ssc-floor-name { display: block; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--tx-64748b); font-size: var(--font-size-xs); font-weight: 600; line-height: 1.4; }
 .ssc-remove { width: 24px; height: 24px; border-radius: 8px; border: 1px solid var(--bd-e2e8f0); background: var(--bg-ffffff); color: var(--tx-64748b); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.15s ease; }
 .ssc-remove:hover { background: var(--bg-fef2f2); border-color: var(--bd-fca5a5); color: var(--tx-ef4444); }
 .ssc-body { display: grid; grid-template-columns: 84px 1fr; gap: 10px; align-items: stretch; }
@@ -3376,13 +3376,13 @@ onUnmounted(unbindBookingPageListeners)
 .ssc-photo:hover img { transform: scale(1.05); }
 .ssc-photo img { transition: transform 0.2s ease; }
 .ssc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.ssc-photo-tag { position: absolute; bottom: 4px; right: 4px; display: inline-flex; align-items: center; gap: 3px; background: rgba(15, 23, 42, 0.78); color: #ffffff; font-size: 0.75rem; font-weight: 600; padding: 2px 6px; border-radius: 5px; }
+.ssc-photo-tag { position: absolute; bottom: 4px; right: 4px; display: inline-flex; align-items: center; gap: 3px; background: rgba(15, 23, 42, 0.78); color: #ffffff; font-size: var(--font-size-xs); font-weight: 600; padding: 2px 6px; border-radius: 5px; }
 .ssc-metrics { display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; }
-.ssc-metric { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 0.8125rem; color: var(--tx-64748b); }
-.ssc-metric b { font-size: 0.9375rem; font-weight: 700; color: var(--tx-0f172a); white-space: nowrap; }
-.ssc-metric b small { font-size: 0.75rem; font-weight: 500; color: var(--tx-64748b); }
+.ssc-metric { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: var(--font-size-xs); color: var(--tx-64748b); }
+.ssc-metric b { font-size: var(--font-size-base); font-weight: 700; color: var(--tx-0f172a); white-space: nowrap; }
+.ssc-metric b small { font-size: var(--font-size-xs); font-weight: 500; color: var(--tx-64748b); }
 .ssc-metric b.is-money { color: var(--tx-059669); }
-.sel-stall-total { display: flex; flex-direction: column; gap: 2px; margin: -2px 0 12px; padding: 8px 10px; border-radius: 10px; background: var(--bg-f8fafc); font-size: 0.8125rem; color: var(--tx-64748b); }
+.sel-stall-total { display: flex; flex-direction: column; gap: 2px; margin: -2px 0 12px; padding: 8px 10px; border-radius: 10px; background: var(--bg-f8fafc); font-size: var(--font-size-xs); color: var(--tx-64748b); }
 .sel-stall-total span:first-child { font-weight: 700; color: var(--tx-334155); }
 
 .map-selection-bar {
@@ -3411,7 +3411,7 @@ onUnmounted(unbindBookingPageListeners)
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.92rem;
+  font-size: var(--font-size-base);
   font-weight: 600;
   color: var(--tx-1e293b);
 }
@@ -3434,12 +3434,12 @@ onUnmounted(unbindBookingPageListeners)
 .msb-metric {
   display: flex;
   flex-direction: column;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
 }
 
 .msb-metric strong {
-  font-size: 0.98rem;
+  font-size: var(--font-size-md);
   font-weight: 700;
   color: var(--tx-1e293b);
 }
@@ -3504,7 +3504,7 @@ onUnmounted(unbindBookingPageListeners)
   background: transparent;
   padding: 6px 14px;
   border-radius: 16px;
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-475569);
   cursor: pointer;
@@ -3538,7 +3538,7 @@ onUnmounted(unbindBookingPageListeners)
   background: transparent;
   padding: 6px 14px;
   border-radius: 16px;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-475569);
   cursor: pointer;
@@ -3559,7 +3559,7 @@ onUnmounted(unbindBookingPageListeners)
   color: #ffffff;
   padding: 5px 16px;
   border-radius: 20px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   display: inline-flex;
@@ -3608,7 +3608,7 @@ onUnmounted(unbindBookingPageListeners)
   background: var(--bg-f1f5f9);
   border-radius: 6px;
   text-align: center;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-94a3b8);
   letter-spacing: 0.05em;
@@ -3632,7 +3632,7 @@ onUnmounted(unbindBookingPageListeners)
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   position: relative;
   transition: all 0.15s ease;
@@ -3687,7 +3687,7 @@ onUnmounted(unbindBookingPageListeners)
 
 .selected-check {
   color: #ffffff;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
@@ -3755,7 +3755,7 @@ onUnmounted(unbindBookingPageListeners)
 }
 
 .date-day-name {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-475569);
 }
@@ -3765,7 +3765,7 @@ onUnmounted(unbindBookingPageListeners)
 }
 
 .date-badge {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 6px;
@@ -3800,7 +3800,7 @@ onUnmounted(unbindBookingPageListeners)
 }
 
 .date-day-num {
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
   font-weight: 800;
   color: var(--tx-0f172a);
   line-height: 1;
@@ -3811,13 +3811,13 @@ onUnmounted(unbindBookingPageListeners)
 }
 
 .date-month {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 600;
 }
 
 .date-card-footer {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   border-top: 1px dashed var(--bd-e2e8f0);
   padding-top: 6px;
   display: flex;
@@ -3920,16 +3920,16 @@ onUnmounted(unbindBookingPageListeners)
 }
 
 .slot-card-icon {
-  font-size: 1.2rem;
+  font-size: var(--font-size-xl);
 }
 
 .slot-card-time {
-  font-size: 0.92rem;
+  font-size: var(--font-size-base);
   color: var(--tx-0f172a);
 }
 
 .slot-card-capacity {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 6px;
@@ -3953,7 +3953,7 @@ onUnmounted(unbindBookingPageListeners)
 }
 
 .slot-card-note {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   line-height: 1.3;
 }
@@ -3994,7 +3994,7 @@ onUnmounted(unbindBookingPageListeners)
   right: 12px;
   background: #10b981;
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 10px;
@@ -4010,25 +4010,25 @@ onUnmounted(unbindBookingPageListeners)
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
-  font-size: 0.92rem;
+  font-size: var(--font-size-base);
   color: var(--tx-0f172a);
 }
 
 .schedule-price {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   font-weight: 800;
   color: var(--tx-1e40af);
   margin-bottom: 4px;
 }
 
 .schedule-price .unit {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--tx-64748b);
 }
 
 .schedule-desc {
-  font-size: 0.76rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   line-height: 1.35;
 }
@@ -4071,7 +4071,7 @@ onUnmounted(unbindBookingPageListeners)
   color: #ffffff;
   padding: 4px 10px;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   white-space: nowrap;
   pointer-events: none;
@@ -4141,7 +4141,7 @@ onUnmounted(unbindBookingPageListeners)
 }
 
 .style-thumb span {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-475569);
 }
@@ -4167,7 +4167,7 @@ onUnmounted(unbindBookingPageListeners)
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-475569);
   font-weight: 500;
 }
@@ -4229,7 +4229,7 @@ onUnmounted(unbindBookingPageListeners)
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-cbd5e1);
   color: var(--tx-1e3a8a);
-  font-size: 1.15rem;
+  font-size: var(--font-size-lg);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -4247,11 +4247,11 @@ onUnmounted(unbindBookingPageListeners)
 }
 
 .zoom-btn.reset-btn {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
 }
 
 .zoom-level-pill {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   color: var(--tx-475569);
   text-align: center;
@@ -4281,7 +4281,7 @@ onUnmounted(unbindBookingPageListeners)
   padding: 10px 18px;
   border-radius: 12px;
   margin-bottom: 12px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   line-height: 1.4;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
   position: relative;
@@ -4335,7 +4335,7 @@ onUnmounted(unbindBookingPageListeners)
   border: 1px solid var(--bd-rgba-0-0-0-0p12);
   border-radius: 8px;
   padding: 5px 12px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: inherit;
   cursor: pointer;
@@ -4361,7 +4361,7 @@ onUnmounted(unbindBookingPageListeners)
 
 .stall-chip {
   border-radius: 9999px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 4px 10px;
   display: inline-flex;
@@ -4389,7 +4389,7 @@ onUnmounted(unbindBookingPageListeners)
   border-radius: 50%;
   background: var(--bg-rgba-0-0-0-0p1);
   border: none;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   line-height: 1;
   cursor: pointer;
   display: inline-flex;
@@ -4429,7 +4429,7 @@ onUnmounted(unbindBookingPageListeners)
   right: 1px;
   background: #d97706;
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 800;
   line-height: 1;
   padding: 1.5px 3px;
@@ -4512,7 +4512,7 @@ onUnmounted(unbindBookingPageListeners)
     backdrop-filter: blur(8px);
     color: #ffffff;
     border-radius: 9999px;
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
     font-weight: 600;
     box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
     pointer-events: none;
@@ -4541,7 +4541,7 @@ onUnmounted(unbindBookingPageListeners)
     border: 1px solid var(--bd-fca5a5);
     border-radius: 12px;
     color: var(--tx-b91c1c);
-    font-size: 0.78rem;
+    font-size: var(--font-size-xs);
     font-weight: 600;
     box-shadow: 0 4px 14px rgba(220, 38, 38, 0.15);
   }
@@ -4572,7 +4572,7 @@ onUnmounted(unbindBookingPageListeners)
 
   .style-thumb {
     padding: 2px 6px !important;
-    font-size: 0.75rem !important;
+    font-size: var(--font-size-xs) !important;
   }
 
   .thumb-preview {
@@ -4589,7 +4589,7 @@ onUnmounted(unbindBookingPageListeners)
     flex: 1;
     justify-content: center;
     padding: 6px 8px !important;
-    font-size: 0.76rem !important;
+    font-size: var(--font-size-xs) !important;
   }
 }
 
@@ -4623,14 +4623,14 @@ onUnmounted(unbindBookingPageListeners)
 }
 
 .market-full-title {
-  font-size: 0.98rem;
+  font-size: var(--font-size-md);
   font-weight: 800;
   color: var(--tx-991b1b);
   margin-bottom: 4px;
 }
 
 .market-full-desc {
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-b91c1c);
   line-height: 1.55;
   margin: 0;
@@ -4712,8 +4712,8 @@ onUnmounted(unbindBookingPageListeners)
 .step3-review-grid > .card > div:first-child > div:first-child { width: 40px !important; height: 40px !important; border-radius: 10px !important; }
 .step3-review-grid > .card > div:first-child > div:first-child svg { width: 20px; height: 20px; }
 .step3-review-grid > .card > div:first-child > span { font-size: var(--font-size-lg) !important; font-weight: 700 !important; }
-.step3-review-grid [style*="font-size: 0.8rem"] { font-size: var(--font-size-xs) !important; }
-.step3-review-grid [style*="font-size: 0.88rem"] { font-size: var(--font-size-sm) !important; }
+.step3-review-grid [style*="font-size: var(--font-size-xs)"] { font-size: var(--font-size-xs) !important; }
+.step3-review-grid [style*="font-size: var(--font-size-sm)"] { font-size: var(--font-size-sm) !important; }
 .step3-finance-card { margin-bottom: 16px !important; padding: 20px !important; }
 .step3-review > .step3-finance-card { margin-top: 0 !important; }
 .step3-finance-icon { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: var(--bg-eff6ff); color: var(--tx-2563eb); flex: 0 0 40px; }

@@ -313,12 +313,12 @@
             <div v-if="isTenant" class="tenant-contract-banner">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
               <div>
-                <strong style="color: var(--tx-1e40af); font-size: 0.95rem;">คำร้องขอเช่าแผงค้าได้รับการอนุมัติเรียบร้อยแล้ว</strong>
-                <p style="margin: 2px 0 0; color: var(--tx-3b82f6); font-size: 0.825rem;">กรุณาตรวจสอบข้อมูลสัญญาเช่าด้านล่าง เมื่อกดยืนยันแล้ว สัญญาจะถูกส่งไปยังเจ้าหน้าที่เพื่อตรวจสอบและอนุมัติสัญญา</p>
+                <strong style="color: var(--tx-1e40af); font-size: var(--font-size-base);">คำร้องขอเช่าแผงค้าได้รับการอนุมัติเรียบร้อยแล้ว</strong>
+                <p style="margin: 2px 0 0; color: var(--tx-3b82f6); font-size: var(--font-size-xs);">กรุณาตรวจสอบข้อมูลสัญญาเช่าด้านล่าง เมื่อกดยืนยันแล้ว สัญญาจะถูกส่งไปยังเจ้าหน้าที่เพื่อตรวจสอบและอนุมัติสัญญา</p>
               </div>
             </div>
 
-            <h4 style="font-size: 0.95rem; margin-bottom: 12px; color: var(--primary);">1. ข้อมูลแผงเช่าและร้านค้า</h4>
+            <h4 style="font-size: var(--font-size-base); margin-bottom: 12px; color: var(--primary);">1. ข้อมูลแผงเช่าและร้านค้า</h4>
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" for="c_stall_id">เลือกแผงเช่าที่ต้องการเช่า <span class="req-star" aria-hidden="true">*</span></label>
@@ -349,7 +349,7 @@
               <AppInput id="c_business_type" v-model="formContract.business_type" type="text" placeholder="เช่น อาหารปรุงสุก, เครื่องดื่ม, เสื้อผ้า" />
             </div>
 
-            <h4 style="font-size: 0.95rem; margin: 20px 0 12px; color: var(--primary);">2. ข้อมูลผู้เช่า (Tenant Information)</h4>
+            <h4 style="font-size: var(--font-size-base); margin: 20px 0 12px; color: var(--primary);">2. ข้อมูลผู้เช่า (Tenant Information)</h4>
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" for="c_tenant_name">ชื่อ-นามสกุล ผู้เช่า <span class="req-star" aria-hidden="true">*</span></label>
@@ -379,7 +379,7 @@
               <AppInput id="c_tenant_address" v-model="formContract.tenant_address" type="textarea" :rows="2" placeholder="บ้านเลขที่ หมู่ ซอย ถนน ตำบล อำเภอ จังหวัด" />
             </div>
 
-            <h4 style="font-size: 0.95rem; margin: 20px 0 12px; color: var(--primary);">3. เงื่อนไขและอัตราค่าเช่า (Lease Terms)</h4>
+            <h4 style="font-size: var(--font-size-base); margin: 20px 0 12px; color: var(--primary);">3. เงื่อนไขและอัตราค่าเช่า (Lease Terms)</h4>
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" for="c_start_date">วันที่เริ่มต้นสัญญา <span class="req-star" aria-hidden="true">*</span></label>
@@ -470,14 +470,14 @@
           <AppButton v-if="currentDoc.has_document" variant="outline" size="sm" @click="openContractAttachment(currentDoc)">ดูเอกสารประกอบ</AppButton>
           <div ref="contractPaper" class="contract-document">
             <div class="contract-header">
-              <h2 style="font-size: 1.4rem; font-weight: 700;">หนังสือสัญญาเช่าพื้นที่แผงค้าในตลาด</h2>
-              <div style="font-size: 0.9rem; color: var(--tx-475569); margin-top: 4px;">ระบบจัดการตลาด e-Market Management System</div>
-              <div style="font-size: 0.85rem; font-weight: 600; color: var(--tx-059669); margin-top: 6px;">
+              <h2 style="font-size: 1.375rem; font-weight: 700;">หนังสือสัญญาเช่าพื้นที่แผงค้าในตลาด</h2>
+              <div style="font-size: var(--font-size-sm); color: var(--tx-475569); margin-top: 4px;">ระบบจัดการตลาด e-Market Management System</div>
+              <div style="font-size: var(--font-size-sm); font-weight: 600; color: var(--tx-059669); margin-top: 6px;">
                 เลขที่สัญญา: {{ currentDoc.contract_number }}
               </div>
             </div>
 
-            <div style="line-height: 1.8; font-size: 0.92rem; text-align: justify;">
+            <div style="line-height: 1.8; font-size: var(--font-size-base); text-align: justify;">
               <p>
                 สัญญาฉบับนี้ทำขึ้น ณ <strong>ตลาดกลางชุมชน e-Market</strong> เมื่อวันที่ <strong>{{ currentDoc.created_at ? currentDoc.created_at.slice(0, 10) : currentDoc.start_date }}</strong>
                 ระหว่าง <strong>บริษัท บริหารจัดการตลาด จำกัด</strong> (ซึ่งต่อไปนี้เรียกว่า "ผู้ให้เช่า") ฝ่ายหนึ่ง กับ
@@ -1294,7 +1294,7 @@ onMounted(() => {
 }
 
 .loading-spinner-row {
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   color: var(--tx-64748b);
   display: inline-flex;
   align-items: center;
@@ -1336,7 +1336,7 @@ onMounted(() => {
 }
 
 .table-card-title {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--tx-1e293b);
   margin: 0;
@@ -1344,7 +1344,7 @@ onMounted(() => {
 }
 
 .table-card-subtitle {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
 }
 
@@ -1373,7 +1373,7 @@ onMounted(() => {
   width: 250px;
   height: 38px;
   padding: 0 34px 0 36px;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-family: inherit;
   color: var(--tx-1e293b);
   background: var(--bg-ffffff);
@@ -1415,7 +1415,7 @@ onMounted(() => {
 .btn-export-report {
   height: 38px;
   padding: 0 14px;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-family: inherit;
   font-weight: 500;
   color: var(--tx-475569);
@@ -1438,7 +1438,7 @@ onMounted(() => {
 .btn-table-primary-action {
   height: 38px;
   padding: 0 16px;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-family: inherit;
   font-weight: 600;
   color: #ffffff;
@@ -1522,7 +1522,7 @@ onMounted(() => {
 }
 
 .kpi-title {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
   line-height: 1.2;
@@ -1537,14 +1537,14 @@ onMounted(() => {
 }
 
 .kpi-count {
-  font-size: 1.35rem;
+  font-size: 1.375rem;
   font-weight: 800;
   color: var(--tx-0f172a);
   line-height: 1;
 }
 
 .kpi-unit-pill {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 5px;
@@ -1647,14 +1647,14 @@ onMounted(() => {
 }
 
 .empty-title {
-  font-size: 1.05rem;
+  font-size: var(--font-size-lg);
   font-weight: 700;
   color: var(--tx-1e293b);
   margin-bottom: 6px;
 }
 
 .empty-desc {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-64748b);
   max-width: 440px;
   margin: 0 auto;
@@ -1663,7 +1663,7 @@ onMounted(() => {
 .btn-empty-reset {
   margin-top: 16px;
   padding: 7px 16px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-family: inherit;
   font-weight: 600;
   color: var(--tx-2563eb);
@@ -1690,12 +1690,12 @@ onMounted(() => {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .custom-table th {
   padding: 13px 16px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-64748b);
   background: var(--bg-f8fafc);
@@ -1717,7 +1717,7 @@ onMounted(() => {
 .table-code-blue {
   color: var(--tx-2563eb);
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .clickable-code {
@@ -1731,7 +1731,7 @@ onMounted(() => {
 }
 
 .cell-sub-cycle {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-94a3b8);
   margin-top: 2px;
 }
@@ -1742,7 +1742,7 @@ onMounted(() => {
 }
 
 .cell-sub-category {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-94a3b8);
   margin-top: 1px;
 }
@@ -1753,7 +1753,7 @@ onMounted(() => {
 }
 
 .cell-phone-link {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   display: inline-flex;
   align-items: center;
@@ -1768,11 +1768,11 @@ onMounted(() => {
 
 .cell-duration-text {
   color: var(--tx-475569);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
 }
 
 .cell-expiring-tag {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-dc2626);
   font-weight: 600;
   display: inline-flex;
@@ -1784,7 +1784,7 @@ onMounted(() => {
 .cell-bold-amount {
   font-weight: 700;
   color: var(--tx-1e293b);
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
 }
 
 .table-actions-cell {
@@ -1850,13 +1850,13 @@ onMounted(() => {
 }
 
 .contract-label-text {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-94a3b8);
   font-weight: 500;
 }
 
 .contract-card-number {
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   cursor: pointer;
   line-height: 1.3;
@@ -1867,7 +1867,7 @@ onMounted(() => {
 }
 
 .contract-card-cycle {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   display: inline-flex;
   align-items: center;
@@ -1883,7 +1883,7 @@ onMounted(() => {
 }
 
 .expiring-badge {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-dc2626);
   background: var(--bg-fee2e2);
@@ -1899,7 +1899,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 7px;
@@ -1976,14 +1976,14 @@ onMounted(() => {
 }
 
 .shop-name-title {
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--tx-1e293b);
   line-height: 1.3;
 }
 
 .shop-category-subtitle {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-top: 2px;
 }
@@ -1997,7 +1997,7 @@ onMounted(() => {
   border: 1px solid var(--bd-bfdbfe);
   padding: 3px 9px;
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -2016,21 +2016,21 @@ onMounted(() => {
 }
 
 .meta-card-label {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
   margin-bottom: 2px;
 }
 
 .meta-card-value {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-1e293b);
   line-height: 1.3;
 }
 
 .meta-card-phone {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-2563eb);
   display: inline-flex;
   align-items: center;
@@ -2048,18 +2048,18 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   color: var(--tx-475569);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
 }
 
 .meta-card-amount {
-  font-size: 1.05rem;
+  font-size: var(--font-size-lg);
   font-weight: 800;
   color: var(--tx-1e293b);
   line-height: 1.2;
 }
 
 .meta-card-amount .unit-text {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--tx-64748b);
   margin-left: 2px;
@@ -2084,14 +2084,14 @@ onMounted(() => {
   border: 1px solid var(--bd-e2e8f0);
   padding: 3px 8px;
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
 /* Field Errors */
 .field-error-text {
   margin: 4px 0 0;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-dc2626);
   font-weight: 500;
 }
@@ -2123,7 +2123,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-854d0e);
   background: #fef08a;
@@ -2132,7 +2132,7 @@ onMounted(() => {
 }
 
 .review-desc {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-713f12);
   margin-top: 4px;
 }

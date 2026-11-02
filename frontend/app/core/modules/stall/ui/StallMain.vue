@@ -622,7 +622,7 @@ const renderMarketMarker = () => {
   const el = document.createElement('div')
   el.className = 'market-overview-pin'
   el.innerHTML = `
-    <div style="background: #2563eb; color: #fff; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.75rem; box-shadow: 0 4px 12px rgba(37,99,235,0.4); border: 2px solid #ffffff; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+    <div style="background: #2563eb; color: #fff; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: var(--font-size-xs); box-shadow: 0 4px 12px rgba(37,99,235,0.4); border: 2px solid #ffffff; display: flex; align-items: center; gap: 5px; cursor: pointer;">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
       <span>${currentMarket.value.name}</span>
     </div>
@@ -630,10 +630,10 @@ const renderMarketMarker = () => {
 
   const popup = new maplibregl.Popup({ offset: 25, closeButton: false }).setHTML(`
     <div style="padding: 4px; font-family: 'Bai Jamjuree', sans-serif;">
-      <strong style="color: #0f172a; font-size: 0.9rem; display: block; margin-bottom: 2px;">${currentMarket.value.name}</strong>
-      <span style="font-size: 0.78rem; color: #64748b;">${currentMarket.value.address}</span>
+      <strong style="color: #0f172a; font-size: var(--font-size-sm); display: block; margin-bottom: 2px;">${currentMarket.value.name}</strong>
+      <span style="font-size: var(--font-size-xs); color: #64748b;">${currentMarket.value.address}</span>
       <div style="margin-top: 6px;">
-        <button type="button" onclick="window.$navigateToMarket('${currentMarket.value.id}', 'book')" style="background: none; border: none; padding: 0; color: #2563eb; font-weight: 700; font-size: 0.8rem; cursor: pointer; font-family: 'Bai Jamjuree', sans-serif;">จองแผงเช่าตลาดนี้ &rarr;</button>
+        <button type="button" onclick="window.$navigateToMarket('${currentMarket.value.id}', 'book')" style="background: none; border: none; padding: 0; color: #2563eb; font-weight: 700; font-size: var(--font-size-xs); cursor: pointer; font-family: 'Bai Jamjuree', sans-serif;">จองแผงเช่าตลาดนี้ &rarr;</button>
       </div>
     </div>
   `)
@@ -884,7 +884,7 @@ onDeactivated(() => {
 .md-page-heading h2 {
   margin: 0;
   color: var(--tx-1e293b);
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
   font-weight: 800;
   line-height: 1.3;
 }
@@ -892,7 +892,7 @@ onDeactivated(() => {
 .md-page-heading p {
   margin: 3px 0 0;
   color: var(--tx-64748b);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
 }
 
@@ -911,7 +911,7 @@ onDeactivated(() => {
 }
 
 .md-card-title {
-  font-size: 1rem;
+  font-size: var(--font-size-md);
   font-weight: 700;
   color: var(--tx-1e293b);
   margin-bottom: 14px;
@@ -1040,7 +1040,7 @@ onDeactivated(() => {
   background: var(--bg-rgba-239-246-255-0p95);
   border: 1px solid var(--bd-bfdbfe);
   color: var(--tx-1d4ed8);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   letter-spacing: 0.02em;
   box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
@@ -1071,7 +1071,7 @@ onDeactivated(() => {
   max-width: 680px;
   margin: 0 0 20px;
   color: var(--tx-475569);
-  font-size: 0.94rem;
+  font-size: var(--font-size-base);
   font-weight: 500;
   line-height: 1.7;
   display: -webkit-box;
@@ -1142,14 +1142,14 @@ onDeactivated(() => {
 }
 
 .md-meta-label {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
   letter-spacing: 0.01em;
 }
 
 .md-meta-val {
-  font-size: 0.88rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-0f172a);
   font-weight: 700;
 }
@@ -1169,7 +1169,7 @@ onDeactivated(() => {
   border-radius: 10px;
   background: #2563eb;
   color: #ffffff;
-  font-size: 0.86rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   text-decoration: none;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
@@ -1184,7 +1184,7 @@ onDeactivated(() => {
 
 .md-btn-lg {
   padding: 12px 24px;
-  font-size: 0.92rem;
+  font-size: var(--font-size-base);
 }
 
 /* Right Side: Quick Stall Status & Booking Card */
@@ -1222,7 +1222,7 @@ onDeactivated(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 0;
   background: transparent;
@@ -1302,7 +1302,7 @@ onDeactivated(() => {
   column-gap: 5px;
   row-gap: 0;
   color: var(--tx-1e293b);
-  font-size: 0.96rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   line-height: 1.3;
   letter-spacing: -0.01em;
@@ -1323,7 +1323,7 @@ onDeactivated(() => {
 
 .md-bqc-summary-copy small {
   color: var(--tx-718096);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -1374,7 +1374,7 @@ onDeactivated(() => {
 
 .md-bqc-summary-count small {
   margin: 0 0 8px 2px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
 }
 
@@ -1404,7 +1404,7 @@ onDeactivated(() => {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-1e40af);
   background: var(--bg-eff6ff);
@@ -1438,7 +1438,7 @@ onDeactivated(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 600;
 }
@@ -1468,7 +1468,7 @@ onDeactivated(() => {
 }
 
 .md-bqc-total {
-  font-size: 0.76rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-94a3b8);
   font-weight: 600;
 }
@@ -1513,7 +1513,7 @@ onDeactivated(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-b45309);
   background: var(--bg-fef3c7);
@@ -1527,7 +1527,7 @@ onDeactivated(() => {
 
 .md-bqc-ratio-text,
 .md-bqc-full-text {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
 }
@@ -1552,7 +1552,7 @@ onDeactivated(() => {
 }
 
 .md-bqc-price-label {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
 }
@@ -1564,14 +1564,14 @@ onDeactivated(() => {
 }
 
 .md-bqc-price-amount strong {
-  font-size: 1.22rem;
+  font-size: var(--font-size-xl);
   font-weight: 800;
   color: var(--tx-0f172a);
   line-height: 1;
 }
 
 .md-bqc-price-amount small {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-64748b);
 }
@@ -1580,7 +1580,7 @@ onDeactivated(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-15803d);
   background: var(--bg-dcfce7);
@@ -1605,7 +1605,7 @@ onDeactivated(() => {
   height: 46px;
   padding: 0 10px 0 15px;
   border-radius: 14px;
-  font-size: 0.86rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
@@ -1710,7 +1710,7 @@ onDeactivated(() => {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   text-align: center;
 }
@@ -1730,7 +1730,7 @@ onDeactivated(() => {
 }
 
 .md-section-title {
-  font-size: 1.4rem;
+  font-size: 1.375rem;
   font-weight: 800;
   color: var(--tx-0f172a);
   text-align: center;
@@ -1742,7 +1742,7 @@ onDeactivated(() => {
 
 .md-section-sub {
   margin-top: 14px;
-  font-size: 0.88rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-64748b);
   text-align: center;
 }
@@ -1780,7 +1780,7 @@ onDeactivated(() => {
   background: var(--bg-rgba-255-255-255-0p92);
   border: 1px solid var(--bd-e2e8f0);
   color: var(--tx-334155);
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
   opacity: 0;
@@ -1865,7 +1865,7 @@ onDeactivated(() => {
 }
 
 .md-stat-label {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
 }
@@ -1875,7 +1875,7 @@ onDeactivated(() => {
   align-items: baseline;
   flex-wrap: wrap;
   gap: 6px;
-  font-size: 1.45rem;
+  font-size: var(--font-size-2xl);
   font-weight: 800;
   color: var(--tx-1e293b);
   line-height: 1.25;
@@ -1883,7 +1883,7 @@ onDeactivated(() => {
 }
 
 .md-stat-unit {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--tx-64748b);
   white-space: nowrap;
@@ -1925,7 +1925,7 @@ onDeactivated(() => {
 }
 
 .md-detail-text {
-  font-size: 0.88rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-475569);
   line-height: 1.7;
 }
@@ -1967,7 +1967,7 @@ onDeactivated(() => {
 }
 
 .md-sub-title {
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   color: var(--tx-1e293b);
   margin-bottom: 4px;
@@ -1989,7 +1989,7 @@ onDeactivated(() => {
   border: 1px solid var(--bd-e2e8f0);
   color: var(--tx-334155);
   background: var(--bg-f8fafc);
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
 }
 
@@ -2056,7 +2056,7 @@ onDeactivated(() => {
   left: 14px;
   bottom: 12px;
   color: #ffffff;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
@@ -2090,7 +2090,7 @@ onDeactivated(() => {
   border-radius: 8px;
   border: 1px solid var(--bd-93c5fd);
   background: var(--bg-ffffff);
-  font-size: 0.825rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-2563eb);
   text-decoration: none;
@@ -2118,7 +2118,7 @@ onDeactivated(() => {
 
 .gis-mini-tab {
   padding: 4px 12px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   border: none;
   background: transparent;
@@ -2163,7 +2163,7 @@ onDeactivated(() => {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   line-height: 1.5;
 }
 
@@ -2301,7 +2301,7 @@ onDeactivated(() => {
     font-size: 1.65rem;
   }
   .md-hero-summary {
-    font-size: 0.84rem;
+    font-size: var(--font-size-sm);
     line-height: 1.6;
   }
   .md-stats-grid {
@@ -2352,7 +2352,7 @@ onDeactivated(() => {
   align-items: center;
   gap: 10px;
   color: var(--tx-0f172a);
-  font-size: 1.05rem;
+  font-size: var(--font-size-lg);
 }
 
 .md-lightbox-title-wrap svg {
@@ -2412,7 +2412,7 @@ onDeactivated(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
 }
 

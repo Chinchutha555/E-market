@@ -45,11 +45,11 @@
                 <td>
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span :style="{ backgroundColor: z.color_code, width: '16px', height: '16px', borderRadius: '4px', display: 'inline-block' }"></span>
-                    <span style="font-family: monospace; font-size: 0.8rem;">{{ z.color_code }}</span>
+                    <span style="font-family: monospace; font-size: var(--font-size-xs);">{{ z.color_code }}</span>
                   </div>
                 </td>
                 <td><strong>{{ z.stalls_count }} แผง</strong></td>
-                <td style="color: var(--text-muted); font-size: 0.82rem;">{{ z.description || '-' }}</td>
+                <td style="color: var(--text-muted); font-size: var(--font-size-xs);">{{ z.description || '-' }}</td>
                 <td style="text-align: right;">
                   <div style="display: inline-flex; gap: 6px;">
                     <button class="btn btn-sm btn-secondary" @click="openEditZoneModal(z)">แก้ไข</button>
@@ -86,7 +86,7 @@
             </svg>
           </NuxtLink>
         </div>
-        <div style="padding: 16px 20px; color: var(--tx-475569); font-size: 0.875rem; line-height: 1.6; background: var(--bg-f8fafc); border-radius: 8px; margin: 0 20px 20px; border: 1px solid var(--border-subtle);">
+        <div style="padding: 16px 20px; color: var(--tx-475569); font-size: var(--font-size-sm); line-height: 1.6; background: var(--bg-f8fafc); border-radius: 8px; margin: 0 20px 20px; border: 1px solid var(--border-subtle);">
           ระบบจัดการหัวข้อ/เรื่องที่ขอในการยื่นคำร้องทั่วไป เช่น ขอเปลี่ยนชื่อผู้ค้าประจำแผง, ขอติดตั้งมิเตอร์ไฟฟ้า, ขอยกเลิกการเช่า ฯลฯ สามารถกำหนดรหัส, ลำดับการแสดงผล และเปิด-ปิดการใช้งานเพื่อให้หน้าบ้านดึงไปแสดงผลโดยอัตโนมัติ
         </div>
       </div>
@@ -102,7 +102,7 @@
             </div>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 14px; font-size: 0.88rem;">
+          <div style="display: flex; flex-direction: column; gap: 14px; font-size: var(--font-size-sm);">
             <div style="background: var(--bg-f8fafc); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
               <div style="color: var(--primary); font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
@@ -141,7 +141,7 @@
             </div>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.88rem;">
+          <div style="display: flex; flex-direction: column; gap: 12px; font-size: var(--font-size-sm);">
             <div style="display: flex; justify-content: space-between; padding: 12px; background: var(--bg-f8fafc); border: 1px solid var(--border-subtle); border-radius: 8px;">
               <span style="color: var(--text-muted);">Frontend Framework:</span>
               <strong style="color: var(--tx-059669);">Nuxt.js (Nuxt 3.12 + Vue 3)</strong>

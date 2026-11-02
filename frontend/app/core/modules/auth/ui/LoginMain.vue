@@ -247,7 +247,7 @@ const handleLogin = async () => {
   color: var(--tx-1d4ed8);
   padding: 3px 12px;
   border-radius: 20px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   margin-bottom: 8px;
 }
@@ -262,7 +262,7 @@ const handleLogin = async () => {
 
 .login-header p {
   color: var(--tx-64748b);
-  font-size: 0.86rem;
+  font-size: var(--font-size-sm);
   line-height: 1.5;
 }
 
@@ -273,7 +273,7 @@ const handleLogin = async () => {
   padding: 10px 14px;
   border-radius: 10px;
   margin-bottom: 18px;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -307,7 +307,7 @@ const handleLogin = async () => {
 .btn-submit-login {
   width: 100%;
   padding: 12px;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   border-radius: 12px;
   margin-top: 6px;
@@ -320,7 +320,7 @@ const handleLogin = async () => {
 }
 
 .quick-title {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-bottom: 10px;
   text-align: center;
@@ -352,7 +352,7 @@ const handleLogin = async () => {
 }
 
 .quick-badge {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 6px;
@@ -377,7 +377,7 @@ const handleLogin = async () => {
 }
 
 .quick-user-info {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-475569);
 }
 
@@ -399,13 +399,13 @@ const handleLogin = async () => {
   gap: 8px;
   margin-bottom: 10px;
   color: var(--tx-6b21a8);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
 }
 
 .staff-demo-heading small {
   color: var(--tx-7c3aed);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
 }
 

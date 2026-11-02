@@ -156,7 +156,7 @@ const handleClick = (e: MouseEvent) => {
   min-height: 32px;
   max-height: 32px;
   padding: 0 10px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   border-radius: 6px;
   gap: 5px;
 }
@@ -166,7 +166,7 @@ const handleClick = (e: MouseEvent) => {
   min-height: 36px;
   max-height: 36px;
   padding: 0 14px;
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   border-radius: 8px;
   gap: 6px;
 }
@@ -176,7 +176,7 @@ const handleClick = (e: MouseEvent) => {
   min-height: 40px;
   max-height: 40px;
   padding: 0 16px;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   border-radius: 8px;
   gap: 7px;
 }
@@ -186,7 +186,7 @@ const handleClick = (e: MouseEvent) => {
   min-height: 46px;
   max-height: 46px;
   padding: 0 22px;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   border-radius: 10px;
   gap: 8px;
 }

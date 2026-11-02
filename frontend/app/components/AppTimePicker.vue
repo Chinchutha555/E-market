@@ -388,7 +388,7 @@ onBeforeUnmount(() => {
 }
 
 .size-sm .time-picker-display {
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   letter-spacing: 0.3px;
 }
@@ -400,7 +400,7 @@ onBeforeUnmount(() => {
 }
 
 .size-md .time-picker-display {
-  font-size: 0.88rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   letter-spacing: 0.4px;
 }
@@ -479,18 +479,18 @@ onBeforeUnmount(() => {
 }
 
 .preview-number {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   color: var(--tx-2563eb);
   font-variant-numeric: tabular-nums;
 }
 
 .preview-colon {
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
   color: var(--tx-64748b);
 }
 
 .preview-unit {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-left: 2px;
   font-weight: 500;
@@ -530,7 +530,7 @@ onBeforeUnmount(() => {
   background: var(--bg-f8fafc);
   border: 1px solid var(--bd-e2e8f0);
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-475569);
   cursor: pointer;
@@ -564,7 +564,7 @@ onBeforeUnmount(() => {
 }
 
 .column-title {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-94a3b8);
   text-align: center;
@@ -590,7 +590,7 @@ onBeforeUnmount(() => {
   border: none;
   background: transparent;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--tx-334155);
   cursor: pointer;
@@ -623,7 +623,7 @@ onBeforeUnmount(() => {
   background: transparent;
   border: none;
   color: var(--tx-2563eb);
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
   padding: 4px 6px;
@@ -640,7 +640,7 @@ onBeforeUnmount(() => {
   color: #ffffff;
   border: none;
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 5px 14px;
   cursor: pointer;

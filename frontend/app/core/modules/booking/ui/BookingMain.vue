@@ -728,7 +728,7 @@
                               v-if="isStallTerminal(sub.status)"
                               class="status-pill-badge"
                               :class="getStatusPillClass(sub.status)"
-                              style="font-size: 0.75rem; padding: 2px 8px;"
+                              style="font-size: var(--font-size-xs); padding: 2px 8px;"
                             >
                               {{ getStatusBadgeLabel(sub.status) }}
                             </span>
@@ -1063,28 +1063,28 @@
                   <span
                     v-if="item.status === 'offered'"
                     class="status-pill-badge pill-blue"
-                    style="font-size: 0.75rem; padding: 2px 10px;"
+                    style="font-size: var(--font-size-xs); padding: 2px 10px;"
                   >
                     ถึงสิทธิ์ (กำลังเสนอสิทธิ์ให้คุณ)
                   </span>
                   <span
                     v-else-if="item.status === 'cancelled'"
                     class="status-pill-badge pill-red"
-                    style="font-size: 0.75rem; padding: 2px 10px;"
+                    style="font-size: var(--font-size-xs); padding: 2px 10px;"
                   >
                     ตัดสิทธิ์ (มีผู้เช่าแล้ว)
                   </span>
                   <span
                     v-else-if="item.status === 'expired'"
                     class="status-pill-badge pill-gray"
-                    style="font-size: 0.75rem; padding: 2px 10px;"
+                    style="font-size: var(--font-size-xs); padding: 2px 10px;"
                   >
                     หมดเวลาตอบรับสิทธิ์
                   </span>
                   <span
                     v-else-if="item.status === 'withdrawn'"
                     class="status-pill-badge pill-gray"
-                    style="font-size: 0.75rem; padding: 2px 10px;"
+                    style="font-size: var(--font-size-xs); padding: 2px 10px;"
                   >
                     ยกเลิกการรอคิว
                   </span>
@@ -1097,13 +1097,13 @@
                 <p v-if="item.status === 'offered'" style="color: var(--tx-1d4ed8); font-weight: 600; margin-top: 4px;">
                   กรุณากด “ยื่นคำร้องขอดูแผง” ภายใน {{ formatOfferExpiresAtText(item) }}
                 </p>
-                <p v-else-if="item.status === 'cancelled'" style="color: var(--tx-b91c1c); margin-top: 4px; font-size: 0.8125rem;">
+                <p v-else-if="item.status === 'cancelled'" style="color: var(--tx-b91c1c); margin-top: 4px; font-size: var(--font-size-xs);">
                   {{ item.dismiss_reason || 'แผงนี้มีผู้ทำสัญญาเช่าเรียบร้อยแล้ว สิ้นสุดการรอคิว' }}
                 </p>
-                <p v-else-if="item.status === 'expired'" style="color: var(--tx-64748b); margin-top: 4px; font-size: 0.8125rem;">
+                <p v-else-if="item.status === 'expired'" style="color: var(--tx-64748b); margin-top: 4px; font-size: var(--font-size-xs);">
                   {{ item.dismiss_reason || 'เลยกำหนดเวลายื่นคำร้องขอดูแผง สิ้นสุดการเสนอสิทธิ์' }}
                 </p>
-                <p v-else-if="item.status === 'withdrawn'" style="color: var(--tx-64748b); margin-top: 4px; font-size: 0.8125rem;">
+                <p v-else-if="item.status === 'withdrawn'" style="color: var(--tx-64748b); margin-top: 4px; font-size: var(--font-size-xs);">
                   {{ item.dismiss_reason || 'ยกเลิกการรอคิวแผงนี้แล้ว' }}
                 </p>
               </div>
@@ -1549,7 +1549,7 @@
                         v-if="getBookingStallItems(b).length <= 1 && getStallQueueCount(b.stall_number) > 0"
                         type="button"
                         class="msa-btn"
-                        style="background: var(--bg-eff6ff); color: var(--tx-1d4ed8); border: 1px solid var(--bd-93c5fd); display: inline-flex; align-items: center; gap: 5px; font-weight: 700; padding: 2px 9px; font-size: 0.78rem; margin-left: 4px; cursor: pointer;"
+                        style="background: var(--bg-eff6ff); color: var(--tx-1d4ed8); border: 1px solid var(--bd-93c5fd); display: inline-flex; align-items: center; gap: 5px; font-weight: 700; padding: 2px 9px; font-size: var(--font-size-xs); margin-left: 4px; cursor: pointer;"
                         @click.stop="openStallQueueModal(b.stall_number, b.market_name)"
                         :title="`คลิกดูรายชื่อผู้จองและผู้รอคิวแผง ${b.stall_number} (${getStallQueueCount(b.stall_number)} ราย)`"
                       >
@@ -1600,7 +1600,7 @@
                             v-if="isStallTerminal(sub.status)"
                             class="status-pill-badge"
                             :class="getStatusPillClass(sub.status)"
-                            style="font-size: 0.75rem; padding: 2px 8px;"
+                            style="font-size: var(--font-size-xs); padding: 2px 8px;"
                           >
                             {{ getStatusBadgeLabel(sub.status) }}
                           </span>
@@ -2090,7 +2090,7 @@
                       <td>
                         <div style="font-weight: 700; color: var(--tx-1e293b);">
                           แผง {{ b.stall_number }}
-                          <span style="font-weight: 500; color: var(--tx-64748b); font-size: 0.8rem;">
+                          <span style="font-weight: 500; color: var(--tx-64748b); font-size: var(--font-size-xs);">
                             ({{ getBookingStallCountLabel(b) }})
                           </span>
                         </div>
@@ -2100,7 +2100,7 @@
                             :key="sub.stall_number"
                             type="button"
                             class="msa-btn"
-                            style="background: var(--bg-eff6ff); color: var(--tx-1d4ed8); border: 1px solid var(--bd-93c5fd); display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 0.75rem;"
+                            style="background: var(--bg-eff6ff); color: var(--tx-1d4ed8); border: 1px solid var(--bd-93c5fd); display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: var(--font-size-xs);"
                             @click.stop="openStallQueueModal(sub.stall_number, sub.market_name || b.market_name)"
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -2249,16 +2249,16 @@
                     <div class="officer-queue-card-header">
                       <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <strong>แผง {{ wg.stallNumber }}</strong>
-                        <span v-if="wg.offeredItem" class="status-pill-badge pill-blue" style="font-size: 0.75rem; padding: 2px 8px;">
+                        <span v-if="wg.offeredItem" class="status-pill-badge pill-blue" style="font-size: var(--font-size-xs); padding: 2px 8px;">
                           กำลังเสนอสิทธิ์ให้ {{ wg.offeredItem.tenant_name }} (เหลือ {{ formatRemainingOfferTime(wg.offeredItem) }} • หมดเขต {{ formatOfferExpiresAtText(wg.offeredItem) }})
                         </span>
-                        <span v-else-if="wg.activeHolder" class="status-pill-badge pill-green" style="font-size: 0.75rem; padding: 2px 8px;">
+                        <span v-else-if="wg.activeHolder" class="status-pill-badge pill-green" style="font-size: var(--font-size-xs); padding: 2px 8px;">
                           ผู้จองหลัก: {{ wg.activeHolder.tenant_name }}
                         </span>
                         <span
                           v-if="getStallWaitlistHistory(wg.stallNumber).length > 0"
                           class="status-pill-badge pill-gray"
-                          style="font-size: 0.75rem; padding: 2px 8px; cursor: pointer;"
+                          style="font-size: var(--font-size-xs); padding: 2px 8px; cursor: pointer;"
                           @click="openStallQueueModal(wg.stallNumber, wg.marketName, 'history')"
                           title="คลิกเพื่อดูประวัติคิวที่ตัดสิทธิ์แล้วของแผงนี้"
                         >
@@ -2324,11 +2324,11 @@
                     <span
                       class="status-pill-badge"
                       :class="item.status === 'cancelled' ? 'pill-red' : (item.status === 'expired' ? 'pill-amber' : 'pill-gray')"
-                      style="font-size: 0.75rem; padding: 2px 10px;"
+                      style="font-size: var(--font-size-xs); padding: 2px 10px;"
                     >
                       {{ item.status === 'cancelled' ? 'ตัดสิทธิ์ (มีผู้เช่าแล้ว)' : (item.status === 'expired' ? 'หมดเวลา (สละสิทธิ์)' : 'ยกเลิกการรอคิว') }}
                     </span>
-                    <span style="font-size: 0.8125rem; color: var(--tx-334155); font-weight: 600;">
+                    <span style="font-size: var(--font-size-xs); color: var(--tx-334155); font-weight: 600;">
                       {{ item.tenant_name }}
                       <span v-if="item.tenant_phone" style="color: var(--tx-64748b); font-weight: 500;"> ({{ item.tenant_phone }})</span>
                     </span>
@@ -2338,7 +2338,7 @@
                     <span v-if="item.created_at">เข้าคิว {{ formatSubmissionTimestamp(item.created_at) }}</span>
                     <span v-if="item.updated_at">สิ้นสุด {{ formatSubmissionTimestamp(item.updated_at) }}</span>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.8125rem; color: var(--tx-b91c1c); background: var(--bg-fef2f2); padding: 4px 10px; border-radius: 6px; width: fit-content; border: 1px solid var(--bd-fee2e2);">
+                  <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: var(--font-size-xs); color: var(--tx-b91c1c); background: var(--bg-fef2f2); padding: 4px 10px; border-radius: 6px; width: fit-content; border: 1px solid var(--bd-fee2e2);">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                     <span>เหตุผล: {{ item.dismiss_reason || 'ตัดสิทธิ์เนื่องจากผู้จองหลักทำสัญญาเช่าแผงสำเร็จ' }}</span>
                   </div>
@@ -2368,7 +2368,7 @@
       <div class="modal-content" style="max-width: 540px;">
         <AppModalHeader title="อนุมัตินัดหมายเข้าดูแผง" :subtitle="`เลขที่การจอง ${targetBooking.booking_number}`" icon="calendar" @close="showApproveModal = false" />
         <div class="modal-body">
-          <p style="font-size: 0.9rem; color: var(--tx-475569); margin-bottom: 14px;">
+          <p style="font-size: var(--font-size-sm); color: var(--tx-475569); margin-bottom: 14px;">
             อนุมัตินัดหมายให้คุณ <strong>{{ targetBooking.tenant_name }}</strong> เข้าดูแผง
             ({{ targetBooking.market_name }}) วันที่ {{ targetBooking.visit_date }} ({{ targetBooking.visit_time_slot }})
           </p>
@@ -2377,7 +2377,7 @@
           <div v-if="approveModalActiveStalls.length > 1" class="form-group" style="margin-bottom: 14px;">
             <label class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
               <span>เลือกแผงค้าที่อนุมัติให้เข้าชม ({{ approvedApproveStallNumbers.length }}/{{ approveModalActiveStalls.length }} แผง)</span>
-              <span style="font-size: 0.78rem; font-weight: 500; color: var(--tx-64748b);">ติ๊กออกเพื่อปฏิเสธบางแผง</span>
+              <span style="font-size: var(--font-size-xs); font-weight: 500; color: var(--tx-64748b);">ติ๊กออกเพื่อปฏิเสธบางแผง</span>
             </label>
             <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1px solid var(--bd-e2e8f0); border-radius: 10px; background: var(--bg-f8fafc);">
               <div
@@ -2393,7 +2393,7 @@
                 <span
                   class="status-pill-badge"
                   :class="approvedApproveStallNumbers.includes(sub.stall_number) ? 'pill-green' : 'pill-red'"
-                  style="font-size: 0.75rem; padding: 3px 10px;"
+                  style="font-size: var(--font-size-xs); padding: 3px 10px;"
                 >
                   {{ approvedApproveStallNumbers.includes(sub.stall_number) ? 'อนุมัติให้เข้าชม' : 'ปฏิเสธแผงนี้' }}
                 </span>
@@ -2441,7 +2441,7 @@
       <div class="modal-content" style="max-width: 500px;">
         <AppModalHeader title="ยกเลิกนัดหมายดูแผง" :subtitle="`เลขที่การจอง ${targetBooking.booking_number}`" icon="warning" tone="danger" @close="showRejectModal = false" />
         <div class="modal-body">
-          <div style="background: var(--bg-fff1f2); border: 1px solid var(--bd-fecdd3); border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; color: var(--tx-9f1239); margin-bottom: 14px; display: flex; align-items: flex-start; gap: 8px;">
+          <div style="background: var(--bg-fff1f2); border: 1px solid var(--bd-fecdd3); border-radius: 8px; padding: 10px 14px; font-size: var(--font-size-sm); color: var(--tx-9f1239); margin-bottom: 14px; display: flex; align-items: flex-start; gap: 8px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             <span>ตามกฎของระบบ เมื่อเจ้าหน้าที่ยกเลิกการจอง สิทธิ์การถือแผงจะถูกปล่อย และเลื่อนคิวที่ 1 ขึ้นมาทันที</span>
           </div>
@@ -2555,7 +2555,7 @@
                       <span
                         class="status-pill-badge"
                         :class="getStatusPillClass(getStallActiveHolder(selectedStallNumber).status)"
-                        style="font-size: 0.75rem; padding: 3px 10px;"
+                        style="font-size: var(--font-size-xs); padding: 3px 10px;"
                       >
                         {{ getStatusBadgeLabel(getStallActiveHolder(selectedStallNumber).status) }}
                       </span>
@@ -2624,7 +2624,7 @@
                         <span
                           v-if="q.status === 'offered'"
                           class="status-pill-badge pill-green"
-                          style="font-size: 0.75rem; padding: 2px 8px;"
+                          style="font-size: var(--font-size-xs); padding: 2px 8px;"
                         >
                           รอตอบรับสิทธิ์
                         </span>
@@ -2681,7 +2681,7 @@
                         <span
                           class="status-pill-badge"
                           :class="q.status === 'cancelled' ? 'pill-red' : (q.status === 'expired' ? 'pill-amber' : 'pill-gray')"
-                          style="font-size: 0.75rem; padding: 2px 8px;"
+                          style="font-size: var(--font-size-xs); padding: 2px 8px;"
                         >
                           {{ q.status === 'cancelled' ? 'ตัดสิทธิ์ (มีผู้เช่าแล้ว)' : (q.status === 'expired' ? 'หมดเวลาตอบรับ (สละสิทธิ์)' : 'ยกเลิกการรอคิว') }}
                         </span>
@@ -2691,7 +2691,7 @@
                         <span style="margin: 0 4px; color: var(--tx-cbd5e1);">•</span>
                         <span class="queue-history-ended-at">สิ้นสุด {{ formatSubmissionTimestamp(q.updated_at) }}</span>
                       </div>
-                      <div style="margin-top: 6px; font-size: 0.78rem; color: var(--tx-b91c1c); display: flex; align-items: center; gap: 6px; background: var(--bg-fef2f2); padding: 4px 8px; border-radius: 6px; width: fit-content; border: 1px solid var(--bd-fee2e2);">
+                      <div style="margin-top: 6px; font-size: var(--font-size-xs); color: var(--tx-b91c1c); display: flex; align-items: center; gap: 6px; background: var(--bg-fef2f2); padding: 4px 8px; border-radius: 6px; width: fit-content; border: 1px solid var(--bd-fee2e2);">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                         <span>{{ q.dismiss_reason || 'ตัดสิทธิ์เนื่องจากผู้จองหลักทำสัญญาเช่าแผงสำเร็จ' }}</span>
                       </div>
@@ -2730,7 +2730,7 @@
               :options="leaseDeadlineDayOptions"
               placeholder="เลือกระยะเวลายื่นคำร้องขอเช่า"
             />
-            <p style="margin: 6px 0 0; font-size: 0.78rem; color: var(--tx-64748b); line-height: 1.45;">
+            <p style="margin: 6px 0 0; font-size: var(--font-size-xs); color: var(--tx-64748b); line-height: 1.45;">
               กำหนดจำนวนวันที่ผู้เช่าต้องส่งคำร้อง หลังเจ้าหน้าที่อนุมัติการเช่า
             </p>
           </div>
@@ -2744,7 +2744,7 @@
               :options="waitlistOfferHourOptions"
               placeholder="เลือกระยะเวลาตอบรับคิวรอ"
             />
-            <p style="margin: 6px 0 0; font-size: 0.78rem; color: var(--tx-64748b); line-height: 1.45;">
+            <p style="margin: 6px 0 0; font-size: var(--font-size-xs); color: var(--tx-64748b); line-height: 1.45;">
               กำหนดเวลาที่ผู้เช่าต้องตอบรับ เมื่อแผงว่างและถึงคิวของตนเอง
             </p>
           </div>
@@ -3017,49 +3017,81 @@ const getStallBookings = (stallNumber: string) => {
   })
 }
 
-const getStallActiveHolder = (stallNumber: string) => {
-  if (!stallNumber) return null
-  const target = stallNumber.trim()
+// Per-stall lookups used by every booking card and the waiting-list groups. Scanning all bookings for each
+// stall made the stall groups O(n^2) (~0.5s with ~470 bookings, re-run whenever the queue modal opened),
+// so they are indexed once per data change instead.
+const stallIndex = computed(() => {
+  const holder = new Map<string, any>()
+  const waitlistWaiting = new Map<string, any[]>()
+  const waitlistHistory = new Map<string, any[]>()
+  const queueBookings = new Map<string, any[]>()
+  const subWaitlistCount = new Map<string, number>()
+  const byPosition = (a: any, b: any) => (a.position || a.queue_position || 99) - (b.position || b.queue_position || 99)
+
   for (const b of bookings.value) {
-    if (isQueueBooking(b) || isStallTerminal(b.status)) continue
     const subs = getBookingStallItems(b)
-    const match = subs.find(s => String(s.stall_number || '').trim() === target && !isStallTerminal(s.status))
-    if (match) {
-      return b
+    const seenInBooking = new Set<string>()
+    for (const sub of subs) {
+      const key = String(sub.stall_number || '').trim()
+      if (!key) continue
+      if (!seenInBooking.has(key)) {
+        seenInBooking.add(key)
+        if (!subWaitlistCount.has(key) && Number(sub.waitlist_count) > 0) subWaitlistCount.set(key, Number(sub.waitlist_count))
+      }
+      if (!holder.has(key) && !isQueueBooking(b) && !isStallTerminal(b.status) && !isStallTerminal(sub.status)) holder.set(key, b)
+    }
+    const ownKey = String(b.stall_number || '').trim()
+    if (ownKey && isQueueBooking(b)) {
+      const list = queueBookings.get(ownKey)
+      if (list) list.push(b)
+      else queueBookings.set(ownKey, [b])
     }
   }
-  return null
+  queueBookings.forEach(list => list.sort((a, b) => (a.queue_position || a.queue_number || 99) - (b.queue_position || b.queue_number || 99)))
+
+  for (const w of waitlistItems.value) {
+    const key = String(w.stall_number || w.stall_ident || '').trim()
+    if (!key) continue
+    const target = (w.status === 'waiting' || w.status === 'offered') ? waitlistWaiting : waitlistHistory
+    const list = target.get(key)
+    if (list) list.push(w)
+    else target.set(key, [w])
+  }
+  waitlistWaiting.forEach(list => list.sort(byPosition))
+  waitlistHistory.forEach(list => list.sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime()))
+
+  return { holder, waitlistWaiting, waitlistHistory, queueBookings, subWaitlistCount }
+})
+
+const getStallActiveHolder = (stallNumber: string) => {
+  if (!stallNumber) return null
+  return stallIndex.value.holder.get(stallNumber.trim()) ?? null
 }
 
+const EMPTY_LIST: any[] = []
+
 const getStallWaitingQueues = (stallNumber: string) => {
-  if (!stallNumber) return []
+  if (!stallNumber) return EMPTY_LIST
   const target = stallNumber.trim()
   if (selectedStallNumber.value === target && selectedStallWaitlistItems.value.length > 0) {
     return selectedStallWaitlistItems.value
       .filter(w => w.status === 'waiting' || w.status === 'offered')
       .sort((a, b) => (a.position || a.queue_position || 99) - (b.position || b.queue_position || 99))
   }
-  const fromWaitlist = waitlistItems.value
-    .filter(w => String(w.stall_number || w.stall_ident || '').trim() === target && (w.status === 'waiting' || w.status === 'offered'))
-    .sort((a, b) => (a.position || a.queue_position || 99) - (b.position || b.queue_position || 99))
-  if (fromWaitlist.length > 0) return fromWaitlist
-
-  return bookings.value
-    .filter(b => String(b.stall_number || '').trim() === target && isQueueBooking(b))
-    .sort((a, b) => (a.queue_position || a.queue_number || 99) - (b.queue_position || b.queue_number || 99))
+  const fromWaitlist = stallIndex.value.waitlistWaiting.get(target)
+  if (fromWaitlist && fromWaitlist.length > 0) return fromWaitlist
+  return stallIndex.value.queueBookings.get(target) ?? EMPTY_LIST
 }
 
 const getStallWaitlistHistory = (stallNumber: string) => {
-  if (!stallNumber) return []
+  if (!stallNumber) return EMPTY_LIST
   const target = stallNumber.trim()
   if (selectedStallNumber.value === target && selectedStallWaitlistItems.value.length > 0) {
     return selectedStallWaitlistItems.value
       .filter(w => w.status !== 'waiting' && w.status !== 'offered')
       .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
   }
-  return waitlistItems.value
-    .filter(w => String(w.stall_number || w.stall_ident || '').trim() === target && w.status !== 'waiting' && w.status !== 'offered')
-    .sort((a, b) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())
+  return stallIndex.value.waitlistHistory.get(target) ?? EMPTY_LIST
 }
 
 const getStallQueueCount = (stallNumber: string) => {
@@ -3068,14 +3100,7 @@ const getStallQueueCount = (stallNumber: string) => {
   const qList = getStallWaitingQueues(target)
   if (qList.length > 0) return qList.length
   // Fallback to waitlist_count on booking_stalls / sub_bookings
-  for (const b of bookings.value) {
-    const subs = getBookingStallItems(b)
-    const match = subs.find(s => String(s.stall_number || '').trim() === target)
-    if (match && Number(match.waitlist_count) > 0) {
-      return Number(match.waitlist_count)
-    }
-  }
-  return 0
+  return stallIndex.value.subWaitlistCount.get(target) ?? 0
 }
 
 const hasOfferedWaitlist = (stallNumber: string) => {
@@ -5566,11 +5591,11 @@ onMounted(async () => {
 .waitlist-item > div:first-child { grid-area: details; min-width: 0; }
 .waitlist-item > .waitlist-position { grid-area: position; justify-self: end; }
 .waitlist-item > div:last-child { grid-area: actions; align-self: end; justify-self: end; margin-bottom: 2px; }
-.waitlist-item strong { font-size: 1rem; color: var(--tx-1e293b); }
-.waitlist-item p { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--bd-eef2f6); color: var(--tx-64748b); font-size: 0.875rem; line-height: 1.6; }
+.waitlist-item strong { font-size: var(--font-size-md); color: var(--tx-1e293b); }
+.waitlist-item p { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--bd-eef2f6); color: var(--tx-64748b); font-size: var(--font-size-sm); line-height: 1.6; }
 .waitlist-item > div:first-child > div:last-child { margin-top: 12px !important; }
-.waitlist-position { padding: 6px 12px; border-radius: 999px; background: var(--bg-fff7ed); color: var(--tx-c2410c); font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
-.waitlist-history-meta { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 12px; padding-top: 12px; color: var(--tx-64748b); font-size: 0.8125rem; line-height: 1.6; }
+.waitlist-position { padding: 6px 12px; border-radius: 999px; background: var(--bg-fff7ed); color: var(--tx-c2410c); font-size: var(--font-size-xs); font-weight: 600; white-space: nowrap; }
+.waitlist-history-meta { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 12px; padding-top: 12px; color: var(--tx-64748b); font-size: var(--font-size-xs); line-height: 1.6; }
 .waitlist-history-meta span { display: inline-flex; align-items: center; }
 .waitlist-history-meta span + span { padding-left: 18px; border-left: 1px solid var(--bd-cbd5e1); }
 .officer-queue-card {
@@ -5602,9 +5627,9 @@ onMounted(async () => {
   align-self: stretch;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   margin: 0;
-  padding: 14px 18px;
+  padding: 14px 22px 14px 18px;
   border-radius: 0;
   background: var(--bg-ffffff);
   color: inherit;
@@ -5618,7 +5643,7 @@ onMounted(async () => {
   border-radius: 999px;
   background: var(--bg-fff7ed);
   color: var(--tx-c2410c);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   line-height: 1.35;
   white-space: nowrap;
@@ -5641,7 +5666,7 @@ onMounted(async () => {
   margin: 0;
   padding: 0;
   border: 0;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   line-height: 1.6;
 }
 .waitlist-item.officer-queue-card > div.officer-queue-card-actions {
@@ -5649,15 +5674,16 @@ onMounted(async () => {
   align-self: stretch;
   justify-self: stretch;
   margin: 0;
-  padding: 12px 18px;
+  padding: 12px 22px 12px 18px;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   justify-content: center;
   gap: 8px;
   background: var(--bg-ffffff);
 }
 .officer-queue-card-actions :deep(.officer-queue-action-btn) {
-  width: 100%;
+  width: auto;
 }
 .queue-history-item { padding: 16px 18px; border-radius: 12px; }
 .queue-history-item .queue-item-name-row { gap: 8px; }
@@ -5677,7 +5703,8 @@ onMounted(async () => {
     border-left: 0;
   }
   .waitlist-item.officer-queue-card > div.officer-queue-card-status {
-    justify-content: flex-start;
+    justify-content: flex-end;
+    padding: 0 18px 10px;
   }
   .waitlist-item.officer-queue-card > div.officer-queue-card-divider {
     margin: 0 18px;
@@ -5730,7 +5757,7 @@ onMounted(async () => {
 .page-subtitle {
   margin: 4px 0 0;
   color: var(--tx-64748b);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
 }
 
@@ -5767,14 +5794,14 @@ onMounted(async () => {
 }
 
 .header-left .section-title {
-  font-size: 1.15rem;
+  font-size: var(--font-size-lg);
   font-weight: 700;
   color: var(--tx-0f172a);
   margin: 0;
 }
 
 .header-left .item-count-subtitle {
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-top: 4px;
 }
@@ -5806,7 +5833,7 @@ onMounted(async () => {
   padding: 0 12px 0 36px;
   border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-1e293b);
   background: var(--bg-ffffff);
   outline: none;
@@ -5824,7 +5851,7 @@ onMounted(async () => {
   background: transparent;
   border: none;
   color: var(--tx-94a3b8);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   cursor: pointer;
 }
 
@@ -5839,7 +5866,7 @@ onMounted(async () => {
   background: var(--bg-ffffff);
   color: var(--tx-334155);
   font-family: inherit;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -5883,7 +5910,7 @@ onMounted(async () => {
   background: var(--bg-ffffff);
   color: var(--tx-475569);
   font-family: inherit;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -5905,7 +5932,7 @@ onMounted(async () => {
   border-radius: 50%;
   background: #2563eb;
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   margin-left: 2px;
 }
@@ -5939,7 +5966,7 @@ onMounted(async () => {
   padding-bottom: 8px;
   border-bottom: 1px solid var(--bd-f1f5f9);
   color: var(--tx-0f172a);
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
 }
 
@@ -5970,7 +5997,7 @@ onMounted(async () => {
   display: block;
   margin-bottom: 6px;
   color: var(--tx-475569);
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
@@ -5978,7 +6005,7 @@ onMounted(async () => {
   min-height: 38px;
   height: 38px;
   padding: 0 12px;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   border-radius: 8px;
 }
 
@@ -5999,7 +6026,7 @@ onMounted(async () => {
   border: 1px solid var(--bd-e2e8f0);
   background: var(--bg-ffffff);
   color: var(--tx-64748b);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -6034,7 +6061,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   background: var(--bg-f8fafc);
   padding: 6px 10px;
@@ -6044,7 +6071,7 @@ onMounted(async () => {
 
 .mfp-result-label {
   color: var(--tx-94a3b8);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
 }
 
 .mfp-result-val strong {
@@ -6070,7 +6097,7 @@ onMounted(async () => {
   border-radius: 8px;
   background: var(--bg-ffffff);
   color: var(--tx-64748b);
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -6098,7 +6125,7 @@ onMounted(async () => {
   border-radius: 8px;
   background: #2563eb;
   color: #ffffff;
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -6144,7 +6171,7 @@ onMounted(async () => {
   border: none;
   border-bottom: 2px solid transparent;
   padding: 10px 4px 12px 4px;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--tx-64748b);
   cursor: pointer;
@@ -6167,7 +6194,7 @@ onMounted(async () => {
 }
 
 .tab-badge {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 12px;
@@ -6220,18 +6247,18 @@ onMounted(async () => {
 .empty-eyebrow {
   margin-bottom: 6px;
   color: var(--tx-64748b);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
 .empty-title {
   font-weight: 700;
   color: var(--tx-0f172a);
-  font-size: 1.125rem;
+  font-size: var(--font-size-lg);
 }
 
 .empty-desc {
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   color: var(--tx-64748b);
   margin-top: 6px;
   line-height: 1.6;
@@ -6311,13 +6338,13 @@ onMounted(async () => {
 }
 
 .market-title {
-  font-size: 1rem;
+  font-size: var(--font-size-md);
   font-weight: 700;
   color: var(--tx-0f172a);
 }
 
 .market-count-pill {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-64748b);
   background: var(--bg-f1f5f9);
@@ -6449,7 +6476,7 @@ onMounted(async () => {
   color: var(--tx-1e40af);
   border: 1px solid var(--bd-dbeafe);
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
@@ -6464,7 +6491,7 @@ onMounted(async () => {
 .in-card-stall-pill .stall-label {
   color: var(--tx-2563eb);
   font-weight: 500;
-  font-size: 0.76rem;
+  font-size: var(--font-size-xs);
 }
 
 .in-card-stall-pill strong {
@@ -6482,7 +6509,7 @@ onMounted(async () => {
   color: var(--tx-334155);
   border: 1px solid var(--bd-e2e8f0);
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
@@ -6499,7 +6526,7 @@ onMounted(async () => {
 .in-card-market-pill .market-label {
   color: var(--tx-64748b);
   font-weight: 500;
-  font-size: 0.76rem;
+  font-size: var(--font-size-xs);
 }
 
 .in-card-project-pill strong,
@@ -6518,7 +6545,7 @@ onMounted(async () => {
   background: var(--bg-eff6ff);
   border: 1px solid var(--bd-bfdbfe);
   color: var(--tx-1d4ed8);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   line-height: 1;
   border-radius: 9999px;
@@ -6570,7 +6597,7 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   min-width: 0;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   line-height: 1.35;
   white-space: nowrap;
 }
@@ -6613,7 +6640,7 @@ onMounted(async () => {
   padding-top: 11px;
   border-top: 1px solid var(--bd-f1f5f9);
   color: var(--tx-475569);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   line-height: 1.45;
 }
 
@@ -6622,7 +6649,7 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   line-height: 1.45;
 }
 
@@ -6634,7 +6661,7 @@ onMounted(async () => {
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--tx-334155);
   cursor: pointer;
@@ -6664,7 +6691,7 @@ onMounted(async () => {
   background: #2563eb;
   border: 1px solid #2563eb;
   border-radius: 8px;
-  font-size: 0.83rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: #ffffff;
   cursor: pointer;
@@ -6688,7 +6715,7 @@ onMounted(async () => {
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-fecaca);
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--tx-dc2626);
   cursor: pointer;
@@ -6710,7 +6737,7 @@ onMounted(async () => {
   background: #8b5cf6;
   border: 1px solid #8b5cf6;
   border-radius: 8px;
-  font-size: 0.83rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: #ffffff;
   cursor: pointer;
@@ -6734,7 +6761,7 @@ onMounted(async () => {
   background: #10b981;
   border: 1px solid #10b981;
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: #ffffff;
   cursor: pointer;
@@ -6758,7 +6785,7 @@ onMounted(async () => {
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-cbd5e1);
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-2563eb);
   cursor: pointer;
@@ -6780,7 +6807,7 @@ onMounted(async () => {
   font-weight: 600;
   padding: 7px 16px;
   border-radius: 8px;
-  font-size: 0.83rem;
+  font-size: var(--font-size-xs);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -6868,7 +6895,7 @@ onMounted(async () => {
 }
 
 .booking-number-block .booking-label {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -6876,7 +6903,7 @@ onMounted(async () => {
 }
 
 .booking-number-block .booking-id-text {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   font-weight: 800;
   color: var(--tx-0f172a);
   letter-spacing: -0.02em;
@@ -6890,7 +6917,7 @@ onMounted(async () => {
   gap: 5px;
   margin-top: 5px;
   color: var(--tx-94a3b8);
-  font-size: 0.76rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   line-height: 1.3;
 }
@@ -6905,7 +6932,7 @@ onMounted(async () => {
   margin-left: 8px;
   font-weight: 500;
   color: var(--tx-475569);
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
 }
 
 .top-row-right {
@@ -6917,7 +6944,7 @@ onMounted(async () => {
 }
 
 .status-pill-badge {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 4px 14px;
   border-radius: 20px;
@@ -6982,7 +7009,7 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--tx-64748b);
   background: transparent;
@@ -7055,7 +7082,7 @@ onMounted(async () => {
   border-radius: 50%;
   background: var(--bg-e2e8f0);
   color: var(--tx-64748b);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -7064,7 +7091,7 @@ onMounted(async () => {
 }
 
 .step-label-text {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-64748b);
   white-space: nowrap;
@@ -7163,7 +7190,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
 }
@@ -7176,13 +7203,13 @@ onMounted(async () => {
 }
 
 .info-value-text {
-  font-size: 0.92rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--tx-0f172a);
 }
 
 .days-remaining-pill {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-2563eb);
   background: var(--bg-eff6ff);
@@ -7195,7 +7222,7 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-1e293b);
   background: var(--bg-f8fafc);
@@ -7205,7 +7232,7 @@ onMounted(async () => {
 }
 
 .stall-count-badge {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-1d4ed8);
   background: var(--bg-dbeafe);
@@ -7215,13 +7242,13 @@ onMounted(async () => {
 }
 
 .tile-sub-text {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-top: 2px;
 }
 
 .tile-sub-price {
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-059669);
   margin-top: 2px;
@@ -7243,7 +7270,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   line-height: 1.45;
 }
 
@@ -7254,7 +7281,7 @@ onMounted(async () => {
   gap: 6px;
   padding: 5px 12px;
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   line-height: 1.3;
 }
 
@@ -7326,7 +7353,7 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   padding: 4px 12px;
   border-radius: 20px;
@@ -7384,7 +7411,7 @@ onMounted(async () => {
   font-weight: 600;
   padding: 7px 16px;
   border-radius: 8px;
-  font-size: 0.83rem;
+  font-size: var(--font-size-xs);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -7408,7 +7435,7 @@ onMounted(async () => {
   font-weight: 600;
   padding: 7px 16px;
   border-radius: 8px;
-  font-size: 0.83rem;
+  font-size: var(--font-size-xs);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -7429,7 +7456,7 @@ onMounted(async () => {
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-cbd5e1);
   color: var(--tx-334155);
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   padding: 7px 14px;
   border-radius: 8px;
@@ -7451,7 +7478,7 @@ onMounted(async () => {
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-fecaca);
   color: var(--tx-dc2626);
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   padding: 7px 14px;
   border-radius: 8px;
@@ -7490,7 +7517,7 @@ onMounted(async () => {
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-cbd5e1);
   color: var(--tx-334155);
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 7px 16px;
   border-radius: 8px;
@@ -7520,7 +7547,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-64748b);
 }
 
@@ -7530,7 +7557,7 @@ onMounted(async () => {
   border-radius: 6px;
   background: var(--bg-ffffff);
   color: var(--tx-0f172a);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   outline: none;
 }
@@ -7553,7 +7580,7 @@ onMounted(async () => {
   background: var(--bg-ffffff);
   color: var(--tx-475569);
   border-radius: 6px;
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -7602,7 +7629,7 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-38bdf8);
   font-weight: 600;
   text-transform: uppercase;
@@ -7627,7 +7654,7 @@ onMounted(async () => {
 }
 
 .officer-sub-info {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-94a3b8);
   margin-top: 6px;
 }
@@ -7642,7 +7669,7 @@ onMounted(async () => {
 }
 
 .mq-label {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-cbd5e1);
 }
 
@@ -7652,7 +7679,7 @@ onMounted(async () => {
   border: 1px solid var(--bd-rgba-255-255-255-0p2);
   padding: 6px 12px;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   outline: none;
 }
@@ -7673,7 +7700,7 @@ onMounted(async () => {
 .officer-work-filter-label {
   padding: 0 4px;
   color: var(--tx-64748b);
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
@@ -7688,7 +7715,7 @@ onMounted(async () => {
   background: var(--bg-ffffff);
   color: var(--tx-475569);
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -7704,7 +7731,7 @@ onMounted(async () => {
   border-radius: 999px;
   background: var(--bg-f1f5f9);
   color: var(--tx-475569);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
 }
 
@@ -7803,7 +7830,7 @@ onMounted(async () => {
 }
 
 .kpi-title {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
   line-height: 1.2;
@@ -7818,14 +7845,14 @@ onMounted(async () => {
 }
 
 .kpi-count {
-  font-size: 1.45rem;
+  font-size: var(--font-size-2xl);
   font-weight: 800;
   color: var(--tx-0f172a);
   line-height: 1;
 }
 
 .kpi-unit-pill {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 6px;
@@ -7948,7 +7975,7 @@ onMounted(async () => {
   position: absolute;
   top: 10px;
   right: 10px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   background: #ef4444;
   color: #ffffff;
@@ -8002,7 +8029,7 @@ onMounted(async () => {
 }
 
 .kpi-popover-header {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-1e293b);
   display: flex;
@@ -8025,7 +8052,7 @@ onMounted(async () => {
   justify-content: space-between;
   padding: 6px 8px;
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-334155);
   cursor: pointer;
   transition: background 0.15s ease;
@@ -8063,7 +8090,7 @@ onMounted(async () => {
   background: var(--bg-f1f5f9);
   padding: 2px 7px;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
 }
 
 .kpi-popover-reset {
@@ -8071,7 +8098,7 @@ onMounted(async () => {
   padding-top: 6px;
   border-top: 1px solid var(--bd-f1f5f9);
   text-align: center;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-2563eb);
   font-weight: 600;
   cursor: pointer;
@@ -8105,7 +8132,7 @@ onMounted(async () => {
   gap: 7px;
   padding: 5px 12px;
   font-family: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
@@ -8120,7 +8147,7 @@ onMounted(async () => {
   height: 19px;
   padding: 0 6px;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   line-height: 1;
   transition: all 0.18s ease;
@@ -8298,7 +8325,7 @@ onMounted(async () => {
   background: var(--bg-f1f5f9);
   padding: 5px 12px;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
 }
 
 .today-toggle-pill-btn {
@@ -8310,7 +8337,7 @@ onMounted(async () => {
   color: var(--tx-b91c1c);
   padding: 5px 12px;
   border-radius: 20px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -8359,20 +8386,20 @@ onMounted(async () => {
 }
 
 .cell-sub-meeting-point {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-top: 3px;
 }
 
 .cell-sub-rate {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-059669);
   font-weight: 600;
   margin-top: 3px;
 }
 
 .stall-zone-pill {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-475569);
   background: var(--bg-f1f5f9);
   padding: 2px 8px;
@@ -8381,7 +8408,7 @@ onMounted(async () => {
 }
 
 .cell-sub-business {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-top: 3px;
 }
@@ -8425,7 +8452,7 @@ onMounted(async () => {
 }
 
 .stall-num {
-  font-size: 1.05rem;
+  font-size: var(--font-size-lg);
   font-weight: 800;
   color: var(--tx-0f172a);
   background: var(--bg-f1f5f9);
@@ -8434,13 +8461,13 @@ onMounted(async () => {
 }
 
 .stall-zone {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-475569);
   font-weight: 500;
 }
 
 .stall-rate {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-059669);
   font-weight: 700;
 }
@@ -8464,7 +8491,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
 }
 
 .owc-lbl { color: var(--tx-64748b); }
@@ -8484,7 +8511,7 @@ onMounted(async () => {
 }
 
 .tenant-name {
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--tx-0f172a);
 }
@@ -8497,7 +8524,7 @@ onMounted(async () => {
   color: var(--tx-2563eb);
   padding: 3px 8px;
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   text-decoration: none;
   transition: all 0.2s ease;
@@ -8509,7 +8536,7 @@ onMounted(async () => {
 }
 
 .tenant-business {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-top: 3px;
 }
@@ -8534,7 +8561,7 @@ onMounted(async () => {
   border-radius: 50%;
   background: var(--bg-e2e8f0);
   color: var(--tx-64748b);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -8542,7 +8569,7 @@ onMounted(async () => {
 }
 
 .mini-text {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   font-weight: 500;
 }
@@ -8586,7 +8613,7 @@ onMounted(async () => {
 }
 
 .owc-booking-num {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
 }
 
@@ -8606,7 +8633,7 @@ onMounted(async () => {
 }
 
 .officer-waiting-tag {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-059669);
   background: var(--bg-ecfdf5);
@@ -8625,7 +8652,7 @@ onMounted(async () => {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 0.86rem;
+  font-size: var(--font-size-sm);
   min-width: 1100px;
 }
 
@@ -8638,7 +8665,7 @@ onMounted(async () => {
   background: transparent !important;
   color: var(--tx-64748b);
   font-weight: 500;
-  font-size: 0.825rem;
+  font-size: var(--font-size-xs);
   padding: 16px 20px;
   border-top: 1px solid var(--bd-e2e8f0);
   border-bottom: 1px solid var(--bd-e2e8f0);
@@ -8720,14 +8747,14 @@ onMounted(async () => {
 
 .hierarchy-project-name {
   color: var(--tx-0f172a);
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .hierarchy-market-pill {
   color: var(--tx-64748b);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   padding: 3px 9px;
   border-radius: 6px;
@@ -8744,7 +8771,7 @@ onMounted(async () => {
   background: var(--bg-f8fafc);
   border: 1px solid var(--bd-e2e8f0);
   color: var(--tx-64748b);
-  font-size: 0.825rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
 }
 
@@ -8800,7 +8827,7 @@ onMounted(async () => {
 }
 
 .hierarchy-stall-left .stall-group-simple-title {
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   font-weight: 600;
   color: var(--tx-1e293b);
   letter-spacing: 0.01em;
@@ -8808,7 +8835,7 @@ onMounted(async () => {
 
 .hierarchy-stall-left .officer-booking-count-pill {
   padding: 4px 12px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   gap: 6px;
 }
@@ -8829,7 +8856,7 @@ onMounted(async () => {
   background: var(--bg-f8fafc);
   border: 1px solid var(--bd-e2e8f0);
   color: var(--tx-1e293b);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
 }
 
 .hierarchy-stall-badge svg {
@@ -8838,7 +8865,7 @@ onMounted(async () => {
 
 .hierarchy-stall-badge .stall-badge-label {
   color: var(--tx-64748b);
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
 }
 
@@ -8856,7 +8883,7 @@ onMounted(async () => {
   background: var(--bg-f8fafc);
   border: 1px solid var(--bd-e2e8f0);
   color: var(--tx-64748b);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
 }
 
@@ -8873,7 +8900,7 @@ onMounted(async () => {
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-cbd5e1);
   color: var(--tx-475569);
-  font-size: 0.775rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -8931,7 +8958,7 @@ onMounted(async () => {
 .clickable-id {
   color: var(--tx-2563eb) !important;
   font-weight: 700 !important;
-  font-size: 0.95rem !important;
+  font-size: var(--font-size-base) !important;
   cursor: pointer;
   text-decoration: none !important;
   display: inline-block;
@@ -8944,7 +8971,7 @@ onMounted(async () => {
 }
 
 .cell-sub-date {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-94a3b8);
   margin-top: 2px;
 }
@@ -8956,7 +8983,7 @@ onMounted(async () => {
 }
 
 .table-visit-slot {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-2563eb);
   font-weight: 600;
   margin-top: 1px;
@@ -8964,7 +8991,7 @@ onMounted(async () => {
 }
 
 .table-meeting-point {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-top: 3px;
   line-height: 1.35;
@@ -8979,13 +9006,13 @@ onMounted(async () => {
 }
 
 .cell-zone-text {
-  font-size: 0.76rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-top: 2px;
 }
 
 .cell-rate-text {
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-059669);
   font-weight: 700;
   margin-top: 2px;
@@ -8997,7 +9024,7 @@ onMounted(async () => {
 }
 
 .table-phone-link {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-2563eb);
   text-decoration: none;
   font-weight: 600;
@@ -9008,7 +9035,7 @@ onMounted(async () => {
 }
 
 .cell-business-text {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-top: 3px;
 }
@@ -9023,7 +9050,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   white-space: nowrap !important;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   padding: 4px 12px;
   border-radius: 8px;
@@ -9041,12 +9068,12 @@ onMounted(async () => {
 
 .table-actions-cell :deep(.app-btn) {
   padding: 0 10px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
 }
 
 .btn-table-act {
   padding: 6px 12px !important;
-  font-size: 0.8rem !important;
+  font-size: var(--font-size-xs) !important;
   border-radius: 8px !important;
   white-space: nowrap !important;
   display: inline-flex !important;
@@ -9112,12 +9139,12 @@ onMounted(async () => {
   }
 
   .booking-number-block .booking-id-text {
-    font-size: 1.05rem;
+    font-size: var(--font-size-lg);
   }
 
   .status-pill-badge {
     padding: 3px 10px;
-    font-size: 0.76rem;
+    font-size: var(--font-size-xs);
   }
 
   .card-top-row {
@@ -9141,7 +9168,7 @@ onMounted(async () => {
   .in-card-stall-pill,
   .in-card-project-pill,
   .in-card-market-pill {
-    font-size: 0.76rem;
+    font-size: var(--font-size-xs);
     padding: 3px 8px;
   }
 
@@ -9173,7 +9200,7 @@ onMounted(async () => {
   .collapsed-next-step-content,
   .footer-left-status {
     width: 100%;
-    font-size: 0.78rem;
+    font-size: var(--font-size-xs);
     line-height: 1.4;
   }
 
@@ -9206,7 +9233,7 @@ onMounted(async () => {
   gap: 6px;
   padding: 4px 10px;
   border-radius: 7px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.18s ease;
@@ -9241,7 +9268,7 @@ onMounted(async () => {
   gap: 4px;
   padding: 2px 8px;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -9305,7 +9332,7 @@ onMounted(async () => {
 .badge-stall-chain {
   background: var(--bg-f1f5f9);
   color: var(--tx-475569);
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 6px;
@@ -9334,7 +9361,7 @@ onMounted(async () => {
 }
 
 .queue-section-badge {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 6px;
@@ -9405,12 +9432,12 @@ onMounted(async () => {
 }
 
 .queue-user-name {
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   color: var(--tx-1e293b);
   font-weight: 700;
 }
 .queue-user-phone {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
 }
 .queue-user-phone::before {
@@ -9424,7 +9451,7 @@ onMounted(async () => {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
 }
 .queue-card-meta-row strong {
@@ -9442,7 +9469,7 @@ onMounted(async () => {
   border: 1px dashed var(--bd-cbd5e1);
   border-radius: 10px;
   color: var(--tx-64748b);
-  font-size: 0.825rem;
+  font-size: var(--font-size-xs);
   text-align: center;
 }
 
@@ -9479,7 +9506,7 @@ onMounted(async () => {
   background: var(--bg-eff6ff);
   color: var(--tx-2563eb);
   font-weight: 800;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   border: 1px solid var(--bd-bfdbfe);
 }
 
@@ -9488,12 +9515,12 @@ onMounted(async () => {
   align-items: center;
   flex-wrap: wrap;
   gap: 6px;
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   color: var(--tx-1e293b);
 }
 
 .queue-item-sub {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-top: 5px;
 }
@@ -9529,7 +9556,7 @@ onMounted(async () => {
   background: var(--bg-f8fafc);
   border-radius: 8px;
   border: 1px solid var(--bd-e2e8f0);
-  font-size: 0.775rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   line-height: 1.4;
 }
@@ -9608,7 +9635,7 @@ onMounted(async () => {
 .officer-project-title {
   min-width: 0;
   color: var(--tx-0f172a);
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
@@ -9621,7 +9648,7 @@ onMounted(async () => {
   gap: 0;
   flex-shrink: 0;
   color: var(--tx-64748b);
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
@@ -9640,7 +9667,7 @@ onMounted(async () => {
 
 .officer-project-market {
   color: var(--tx-64748b);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
 }
 
@@ -9671,7 +9698,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-475569);
 }
 
@@ -9687,7 +9714,7 @@ onMounted(async () => {
 .btn-toggle-all-stalls {
   height: 32px;
   padding: 4px 14px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-334155);
   background: var(--bg-f8fafc);
@@ -9789,7 +9816,7 @@ onMounted(async () => {
 
 .stall-group-simple-title {
   min-width: 0;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--tx-0f172a);
   white-space: nowrap;
@@ -9807,7 +9834,7 @@ onMounted(async () => {
   border-radius: 999px;
   background: var(--bg-f8fafc);
   color: var(--tx-475569);
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   line-height: 1;
 }
@@ -9829,7 +9856,7 @@ onMounted(async () => {
   border-radius: 10px;
   background: var(--bg-eff6ff);
   color: var(--tx-475569);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
 }
 
 .queue-holder-context strong {
@@ -9846,7 +9873,7 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 6px;
@@ -9914,13 +9941,13 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-1e293b);
 }
 
 .msa-hint {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--tx-64748b);
 }
@@ -9951,13 +9978,13 @@ onMounted(async () => {
 }
 
 .msa-stall-code {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   color: var(--tx-0f172a);
 }
 
 .msa-stall-zone {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--tx-64748b);
   background: var(--bg-f1f5f9);
@@ -9966,7 +9993,7 @@ onMounted(async () => {
 }
 
 .msa-stall-rate {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-2563eb);
 }
@@ -9985,7 +10012,7 @@ onMounted(async () => {
   height: 30px;
   padding: 0 10px;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -10018,8 +10045,25 @@ onMounted(async () => {
 .tenant-table-skeleton { overflow: hidden; }
 .tenant-table-skeleton-row { display: grid; grid-template-columns: repeat(7, minmax(100px, 1fr)); gap: 24px; padding: 24px 16px; border-bottom: 1px solid var(--bd-f1f5f9); }
 .tenant-table-skeleton-row span { height: 18px; border-radius: 6px; background: linear-gradient(90deg, var(--bg-f1f5f9) 25%, var(--bg-e2e8f0) 50%, var(--bg-f1f5f9) 75%); background-size: 200% 100%; animation: tenant-table-shimmer 1.5s infinite; }
-.form-field-error { margin: 6px 0 0; color: var(--tx-dc2626); font-size: .8125rem; font-weight: 500; line-height: 1.35; }
+.form-field-error { margin: 6px 0 0; color: var(--tx-dc2626); font-size: var(--font-size-xs); font-weight: 500; line-height: 1.35; }
 @keyframes tenant-table-shimmer { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .tenant-table-skeleton-row span { animation: none; } }
+
+/* มือถือ: การ์ดสถิติและหัวการ์ดการจองต้องไม่บีบข้อความจนล้นหรือตัดคำกลางเลขที่ใบจอง */
+@media (max-width: 640px) {
+  .kpi-ribbon-card { padding: 12px; gap: 8px; min-width: 0; }
+  .kpi-ribbon-card .kpi-icon-box { display: none; }
+  .kpi-text-box { flex: 1 1 auto; min-width: 0; }
+  .kpi-title { overflow: hidden; text-overflow: ellipsis; }
+  .kpi-value-row { flex-wrap: wrap; gap: 2px 6px; }
+  .card-top-main { flex-wrap: wrap; gap: 10px; }
+  .top-row-left { flex: 1 1 100%; align-items: flex-start; gap: 12px; }
+  .top-row-right { flex: 1 1 100%; margin-left: 0; justify-content: space-between; }
+  .booking-number-block .booking-id-text { font-size: var(--font-size-lg); white-space: nowrap; }
+  .officer-booked-at, .tenant-booked-at { align-items: flex-start; }
+  /* ลดชั้นขอบซ้อนกันให้การ์ดการจองกว้างขึ้น */
+  .main-white-card.primary-tab-content-card { padding: 16px; }
+  .market-accordion-body { padding: 10px; }
+}
 
 </style>

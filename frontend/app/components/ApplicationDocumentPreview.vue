@@ -241,12 +241,12 @@ const checked = (type: string) => props.application?.proposed_rent_type === type
 .document-overlay { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 16px; background: rgba(15,23,42,.55); }
 .document-modal { width: min(900px, 100%); max-height: 94vh; display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; background: var(--bg-ffffff); box-shadow: 0 20px 35px rgba(15,23,42,.2); }
 .document-header, .document-footer { display: flex; align-items: center; padding: 14px 20px; gap: 12px; }
-.document-header { justify-content: space-between; border-bottom: 1px solid var(--bd-e2e8f0); } .document-header h2 { margin: 0; font-size: 1.125rem; color: var(--tx-1e293b); }
+.document-header { justify-content: space-between; border-bottom: 1px solid var(--bd-e2e8f0); } .document-header h2 { margin: 0; font-size: var(--font-size-lg); color: var(--tx-1e293b); }
 .document-close { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 8px; background: var(--bg-f1f5f9); color: var(--tx-475569); cursor: pointer; }
 .signature-load-error { margin: 12px 20px; color: #dc2626; font-size: 0.875rem; }
 .signature-load-error button { color: #2563eb; text-decoration: underline; }
 .document-tools { display: flex; justify-content: center; padding: 8px 16px; border-bottom: 1px solid var(--bd-e2e8f0); }
-.zoom-controls { display: flex; align-items: center; gap: 8px; color: var(--tx-475569); font-size: .875rem; }
+.zoom-controls { display: flex; align-items: center; gap: 8px; color: var(--tx-475569); font-size: var(--font-size-sm); }
 .zoom-controls span { min-width: 48px; text-align: center; }
 .signed-file-body { flex: 1 1 auto; min-height: 0; overflow: auto; background: #f1f5f9; }
 .signed-file-body iframe { display: block; width: 100%; height: min(70vh, 800px); border: 0; }
@@ -254,16 +254,16 @@ const checked = (type: string) => props.application?.proposed_rent_type === type
 .signed-image-wrap { display: flex; justify-content: center; padding: 20px; }
 .signed-image-wrap img { max-width: 100%; height: auto; object-fit: contain; }
 .document-scroll { flex: 1; overflow: auto; padding: 24px; background: var(--bg-f1f5f9); }
-.document-paper { max-width: 740px; margin: auto; padding: 32px; background: var(--bg-ffffff); color: var(--tx-0f172a); box-shadow: 0 1px 4px rgba(15,23,42,.15); font-size: .8125rem; line-height: 1.65; }
-.document-paper h3 { text-align: center; margin: 4px 0 12px; font-size: 1rem; } .document-paper p { margin: 10px 0; }
+.document-paper { max-width: 740px; margin: auto; padding: 32px; background: var(--bg-ffffff); color: var(--tx-0f172a); box-shadow: 0 1px 4px rgba(15,23,42,.15); font-size: var(--font-size-xs); line-height: 1.65; }
+.document-paper h3 { text-align: center; margin: 4px 0 12px; font-size: var(--font-size-md); } .document-paper p { margin: 10px 0; }
 .document-number { text-align: right; } .document-date { width: min(420px, 100%); margin-left: auto; } .document-date > div { display: flex; align-items: baseline; gap: 5px; } .document-date .place, .document-date .date-time, .document-date .date-month { flex: 1; } .document-date .date-day { min-width: 35px; } .document-date .date-year { min-width: 55px; }
 .document-section { border: 1px solid var(--bd-94a3b8); padding: 12px; margin: 10px 0; } .document-row { overflow-wrap: anywhere; } .document-value { font-weight: 600; } .document-indent { padding-left: 18px; }
 .fill-line { display: inline-block; min-height: 1.2em; min-width: 80px; padding: 0 3px; border-bottom: 1px dotted #475569; text-align: center; font-weight: 600; } .fill-line.signature { min-width: 170px; }
 .form-check { display: inline-block; position: relative; width: 13px; height: 13px; border: 1px solid #334155; vertical-align: middle; }
 .form-check.marked::after { content: ''; position: absolute; width: 5px; height: 8px; left: 3px; top: 0; border: solid #111; border-width: 0 2px 2px 0; transform: rotate(45deg); }
 .document-sign { text-align: right; margin-top: 8px; } .tenant-name { display: inline-block; width: 250px; text-align: center; } .officer-signature { display: inline-flex; width: 170px; min-height: 24px; justify-content: center; align-items: flex-end; vertical-align: bottom; } .officer-signature img { max-width: 165px; max-height: 55px; object-fit: contain; } .document-divider { border-top: 1px solid var(--bd-cbd5e1); margin: 12px -12px; }
-.signed-note { margin-right: auto; color: var(--tx-15803d); font-size: .875rem; font-weight: 600; }
-.sign-overlay { position: fixed; inset: 0; z-index: 2100; display: grid; place-items: center; padding: 16px; background: rgba(15,23,42,.45); } .sign-dialog { width: min(450px,100%); max-height:min(90vh,90dvh); display:flex; flex-direction:column; overflow:hidden; background: var(--bg-ffffff); border-radius: 20px; } .sign-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:24px 28px}.sign-dialog label { display: block; margin: 0 0 6px; font-size: .875rem; font-weight: 600; } .sign-actions { flex:0 0 auto;display: flex; justify-content: flex-end; gap: 10px; padding:16px 28px; border-top:1px solid var(--bd-e2e8f0); background:var(--bg-f8fafc); }
+.signed-note { margin-right: auto; color: var(--tx-15803d); font-size: var(--font-size-sm); font-weight: 600; }
+.sign-overlay { position: fixed; inset: 0; z-index: 2100; display: grid; place-items: center; padding: 16px; background: rgba(15,23,42,.45); } .sign-dialog { width: min(450px,100%); max-height:min(90vh,90dvh); display:flex; flex-direction:column; overflow:hidden; background: var(--bg-ffffff); border-radius: 20px; } .sign-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:24px 28px}.sign-dialog label { display: block; margin: 0 0 6px; font-size: var(--font-size-sm); font-weight: 600; } .sign-actions { flex:0 0 auto;display: flex; justify-content: flex-end; gap: 10px; padding:16px 28px; border-top:1px solid var(--bd-e2e8f0); background:var(--bg-f8fafc); }
 .document-footer { justify-content: flex-end; border-top: 1px solid var(--bd-e2e8f0); }
 @media (max-width: 600px) { .signed-file-body { flex: 1 1 auto; min-height: 0; overflow: auto; background: #f1f5f9; }
 .signed-file-body iframe { display: block; width: 100%; height: min(70vh, 800px); border: 0; }

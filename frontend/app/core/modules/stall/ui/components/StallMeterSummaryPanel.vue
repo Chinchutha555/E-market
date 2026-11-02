@@ -42,19 +42,19 @@ const percent = (recorded: number, total: number) => total ? Math.round((recorde
 <style scoped>
 .msp { display: flex; flex-direction: column; min-height: 0; height: 100%; color: var(--tx-334155); }
 .msp-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid var(--bd-e2e8f0); }
-.msp-head h3 { margin: 0; color: var(--tx-1e293b); font-size: 1.0625rem; font-weight: 700; }
-.msp-head p { margin: 3px 0 0; color: var(--tx-64748b); font-size: .8125rem; font-weight: 500; }
+.msp-head h3 { margin: 0; color: var(--tx-1e293b); font-size: var(--font-size-lg); font-weight: 700; }
+.msp-head p { margin: 3px 0 0; color: var(--tx-64748b); font-size: var(--font-size-xs); font-weight: 500; }
 .msp-close { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--bd-e2e8f0); border-radius: 8px; background: var(--bg-ffffff); color: var(--tx-64748b); cursor: pointer; }
 .msp-body { min-height: 0; flex: 1 1 auto; overflow: auto; padding: 0 16px 16px; }
 .msp-table { width: 100%; border-collapse: collapse; }
-.msp-table th { padding: 12px 8px; border-bottom: 1px solid var(--bd-f1f5f9); color: var(--tx-64748b); font-size: .75rem; font-weight: 600; text-align: left; white-space: nowrap; }
-.msp-table td { padding: 12px 8px; border-bottom: 1px solid var(--bd-f1f5f9); vertical-align: middle; font-size: .8125rem; }
+.msp-table th { padding: 12px 8px; border-bottom: 1px solid var(--bd-f1f5f9); color: var(--tx-64748b); font-size: var(--font-size-xs); font-weight: 600; text-align: left; white-space: nowrap; }
+.msp-table td { padding: 12px 8px; border-bottom: 1px solid var(--bd-f1f5f9); vertical-align: middle; font-size: var(--font-size-xs); }
 .msp-table strong, .msp-table small { display: block; }
 .msp-table strong { color: var(--tx-1e293b); font-weight: 700; }
-.msp-table small { margin-top: 2px; color: var(--tx-64748b); font-size: .75rem; }
+.msp-table small { margin-top: 2px; color: var(--tx-64748b); font-size: var(--font-size-xs); }
 .msp-progress { width: 72px; height: 7px; overflow: hidden; border-radius: 999px; background: var(--bg-e2e8f0); }
 .msp-progress i { display: block; height: 100%; border-radius: inherit; background: #2563eb; }
-.msp-pill { display: inline-flex; padding: 4px 8px; border-radius: 7px; font-size: .75rem; font-weight: 600; white-space: nowrap; }
+.msp-pill { display: inline-flex; padding: 4px 8px; border-radius: 7px; font-size: var(--font-size-xs); font-weight: 600; white-space: nowrap; }
 .msp-pill.is-ready { background: var(--bg-dcfce7); color: var(--tx-15803d); }
 .msp-pill.is-pending { background: var(--bg-fef3c7); color: var(--tx-d97706); }
 </style>

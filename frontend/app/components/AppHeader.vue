@@ -65,11 +65,11 @@
         <!-- Dropdown Menu -->
         <div v-if="showDropdown" class="profile-dropdown-card" @click.stop>
           <div class="dropdown-header">
-            <div style="font-size: 0.75rem; color: var(--tx-64748b); font-weight: 600;">บัญชีผู้ใช้งาน</div>
-            <div style="font-weight: 700; font-size: 0.88rem; color: var(--tx-0f172a); margin-top: 2px;">
+            <div style="font-size: var(--font-size-xs); color: var(--tx-64748b); font-weight: 600;">บัญชีผู้ใช้งาน</div>
+            <div style="font-weight: 700; font-size: var(--font-size-sm); color: var(--tx-0f172a); margin-top: 2px;">
               {{ user?.full_name || (user?.role === 'tenant' ? 'สมชาย ใจดี' : 'ผู้ดูแลระบบ') }}
             </div>
-            <div style="font-size: 0.75rem; color: var(--tx-64748b);">
+            <div style="font-size: var(--font-size-xs); color: var(--tx-64748b);">
               {{ user?.email || (user?.role === 'tenant' ? 'somchai@tenant.com' : 'admin@emarket.com') }}
             </div>
           </div>
@@ -163,7 +163,7 @@ const handleLogout = async () => {
 }
 
 .brand-title-text {
-  font-size: 1.15rem;
+  font-size: var(--font-size-lg);
   font-weight: 800;
   color: var(--tx-0f172a);
   letter-spacing: -0.02em;
@@ -179,7 +179,7 @@ const handleLogout = async () => {
   color: var(--tx-1e40af);
   padding: 4px 11px;
   border-radius: 9999px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   line-height: 1.2;
 }
@@ -247,7 +247,7 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-334155);
   border-radius: 8px;

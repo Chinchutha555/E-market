@@ -874,7 +874,7 @@ watch(marketId, () => {
 .visit-page-heading .page-title {
   margin: 0;
   color: var(--tx-1e293b);
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
   font-weight: 800;
   line-height: 1.3;
 }
@@ -882,7 +882,7 @@ watch(marketId, () => {
 .visit-page-heading .page-desc {
   margin: 4px 0 0;
   color: var(--tx-64748b);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   line-height: 1.5;
 }
@@ -903,7 +903,7 @@ watch(marketId, () => {
   background: var(--bg-eff6ff);
   color: var(--tx-2563eb);
   border: 1px solid var(--bd-bfdbfe);
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   text-decoration: none;
   transition: all 0.15s ease;
@@ -920,7 +920,7 @@ watch(marketId, () => {
   border-radius: 9px;
   padding: 9px 16px;
   font-weight: 700;
-  font-size: 0.86rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -986,7 +986,7 @@ watch(marketId, () => {
   border-bottom: none;
   border-radius: 12px 12px 0 0;
   color: var(--tx-64748b);
-  font-size: 0.88rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
@@ -1010,7 +1010,7 @@ watch(marketId, () => {
 }
 
 .mode-active-pill {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   background: var(--bg-dcfce7);
   color: var(--tx-15803d);
@@ -1019,7 +1019,7 @@ watch(marketId, () => {
 }
 
 .override-badge {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   background: var(--bg-fef3c7);
   color: var(--tx-b45309);
@@ -1064,13 +1064,13 @@ watch(marketId, () => {
 
 .ssb-content strong {
   display: block;
-  font-size: 0.92rem;
+  font-size: var(--font-size-base);
   color: var(--tx-1e3a8a);
 }
 
 .ssb-content p {
   margin: 3px 0 0;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-3b82f6);
   line-height: 1.45;
 }
@@ -1089,7 +1089,7 @@ watch(marketId, () => {
   border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
   color: var(--tx-1e293b);
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   cursor: pointer;
   font-family: inherit;
@@ -1135,13 +1135,13 @@ watch(marketId, () => {
 }
 
 .preset-menu-item .pmi-title {
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--tx-1e293b);
 }
 
 .preset-menu-item .pmi-desc {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
   margin-top: 2px;
   line-height: 1.35;
@@ -1193,14 +1193,14 @@ watch(marketId, () => {
 }
 
 .sidebar-title {
-  font-size: 1.08rem;
+  font-size: var(--font-size-lg);
   font-weight: 700;
   color: var(--tx-1e293b);
   margin: 0;
 }
 
 .sidebar-sub {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--tx-64748b);
   display: block;
@@ -1216,7 +1216,7 @@ watch(marketId, () => {
   color: var(--tx-2563eb);
   border: 1px solid var(--bd-bfdbfe);
   border-radius: 7px;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1288,7 +1288,7 @@ watch(marketId, () => {
 }
 
 .dmi-name {
-  font-size: 0.96rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--tx-1e293b);
 }
@@ -1299,7 +1299,7 @@ watch(marketId, () => {
 
 .dmi-bot-row {
   margin-top: 4px;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
 }
 
 .dmi-status-open {
@@ -1333,7 +1333,7 @@ watch(marketId, () => {
   border: 1px solid var(--bd-e2e8f0);
   border-radius: 10px;
   color: var(--tx-64748b);
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   line-height: 1.45;
 }
@@ -1372,7 +1372,7 @@ watch(marketId, () => {
 }
 
 .ddh-day-title {
-  font-size: 1.32rem;
+  font-size: 1.375rem;
   font-weight: 700;
   color: var(--tx-0f172a);
   margin: 0;
@@ -1380,7 +1380,7 @@ watch(marketId, () => {
 
 .ddh-subtitle {
   margin: 5px 0 0;
-  font-size: 0.92rem;
+  font-size: var(--font-size-base);
   font-weight: 500;
   color: var(--tx-64748b);
 }
@@ -1435,7 +1435,7 @@ watch(marketId, () => {
 }
 
 .toggle-text {
-  font-size: 0.92rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--tx-64748b);
 }
@@ -1491,14 +1491,14 @@ watch(marketId, () => {
 }
 
 .sch-title {
-  font-size: 1.06rem;
+  font-size: var(--font-size-lg);
   font-weight: 700;
   color: var(--tx-1e293b);
   margin: 0;
 }
 
 .sch-sub {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--tx-64748b);
   display: block;
@@ -1514,7 +1514,7 @@ watch(marketId, () => {
   border: 1px solid var(--bd-93c5fd);
   color: var(--tx-2563eb);
   border-radius: 8px;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1525,7 +1525,7 @@ watch(marketId, () => {
 }
 
 .field-label {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   color: var(--tx-334155);
 }
@@ -1533,20 +1533,20 @@ watch(marketId, () => {
 .holiday-placeholder-card { min-height: 0; display: block; background: var(--bg-ffffff); border: 1px solid var(--bd-e2e8f0); border-radius: 16px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04); }
 .holiday-placeholder-card .empty-state-panel { display: grid; justify-items: center; max-width: 420px; text-align: center; }
 .holiday-placeholder-card .empty-icon { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 14px; border-radius: 16px; background: var(--bg-eff6ff); color: var(--tx-2563eb); }
-.holiday-placeholder-card .empty-title { color: var(--tx-1e293b); font-size: 1rem; font-weight: 700; }
-.holiday-placeholder-card .empty-desc { margin-top: 6px; color: var(--tx-64748b); font-size: .875rem; line-height: 1.5; }
+.holiday-placeholder-card .empty-title { color: var(--tx-1e293b); font-size: var(--font-size-md); font-weight: 700; }
+.holiday-placeholder-card .empty-desc { margin-top: 6px; color: var(--tx-64748b); font-size: var(--font-size-sm); line-height: 1.5; }
 .holiday-manager { padding: 0; }
 .holiday-manager-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; padding: 4px 0 18px; border-bottom: 1px solid var(--bd-eef2f6); }
-.holiday-manager-head h2 { margin: 0; color: var(--tx-1e293b); font-size: 1.125rem; }
-.holiday-manager-head p { margin: 5px 0 0; color: var(--tx-64748b); font-size: .875rem; }
-.holiday-count { color: var(--tx-2563eb); background: var(--bg-eff6ff); border-radius: 999px; padding: 5px 10px; font-size: .8rem; font-weight: 700; white-space: nowrap; }
+.holiday-manager-head h2 { margin: 0; color: var(--tx-1e293b); font-size: var(--font-size-lg); }
+.holiday-manager-head p { margin: 5px 0 0; color: var(--tx-64748b); font-size: var(--font-size-sm); }
+.holiday-count { color: var(--tx-2563eb); background: var(--bg-eff6ff); border-radius: 999px; padding: 5px 10px; font-size: var(--font-size-xs); font-weight: 700; white-space: nowrap; }
 .holiday-add-row { display: grid; grid-template-columns: 180px 1fr auto; gap: 10px; margin-top: 16px; align-items: center; }
 .holiday-list { display: grid; gap: 8px; margin-top: 16px; }
 .holiday-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--bd-e2e8f0); border-radius: 10px; background: var(--bg-f8fafc); }
-.holiday-row div { display: flex; flex-direction: column; gap: 3px; }.holiday-row strong { color: var(--tx-1e293b); }.holiday-row span { color: var(--tx-64748b); font-size: .8125rem; }.holiday-remove { color: var(--tx-dc2626); border-color: var(--bd-fecaca); }
-.holiday-empty { margin-top: 18px; padding: 22px; border: 1px dashed var(--bd-cbd5e1); border-radius: 10px; color: var(--tx-64748b); text-align: center; font-size: .875rem; }
+.holiday-row div { display: flex; flex-direction: column; gap: 3px; }.holiday-row strong { color: var(--tx-1e293b); }.holiday-row span { color: var(--tx-64748b); font-size: var(--font-size-xs); }.holiday-remove { color: var(--tx-dc2626); border-color: var(--bd-fecaca); }
+.holiday-empty { margin-top: 18px; padding: 22px; border: 1px dashed var(--bd-cbd5e1); border-radius: 10px; color: var(--tx-64748b); text-align: center; font-size: var(--font-size-sm); }
 
-.day-booked-badge { display: inline-flex; align-items: center; margin-left: 6px; padding: 2px 7px; border-radius: 999px; background: var(--bg-dbeafe); color: var(--tx-1d4ed8); font-size: .75rem; font-weight: 700; white-space: nowrap; }
+.day-booked-badge { display: inline-flex; align-items: center; margin-left: 6px; padding: 2px 7px; border-radius: 999px; background: var(--bg-dbeafe); color: var(--tx-1d4ed8); font-size: var(--font-size-xs); font-weight: 700; white-space: nowrap; }
 
 .styled-input {
   width: 100%;
@@ -1555,7 +1555,7 @@ watch(marketId, () => {
   padding: 8px 12px;
   border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   color: var(--tx-1e293b);
   font-family: inherit;
   background: var(--bg-ffffff);
@@ -1576,7 +1576,7 @@ watch(marketId, () => {
   background: var(--bg-ffffff);
   border: 1px solid var(--bd-cbd5e1);
   border-radius: 8px;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-334155);
   cursor: pointer;
@@ -1610,7 +1610,7 @@ watch(marketId, () => {
   align-items: center;
   gap: 12px;
   padding: 0 14px;
-  font-size: 0.825rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-64748b);
 }
@@ -1635,7 +1635,7 @@ watch(marketId, () => {
 
 .time-range-separator {
   color: var(--tx-94a3b8);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -1699,7 +1699,7 @@ watch(marketId, () => {
   border: none;
   background: transparent;
   text-align: right;
-  font-size: 0.9375rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--tx-1e293b);
   padding: 0;
@@ -1716,7 +1716,7 @@ watch(marketId, () => {
 }
 
 .cap-suffix {
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-64748b);
   font-weight: 500;
   margin-left: 4px;
@@ -1754,7 +1754,7 @@ watch(marketId, () => {
   padding: 8px 12px;
   color: var(--tx-1e293b);
   font-family: inherit;
-  font-size: 0.92rem;
+  font-size: var(--font-size-base);
 }
 
 .time-input:focus,
@@ -1813,7 +1813,7 @@ watch(marketId, () => {
 }
 
 .status-toggle-label {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   color: var(--tx-94a3b8);
   min-width: 26px;
@@ -1849,7 +1849,7 @@ watch(marketId, () => {
   border-radius: 10px;
   background: var(--bg-f8fafc);
   color: var(--tx-2563eb);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -1884,14 +1884,14 @@ watch(marketId, () => {
 
 .closed-day-banner strong {
   display: block;
-  font-size: 1rem;
+  font-size: var(--font-size-md);
   font-weight: 700;
   color: var(--tx-78350f);
 }
 
 .closed-day-banner p {
   margin: 4px 0 0;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--tx-92400e);
 }
@@ -1903,7 +1903,7 @@ watch(marketId, () => {
   color: #ffffff;
   border: none;
   border-radius: 9px;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -1932,13 +1932,13 @@ watch(marketId, () => {
 
 .calendar-horizon-banner strong {
   display: block;
-  font-size: 0.92rem;
+  font-size: var(--font-size-base);
   color: var(--tx-0f172a);
 }
 
 .calendar-horizon-banner p {
   margin: 3px 0 0;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
 }
 
@@ -1955,7 +1955,7 @@ watch(marketId, () => {
   background: transparent;
   padding: 5px 12px;
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-64748b);
   cursor: pointer;
@@ -2023,7 +2023,7 @@ watch(marketId, () => {
 }
 
 .date-status {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
 }
 
@@ -2031,7 +2031,7 @@ watch(marketId, () => {
 .date-status.status-closed { color: var(--tx-94a3b8); }
 
 .date-badge {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 3px 9px;
   border-radius: 6px;
@@ -2044,12 +2044,12 @@ watch(marketId, () => {
 .badge-neutral { background: var(--bg-f1f5f9); color: var(--tx-475569); }
 .badge-override { background: var(--bg-fef3c7); color: var(--tx-b45309); }
 
-.date-day-name { font-size: 0.8rem; font-weight: 700; color: var(--tx-475569); }
+.date-day-name { font-size: var(--font-size-xs); font-weight: 700; color: var(--tx-475569); }
 .date-card.active .date-day-name { color: var(--tx-1e40af); }
 .date-day-num { font-size: 1.6rem; color: var(--tx-0f172a); line-height: 1.1; margin: 2px 0 3px; font-weight: 800; }
 .date-card.active .date-day-num { color: var(--tx-1d4ed8); }
-.date-month { font-size: 0.75rem; color: var(--tx-64748b); font-weight: 500; }
-.date-card-bot { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--bd-e2e8f0); font-size: 0.75rem; }
+.date-month { font-size: var(--font-size-xs); color: var(--tx-64748b); font-weight: 500; }
+.date-card-bot { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--bd-e2e8f0); font-size: var(--font-size-xs); }
 .day-cap-tag { color: var(--tx-2563eb); font-weight: 700; }
 .day-closed-tag { color: var(--tx-94a3b8); font-weight: 500; }
 
@@ -2071,14 +2071,14 @@ watch(marketId, () => {
 
 .sob-head h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--font-size-md);
   font-weight: 700;
   color: var(--tx-0f172a);
 }
 
 .sob-head p {
   margin: 4px 0 0;
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
 }
 
@@ -2096,7 +2096,7 @@ watch(marketId, () => {
   border: 1px solid var(--bd-cbd5e1);
   background: var(--bg-ffffff);
   border-radius: 8px;
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--tx-64748b);
   cursor: pointer;
@@ -2110,7 +2110,7 @@ watch(marketId, () => {
 .quick-toggle-day-btn {
   padding: 8px 16px;
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   cursor: pointer;
   border: none;
@@ -2140,7 +2140,7 @@ watch(marketId, () => {
 
 /* Page actions: สถานะการแก้ไข + ปุ่มบันทึก (ตำแหน่งเดียวกับหน้าจัดการผัง GIS) */
 .visit-page-actions { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.draft-status { display: inline-flex; align-items: center; gap: 7px; height: 34px; box-sizing: border-box; padding: 0 12px; border-radius: 999px; background: var(--bg-f1f5f9); color: var(--tx-475569); font-size: 0.8125rem; font-weight: 600; transition: all .2s ease; }
+.draft-status { display: inline-flex; align-items: center; gap: 7px; height: 34px; box-sizing: border-box; padding: 0 12px; border-radius: 999px; background: var(--bg-f1f5f9); color: var(--tx-475569); font-size: var(--font-size-xs); font-weight: 600; transition: all .2s ease; }
 .draft-status i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 .draft-status.published { background: var(--bg-ecfdf5); color: var(--tx-15803d); border: 1px solid var(--bd-bbf7d0); }
 .draft-status.is-dirty { background: var(--bg-fff7ed); color: var(--tx-c2410c); border: 1px solid var(--bd-fed7aa); }
@@ -2187,7 +2187,7 @@ watch(marketId, () => {
 
 .cm-title-wrap h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--font-size-md);
   font-weight: 700;
   color: var(--tx-0f172a);
 }
@@ -2210,7 +2210,7 @@ watch(marketId, () => {
 
 .cm-desc {
   margin: 0 0 14px;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-475569);
 }
 
@@ -2243,13 +2243,13 @@ watch(marketId, () => {
 
 .target-option-card strong {
   display: block;
-  font-size: 0.86rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-1e293b);
 }
 
 .target-option-card p {
   margin: 2px 0 0;
-  font-size: 0.76rem;
+  font-size: var(--font-size-xs);
   color: var(--tx-64748b);
 }
 

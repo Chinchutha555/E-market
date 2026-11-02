@@ -49,7 +49,7 @@
 
         <!-- Dropdown Menu -->
         <div v-if="showDropdown" class="card" style="position: absolute; top: 110%; right: 0; min-width: 190px; padding: 8px; z-index: 50; box-shadow: var(--shadow-lg);">
-          <div style="padding: 6px 10px; font-size: 0.76rem; color: var(--tx-64748b); border-bottom: 1px solid var(--bd-f1f5f9); margin-bottom: 4px;">
+          <div style="padding: 6px 10px; font-size: var(--font-size-xs); color: var(--tx-64748b); border-bottom: 1px solid var(--bd-f1f5f9); margin-bottom: 4px;">
             บทบาทปัจจุบัน: <strong>{{ roleLabel }}</strong>
           </div>
           <button class="btn btn-sm btn-outline" style="width: 100%; border: none; justify-content: flex-start; color: var(--tx-ef4444); display: flex; align-items: center; gap: 8px;" @click="handleLogout">
@@ -100,7 +100,7 @@ const handleLogout = async () => {
 
 <style scoped>
 .navbar-subtitle-text {
-  font-size: 0.86rem;
+  font-size: var(--font-size-sm);
   color: var(--tx-64748b);
   font-weight: 500;
   margin-left: 6px;

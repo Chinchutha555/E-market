@@ -61,12 +61,12 @@
         <div class="gis-card-header">
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="stall-code" style="font-size: 1.35rem; color: var(--primary);">{{ selectedStall.stall_number }}</span>
+              <span class="stall-code" style="font-size: 1.375rem; color: var(--primary);">{{ selectedStall.stall_number }}</span>
               <span :class="getStatusBadgeClass(selectedStall.status)">
                 {{ getStatusLabel(selectedStall.status) }}
               </span>
             </div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+            <div style="font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 2px;">
               โซน {{ selectedStall.zone_code }}: {{ selectedStall.category || selectedStall.zone_name }}
             </div>
           </div>
@@ -83,7 +83,7 @@
             </div>
             <div>
               <span class="gis-label">ค่าเช่ารายเดือน:</span>
-              <strong style="color: var(--tx-059669); font-size: 1.05rem;">฿{{ Number(selectedStall.monthly_rate).toLocaleString() }}</strong>
+              <strong style="color: var(--tx-059669); font-size: var(--font-size-lg);">฿{{ Number(selectedStall.monthly_rate).toLocaleString() }}</strong>
             </div>
             <div>
               <span class="gis-label">ค่าเช่ารายวัน:</span>
@@ -91,7 +91,7 @@
             </div>
             <div>
               <span class="gis-label">พิกัด GIS:</span>
-              <span style="font-family: monospace; font-size: 0.78rem;">{{ Number(selectedStall.lat || 13.80).toFixed(5) }}, {{ Number(selectedStall.lng || 100.55).toFixed(5) }}</span>
+              <span style="font-family: monospace; font-size: var(--font-size-xs);">{{ Number(selectedStall.lat || 13.80).toFixed(5) }}, {{ Number(selectedStall.lng || 100.55).toFixed(5) }}</span>
             </div>
           </div>
 
@@ -105,14 +105,14 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
               <span>มีคำขอจองเข้าดูแผงนี้อยู่แล้ว (เลขที่: {{ selectedStall.active_booking_number }})</span>
             </span>
-            <span style="text-decoration: underline; font-weight: 600; font-size: 0.78rem;">คลิกดู &rarr;</span>
+            <span style="text-decoration: underline; font-weight: 600; font-size: var(--font-size-xs);">คลิกดู &rarr;</span>
           </div>
 
           <div class="gis-card-footer">
             <button
               v-if="selectedStall.status === 'available'"
               class="btn btn-primary"
-              style="width: 100%; padding: 12px; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 6px;"
+              style="width: 100%; padding: 12px; font-size: var(--font-size-base); display: flex; align-items: center; justify-content: center; gap: 6px;"
               @click="$emit('bookStall', selectedStall)"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
@@ -123,14 +123,14 @@
             <button
               v-if="selectedStall.has_active_booking"
               class="btn btn-primary"
-              style="width: 100%; padding: 11px; font-size: 0.92rem; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 8px;"
+              style="width: 100%; padding: 11px; font-size: var(--font-size-base); background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 8px;"
               @click="$emit('viewBooking', selectedStall)"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
               <span>ดูรายละเอียดการจอง ({{ selectedStall.active_booking_number }})</span>
             </button>
 
-            <div v-if="selectedStall.status !== 'available' && !selectedStall.has_active_booking" style="text-align: center; font-size: 0.85rem; color: var(--text-dim); padding: 8px;">
+            <div v-if="selectedStall.status !== 'available' && !selectedStall.has_active_booking" style="text-align: center; font-size: var(--font-size-sm); color: var(--text-dim); padding: 8px;">
               แผงนี้ไม่ว่างสำหรับจอง (สถานะ: {{ getStatusLabel(selectedStall.status) }})
             </div>
           </div>
@@ -416,16 +416,16 @@ const setupStallsLayers = () => {
       const statusLabel = getStatusLabel(p.status)
 
       hoverPopup.setLngLat(coordinates).setHTML(`
-        <div style="font-family: 'Bai Jamjuree', sans-serif; padding: 4px; font-size: 12px; line-height: 1.4;">
-          <div style="font-weight: 700; color: #0f172a; font-size: 13px;">
-            แผง ${p.stall_number} <span style="font-weight: 500; font-size: 0.75rem; color: #64748b;">(โซน ${p.zone_code})</span>
+        <div style="font-family: 'Bai Jamjuree', sans-serif; padding: 4px; font-size: var(--font-size-xs); line-height: 1.4;">
+          <div style="font-weight: 700; color: #0f172a; font-size: var(--font-size-xs);">
+            แผง ${p.stall_number} <span style="font-weight: 500; font-size: var(--font-size-xs); color: #64748b;">(โซน ${p.zone_code})</span>
           </div>
-          <div style="color: #475569; font-size: 0.75rem; margin-bottom: 2px;">
+          <div style="color: #475569; font-size: var(--font-size-xs); margin-bottom: 2px;">
             ${p.category || p.zone_name || ''}
           </div>
           <div style="display: flex; justify-content: space-between; gap: 8px; margin-top: 4px;">
             <span style="font-weight: 700; color: #059669;">฿${Number(p.monthly_rate).toLocaleString()}/ด.</span>
-            <span style="font-size: 0.75rem; padding: 1px 6px; border-radius: 4px; background: #f1f5f9; color: #334155;">${statusLabel}</span>
+            <span style="font-size: var(--font-size-xs); padding: 1px 6px; border-radius: 4px; background: #f1f5f9; color: #334155;">${statusLabel}</span>
           </div>
         </div>
       `).addTo(map)
@@ -599,7 +599,7 @@ defineExpose({
   backdrop-filter: blur(12px);
   padding: 8px 16px;
   border-radius: var(--radius-full);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   border: 1px solid var(--border-subtle);
   display: flex;
@@ -627,7 +627,7 @@ defineExpose({
   border: none;
   background: transparent;
   font-family: inherit;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-64748b);
   cursor: pointer;
@@ -657,7 +657,7 @@ defineExpose({
   border: 1px solid var(--bd-rgba-226-232-240-0p9);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
   font-family: inherit;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-334155);
   cursor: pointer;
@@ -706,13 +706,13 @@ defineExpose({
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   margin-bottom: 14px;
 }
 
 .gis-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
 }
 
@@ -722,7 +722,7 @@ defineExpose({
   color: var(--tx-2563eb);
   padding: 8px 12px;
   border-radius: var(--radius-sm);
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   margin-bottom: 12px;
 }
 
@@ -737,7 +737,7 @@ defineExpose({
   border: 1px solid var(--border-subtle);
   padding: 12px 16px;
   border-radius: var(--radius-md);
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   box-shadow: var(--shadow-md);
   color: var(--tx-0f172a);
 }

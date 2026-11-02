@@ -30,8 +30,8 @@
 
     <!-- Map Legend Bar -->
     <div class="bma-gis-legend">
-      <div style="font-weight: 700; color: var(--tx-0f172a); margin-bottom: 6px; font-size: 0.8rem;">สัญลักษณ์แผนที่:</div>
-      <div style="display: flex; gap: 14px; font-size: 0.78rem;">
+      <div style="font-weight: 700; color: var(--tx-0f172a); margin-bottom: 6px; font-size: var(--font-size-xs);">สัญลักษณ์แผนที่:</div>
+      <div style="display: flex; gap: 14px; font-size: var(--font-size-xs);">
         <span style="display: flex; align-items: center; gap: 6px;">
           <span style="width: 12px; height: 12px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
           <span style="color: var(--tx-334155);">เปิดรับจองแผง (มีแผงว่าง)</span>
@@ -365,9 +365,9 @@ const renderMarkers = (force = false) => {
     el.style.cursor = 'pointer'
     el.innerHTML = `
       <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-        <div style="background: ${pinColor}; color: #ffffff; padding: 5px 11px; border-radius: 20px; font-size: 12px; font-weight: 700; font-family: 'Bai Jamjuree', sans-serif; box-shadow: 0 4px 14px rgba(0,0,0,0.25); white-space: nowrap; border: 2px solid #ffffff; display: flex; align-items: center; gap: 6px; transition: transform 0.2s ease;">
+        <div style="background: ${pinColor}; color: #ffffff; padding: 5px 11px; border-radius: 20px; font-size: var(--font-size-xs); font-weight: 700; font-family: 'Bai Jamjuree', sans-serif; box-shadow: 0 4px 14px rgba(0,0,0,0.25); white-space: nowrap; border: 2px solid #ffffff; display: flex; align-items: center; gap: 6px; transition: transform 0.2s ease;">
           <span>${m.name}</span>
-          <span style="background: rgba(255,255,255,0.25); padding: 1px 7px; border-radius: 10px; font-size: 12px;">${isAvail ? `ว่าง ${m.available_stalls}` : 'เต็ม'}</span>
+          <span style="background: rgba(255,255,255,0.25); padding: 1px 7px; border-radius: 10px; font-size: var(--font-size-xs);">${isAvail ? `ว่าง ${m.available_stalls}` : 'เต็ม'}</span>
         </div>
         <div style="width: 12px; height: 12px; background: ${pinColor}; transform: rotate(45deg); margin-top: -6px; border: 2px solid #ffffff; border-top: none; border-left: none;"></div>
         <div style="width: 22px; height: 6px; border-radius: 50%; background: ${pinBg}; filter: blur(1.5px); margin-top: -1px;"></div>
@@ -378,17 +378,17 @@ const renderMarkers = (force = false) => {
     const actionButtonsHtml = isOfficer.value
       ? `
         <div style="display: flex; gap: 6px;">
-          <button type="button" onclick="window.$navigateToMarket('${marketKey}', 'stalls')" style="flex: 1; text-align: center; background: #2563eb; color: #fff; border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Bai Jamjuree', sans-serif;">
+          <button type="button" onclick="window.$navigateToMarket('${marketKey}', 'stalls')" style="flex: 1; text-align: center; background: #2563eb; color: #fff; border: none; padding: 8px 12px; border-radius: 8px; font-size: var(--font-size-xs); font-weight: 700; cursor: pointer; font-family: 'Bai Jamjuree', sans-serif;">
             ข้อมูลตลาด &rarr;
           </button>
         </div>
       `
       : `
         <div style="display: flex; gap: 6px;">
-          <button type="button" onclick="window.$navigateToMarket('${marketKey}', 'book')" style="flex: 1; text-align: center; background: #2563eb; color: #fff; border: none; padding: 8px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Bai Jamjuree', sans-serif;">
+          <button type="button" onclick="window.$navigateToMarket('${marketKey}', 'book')" style="flex: 1; text-align: center; background: #2563eb; color: #fff; border: none; padding: 8px 10px; border-radius: 8px; font-size: var(--font-size-xs); font-weight: 700; cursor: pointer; font-family: 'Bai Jamjuree', sans-serif;">
             จองแผง &rarr;
           </button>
-          <button type="button" onclick="window.$navigateToMarket('${marketKey}', 'stalls')" style="text-align: center; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; padding: 8px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Bai Jamjuree', sans-serif;">
+          <button type="button" onclick="window.$navigateToMarket('${marketKey}', 'stalls')" style="text-align: center; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; padding: 8px 10px; border-radius: 8px; font-size: var(--font-size-xs); font-weight: 600; cursor: pointer; font-family: 'Bai Jamjuree', sans-serif;">
             ข้อมูลตลาด
           </button>
         </div>
@@ -398,13 +398,13 @@ const renderMarkers = (force = false) => {
       <div style="font-family: 'Bai Jamjuree', sans-serif; width: 244px; padding: 4px;">
         <div style="border-radius: 8px; overflow: hidden; height: 112px; margin-bottom: 8px; position: relative;">
           <img src="${m.image_url}" style="width: 100%; height: 100%; object-fit: cover;" alt="${m.name}" />
-          <span style="position: absolute; top: 6px; right: 6px; background: ${isAvail ? '#10b981' : '#ef4444'}; color: #fff; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 12px;">
+          <span style="position: absolute; top: 6px; right: 6px; background: ${isAvail ? '#10b981' : '#ef4444'}; color: #fff; font-size: var(--font-size-xs); font-weight: 700; padding: 2px 9px; border-radius: 12px;">
             ${isAvail ? `ว่าง ${m.available_stalls} แผง` : 'เต็ม'}
           </span>
         </div>
-        <strong style="font-size: 14px; color: #0f172a; display: block; margin-bottom: 2px;">${m.name}</strong>
-        <div style="font-size: 12px; color: #64748b; margin-bottom: 6px;">${districtLabel}</div>
-        <div style="font-size: 12px; color: #334155; margin-bottom: 10px;">
+        <strong style="font-size: var(--font-size-sm); color: #0f172a; display: block; margin-bottom: 2px;">${m.name}</strong>
+        <div style="font-size: var(--font-size-xs); color: #64748b; margin-bottom: 6px;">${districtLabel}</div>
+        <div style="font-size: var(--font-size-xs); color: #334155; margin-bottom: 10px;">
           ค่าเช่าเริ่มต้น: <strong style="color: #059669;">฿${m.starting_price_daily}/วัน</strong> (฿${Number(m.starting_price_monthly).toLocaleString()}/ด.)
         </div>
         ${actionButtonsHtml}
@@ -491,7 +491,7 @@ const renderMarkers = (force = false) => {
   border: none;
   background: transparent;
   font-family: inherit;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-64748b);
   cursor: pointer;
@@ -521,7 +521,7 @@ const renderMarkers = (force = false) => {
   border: 1px solid var(--bd-rgba-226-232-240-0p9);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
   font-family: inherit;
-  font-size: 0.84rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--tx-334155);
   cursor: pointer;
@@ -575,7 +575,7 @@ const renderMarkers = (force = false) => {
 }
 
 :deep(.maplibregl-popup-close-button) {
-  font-size: 16px;
+  font-size: var(--font-size-md);
   color: var(--tx-64748b);
   padding: 4px 8px;
 }
@@ -594,11 +594,11 @@ const renderMarkers = (force = false) => {
   }
   .gis-ctrl-btn {
     padding: 5px 10px;
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
   }
   .gis-mode-tab {
     padding: 4px 8px;
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
   }
   .maplibre-container {
     height: 400px !important;
@@ -606,7 +606,7 @@ const renderMarkers = (force = false) => {
   .bma-gis-legend {
     position: static;
     margin: 10px 12px;
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
   }
 }
 </style>

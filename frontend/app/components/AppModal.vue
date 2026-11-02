@@ -98,8 +98,8 @@ useBodyScrollLock(toRef(props, 'modelValue'))
 .app-modal-icon{width:48px;height:48px;display:grid;place-items:center;flex:0 0 48px;border-radius:14px;border:1px solid var(--bd-dbeafe);background:var(--bg-eff6ff);color:var(--tx-2563eb)}
 .app-modal-icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .app-modal-heading-copy{min-width:0}
-.app-modal-header h2{margin:0;color:var(--tx-0f172a);font-size:1.25rem;line-height:1.35;font-weight:700}
-.app-modal-header p{margin:4px 0 0;color:var(--tx-64748b);font-size:.9375rem;line-height:1.5}
+.app-modal-header h2{margin:0;color:var(--tx-0f172a);font-size:var(--font-size-xl);line-height:1.35;font-weight:700}
+.app-modal-header p{margin:4px 0 0;color:var(--tx-64748b);font-size:var(--font-size-base);line-height:1.5}
 .app-modal-close{flex:0 0 auto!important;padding:0!important;width:38px!important;height:38px!important;color:var(--tx-94a3b8)!important}.app-modal-close svg{width:20px;height:20px}
 .app-modal-body{
   flex:1 1 auto;
@@ -118,5 +118,5 @@ useBodyScrollLock(toRef(props, 'modelValue'))
   background:var(--bg-f8fafc);
 }
 .app-modal-fade-enter-active,.app-modal-fade-leave-active{transition:opacity .16s ease}.app-modal-fade-enter-active .app-modal,.app-modal-fade-leave-active .app-modal{transition:transform .16s ease}.app-modal-fade-enter-from,.app-modal-fade-leave-to{opacity:0}.app-modal-fade-enter-from .app-modal,.app-modal-fade-leave-to .app-modal{transform:translateY(6px) scale(.98)}
-@media(max-width:640px){.app-modal-header{min-height:92px;padding:18px 20px}.app-modal-icon{width:44px;height:44px;flex-basis:44px}.app-modal-header h2{font-size:1.125rem}.app-modal-header p{font-size:.875rem}.app-modal-body{padding:22px 20px}.app-modal-footer{padding:14px 20px;flex-wrap:wrap}}
+@media(max-width:640px){.app-modal-header{min-height:92px;padding:18px 20px}.app-modal-icon{width:44px;height:44px;flex-basis:44px}.app-modal-header h2{font-size:var(--font-size-lg)}.app-modal-header p{font-size:var(--font-size-sm)}.app-modal-body{padding:22px 20px}.app-modal-footer{padding:14px 20px;flex-wrap:wrap}}
 </style>
