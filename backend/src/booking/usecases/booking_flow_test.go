@@ -21,7 +21,7 @@ func newBookingFlow(t *testing.T) (*gorm.DB, *bookingHarness) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := db.AutoMigrate(&models.User{}, &models.Market{}, &models.Stall{}, &models.Booking{}, &models.BookingStall{}, &models.Waitlist{}, &models.Notification{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Market{}, &models.Stall{}, &models.Booking{}, &models.BookingStall{}, &models.Waitlist{}, &models.Notification{}, &models.Contract{}); err != nil {
 		t.Fatal(err)
 	}
 	users := []models.User{{ID: 101, Username: "tenant-a", Password: "x", FullName: "ผู้เช่า A", Phone: "0800000001", Role: "tenant", Status: "A"}, {ID: 102, Username: "tenant-b", Password: "x", FullName: "ผู้เช่า B", Phone: "0800000002", Role: "tenant", Status: "A"}, {ID: 103, Username: "tenant-c", Password: "x", FullName: "ผู้เช่า C", Phone: "0800000003", Role: "tenant", Status: "A"}}

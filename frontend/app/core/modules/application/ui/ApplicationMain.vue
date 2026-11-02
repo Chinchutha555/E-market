@@ -71,14 +71,14 @@
             />
 
             <!-- Primary Action: ยื่นคำร้องทั่วไป -->
-            <AppButton variant="primary" size="md" title="ยื่นคำร้องทั่วไป" @click="openCreateGeneralModal">
+            <AppButton v-if="(role || authStore.role) !== 'admin'" variant="primary" size="md" title="ยื่นคำร้องทั่วไป" @click="openCreateGeneralModal">
               <template #prefix><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></template>
               ยื่นคำร้องทั่วไป
             </AppButton>
 
             <!-- Manage Application Types (Admin & Staff) -->
             <AppButton
-              v-if="isAdminOrStaff"
+              v-if="(role || authStore.role) === 'admin'"
               to="/applications/types"
               variant="secondary"
               size="md"
@@ -529,7 +529,8 @@
                       </div>
 
                       <div class="top-row-right">
-                        <AppButton v-if="isStallLease(app)" variant="outline" size="sm" title="ดูตัวอย่างเอกสารคำร้อง" @click.stop="documentPreviewApplication = app"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>ตัวอย่างเอกสาร</AppButton>
+                        <AppButton v-if="canManageDocuments(app)" variant="primary" size="sm" title="จัดการเอกสาร" @click.stop="documentManagerApplication = app"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>จัดการเอกสาร</AppButton>
+                        <AppButton variant="outline" size="sm" title="ดูตัวอย่างเอกสารคำร้อง" @click.stop="documentPreviewApplication = app"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>ตัวอย่างเอกสาร</AppButton>
                         <!-- Aggregate Status Badge Pill -->
                         <span class="status-pill-badge" :class="getStatusPillClass(app.status)">
                           {{ getStatusBadgeLabel(app.status) }}
@@ -663,7 +664,7 @@
                           <span>ผอ.สำนัก อนุมัติ</span>
                         </AppButton>
                       </template>
-                      <template v-else-if="app.status === 'approved' && isStallLease(app)">
+                      <template v-else-if="app.status === 'completed' && isStallLease(app) && role === 'tenant'">
                         <NuxtLink
                           :to="'/contracts?new_for_stall=' + encodeURIComponent(app.stall_number || app.stall_id || '') + '&app_id=' + app.id"
                           class="btn-collapsed-primary"
@@ -684,7 +685,7 @@
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </NuxtLink>
                       </template>
-                      <template v-else-if="app.status === 'completed'">
+                      <template v-else-if="app.status === 'completed' && !app.has_signed_document">
                         <NuxtLink
                           :to="'/contracts?stall=' + encodeURIComponent(app.stall_number || app.stall_id || '')"
                           class="btn-collapsed-primary"
@@ -944,7 +945,7 @@
                         </template>
 
                         <!-- Final Step: Approved -> Contract button styled with blue theme -->
-                        <template v-else-if="app.status === 'approved' && isStallLease(app)">
+                        <template v-else-if="app.status === 'completed' && isStallLease(app) && role === 'tenant'">
                           <NuxtLink
                             :to="'/contracts?new_for_stall=' + encodeURIComponent(app.stall_number || app.stall_id || '') + '&app_id=' + app.id"
                             class="btn-action-primary-solid"
@@ -965,7 +966,7 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                           </NuxtLink>
                         </template>
-                        <template v-else-if="app.status === 'completed'">
+                        <template v-else-if="app.status === 'completed' && !app.has_signed_document">
                           <NuxtLink
                             :to="'/contracts?stall=' + encodeURIComponent(app.stall_number || app.stall_id || '')"
                             class="btn-action-primary-solid"
@@ -1024,7 +1025,8 @@
                 <td>
                   <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                     <strong class="table-code-blue">{{ app.application_number }}</strong>
-                    <AppButton v-if="isStallLease(app)" variant="outline" size="sm" title="ดูตัวอย่างเอกสารคำร้อง" @click.stop="documentPreviewApplication = app"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>ตัวอย่างเอกสาร</AppButton>
+                    <AppButton v-if="canManageDocuments(app)" variant="primary" size="sm" title="จัดการเอกสาร" @click.stop="documentManagerApplication = app"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>จัดการเอกสาร</AppButton>
+                        <AppButton variant="outline" size="sm" title="ดูตัวอย่างเอกสารคำร้อง" @click.stop="documentPreviewApplication = app"><template #prefix><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg></template>ตัวอย่างเอกสาร</AppButton>
                     <span v-if="isStallLease(app)" class="badge-type badge-type-stall">ขอเช่าแผง</span>
                     <span v-else class="badge-type badge-type-general">คำร้องทั่วไป</span>
                   </div>
@@ -1146,7 +1148,7 @@
 
                     <!-- Final: Approved -> Generate Contract (Only for stall lease) -->
                     <NuxtLink
-                      v-else-if="app.status === 'approved' && isStallLease(app)"
+                      v-else-if="app.status === 'completed' && isStallLease(app) && role === 'tenant'"
                       :to="'/contracts?new_for_stall=' + encodeURIComponent(app.stall_number || app.stall_id || '') + '&app_id=' + app.id"
                       class="btn-table-action btn-table-primary"
                       title="จัดทำสัญญาเช่า"
@@ -1164,7 +1166,7 @@
                       <span>ดูสัญญา (รอตรวจ)</span>
                     </NuxtLink>
                     <NuxtLink
-                      v-else-if="app.status === 'completed'"
+                      v-else-if="app.status === 'completed' && !app.has_signed_document"
                       :to="'/contracts?stall=' + encodeURIComponent(app.stall_number || app.stall_id || '')"
                       class="btn-table-action btn-table-view"
                       title="ดูสัญญาเช่า"
@@ -1590,146 +1592,48 @@
     >
       <div class="modal-content general-modal-box">
         <!-- Modal Header -->
-        <AppModalHeader title="ยื่นคำร้องทั่วไป" subtitle="บันทึกคำร้องทั่วไปสำหรับผู้ค้าหรือประชาชนทั่วไป" icon="document" @close="closeCreateGeneralModal" />
+        <AppModalHeader title="ยื่นคำร้องทั่วไป" subtitle="กรอกข้อมูลและเลือกหัวข้อคำร้อง" icon="document" @close="closeCreateGeneralModal" />
 
-        <!-- Modal Body -->
-        <div class="modal-body general-modal-body">
-          <form @submit.prevent="submitGeneralApplication" class="general-app-form">
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label class="form-label" for="gen-applicant-name">ชื่อ-นามสกุล ผู้ยื่นคำร้อง <span class="req-star" aria-hidden="true">*</span></label>
-                <input
-                  id="gen-applicant-name"
-                  v-model="generalForm.applicant_name"
-                  type="text"
-                  class="form-input"
-                  placeholder="เช่น นายสมชาย ใจดี"
-                  required
-                />
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="gen-applicant-phone">เบอร์โทรศัพท์ติดต่อ <span class="req-star" aria-hidden="true">*</span></label>
-                <input
-                  id="gen-applicant-phone"
-                  v-model="generalForm.applicant_phone"
-                  type="tel"
-                  class="form-input"
-                  placeholder="เช่น 0812345678"
-                  required
-                />
-              </div>
-            </div>
-
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label class="form-label" for="gen-applicant-id-card">เลขประจำตัวประชาชน</label>
-                <input
-                  id="gen-applicant-id-card"
-                  v-model="generalForm.applicant_id_card"
-                  type="text"
-                  class="form-input"
-                  placeholder="13 หลัก (ถ้ามี)"
-                  maxlength="13"
-                />
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="gen-applicant-email">อีเมล</label>
-                <input
-                  id="gen-applicant-email"
-                  v-model="generalForm.applicant_email"
-                  type="email"
-                  class="form-input"
-                  placeholder="name@example.com"
-                />
-              </div>
-            </div>
-
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label class="form-label">ตลาดที่เกี่ยวข้อง</label>
-                <AppSelect
-                  v-model="generalForm.market_id"
-                  :options="marketOptions"
-                  placeholder="เลือกตลาดที่เกี่ยวข้อง"
-                />
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="gen-stall-number">รหัสแผงค้า (ถ้ามี)</label>
-                <input
-                  id="gen-stall-number"
-                  v-model="generalForm.stall_number"
-                  type="text"
-                  class="form-input"
-                  placeholder="เช่น A-01 (เว้นว่างได้หากไม่มี)"
-                />
-              </div>
-            </div>
-
+        <form novalidate @submit.prevent="submitGeneralApplication">
+          <div class="modal-body general-modal-body">
+            <h4 class="general-section-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>1. ข้อมูลผู้ยื่นคำร้อง</h4>
             <div class="form-group">
-              <label class="form-label" for="gen-subject">เรื่อง / หัวข้อคำร้อง <span class="req-star" aria-hidden="true">*</span></label>
-              <input
-                id="gen-subject"
-                v-model="generalForm.subject"
-                type="text"
-                class="form-input"
-                placeholder="เช่น ขอเปลี่ยนชื่อผู้ประกอบการ, ขอขยายเวลาชำระค่าเช่า, ขอซ่อมแซมแผง"
-                required
-              />
+              <label class="form-label">คำนำหน้าชื่อ <span class="req-star" aria-hidden="true">*</span></label>
+              <AppSelect v-model="generalForm.applicant_title" :options="generalTitleOptions" placeholder="เลือกคำนำหน้า" :error="generalSubmitted && !generalForm.applicant_title ? 'กรุณาเลือกคำนำหน้าชื่อ' : false" />
             </div>
-
+            <div class="form-row">
+              <div class="form-group"><label class="form-label" for="gen-name">ชื่อ-นามสกุล <span class="req-star" aria-hidden="true">*</span></label><AppInput id="gen-name" v-model="generalForm.applicant_name" placeholder="ระบุชื่อและนามสกุล" :error="generalSubmitted && !generalForm.applicant_name.trim() ? 'กรุณาระบุชื่อ-นามสกุล' : ''" /></div>
+              <div class="form-group"><label class="form-label" for="gen-age">อายุ (ปี) <span class="req-star" aria-hidden="true">*</span></label><AppInput id="gen-age" v-model="generalForm.applicant_age" type="number" min="1" max="120" placeholder="ระบุอายุ เช่น 35" :error="generalSubmitted && !generalAgeValid ? 'กรุณาระบุอายุ 1-120 ปี' : ''" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label" for="gen-id">เลขประจำตัวประชาชน (13 หลัก) <span class="req-star" aria-hidden="true">*</span></label><AppInput id="gen-id" v-model="generalForm.applicant_id_card" maxlength="17" placeholder="x-xxxx-xxxxx-xx-x" :error="generalSubmitted && !generalIdValid ? 'กรุณาระบุเลขประจำตัวประชาชน 13 หลัก' : ''" /></div>
+              <div class="form-group"><label class="form-label" for="gen-phone">เบอร์โทรศัพท์ติดต่อ <span class="req-star" aria-hidden="true">*</span></label><AppInput id="gen-phone" v-model="generalForm.applicant_phone" type="tel" placeholder="08x-xxx-xxxx" :error="generalSubmitted && !generalForm.applicant_phone.trim() ? 'กรุณาระบุเบอร์โทรศัพท์' : ''" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label" for="gen-email">อีเมล</label><AppInput id="gen-email" v-model="generalForm.applicant_email" type="email" placeholder="example@domain.com" /></div>
+              <div class="form-group"><label class="form-label" for="gen-address">ที่อยู่ตามบัตรประชาชน / ที่อยู่ติดต่อ</label><AppInput id="gen-address" v-model="generalForm.applicant_address" placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ" /></div>
+            </div>
+            <AppFileUpload v-model="generalIdCardCopy" class="form-group" label="สำเนาบัตรประชาชน (ID Card Copy)" required-text="จำเป็น" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" :max-size-mb="3" hint="PDF, JPG หรือ PNG ขนาดไม่เกิน 3MB" description="แนบสำเนาบัตรประชาชน พร้อมลงนามสำเนาถูกต้อง" :error="generalIdCardCopyError || (generalSubmitted && !generalIdCardCopy ? 'กรุณาแนบสำเนาบัตรประชาชน' : '')" @error="generalIdCardCopyError = $event" />
+            <h4 class="general-section-title">2. รายละเอียดคำร้อง</h4>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">ตลาดที่เกี่ยวข้อง</label><AppSelect v-model="generalForm.market_id" :options="marketOptions" placeholder="เลือกตลาด" /></div>
+              <div class="form-group"><label class="form-label" for="gen-stall">รหัสแผงค้า (ถ้ามี)</label><AppInput id="gen-stall" v-model="generalForm.stall_number" placeholder="เช่น A-01" /></div>
+            </div>
             <div class="form-group">
-              <label class="form-label" for="gen-details">รายละเอียดคำร้อง <span class="req-star" aria-hidden="true">*</span></label>
-              <textarea
-                id="gen-details"
-                v-model="generalForm.details"
-                class="form-textarea"
-                rows="4"
-                placeholder="ระบุรายละเอียด ความประสงค์ หรือเหตุผลความจำเป็นประกอบคำร้อง..."
-                required
-              ></textarea>
+              <label class="form-label">หัวข้อคำร้อง <span class="req-star" aria-hidden="true">*</span></label>
+              <AppSelect v-model="generalForm.subject" :options="generalTypeOptions" :placeholder="generalTypesLoading ? 'กำลังโหลดหัวข้อคำร้อง' : 'เลือกหัวข้อคำร้อง'" :disabled="generalTypesLoading" :error="generalSubjectError || false" @update:model-value="generalSubjectError = ''" />
+              <p v-if="generalTypesError" class="general-types-error" role="alert">{{ generalTypesError }}</p>
             </div>
-
-            <div class="form-group">
-              <label class="form-label" for="gen-applicant-address">ที่อยู่ผู้ยื่นคำร้อง</label>
-              <input
-                id="gen-applicant-address"
-                v-model="generalForm.applicant_address"
-                type="text"
-                class="form-input"
-                placeholder="ที่อยู่สำหรับการติดต่อหรือส่งเอกสาร"
-              />
-            </div>
-
-            <div v-if="generalFormError" class="form-error-alert">
-              {{ generalFormError }}
-            </div>
-          </form>
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="modal-footer">
-          <AppButton
-            variant="secondary"
-            size="md"
-            @click="closeCreateGeneralModal"
-          >
-            ยกเลิก
-          </AppButton>
-          <AppButton
-            variant="primary"
-            size="md"
-            :loading="generalSubmitting"
-            @click="submitGeneralApplication"
-          >
-            บันทึกและยื่นคำร้อง
-          </AppButton>
-        </div>
+            <div class="form-group"><label class="form-label" for="gen-details">รายละเอียดคำร้อง <span class="req-star" aria-hidden="true">*</span></label><textarea id="gen-details" v-model="generalForm.details" class="form-textarea" rows="4" placeholder="ระบุรายละเอียดคำร้อง"></textarea><p v-if="generalSubmitted && !generalForm.details.trim()" class="general-types-error">กรุณาระบุรายละเอียดคำร้อง</p></div>
+            <div v-if="generalFormError" class="form-error-alert" role="alert">{{ generalFormError }}</div>
+          </div>
+          <div class="modal-footer">
+            <AppButton type="button" variant="secondary" size="md" @click="closeCreateGeneralModal">ยกเลิก</AppButton>
+            <AppButton type="submit" variant="primary" size="md" :loading="generalSubmitting" :disabled="generalSubmitting || generalTypesLoading">ยื่นคำร้องทั่วไป</AppButton>
+          </div>
+        </form>
       </div>
     </div>
-
     <!-- Slide-over Right Side Panel for History -->
     <AppHistoryPanel
       :is-open="showHistoryPanel"
@@ -1754,7 +1658,9 @@
     </div>
   </Teleport>
   <ApplicationDocumentPreview :application="documentPreviewApplication" @close="documentPreviewApplication = null" @signed="Object.assign(documentPreviewApplication, $event)" />
+  <ApplicationDocumentManager :application="documentManagerApplication" @close="documentManagerApplication = null" @completed="onDocumentsCompleted" />
   <OfficerSignatureModal :open="!!signatureTarget" @cancel="signatureTarget = null" @confirm="submitOfficerApproval" />
+  <ApplicationMockOtpModal :open="!!otpTarget" @cancel="otpTarget = null" @confirm="submitMockOtp" />
 </template>
 
 <script setup lang="ts">
@@ -1762,7 +1668,9 @@ import ApplicationActionsMenu from '~/components/ApplicationActionsMenu.vue'
 import AppFileUpload from '~/components/AppFileUpload.vue'
 import OfficerSignatureModal from '~/components/OfficerSignatureModal.vue'
 import ApplicationDocumentPreview from '~/components/ApplicationDocumentPreview.vue'
+import ApplicationDocumentManager from '~/components/ApplicationDocumentManager.vue'
 const documentPreviewApplication = ref<any | null>(null)
+const documentManagerApplication = ref<any | null>(null)
 import { useAuthStore } from '~/core/modules/auth/store/AuthStore'
 import { useNotifications } from '~/composables/useNotifications'
 
@@ -1771,10 +1679,17 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const { user, currentUser, isTenant, role } = useAuth()
-const isAdminOrStaff = computed(() => ['admin', 'staff'].includes(role.value || authStore.role || ''))
+
+const canManageDocuments = (app: any) => (role.value || authStore.role) === 'staff' &&
+  app.status === 'approved' && app.has_officer_signature === true &&
+  app.has_market_director_signature === true && app.has_bureau_director_signature === true
+const onDocumentsCompleted = async () => {
+  documentManagerApplication.value = null
+  await loadApplications()
+}
 const canReview = (app: any) => {
   const currentRole = role.value || authStore.role || ''
-  return (app.status === 'pending_officer' && ['staff', 'admin'].includes(currentRole)) ||
+  return (app.status === 'pending_officer' && currentRole === 'staff') ||
     (app.status === 'pending_market_director' && currentRole === 'market_director') ||
     (app.status === 'pending_bureau_director' && currentRole === 'bureau_director')
 }
@@ -2513,7 +2428,7 @@ const getStatusBadgeLabel = (status: string): string => {
     case 'contract_pending':
       return 'รอตรวจสัญญา'
     case 'completed':
-      return 'ทำสัญญาแล้ว'
+      return 'คำร้องเสร็จสมบูรณ์'
     case 'revision_required':
       return isTenant.value ? 'ต้องแก้ไขเอกสาร' : 'ส่งกลับให้ผู้เช่าแก้ไข'
     case 'rejected':
@@ -2608,13 +2523,11 @@ const getApplicationProgressText = (app: any): string => {
     case 'pending_bureau_director':
       return 'ผอ.ตลาด ให้ความเห็นชอบแล้ว รอ ผอ.สำนักตลาด ลงนามอนุมัติ'
     case 'approved':
-      return isStallLease(app)
-        ? 'อนุมัติคำร้องขอเช่าแล้ว พร้อมดำเนินการจัดทำสัญญาเช่าแผงค้า'
-        : 'อนุมัติคำร้องเรียบร้อยแล้ว'
+      return 'ผอ.สำนักตลาดลงนามแล้ว รอนำเข้าเอกสารที่ผู้เช่าลงนาม'
     case 'contract_pending':
       return 'ผู้เช่าจัดทำสัญญาเช่าแล้ว อยู่ระหว่างรอเจ้าหน้าที่ตรวจสอบสัญญา'
     case 'completed':
-      return 'สัญญาเช่าได้รับการอนุมัติและมีผลบังคับใช้เรียบร้อยแล้ว'
+      return 'บันทึกเอกสารลงนามแล้ว'
     case 'rejected':
       return isTenant.value
         ? `คำร้องไม่ผ่านการอนุมัติ: ${app.review_note || app.bureau_director_comment || app.market_director_comment || app.officer_comment || 'ไม่ผ่านเกณฑ์การพิจารณา'} (สามารถกดแก้ไขคำร้องเพื่อยื่นใหม่ได้)`
@@ -2689,15 +2602,23 @@ const getAllCommentsList = (app: any) => {
 
 // Approval and Actions
 const signatureTarget = ref<{ app: any; comment: string } | null>(null)
+const otpTarget = ref<{ app: any; comment: string; signature: string } | null>(null)
+const submitMockOtp = async (otp: string) => {
+  const target = otpTarget.value
+  if (!target) return
+  otpTarget.value = null
+  await processApproval(target.app, target.comment, target.signature, otp)
+}
 const submitOfficerApproval = async (signature: string) => {
   const target = signatureTarget.value
   if (!target) return
   signatureTarget.value = null
   await processApproval(target.app, target.comment, signature)
 }
-const processApproval = async (app: any, defaultComment: string, signature = '') => {
-  if (isStallLease(app) && app.status === 'pending_officer' && !signature) { signatureTarget.value = { app, comment: defaultComment }; return }
-  const confirmed = await showConfirm(
+const processApproval = async (app: any, defaultComment: string, signature = '', otp = '') => {
+  if (!signature) { signatureTarget.value = { app, comment: defaultComment }; return }
+  if (app.status === 'pending_bureau_director' && !otp) { otpTarget.value = { app, comment: defaultComment, signature }; return }
+  const confirmed = otp ? true : await showConfirm(
     `ยืนยันการอนุมัติคำร้องเลขที่ ${app.application_number} หรือไม่?`,
     { title: 'ยืนยันการอนุมัติ', type: 'info', confirmText: 'อนุมัติคำร้อง', cancelText: 'ยกเลิก' }
   )
@@ -2707,7 +2628,8 @@ const processApproval = async (app: any, defaultComment: string, signature = '')
     await post(`/applications/${app.id}/action`, {
       action: 'approve',
       comment: defaultComment,
-      signature_base64: signature
+      signature_base64: signature,
+      otp
     })
     await loadApplications()
     await showSuccess('บันทึกการอนุมัติเรียบร้อยแล้ว', 'อนุมัติสำเร็จ')
@@ -2814,7 +2736,35 @@ const submitReject = async () => {
 const showGeneralModal = ref(false)
 const generalSubmitting = ref(false)
 const generalFormError = ref('')
+const generalSubmitted = ref(false)
+const generalIdCardCopy = ref<File | null>(null)
+const generalIdCardCopyError = ref('')
+const generalTitleOptions = ['นาย', 'นาง', 'นางสาว']
+const generalAgeValid = computed(() => Number.isInteger(Number(generalForm.value.applicant_age)) && Number(generalForm.value.applicant_age) >= 1 && Number(generalForm.value.applicant_age) <= 120)
+const generalIdValid = computed(() => generalForm.value.applicant_id_card.replace(/\D/g, '').length === 13)
+const generalSubjectError = ref('')
+const generalTypesLoading = ref(false)
+const generalTypesError = ref('')
+const generalTypes = ref<{ title: string; is_active: boolean }[]>([])
+const generalTypeOptions = computed(() => generalTypes.value.filter(type => type.is_active).map(type => ({ value: type.title, label: type.title })))
+
+const loadGeneralTypes = async () => {
+  generalTypesLoading.value = true
+  generalTypesError.value = ''
+  try {
+    const res: any = await get('/application-types?active_only=true')
+    generalTypes.value = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : [])
+    if (!generalTypes.value.length) generalTypesError.value = 'ยังไม่มีหัวข้อคำร้องที่เปิดใช้งาน'
+  } catch {
+    generalTypes.value = []
+    generalTypesError.value = 'โหลดหัวข้อคำร้องไม่สำเร็จ กรุณาปิดแล้วเปิดฟอร์มอีกครั้ง'
+  } finally {
+    generalTypesLoading.value = false
+  }
+}
 const generalForm = ref({
+  applicant_title: '',
+  applicant_age: '',
   applicant_name: '',
   applicant_phone: '',
   applicant_id_card: '',
@@ -2827,8 +2777,16 @@ const generalForm = ref({
 })
 
 const openCreateGeneralModal = () => {
+  const fullName = String(currentUser.value?.full_name || user.value?.full_name || '').trim()
+  const parsedTitle = fullName.match(/^(นางสาว|นาย|นาง)/)?.[0] || ''
+  const parsedName = fullName.slice(parsedTitle.length).trim()
+  generalSubmitted.value = false
+  generalIdCardCopy.value = null
+  generalIdCardCopyError.value = ''
   generalForm.value = {
-    applicant_name: currentUser.value?.full_name || user.value?.full_name || '',
+    applicant_title: parsedTitle,
+    applicant_age: '',
+    applicant_name: parsedName,
     applicant_phone: currentUser.value?.phone || user.value?.phone || '',
     applicant_id_card: '',
     applicant_email: currentUser.value?.email || user.value?.email || '',
@@ -2839,16 +2797,34 @@ const openCreateGeneralModal = () => {
     details: ''
   }
   generalFormError.value = ''
+  generalSubjectError.value = ''
   showGeneralModal.value = true
+  void loadGeneralTypes()
+  void loadGeneralApplicantId()
 }
 
+const loadGeneralApplicantId = async () => {
+  if (!isTenant.value) return
+  try {
+    const res: any = await get('/bookings')
+    const bookings = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : [])
+    const booking = bookings.find((item: any) => item.tenant_id_card)
+    if (showGeneralModal.value && !generalForm.value.applicant_id_card && booking) {
+      generalForm.value.applicant_id_card = booking.tenant_id_card
+    }
+  } catch {
+    // The applicant can enter the number if booking data is unavailable.
+  }
+}
 const closeCreateGeneralModal = () => {
   showGeneralModal.value = false
   generalFormError.value = ''
 }
 
 const submitGeneralApplication = async () => {
-  if (!generalForm.value.applicant_name || !generalForm.value.applicant_phone || !generalForm.value.subject || !generalForm.value.details) {
+  generalSubmitted.value = true
+  generalSubjectError.value = generalForm.value.subject ? '' : 'กรุณาเลือกหัวข้อคำร้อง'
+  if (!generalForm.value.applicant_title || !generalForm.value.applicant_name.trim() || !generalAgeValid.value || !generalIdValid.value || !generalForm.value.applicant_phone.trim() || !generalForm.value.subject || !generalForm.value.details.trim() || !generalIdCardCopy.value || generalIdCardCopyError.value) {
     generalFormError.value = 'กรุณากรอกข้อมูลในช่องที่มีเครื่องหมาย * ให้ครบถ้วน'
     return
   }
@@ -2857,8 +2833,12 @@ const submitGeneralApplication = async () => {
   generalFormError.value = ''
 
   try {
-    await post('/applications/general', {
-      applicant_name: generalForm.value.applicant_name,
+    const idCardCopyBase64 = generalIdCardCopy.value ? await readRevIDCardCopy(generalIdCardCopy.value) : ''
+    await post('/applications', {
+      application_type: 'general',
+      applicant_name: generalForm.value.applicant_title + ' ' + generalForm.value.applicant_name.trim(),
+      applicant_age: Number(generalForm.value.applicant_age),
+      id_card_copy_base64: idCardCopyBase64,
       applicant_phone: generalForm.value.applicant_phone,
       applicant_id_card: generalForm.value.applicant_id_card,
       applicant_email: generalForm.value.applicant_email,
@@ -4501,7 +4481,7 @@ watch(() => route.query.booking, (value, previous) => {
   background: var(--bg-ffffff);
   border-radius: 16px;
   width: 100%;
-  max-width: 620px;
+  max-width: 660px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
   border: 1px solid var(--bd-eef2f6);
   overflow: hidden;
@@ -4524,6 +4504,20 @@ watch(() => route.query.booking, (value, previous) => {
   line-height: 1.3;
 }
 
+.general-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: var(--primary);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+.general-types-error {
+  margin: 6px 0 0;
+  color: #dc2626;
+  font-size: 0.8125rem;
+}
 .general-modal-body {
   overflow-y: auto;
   display: flex;

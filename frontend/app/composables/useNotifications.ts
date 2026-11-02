@@ -25,8 +25,7 @@ const notificationCursors = new Map<string, NotificationCursor>()
 
 export const useNotifications = () => {
   const { get, post } = useApi()
-  const { user, role: authRole } = useAuth()
-  const route = useRoute()
+  const { user, token, role: authRole } = useAuth()
 
   const notifications = useState<INotificationItem[]>('global_notifications_list', () => [])
   const tenantUnreadCount = useState<number>('global_notifications_tenant_unread', () => 0)
@@ -35,20 +34,23 @@ export const useNotifications = () => {
   const toastQueue = useState<INotificationItem[]>('global_notifications_toast_queue', () => [])
   const notificationOwnerKey = useState<string>('global_notifications_owner_key', () => '')
 
-  // Determine the active role context ('tenant' vs 'officer')
   const activeRole = computed<'tenant' | 'officer'>(() => {
-    const queryRole = String(route.query?.role || '').toLowerCase()
-    if (queryRole === 'tenant') return 'tenant'
-    if (queryRole === 'officer' || queryRole === 'admin' || queryRole === 'staff') return 'officer'
-    const currentAuthRole = String(user.value?.role || authRole.value || '').toLowerCase()
+    const currentAuthRole = String(authRole.value || user.value?.role || '').toLowerCase()
     return currentAuthRole === 'tenant' ? 'tenant' : 'officer'
   })
-
-  const sessionKey = computed(() => {
-    const currentUser = user.value as any
-    return currentUser?.id ? `${currentUser.id}:${activeRole.value}` : 'anonymous'
+  const sessionUserId = computed<number | null>(() => {
+    try {
+      const payload = token.value?.split('.')[1]
+      if (!payload) return null
+      const claims = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')))
+      const id = Number(claims.user_id)
+      return Number.isSafeInteger(id) && id > 0 ? id : null
+    } catch { return null }
   })
 
+  const sessionKey = computed(() =>
+    sessionUserId.value ? String(sessionUserId.value) + ':' + activeRole.value : 'anonymous'
+  )
   const clearClientNotificationState = () => {
     notifications.value = []
     tenantUnreadCount.value = 0
@@ -68,28 +70,11 @@ export const useNotifications = () => {
     notificationOwnerKey.value = nextKey
   }, { immediate: true })
 
-  const normalizeOwnerName = (value: unknown) => String(value || '')
-    .replace(/^(คุณ|นาย|นางสาว|นาง|น\.ส\.)\s*/g, '')
-    .replace(/\([^)]*\)/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase()
-
   const isNotificationVisibleToActiveUser = (item: INotificationItem) => {
-    if (activeRole.value !== 'tenant' || item.recipient_role !== 'tenant') {
-      return activeRole.value === 'officer' ? item.recipient_role === 'officer' : false
-    }
-    const currentUser = user.value as any
-    if (item.recipient_user_id !== undefined && item.recipient_user_id !== null && currentUser?.id !== undefined) {
-      return String(item.recipient_user_id) === String(currentUser.id)
-    }
-    const currentName = normalizeOwnerName(currentUser?.full_name)
-    const demoOwnerNames: Record<string, string> = { tenant: 'สมชาย ใจดี', tenant2: 'นภาพร รัตนศิลป์', tenant3: 'วิชัย เจริญทรัพย์' }
-    const fallbackName = normalizeOwnerName(demoOwnerNames[String(currentUser?.username || '')])
-    const recipientName = normalizeOwnerName(item.recipient_name)
-    return Boolean(recipientName && (recipientName === currentName || recipientName === fallbackName))
+    const currentId = sessionUserId.value
+    return currentId != null && item.recipient_user_id != null &&
+      String(item.recipient_user_id) === String(currentId)
   }
-
   const dismissToast = (id: number) => {
     toastQueue.value = toastQueue.value.filter(t => t.id !== id)
   }
@@ -124,7 +109,7 @@ export const useNotifications = () => {
         : Array.isArray(res)
           ? res
           : []
-      const visibleList = list.filter(isNotificationVisibleToActiveUser)
+      const visibleList = list.filter(isNotificationVisibleToActiveUser).map(item => ({ ...item, recipient_role: (activeRole.value === 'tenant' ? 'tenant' : 'officer') as 'tenant' | 'officer' }))
       // Ignore a late response belonging to the account that just logged out.
       if (requestedSessionKey !== sessionKey.value) return
 

@@ -2,10 +2,28 @@
   <Teleport to="body">
     <div v-if="application" class="document-overlay" @click.self="$emit('close')">
       <section class="document-modal" role="dialog" aria-modal="true" aria-labelledby="document-title">
-        <AppModalHeader title="ตัวอย่างคำร้องขออนุญาตเช่าแผงค้า" :subtitle="`คำร้องเลขที่ ${application.application_number || application.document_number || '-'}`" icon="document" @close="$emit('close')" />
+        <AppModalHeader :title="application.has_signed_document ? 'เอกสารลงนาม' : 'ตัวอย่างคำร้อง'" :subtitle="`คำร้องเลขที่ ${application.application_number || application.document_number || '-'}`" icon="document" @close="$emit('close')" />
+        <template v-if="application.has_signed_document">
+          <div class="signed-file-body">
+            <p v-if="signedFileLoading" class="signed-file-message">กำลังโหลดเอกสาร...</p>
+            <div v-else-if="signedFileError" class="signed-file-message" role="alert">
+              <p>{{ signedFileError }}</p>
+              <AppButton variant="outline" size="sm" @click="loadSignedFile(application)">ลองอีกครั้ง</AppButton>
+            </div>
+            <iframe v-else-if="signedFileType === 'application/pdf' && signedFileUrl" :src="signedFileUrl" title="เอกสารลงนาม" />
+            <div v-else-if="signedFileUrl" class="signed-image-wrap"><img :src="signedFileUrl" alt="เอกสารลงนาม" /></div>
+          </div>
+          <footer class="document-footer">
+            <AppButton variant="primary" size="md" :disabled="!signedFileUrl || signedFileLoading" @click="downloadSignedFile">ดาวน์โหลดเอกสาร</AppButton>
+            <AppButton variant="secondary" size="md" @click="$emit('close')">ปิด</AppButton>
+          </footer>
+        </template>
+        <template v-else>
         <div class="document-tools"><div class="zoom-controls"><AppButton size="sm" variant="outline" :disabled="zoom <= 70" @click="zoom = Math.max(70, zoom - 10)">−</AppButton><span>{{ zoom }}%</span><AppButton size="sm" variant="outline" :disabled="zoom >= 180" @click="zoom = Math.min(180, zoom + 10)">+</AppButton><AppButton size="sm" variant="ghost" @click="zoom = 100">ขนาดปกติ</AppButton></div></div>
+        <p v-if="signatureLoadError" class="signature-load-error" role="alert">{{ signatureLoadError }} <button type="button" @click="loadReviewSignatures(application)">ลองอีกครั้ง</button></p>
         <div class="document-scroll">
-          <article class="document-paper" :style="{ zoom: zoom / 100 }">
+          <article ref="documentPaper" class="document-paper" :style="{ zoom: zoom / 100 }">
+<template v-if="application.application_type !== 'general'">
             <div class="document-number">คำร้องขออนุญาตที่ {{ application.document_number || '.......... / ..........' }}</div>
             <h3>คำร้องขออนุญาตเช่าแผงค้า สำนักงานตลาดกรุงเทพมหานคร</h3>
             <div class="document-date">
@@ -25,12 +43,30 @@
               <p>ข้าพเจ้าได้อ่านและเข้าใจหลักเกณฑ์ เงื่อนไข และวิธีการให้เช่า ทั้งหมดแล้วทุกประการ</p>
               <div class="document-sign">ลงชื่อ <span class="fill-line signature">{{ savedSignature }}</span> ผู้ขอสิทธิ์<br><span class="tenant-name">( {{ application.applicant_name || '..................................................' }} )</span></div>
             </section>
-            <section class="document-section"><strong>2. ส่วนของเจ้าหน้าที่</strong><br><strong>2.1 งานผลประโยชน์และเร่งรัดหนี้สิน/ผู้จัดการตลาด</strong><div class="document-indent">□ ไม่มีแผงค้า<br>□ มีแผงค้า จำนวน ............ แผง เลขที่ ........................ โครงการ ........................ ประเภท ........................<br>□ สัญญาอื่น ๆ (เช่า) สำนักงานตลาดกรุงเทพมหานคร<br>□ อื่น ๆ ..............................................................................................<br>□ คุณสมบัติและเอกสารถูกต้องครบถ้วน ได้แก่ ลงทะเบียนรับเรื่อง/ใบจองจากระบบ ........................</div><div class="document-sign">ลงชื่อ <span class="officer-signature"><img v-if="officerSignatureUrl" :src="officerSignatureUrl" alt="ลายเซ็นเจ้าหน้าที่" /><span v-else>..................................................</span></span> เจ้าหน้าที่<br>(..................................................) .......... / .......... / ..........</div><div class="document-divider"></div><strong>2.2 งานการคลัง/ฝ่ายการคลัง</strong><div class="document-indent">□ ไม่มีหนี้ค้างชำระ<br>□ มีหนี้ค้าง จำนวน ........................ บาท</div><div class="document-sign">ลงชื่อ .................................................. เจ้าหน้าที่<br>(..................................................) .......... / .......... / ..........</div></section>
-            <section class="document-section"><strong>3. ผู้มีอำนาจอนุมัติ</strong><div class="document-indent">□ อนุมัติ &nbsp;&nbsp; □ ไม่อนุมัติ &nbsp;&nbsp; □ อื่น ๆ ................................................<br>□ สำนักงาน เลขระบบ วันที่ ............................</div><div class="document-sign">ลงชื่อ .................................................. ผู้มีอำนาจอนุมัติ<br>(..................................................) .......... / .......... / ..........</div></section>
+            <section class="document-section"><strong>2. ส่วนของเจ้าหน้าที่</strong><br><strong>2.1 งานผลประโยชน์และเร่งรัดหนี้สิน/ผู้จัดการตลาด</strong><div class="document-indent">□ ไม่มีแผงค้า<br>□ มีแผงค้า จำนวน ............ แผง เลขที่ ........................ โครงการ ........................ ประเภท ........................<br>□ สัญญาอื่น ๆ (เช่า) สำนักงานตลาดกรุงเทพมหานคร<br>□ อื่น ๆ ..............................................................................................<br>□ คุณสมบัติและเอกสารถูกต้องครบถ้วน ได้แก่ ลงทะเบียนรับเรื่อง/ใบจองจากระบบ ........................</div><div class="document-sign">ลงชื่อ <span class="officer-signature"><img v-if="reviewerSignatures[0].url" :src="reviewerSignatures[0].url" alt="ลายเซ็นเจ้าหน้าที่" /><span v-else>..................................................</span></span> เจ้าหน้าที่<br>(..................................................) .......... / .......... / ..........</div><div class="document-divider"></div><strong>2.2 งานการคลัง/ฝ่ายการคลัง</strong><div class="document-indent">□ ไม่มีหนี้ค้างชำระ<br>□ มีหนี้ค้าง จำนวน ........................ บาท</div><div class="document-sign">ลงชื่อ <span class="officer-signature"><img v-if="reviewerSignatures[1].url" :src="reviewerSignatures[1].url" alt="ลายเซ็น ผอ.ตลาด" /><span v-else>..................................................</span></span> เจ้าหน้าที่<br>(..................................................) .......... / .......... / ..........</div></section>
+            <section class="document-section"><strong>3. ผู้มีอำนาจอนุมัติ</strong><div class="document-indent">□ อนุมัติ &nbsp;&nbsp; □ ไม่อนุมัติ &nbsp;&nbsp; □ อื่น ๆ ................................................<br>□ สำนักงาน เลขระบบ วันที่ ............................</div><div class="document-sign">ลงชื่อ <span class="officer-signature"><img v-if="reviewerSignatures[2].url" :src="reviewerSignatures[2].url" alt="ลายเซ็น ผอ.สำนักตลาด" /><span v-else>..................................................</span></span> ผู้มีอำนาจอนุมัติ<br>(..................................................) .......... / .......... / ..........</div></section>
             <section class="document-section"><strong>4. งานการคลัง/ผู้จัดการตลาด</strong><div class="document-indent">□ จัดเก็บเงิน จำนวน ........................ บาท<br>ตามใบเสร็จรับเงินเล่มที่ ............... เลขที่ ............... วันที่ ............... ที่แบบ ...............<br>□ ส่งเจ้าของเรื่อง วันที่ ............................</div><div class="document-sign">ลงชื่อ .................................................. เจ้าหน้าที่<br>(..................................................) .......... / .......... / ..........</div></section>
+            </template>
+            <template v-else>
+              <div class="document-number">เลขที่คำร้อง {{ application.application_number }}</div>
+              <h3>คำร้องทั่วไป</h3>
+              <p><strong>เรื่อง</strong> {{ application.subject }}</p>
+              <p><strong>ผู้ยื่นคำร้อง</strong> {{ application.applicant_name }} อายุ {{ application.applicant_age || '-' }} ปี</p>
+              <p>เลขบัตรประชาชน {{ application.applicant_id_card || '-' }} โทร {{ application.applicant_phone || '-' }}</p>
+              <p>ตลาด {{ application.market_name || '-' }} แผง {{ application.stall_number || '-' }}</p>
+              <p><strong>รายละเอียด</strong> {{ application.details || '-' }}</p>
+              <div class="document-sign">ลงชื่อ .................................................. ผู้ยื่นคำร้อง</div>
+            </template>
+            <div v-if="application.application_type === 'general'" class="document-section">
+              <div>ลายเซ็นผู้ตรวจสอบและผู้อนุมัติ</div>
+              <div v-for="entry in reviewerSignatures" :key="entry.role" class="document-sign">
+                <span class="officer-signature"><img v-if="entry.url" :src="entry.url" :alt="'ลายเซ็น' + entry.label" /><span v-else>..................................................</span></span> {{ entry.label }}
+              </div>
+            </div>
           </article>
         </div>
-        <footer class="document-footer"><AppButton v-if="isTenant && !savedSignature" variant="primary" size="md" @click="openSigning">ลงนามคำร้อง</AppButton><span v-else-if="savedSignature" class="signed-note">ลงนามแล้ว</span><AppButton variant="secondary" size="md" @click="$emit('close')">ปิด</AppButton></footer>
+        <footer class="document-footer"><AppButton v-if="!isTenant" variant="primary" size="md" :disabled="signaturesLoading || !!signatureLoadError || downloadingPdf" :loading="downloadingPdf" @click="downloadPdf">ดาวน์โหลด PDF</AppButton><AppButton v-if="isTenant && !savedSignature" variant="primary" size="md" @click="openSigning">ลงนามคำร้อง</AppButton><span v-else-if="savedSignature" class="signed-note">ลงนามแล้ว</span><AppButton variant="secondary" size="md" @click="$emit('close')">ปิด</AppButton></footer>
+        </template>
       </section>
     </div>
     <div v-if="signing" class="sign-overlay" @click.self="signing = false">
@@ -49,25 +85,123 @@ const { isTenant } = useAuth()
 const { post, apiFetch } = useApi()
 const { showConfirm, showError } = useAppAlert()
 const zoom = ref(100)
-const officerSignatureUrl = ref('')
-let signatureRequest = 0
-const loadOfficerSignature = async (app: any) => {
-  const requestId = ++signatureRequest
-  if (officerSignatureUrl.value) URL.revokeObjectURL(officerSignatureUrl.value)
-  officerSignatureUrl.value = ''
-  if (!app?.id || !app.has_officer_signature) return
-  try {
-    const file = await apiFetch<Blob>(`/applications/${app.id}/officer-signature`, { responseType: 'blob' })
-    if (requestId === signatureRequest) officerSignatureUrl.value = URL.createObjectURL(file)
-  } catch { /* The signature is only shown when the authorized request succeeds. */ }
+const documentPaper = ref<HTMLElement | null>(null)
+const downloadingPdf = ref(false)
+const signedFileUrl = ref('')
+const signedFileType = ref('')
+const signedFileLoading = ref(false)
+const signedFileError = ref('')
+let signedFileRequest = 0
+const clearSignedFile = () => {
+  if (signedFileUrl.value) URL.revokeObjectURL(signedFileUrl.value)
+  signedFileUrl.value = ''
+  signedFileType.value = ''
 }
-onBeforeUnmount(() => { signatureRequest++; if (officerSignatureUrl.value) URL.revokeObjectURL(officerSignatureUrl.value) })
+const loadSignedFile = async (app: any) => {
+  const request = ++signedFileRequest
+  clearSignedFile()
+  signedFileError.value = ''
+  signedFileLoading.value = !!app?.id && !!app?.has_signed_document
+  if (!signedFileLoading.value) return
+  try {
+    const file = await apiFetch<Blob>('/applications/' + app.id + '/signed-document', { responseType: 'blob' })
+    if (request !== signedFileRequest) return
+    const type = file.type.toLowerCase().split(';')[0]
+    if (!['application/pdf', 'image/jpeg', 'image/png'].includes(type)) throw new Error('unsupported file')
+    signedFileType.value = type
+    signedFileUrl.value = URL.createObjectURL(file)
+  } catch {
+    if (request === signedFileRequest) signedFileError.value = 'โหลดเอกสารลงนามไม่สำเร็จ'
+  } finally {
+    if (request === signedFileRequest) signedFileLoading.value = false
+  }
+}
+const downloadSignedFile = () => {
+  if (!signedFileUrl.value) return
+  const extension = signedFileType.value === 'application/pdf' ? 'pdf' : signedFileType.value === 'image/png' ? 'png' : 'jpg'
+  const link = document.createElement('a')
+  link.href = signedFileUrl.value
+  link.download = 'signed-application-' + String(props.application?.id || 'document') + '.' + extension
+  link.click()
+}
+watch(() => props.application, app => { if (import.meta.client) void loadSignedFile(app) }, { immediate: true })
+onBeforeUnmount(() => { signedFileRequest++; clearSignedFile() })
+const reviewerSignatures = ref([{ role: 'officer', label: 'เจ้าหน้าที่', url: '' }, { role: 'market', label: 'ผอ.ตลาด', url: '' }, { role: 'bureau', label: 'ผอ.สำนักตลาด', url: '' }])
+const signaturesLoading = ref(false)
+const signatureLoadError = ref('')
+let reviewRequest = 0
+const loadReviewSignatures = async (app: any) => {
+  const request = ++reviewRequest
+  reviewerSignatures.value.forEach(item => { if (item.url) URL.revokeObjectURL(item.url); item.url = '' })
+  signatureLoadError.value = ''
+  signaturesLoading.value = !!app?.id
+  if (!app?.id || app.has_signed_document) { signaturesLoading.value = false; return }
+  const state = String(app.status || app.application_state || '')
+  const flags = [
+    app.has_officer_signature === true || ['pending_market_director', 'pending_bureau_director', 'approved', 'contract_pending', 'completed'].includes(state),
+    app.has_market_director_signature === true || ['pending_bureau_director', 'approved', 'contract_pending', 'completed'].includes(state),
+    app.has_bureau_director_signature === true || ['approved', 'contract_pending', 'completed'].includes(state)
+  ]
+  const results = await Promise.allSettled(reviewerSignatures.value.map(async (item, index) => {
+    try {
+      const blob = await apiFetch<Blob>('/applications/' + app.id + '/' + item.role + '-signature', { responseType: 'blob' })
+      if (request !== reviewRequest) return
+      item.url = URL.createObjectURL(blob)
+      await new Promise<void>((resolve, reject) => {
+        const image = new Image()
+        image.onload = () => resolve()
+        image.onerror = () => reject(new Error('โหลดรูปไม่สำเร็จ'))
+        image.src = item.url
+      })
+    } catch (err: any) {
+      const statusCode = err?.statusCode || err?.status || err?.response?.status
+      if (statusCode === 404 && !flags[index]) return
+      if (statusCode === 404) throw new Error('ไม่พบลายเซ็น' + item.label + 'ที่บันทึกในคำร้อง')
+      throw new Error('โหลดลายเซ็น' + item.label + 'ไม่สำเร็จ กรุณาลองอีกครั้ง')
+    }
+  }))
+  if (request !== reviewRequest) return
+  signaturesLoading.value = false
+  const failures = results.filter((result): result is PromiseRejectedResult => result.status === 'rejected')
+  if (failures.length) signatureLoadError.value = failures.map(result => result.reason?.message || 'โหลดลายเซ็นไม่สำเร็จ').join(' · ')
+}
+const downloadPdf = async () => {
+  if (!documentPaper.value || signaturesLoading.value || signatureLoadError.value || downloadingPdf.value) return
+  downloadingPdf.value = true
+  try {
+    await document.fonts.ready
+    const html2pdf = (await import('html2pdf.js')).default
+    const number = String(props.application?.application_number || props.application?.application_no || props.application?.id || 'document').replace(/[^a-zA-Z0-9_-]/g, '-')
+    await html2pdf().set({
+      margin: [8, 8, 8, 8],
+      filename: 'application-' + number + '.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        onclone: (cloned: Document) => {
+          const paper = cloned.querySelector<HTMLElement>('.html2pdf__container .document-paper')
+          if (paper) { paper.style.zoom = '1'; paper.style.boxShadow = 'none' }
+        }
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'], avoid: ['.document-sign'] }
+    }).from(documentPaper.value).save()
+  } catch {
+    await showError('ดาวน์โหลด PDF ไม่สำเร็จ กรุณาลองอีกครั้ง')
+  } finally {
+    downloadingPdf.value = false
+  }
+}
+watch(() => props.application, app => { if (import.meta.client) void loadReviewSignatures(app) }, { immediate: true })
+onBeforeUnmount(() => { reviewRequest++; reviewerSignatures.value.forEach(item => { if (item.url) URL.revokeObjectURL(item.url) }) })
 const signing = ref(false)
+useBodyScrollLock(computed(() => !!props.application || signing.value))
 const signingBusy = ref(false)
 const signatureName = ref('')
 const signatureError = ref('')
 const savedSignature = ref('')
-watch(() => props.application, (app) => { savedSignature.value = app?.tenant_signature || ''; signing.value = false; zoom.value = 100; if (import.meta.client) loadOfficerSignature(app) }, { immediate: true })
+watch(() => props.application, (app) => { savedSignature.value = app?.tenant_signature || ''; signing.value = false; zoom.value = 100 }, { immediate: true })
 const submittedDate = computed(() => {
   const raw = props.application?.created_at
   const date = raw ? new Date(raw) : null
@@ -109,9 +243,16 @@ const checked = (type: string) => props.application?.proposed_rent_type === type
 .document-header, .document-footer { display: flex; align-items: center; padding: 14px 20px; gap: 12px; }
 .document-header { justify-content: space-between; border-bottom: 1px solid var(--bd-e2e8f0); } .document-header h2 { margin: 0; font-size: var(--font-size-lg); color: var(--tx-1e293b); }
 .document-close { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 8px; background: var(--bg-f1f5f9); color: var(--tx-475569); cursor: pointer; }
+.signature-load-error { margin: 12px 20px; color: #dc2626; font-size: 0.875rem; }
+.signature-load-error button { color: #2563eb; text-decoration: underline; }
 .document-tools { display: flex; justify-content: center; padding: 8px 16px; border-bottom: 1px solid var(--bd-e2e8f0); }
 .zoom-controls { display: flex; align-items: center; gap: 8px; color: var(--tx-475569); font-size: var(--font-size-sm); }
 .zoom-controls span { min-width: 48px; text-align: center; }
+.signed-file-body { flex: 1 1 auto; min-height: 0; overflow: auto; background: #f1f5f9; }
+.signed-file-body iframe { display: block; width: 100%; height: min(70vh, 800px); border: 0; }
+.signed-file-message { padding: 24px; color: #64748b; font-size: 0.9375rem; text-align: center; }
+.signed-image-wrap { display: flex; justify-content: center; padding: 20px; }
+.signed-image-wrap img { max-width: 100%; height: auto; object-fit: contain; }
 .document-scroll { flex: 1; overflow: auto; padding: 24px; background: var(--bg-f1f5f9); }
 .document-paper { max-width: 740px; margin: auto; padding: 32px; background: var(--bg-ffffff); color: var(--tx-0f172a); box-shadow: 0 1px 4px rgba(15,23,42,.15); font-size: var(--font-size-xs); line-height: 1.65; }
 .document-paper h3 { text-align: center; margin: 4px 0 12px; font-size: var(--font-size-md); } .document-paper p { margin: 10px 0; }
@@ -124,5 +265,23 @@ const checked = (type: string) => props.application?.proposed_rent_type === type
 .signed-note { margin-right: auto; color: var(--tx-15803d); font-size: var(--font-size-sm); font-weight: 600; }
 .sign-overlay { position: fixed; inset: 0; z-index: 2100; display: grid; place-items: center; padding: 16px; background: rgba(15,23,42,.45); } .sign-dialog { width: min(450px,100%); max-height:min(90vh,90dvh); display:flex; flex-direction:column; overflow:hidden; background: var(--bg-ffffff); border-radius: 20px; } .sign-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:24px 28px}.sign-dialog label { display: block; margin: 0 0 6px; font-size: var(--font-size-sm); font-weight: 600; } .sign-actions { flex:0 0 auto;display: flex; justify-content: flex-end; gap: 10px; padding:16px 28px; border-top:1px solid var(--bd-e2e8f0); background:var(--bg-f8fafc); }
 .document-footer { justify-content: flex-end; border-top: 1px solid var(--bd-e2e8f0); }
-@media (max-width: 600px) { .document-scroll { padding: 12px; } .document-paper { padding: 18px; } }
+@media (max-width: 600px) { .signed-file-body { flex: 1 1 auto; min-height: 0; overflow: auto; background: #f1f5f9; }
+.signed-file-body iframe { display: block; width: 100%; height: min(70vh, 800px); border: 0; }
+.signed-file-message { padding: 24px; color: #64748b; font-size: 0.9375rem; text-align: center; }
+.signed-image-wrap { display: flex; justify-content: center; padding: 20px; }
+.signed-image-wrap img { max-width: 100%; height: auto; object-fit: contain; }
+.document-scroll { padding: 12px; } .document-paper { padding: 18px; } }
+@media print {
+  :global(body > *:not(.document-overlay)) { display: none !important; }
+  .document-overlay { position: static; display: block; padding: 0; background: white; }
+  .document-modal { display: block; width: 100%; max-height: none; overflow: visible; box-shadow: none; }
+  .document-tools, .document-footer, :deep(.app-modal-header), .sign-overlay { display: none !important; }
+  .signed-file-body { flex: 1 1 auto; min-height: 0; overflow: auto; background: #f1f5f9; }
+.signed-file-body iframe { display: block; width: 100%; height: min(70vh, 800px); border: 0; }
+.signed-file-message { padding: 24px; color: #64748b; font-size: 0.9375rem; text-align: center; }
+.signed-image-wrap { display: flex; justify-content: center; padding: 20px; }
+.signed-image-wrap img { max-width: 100%; height: auto; object-fit: contain; }
+.document-scroll { overflow: visible; padding: 0; background: white; }
+  .document-paper { zoom: 1 !important; max-width: none; box-shadow: none; }
+}
 </style>

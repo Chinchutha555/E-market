@@ -201,12 +201,16 @@ func SetupRouter() *gin.Engine {
 			appGroup.GET("", appHandler.GetApplications)
 			appGroup.GET("/:id", middlewares.RequireResourceAccess(db, "application"), appHandler.GetApplicationByID)
 			appGroup.GET("/:id/officer-signature", middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.OfficerSignature(db))
+			appGroup.GET("/:id/market-signature", middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.DirectorSignature(db, "market"))
+			appGroup.GET("/:id/bureau-signature", middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.DirectorSignature(db, "bureau"))
 			appGroup.GET("/:id/id-card-copy", middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.IDCardCopy(db))
-			appGroup.POST("", middlewares.RequireRoles("tenant", "admin", "staff", "market_director"), appHandler.CreateApplication)
+			appGroup.GET("/:id/signed-document", middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.SignedDocumentDownload(db))
+			appGroup.POST("/:id/signed-document", middlewares.RequireRoles("staff"), middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.SignedDocumentUpload(db))
+			appGroup.POST("", middlewares.RequireRoles("tenant", "staff", "market_director"), appHandler.CreateApplication)
 			appGroup.POST("/:id/sign", middlewares.RequireRoles("tenant"), middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.SignApplication(db))
 			appGroup.POST("/:id/resubmit", middlewares.RequireRoles("tenant"), middlewares.RequireResourceAccess(db, "application"), appHandlerPkg.Resubmit(db))
 			appGroup.POST("/:id/action", middlewares.RequireApplicationReviewer(db), appHandler.Action)
-			appGroup.POST("/clear", middlewares.RequireRoles("admin", "staff"), func(c *gin.Context) {
+			appGroup.POST("/clear", middlewares.RequireRoles("staff"), func(c *gin.Context) {
 				c.JSON(http.StatusOK, responses.SuccessResponse(gin.H{"cleared": true}, http.StatusOK))
 			})
 			appGroup.PATCH("/:id/status", func(c *gin.Context) { c.AbortWithStatus(http.StatusMethodNotAllowed) })
@@ -217,11 +221,11 @@ func SetupRouter() *gin.Engine {
 		{
 			appTypeGroup.GET("", appTypeHandler.GetApplicationTypes)
 			appTypeGroup.GET("/:id", appTypeHandler.GetApplicationTypeByID)
-			appTypeGroup.POST("", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff"), appTypeHandler.CreateApplicationType)
-			appTypeGroup.PUT("/:id", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff"), appTypeHandler.UpdateApplicationType)
-			appTypeGroup.DELETE("/:id", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff"), appTypeHandler.DeleteApplicationType)
-			appTypeGroup.PATCH("/:id/toggle", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff"), appTypeHandler.ToggleActive)
-			appTypeGroup.POST("/:id/toggle", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin", "staff"), appTypeHandler.ToggleActive)
+			appTypeGroup.POST("", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin"), appTypeHandler.CreateApplicationType)
+			appTypeGroup.PUT("/:id", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin"), appTypeHandler.UpdateApplicationType)
+			appTypeGroup.DELETE("/:id", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin"), appTypeHandler.DeleteApplicationType)
+			appTypeGroup.PATCH("/:id/toggle", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin"), appTypeHandler.ToggleActive)
+			appTypeGroup.POST("/:id/toggle", middlewares.AuthorizeJWT(), middlewares.RequireRoles("admin"), appTypeHandler.ToggleActive)
 		}
 
 		// Contract Routes
@@ -229,9 +233,12 @@ func SetupRouter() *gin.Engine {
 		{
 			contractGroup.GET("", contractHandler.GetContracts)
 			contractGroup.GET("/:id", middlewares.RequireResourceAccess(db, "contract"), contractHandler.GetContractByID)
-			contractGroup.POST("", middlewares.RequireRoles("admin", "staff", "market_director", "tenant"), middlewares.RequireStallPayloadAccess(db), contractHandler.CreateContract)
-			contractGroup.POST("/:id/approve", middlewares.RequireRoles("admin", "staff", "market_director"), middlewares.RequireResourceAccess(db, "contract"), contractHandler.ApproveContract)
-			contractGroup.POST("/:id/reject", middlewares.RequireRoles("admin", "staff", "market_director"), middlewares.RequireResourceAccess(db, "contract"), contractHandler.RejectContract)
+			contractGroup.POST("", middlewares.RequireRoles("tenant"), middlewares.RequireStallPayloadAccess(db), contractHandler.CreateContract)
+			contractGroup.POST("/:id/action", middlewares.RequireRoles("staff", "market_director", "bureau_director"), middlewares.RequireResourceAccess(db, "contract"), contractHandlerPkg.ContractReview(db))
+			contractGroup.POST("/:id/resubmit", middlewares.RequireRoles("tenant"), middlewares.RequireResourceAccess(db, "contract"), contractHandlerPkg.ContractResubmit(db))
+			contractGroup.GET("/:id/assets/:kind", middlewares.RequireResourceAccess(db, "contract"), contractHandlerPkg.ContractAsset(db))
+			contractGroup.POST("/:id/approve", func(c *gin.Context) { c.AbortWithStatus(http.StatusMethodNotAllowed) })
+			contractGroup.POST("/:id/reject", func(c *gin.Context) { c.AbortWithStatus(http.StatusMethodNotAllowed) })
 			contractGroup.PATCH("/:id/workflow", middlewares.RequireRoles("admin", "staff", "market_director"), middlewares.RequireResourceAccess(db, "contract"), contractHandler.UpdateContractWorkflow)
 			contractGroup.POST("/:id/terminate", middlewares.RequireRoles("admin", "staff", "market_director"), middlewares.RequireResourceAccess(db, "contract"), contractHandler.TerminateContract)
 		}

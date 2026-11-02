@@ -9,6 +9,7 @@ import (
 	"emarket-api/responses"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Handler struct {
@@ -21,24 +22,51 @@ func NewHandler(db *gorm.DB) *Handler {
 
 func (h *Handler) scopedQuery(c *gin.Context) *gorm.DB {
 	role := middlewares.GetUserRole(c)
-	query := h.db.Model(&models.Notification{})
-	if role == "tenant" {
-		return query.Where("recipient_role = ? AND recipient_user_id = ?", "tenant", middlewares.GetUserID(c))
+	query := h.db.Model(&models.Notification{}).Where("recipient_user_id = ?", middlewares.GetUserID(c))
+	switch role {
+	case "staff":
+		return query.Where("recipient_role IN ?", []string{"officer", "staff"})
+	case "tenant", "market_director", "bureau_director", "admin":
+		return query.Where("recipient_role = ?", role)
+	default:
+		return query.Where("1 = 0")
 	}
-	if role == "staff" {
-		marketIDs, err := middlewares.StaffMarketIDs(h.db, middlewares.GetUserID(c))
-		if err != nil || len(marketIDs) == 0 {
-			return query.Where("1 = 0")
-		}
-		return query.Where(`recipient_role = ? AND (
-			booking_id IN (SELECT id FROM booking WHERE market_id IN ?) OR
-			market_name IN (SELECT name FROM market WHERE id IN ?)
-		)`, "officer", marketIDs, marketIDs)
-	}
-	return query.Where("recipient_role = ?", "officer")
 }
 
+// Copy market notices for each assigned staff member to keep read state private.
+func (h *Handler) materializeStaffNotifications(c *gin.Context) error {
+	if middlewares.GetUserRole(c) != "staff" {
+		return nil
+	}
+	userID := middlewares.GetUserID(c)
+	marketIDs, err := middlewares.StaffMarketIDs(h.db, userID)
+	if err != nil || len(marketIDs) == 0 {
+		return err
+	}
+	var sources []models.Notification
+	err = h.db.Where("recipient_user_id IS NULL AND source_notification_id IS NULL AND recipient_role IN ?", []string{"officer", "staff"}).
+		Where("booking_id IN (SELECT id FROM booking WHERE market_id IN ?) OR market_name IN (SELECT name FROM market WHERE id IN ? AND name IN (SELECT name FROM market GROUP BY name HAVING COUNT(*) = 1))", marketIDs, marketIDs).
+		Where("NOT EXISTS (SELECT 1 FROM notification AS recipient WHERE recipient.source_notification_id = notification.id AND recipient.recipient_user_id = ?)", userID).Find(&sources).Error
+	if err != nil {
+		return err
+	}
+	for _, source := range sources {
+		copy := source
+		copy.ID = 0
+		copy.SourceNotificationID = &source.ID
+		copy.RecipientUserID = &userID
+		copy.IsRead = false
+		if err := h.db.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "source_notification_id"}, {Name: "recipient_user_id"}}, DoNothing: true}).Create(&copy).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
 func (h *Handler) GetNotifications(c *gin.Context) {
+	if err := h.materializeStaffNotifications(c); err != nil {
+		c.JSON(http.StatusInternalServerError, responses.FailRespone(responses.NewInternalServerError()))
+		return
+	}
 	var items []models.Notification
 	if err := h.scopedQuery(c).Order("id DESC").Find(&items).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, responses.FailRespone(responses.NewInternalServerError()))

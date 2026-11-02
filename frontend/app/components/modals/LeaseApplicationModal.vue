@@ -62,7 +62,14 @@
 
           <div class="form-group">
             <label class="form-label">คำนำหน้าชื่อ <b class="req-star">*</b></label>
-            <AppSelect v-model="applicantTitle" :options="applicantTitleOptions" placeholder="เลือกคำนำหน้า" :error="titleError" />
+            <AppSelect
+              v-model="applicantTitle"
+              :options="applicantTitleOptions"
+              placeholder="เลือกคำนำหน้า"
+              :error="hasSubmitted && errors.applicant_title ? errors.applicant_title : false"
+              @change="errors.applicant_title = ''"
+              @update:model-value="errors.applicant_title = ''"
+            />
           </div>
 
           <!-- ลำดับที่ 1: ชื่อ-นามสกุล -> ลำดับที่ 2: อายุ -->
@@ -75,12 +82,12 @@
                 type="text"
                 placeholder="ระบุชื่อและนามสกุลจริง"
                 :error="errors.applicant_name"
-                @blur="validateField('applicant_name')"
+                @blur="validateField('applicant_name')" @input="handleFieldInput('applicant_name')"
               />
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="app_age">อายุ (ปี)</label>
+              <label class="form-label" for="app_age">อายุ (ปี) <b class="req-star">*</b></label>
               <AppInput
                 id="app_age"
                 v-model="form.applicant_age"
@@ -88,6 +95,8 @@
                 min="1"
                 max="120"
                 placeholder="ระบุอายุ เช่น 35"
+                :error="errors.applicant_age"
+                @blur="validateField('applicant_age')" @input="handleFieldInput('applicant_age')"
               />
             </div>
           </div>
@@ -103,7 +112,7 @@
                 placeholder="x-xxxx-xxxxx-xx-x"
                 maxlength="17"
                 :error="errors.applicant_id_card"
-                @blur="validateField('applicant_id_card')"
+                @blur="validateField('applicant_id_card')" @input="handleFieldInput('applicant_id_card')"
               />
             </div>
 
@@ -115,7 +124,7 @@
                 type="tel"
                 placeholder="08x-xxx-xxxx"
                 :error="errors.applicant_phone"
-                @blur="validateField('applicant_phone')"
+                @blur="validateField('applicant_phone')" @input="handleFieldInput('applicant_phone')"
               />
             </div>
           </div>
@@ -147,11 +156,12 @@
             v-model="idCardCopy"
             class="form-group"
             label="สำเนาบัตรประชาชน (ID Card Copy)"
+            required-text="จำเป็น"
             accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
             :max-size-mb="3"
             hint="PDF, JPG หรือ PNG ขนาดไม่เกิน 3MB"
             description="แนบสำเนาบัตรประจำตัวประชาชน พร้อมรับรองสำเนาถูกต้อง"
-            :error="idCardCopyError"
+            :error="idCardCopyError || (hasSubmitted && !idCardCopy ? 'กรุณาแนบสำเนาบัตรประชาชน' : '')"
             @error="idCardCopyError = $event"
           />
 
@@ -162,12 +172,12 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="app_shop">ชื่อร้านค้า (Shop Name) <b class="req-star">*</b></label>
-              <AppInput id="app_shop" v-model="form.shop_name" type="text" placeholder="เช่น ชานมไข่มุก เฮงเฮง" :error="errors.shop_name" @blur="validateField('shop_name')" />
+              <AppInput id="app_shop" v-model="form.shop_name" type="text" placeholder="เช่น ชานมไข่มุก เฮงเฮง" :error="errors.shop_name" @blur="validateField('shop_name')" @input="handleFieldInput('shop_name')" />
             </div>
 
             <div class="form-group">
               <label class="form-label" for="app_prod">ประเภทสินค้าที่จะจำหน่าย <b class="req-star">*</b></label>
-              <AppInput id="app_prod" v-model="form.product_type" type="text" placeholder="เช่น เครื่องดื่ม, ของทอด, เสื้อผ้า" :error="errors.product_type" @blur="validateField('product_type')" />
+              <AppInput id="app_prod" v-model="form.product_type" type="text" placeholder="เช่น เครื่องดื่ม, ของทอด, เสื้อผ้า" :error="errors.product_type" @blur="validateField('product_type')" @input="handleFieldInput('product_type')" />
             </div>
           </div>
 
@@ -316,7 +326,7 @@ const targetStallId = computed(() => {
 })
 
 const applicantTitle = ref('')
-const titleError = ref('')
+const hasSubmitted = ref(false)
 const applicantTitleOptions = [
   { value: 'นาย', label: 'นาย' },
   { value: 'นาง', label: 'นาง' },
@@ -342,7 +352,9 @@ const form = ref({
 })
 
 const errors = reactive({
+  applicant_title: '',
   applicant_name: '',
+  applicant_age: '',
   applicant_id_card: '',
   applicant_phone: '',
   shop_name: '',
@@ -351,7 +363,10 @@ const errors = reactive({
 })
 
 const resetErrors = () => {
+  hasSubmitted.value = false
+  errors.applicant_title = ''
   errors.applicant_name = ''
+  errors.applicant_age = ''
   errors.applicant_id_card = ''
   errors.applicant_phone = ''
   errors.shop_name = ''
@@ -359,9 +374,27 @@ const resetErrors = () => {
   errors.requested_start_date = ''
 }
 
+const handleFieldInput = (field: keyof typeof errors) => {
+  if (errors[field]) validateField(field)
+}
+
 const validateField = (field: keyof typeof errors) => {
-  if (field === 'applicant_name') {
+  if (field === 'applicant_title') {
+    errors.applicant_title = (hasSubmitted.value && !applicantTitle.value.trim()) ? 'กรุณาเลือกคำนำหน้าชื่อ' : ''
+  } else if (field === 'applicant_name') {
     errors.applicant_name = form.value.applicant_name.trim() ? '' : 'กรุณาระบุชื่อ-นามสกุล'
+  } else if (field === 'applicant_age') {
+    const raw = String(form.value.applicant_age ?? '').trim()
+    if (!raw) {
+      errors.applicant_age = 'กรุณาระบุอายุ'
+    } else {
+      const num = Number(raw)
+      if (!Number.isInteger(num) || num < 1 || num > 120) {
+        errors.applicant_age = 'กรุณาระบุอายุให้ถูกต้อง (1-120 ปี)'
+      } else {
+        errors.applicant_age = ''
+      }
+    }
   } else if (field === 'applicant_id_card') {
     errors.applicant_id_card = form.value.applicant_id_card.trim() ? '' : 'กรุณาระบุเลขประจำตัวประชาชน'
   } else if (field === 'applicant_phone') {
@@ -376,17 +409,20 @@ const validateField = (field: keyof typeof errors) => {
 }
 
 const validateForm = () => {
+  validateField('applicant_title')
   validateField('applicant_name')
+  validateField('applicant_age')
   validateField('applicant_id_card')
   validateField('applicant_phone')
   validateField('shop_name')
   validateField('product_type')
   validateField('requested_start_date')
-  return !titleError.value && !Object.values(errors).some(Boolean)
+  return !Object.values(errors).some(Boolean)
 }
 
 watch(() => props.show, (newVal) => {
   if (newVal) {
+    hasSubmitted.value = false
     isSuccess.value = false
     removeIDCardFile()
     form.value.applicant_age = ''
@@ -405,20 +441,20 @@ watch(() => props.show, (newVal) => {
       form.value.applicant_name = parsedName.name
       form.value.applicant_phone = base.tenant_phone || ''
       form.value.applicant_email = base.tenant_email || ''
-      form.value.applicant_id_card = base.tenant_id_card || ''
+      form.value.applicant_id_card = base.tenant_id_card || base.applicant_id_card || ''
       form.value.product_type = base.intended_business || ''
       form.value.shop_name = base.intended_business || ''
     }
   } else {
     removeIDCardFile()
   }
-})
+}, { immediate: true })
 
 const handleSubmit = async () => {
-  if (!validateForm()) return
-  if (idCardCopyError.value) return
-  const age = form.value.applicant_age === '' ? null : Number(form.value.applicant_age)
-  if (age !== null && (!Number.isInteger(age) || age < 1 || age > 120)) { await showError('กรุณาระบุอายุระหว่าง 1 ถึง 120 ปี', 'ข้อมูลไม่ถูกต้อง'); return }
+  hasSubmitted.value = true
+  const formValid = validateForm()
+  if (!formValid || !idCardCopy.value || idCardCopyError.value) return
+  const age = Number(form.value.applicant_age)
   submitting.value = true
   try {
     const idCardCopyBase64 = idCardCopy.value ? await readIDCardCopy(idCardCopy.value) : ''
