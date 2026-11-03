@@ -135,5 +135,5 @@ export PATH="$HOME/.local/node/bin:$PATH"
 export NUXT_TELEMETRY_DISABLED=1
 npm run dev
 ```
-เข้าใช้งานผ่านเบราว์เซอร์ที่: **http://localhost:3000**
+เข้าใช้งานผ่านเบราว์เซอร์ที่: **http://localhost:82/e-market/**
 # E-market

@@ -8,10 +8,10 @@ services:
     container_name: emarket-api
     restart: always
     ports:
-      - "8080:8080"
+      - "8188:8188"
     environment:
       - APP_ENV=prod
-      - PORT=8080
+      - PORT=8188
       - DB_DRIVER=postgres
       - DB_URL=postgres://emarket_user:emarket_pass@postgres:5432/emarket_db?sslmode=disable
       - JWT_SECRET=super-secret-production-jwt-key
