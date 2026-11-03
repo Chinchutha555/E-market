@@ -1,6 +1,6 @@
 const configuredApiBase = process.env.NUXT_PUBLIC_API_BASE
   || process.env.NUXT_PUBLIC_API_URL
-  || 'http://127.0.0.1:8080/api/v1'
+  || 'http://127.0.0.1:8188/api/v1'
 
 const configuredAppBase = process.env.NUXT_APP_BASE_URL || '/e-market/'
 
@@ -28,7 +28,7 @@ export default defineNuxtConfig({
       redirect: `${configuredAppBase.replace(/\/$/, '')}/images/**`
     },
     '/api/v1/**': {
-      proxy: `${process.env.BACKEND_API_URL || process.env.BACKEND_URL || 'http://127.0.0.1:8080'}/api/v1/**`
+      proxy: `${process.env.BACKEND_API_URL || process.env.BACKEND_URL || 'http://127.0.0.1:8188'}/api/v1/**`
     }
   },
   experimental: {
