@@ -1,6 +1,8 @@
 const configuredApiBase = process.env.NUXT_PUBLIC_API_BASE
   || process.env.NUXT_PUBLIC_API_URL
-  || '/api/v1'
+  || 'http://127.0.0.1:8080/api/v1'
+
+const configuredAppBase = process.env.NUXT_APP_BASE_URL || '/e-market/'
 
 export default defineNuxtConfig({
   vite: {
@@ -19,6 +21,12 @@ export default defineNuxtConfig({
   telemetry: false,
   ssr: false,
   routeRules: {
+    // Existing records and UI data still contain root-relative image URLs.
+    // Keep them working under the frontend base path without migrating every
+    // persisted URL at once.
+    '/images/**': {
+      redirect: `${configuredAppBase.replace(/\/$/, '')}/images/**`
+    },
     '/api/v1/**': {
       proxy: `${process.env.BACKEND_API_URL || process.env.BACKEND_URL || 'http://127.0.0.1:8080'}/api/v1/**`
     }
@@ -42,6 +50,9 @@ export default defineNuxtConfig({
     '~/assets/css/notification-cards.css'
   ],
   app: {
+    // Serve every frontend route under /e-market/ (for example,
+    // /e-market/auth/login and /e-market/stalls).
+    baseURL: configuredAppBase,
     head: {
       title: 'e-Market | ระบบจัดการแผงเช่าตลาดและสัญญาการเช่า',
       meta: [
